@@ -1,0 +1,10 @@
+syntax: glob
+*.pyc
+*.egg-info
+*.orig
+.coverage
+build
+*.egg
+.DS_Store
+dist
+development.ini

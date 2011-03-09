@@ -1,0 +1,72 @@
+<html xmlns:py="http://genshi.edgewall.org/"
+  xmlns:i18n="http://genshi.edgewall.org/i18n"
+  xmlns:xi="http://www.w3.org/2001/XInclude"
+  py:strip="">
+
+  <py:def function="page_title">Harvest Source Details</py:def>
+
+  <py:def function="optional_head">
+    <link type="text/css" rel="stylesheet" media="all" href="/ckanext/harvest/style.css" />
+  </py:def>
+  
+<div py:match="content">
+  <div class="harvest-content">
+  <h1>Harvest Source Details</h1>
+    <table id="harvest-source-details">
+        <tr>
+            <th>ID</th>
+            <td>${c.source.id}</td>
+        </tr>
+        <tr>
+            <th>URL</th>
+            <td>${c.source.url}</td>
+        </tr>
+        <tr>
+            <th>Description</th>
+            <td>${c.source.description}</td>
+        </tr>
+        <tr>
+            <th>User</th>
+            <td>${c.source.user_ref}</td>
+        </tr>
+        <tr>
+            <th>Publisher</th>
+            <td>${c.source.publisher_ref}</td>
+        </tr>
+        <tr>
+            <th>Created</th>
+            <td>${c.source.created}</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td>
+                Last Harvest Status: ${c.source.status.last_harvest_status}<br/>
+                Last Harvest Errors: <span py:for="errors in c.source.status.last_harvest_errors"></span><br/>
+                Last Harvest Added or Updated: ${c.source.status.last_harvest_statistics.added}<br/>
+                Last Harvest Request: ${c.source.status.last_harvest_request} <br/>
+                Next Harvest: ${c.source.status.next_harvest}
+            </td>
+        </tr>
+        <tr>
+            <th>Total Errors</th>
+            <td>${c.source.status.overall_statistics.errors}</td>
+        </tr>
+        <tr>
+            <th>Total Packages</th>
+            <td>${c.source.status.overall_statistics.added}</td>
+        </tr>
+        <tr>
+            <th>Packages</th>
+            <td>
+                <div>There could be a 10 minutes delay before these packages (or changes to them) appear on 
+                the site or on search results.</div>
+                <div py:for="package in c.source.status.packages">
+                    <a href="/package/${package}">${package}</a>
+                </div>
+            </td>
+        </tr>
+    </table>
+  </div>
+</div>
+<xi:include href="../../layout.html" />
+</html>
