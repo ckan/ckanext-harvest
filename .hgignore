@@ -8,3 +8,4 @@ build
 .DS_Store
 dist
 development.ini
+*.swp
