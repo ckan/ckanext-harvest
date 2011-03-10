@@ -42,7 +42,15 @@
             <td>
                 Last Harvest Status: ${c.source.status.last_harvest_status}<br/>
                 Last Harvest Errors: <span py:for="errors in c.source.status.last_harvest_errors"></span><br/>
-                Last Harvest Added or Updated: ${c.source.status.last_harvest_statistics.added}<br/>
+                Last Harvest Added or Updated: 
+                <py:choose>
+                    <py:when test="'added' in c.source.status.last_harvest_statistics">
+                        ${c.source.status.last_harvest_statistics.added}<br/>
+                    </py:when>
+                    <py:otherwise>
+                        None<br/>
+                    </py:otherwise>
+                </py:choose>
                 Last Harvest Request: ${c.source.status.last_harvest_request} <br/>
                 Next Harvest: ${c.source.status.next_harvest}
             </td>
