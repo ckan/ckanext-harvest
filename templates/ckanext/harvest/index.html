@@ -26,8 +26,7 @@
         
         <tr py:for="source in c.sources">
             <td>${h.link_to('view', 'harvest/' + source.id)}</td>
-            
-            <td>refresh</td>
+            <td>${h.link_to('refresh', 'harvest/' + source.id + '/refresh')}</td>            
             <td>${source.url}</td>
             <td>${source.status.last_harvest_status}</td>
             <td>${source.status.overall_statistics.added} pkgs ${source.status.overall_statistics.errors} errors</td>

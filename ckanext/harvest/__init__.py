@@ -35,23 +35,7 @@ class Harvest(SingletonPlugin):
     
     def filter(self, stream):
         return stream
-        """
-        if self.enable_organizations:
-            from pylons import request, tmpl_context as c
-            routes = request.environ.get('pylons.routes_dict')
-        
-            data = dict(link = h.link_to("Organizations who have published packages with broken resource links.",\
-                h.url_for(controller='qa',\
-                action='organizations_with_broken_resource_links')
-            ))
 
-            if routes.get('controller') == 'ckanext.qa.controllers.view:ViewController'\
-               and routes.get('action') == 'index':
-                stream = stream | Transformer('body//div[@class="qa-content"]')\
-                    .append(HTML(html.ORGANIZATION_LINK % data))
-                        
-        return stream
-    """ 
     def before_map(self, map):
         map.connect('harvest', '/harvest',
             controller='ckanext.harvest.controllers.view:ViewController',
@@ -67,15 +51,14 @@ class Harvest(SingletonPlugin):
             conditions=dict(method=['POST']),
             action='create')
 
-        map.connect('harvest_create', '/harvest/harvestingjob',
-            controller='ckanext.harvest.controllers.view:ViewController',
-            conditions=dict(method=['POST']),
-            action='create_harvesting_job')
-
         map.connect('harvest_show', '/harvest/:id',
             controller='ckanext.harvest.controllers.view:ViewController',
             action='show')
-        
+
+        map.connect('harvest_create', '/harvest/:id/refresh',
+            controller='ckanext.harvest.controllers.view:ViewController',
+            action='create_harvesting_job')
+       
         return map
 
     def update_config(self, config):

@@ -72,15 +72,17 @@ class ViewController(BaseController):
             h.flash_success('Harvesting source added successfully')
             redirect(h.url_for(controller='harvest', action='index'))
                             
-    def create_harvesting_job(self):
+    def create_harvesting_job(self,id):
         form_url = self.api_url + '/harvestingjob'
         data = {
-            'source_id': request.POST['source_id'],
+            'source_id': id,
             'user_ref': ''
         }
         data = json.dumps(data)
         r = self._do_request(form_url,data)
-        return r.read()
+
+        h.flash_success('Refresh requested, harvesting will take place within 15 minutes.')
+        redirect(h.url_for(controller='harvest', action='index', id=None))
 
     def show(self,id):
         sources_url = self.api_url + '/harvestsource/%s' % id
