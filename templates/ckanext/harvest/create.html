@@ -11,29 +11,13 @@
   
 <div py:match="content">
     <div class="harvest-content">
-    <h1>Add harvesting source</h1>
-    ${Markup(c.form)}
-    <div class="submit">
-        <input id="save" name="save" value="Save" type="button" />
+        <h1>Add harvesting source</h1>
+    
+        <form action="create" method="POST">
+        ${Markup(c.form)}
+            <input id="save" name="save" value="Save" type="submit" />
+        </form>
     </div>
-    </div>
-    <script type="text/javascript">
-    //<![CDATA[
-    $(document).ready(function() {
-        $('#save').click(function(){
-            $.post(
-            'http://localhost:5000/harvest/create',
-            {'HarvestSource--url':$('#HarvestSource--url').val(),
-             'HarvestSource--description':$('#HarvestSource--description').val()},
-            function(data,status,xhr){
-            alert(status);
-    })
-
-        });
-    });
-    //]]>
-    </script>
-
 </div>
 <xi:include href="../../layout.html" />
 </html>
