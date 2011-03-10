@@ -67,6 +67,11 @@ class Harvest(SingletonPlugin):
             conditions=dict(method=['POST']),
             action='create')
 
+        map.connect('harvest_create', '/harvest/harvestingjob',
+            controller='ckanext.harvest.controllers.view:ViewController',
+            conditions=dict(method=['POST']),
+            action='create_harvesting_job')
+
         map.connect('harvest_show', '/harvest/:id',
             controller='ckanext.harvest.controllers.view:ViewController',
             action='show')

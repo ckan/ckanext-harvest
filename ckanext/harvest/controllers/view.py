@@ -8,6 +8,7 @@ from ckan.lib.base import BaseController, c, g, request, \
 class ViewController(BaseController):
 
     api_url = config.get('ckan.api_url', 'http://localhost:5000').rstrip('/')+'/api/2/rest'
+    form_api_url = config.get('ckan.api_url', 'http://localhost:5000').rstrip('/')+'/api/2/form'
     api_key = config.get('ckan.harvesting.api_key')
 
     def _do_request(self,url,data = None):
@@ -49,8 +50,7 @@ class ViewController(BaseController):
     def create(self):
 
         # This is the DGU form API, so we don't use self.api_url
-        form_url = config.get('ckan.api_url', '/').rstrip('/') + \
-                   '/api/2/form/harvestsource/create'
+        form_url = self.form_api_url + '/harvestsource/create'
         if request.method == 'GET':
             # Request the fields
             c.form = self._do_request(form_url).read()
@@ -67,14 +67,20 @@ class ViewController(BaseController):
             }
             data = json.dumps(data)
 
-            try:
-                r = self._do_request(form_url,data)
-    
-                h.flash_success('Harvesting source added successfully')
-                redirect(h.url_for(controller='harvest', action='index'))
-            except urllib2.HTTPError as e:
-                raise Exception('The forms API returned an error:' + str(e.getcode()) + ' ' + e.msg )
-                        
+            r = self._do_request(form_url,data)
+        
+            h.flash_success('Harvesting source added successfully')
+            redirect(h.url_for(controller='harvest', action='index'))
+                            
+    def create_harvesting_job(self):
+        form_url = self.api_url + '/harvestingjob'
+        data = {
+            'source_id': request.POST['source_id'],
+            'user_ref': ''
+        }
+        data = json.dumps(data)
+        r = self._do_request(form_url,data)
+        return r.read()
 
     def show(self,id):
         sources_url = self.api_url + '/harvestsource/%s' % id
