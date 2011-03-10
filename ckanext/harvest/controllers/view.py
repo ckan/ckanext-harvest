@@ -8,43 +8,52 @@ from ckan.lib.base import BaseController, c, g, request, \
 class ViewController(BaseController):
 
     api_url = config.get('ckan.api_url', 'http://localhost:5000').rstrip('/')+'/api/2/rest'
-    
-    def index(self):
+    api_key = config.get('ckan.harvesting.api_key')
+
+    def _do_request(self,url,data = None):
+
+        http_request = urllib2.Request(
+            url = url,
+            headers = {'Authorization' : self.api_key}
+        )
+
+        if data:
+            http_request.add_data(data)
+        
         try:
-            # Request all harvesting sources
-            sources_url = self.api_url + '/harvestsource'
-            
-            doc = urllib2.urlopen(sources_url).read()
-            sources_ids = json.loads(doc)
-
-            source_url = sources_url + '/%s'
-            sources = []
-            
-            # For each source, request its details
-            for source_id in sources_ids:
-                doc = urllib2.urlopen(source_url % source_id).read()
-                sources.append(json.loads(doc))
-
-            c.sources = sources
-            return render('ckanext/harvest/index.html')
+            return urllib2.urlopen(http_request)
         except urllib2.HTTPError as e:
-            raise Exception('The forms API returned an error:' + str(e.getcode()) + ' ' + e.msg )
+            raise Exception('The API call returned an error: ' + str(e.getcode()) + \
+                    ' ' + e.msg + ' [' + e.url + ']')
+
+
+
+    def index(self):
+        # Request all harvesting sources
+        sources_url = self.api_url + '/harvestsource'
+        
+        doc = self._do_request(sources_url).read()
+        sources_ids = json.loads(doc)
+
+        source_url = sources_url + '/%s'
+        sources = []
+        
+        # For each source, request its details
+        for source_id in sources_ids:
+            doc = self._do_request(source_url % source_id).read()
+            sources.append(json.loads(doc))
+
+        c.sources = sources
+        return render('ckanext/harvest/index.html')
     
     def create(self):
 
         # This is the DGU form API, so we don't use self.api_url
         form_url = config.get('ckan.api_url', '/').rstrip('/') + \
                    '/api/2/form/harvestsource/create'
-
-        # Create a Request object to define the Authz header
-        http_request = urllib2.Request(
-            url = form_url,
-            headers = {'Authorization' : config.get('ckan.harvesting.api_key')}
-        )
-
         if request.method == 'GET':
             # Request the fields
-            c.form = urllib2.urlopen(http_request).read()
+            c.form = self._do_request(form_url).read()
 
             return render('ckanext/harvest/create.html')
         if request.method == 'POST':
@@ -57,30 +66,19 @@ class ViewController(BaseController):
                 'publisher_ref':''
             }
             data = json.dumps(data)
-            http_request.add_data(data)
 
             try:
-                r = urllib2.urlopen(http_request)
+                r = self._do_request(form_url,data)
     
                 h.flash_success('Harvesting source added successfully')
                 redirect(h.url_for(controller='harvest', action='index'))
             except urllib2.HTTPError as e:
-                h.flash_error('An error occurred: ' + str(e.getcode()) + ' ' + e.msg)
-                redirect(h.url_for(controller='harvest', action='create'))
-                """
-                if e.getcode() == 403:
-                    abort(403)
-                else:
-                    raise Exception('The forms API returned an error:' + str(e.getcode()) + ' ' + e.msg )
-                """
-        
+                raise Exception('The forms API returned an error:' + str(e.getcode()) + ' ' + e.msg )
+                        
 
     def show(self,id):
         sources_url = self.api_url + '/harvestsource/%s' % id
-        try:
-            doc = urllib2.urlopen(sources_url).read()
-        except urllib2.HTTPError as e:
-            raise Exception('The forms API returned an error:' + str(e.getcode()) + ' ' + e.msg )       
+        doc = self._do_request(sources_url).read()
         c.source = json.loads(doc)
 
         return render('ckanext/harvest/show.html')
