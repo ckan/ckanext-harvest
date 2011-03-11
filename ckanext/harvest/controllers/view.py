@@ -81,6 +81,8 @@ class ViewController(BaseController):
         sources_url = self.api_url + '/harvestsource/%s' % id
         doc = self._do_request(sources_url).read()
         c.source = json.loads(doc)
+        
+        return render('ckanext/harvest/show.html')
           
     def create_harvesting_job(self,id):
         form_url = self.api_url + '/harvestingjob'
@@ -101,4 +103,3 @@ class ViewController(BaseController):
             h.flash_error(msg) 
         finally:
             redirect(h.url_for(controller='harvest', action='index', id=None))
-        return render('ckanext/harvest/show.html')
