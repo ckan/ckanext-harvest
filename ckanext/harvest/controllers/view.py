@@ -24,9 +24,7 @@ class ViewController(BaseController):
         try:
             return urllib2.urlopen(http_request)
         except urllib2.HTTPError as e:
-            raise Exception('The API call returned an error: ' + str(e.getcode()) + \
-                    ' ' + e.msg + ' [' + e.url + ']')
-
+            raise
 
 
     def index(self):
@@ -66,12 +64,24 @@ class ViewController(BaseController):
                 'publisher_ref':''
             }
             data = json.dumps(data)
-
-            r = self._do_request(form_url,data)
-        
-            h.flash_success('Harvesting source added successfully')
-            redirect(h.url_for(controller='harvest', action='index'))
-                            
+            try:
+                r = self._do_request(form_url,data)
+  
+                h.flash_success('Harvesting source added successfully')
+            except urllib2.HTTPError as e:
+                msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
+                # The form API returns just a 500, so we are not exactly sure of what 
+                # happened, but most probably it was a duplicate entry
+                msg = msg + ' Does the source already exist?'
+                h.flash_error(msg)
+            finally:
+                redirect(h.url_for(controller='harvest', action='index'))
+ 
+    def show(self,id):
+        sources_url = self.api_url + '/harvestsource/%s' % id
+        doc = self._do_request(sources_url).read()
+        c.source = json.loads(doc)
+          
     def create_harvesting_job(self,id):
         form_url = self.api_url + '/harvestingjob'
         data = {
@@ -79,14 +89,16 @@ class ViewController(BaseController):
             'user_ref': ''
         }
         data = json.dumps(data)
-        r = self._do_request(form_url,data)
+        try:
+            r = self._do_request(form_url,data)
 
-        h.flash_success('Refresh requested, harvesting will take place within 15 minutes.')
-        redirect(h.url_for(controller='harvest', action='index', id=None))
-
-    def show(self,id):
-        sources_url = self.api_url + '/harvestsource/%s' % id
-        doc = self._do_request(sources_url).read()
-        c.source = json.loads(doc)
-
+            h.flash_success('Refresh requested, harvesting will take place within 15 minutes.')
+        except urllib2.HTTPError as e:
+            msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
+            if e.getcode() == 400:
+                msg = msg + ' ' + e.read()
+                
+            h.flash_error(msg) 
+        finally:
+            redirect(h.url_for(controller='harvest', action='index', id=None))
         return render('ckanext/harvest/show.html')
