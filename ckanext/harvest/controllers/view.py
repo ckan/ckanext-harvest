@@ -83,7 +83,14 @@ class ViewController(BaseController):
         c.source = json.loads(doc)
         
         return render('ckanext/harvest/show.html')
-          
+
+    def delete(self,id):
+        form_url = self.form_api_url + '/harvestsource/delete/%s' % id
+        r = self._do_request(form_url)
+    
+        h.flash_success('Harvesting source deleted successfully')
+        redirect(h.url_for(controller='harvest', action='index', id=None))
+
     def create_harvesting_job(self,id):
         form_url = self.api_url + '/harvestingjob'
         data = {
