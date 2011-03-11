@@ -18,7 +18,6 @@
             <th></th>
             <th></th>
             <th></th>
-            <th></th>
             <th>URL</th>
             <th>Status</th>
             <th>Statistics</th>
@@ -29,7 +28,6 @@
         <tr py:for="source in c.sources">
             <td>${h.link_to('view', 'harvest/' + source.id)}</td>
             <td>${h.link_to('edit', 'harvest/' + source.id + '/edit')}</td> 
-            <td>${h.link_to('delete', 'harvest/' + source.id + '/delete')}</td> 
             <td>${h.link_to('refresh', 'harvest/' + source.id + '/refresh')}</td>            
             <td>${source.url}</td>
             <td>${source.status.last_harvest_status}</td>
