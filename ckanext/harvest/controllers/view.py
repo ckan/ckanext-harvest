@@ -52,6 +52,7 @@ class ViewController(BaseController):
         if request.method == 'GET':
             # Request the fields
             c.form = self._do_request(form_url).read()
+            c.mode = 'create'
 
             return render('ckanext/harvest/create.html')
         if request.method == 'POST':
@@ -72,7 +73,8 @@ class ViewController(BaseController):
                 msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
                 # The form API returns just a 500, so we are not exactly sure of what 
                 # happened, but most probably it was a duplicate entry
-                msg = msg + ' Does the source already exist?'
+                if e.getcode() == 500:
+                    msg = msg + ' Does the source already exist?'
                 h.flash_error(msg)
             finally:
                 redirect(h.url_for(controller='harvest', action='index'))
@@ -91,6 +93,35 @@ class ViewController(BaseController):
         h.flash_success('Harvesting source deleted successfully')
         redirect(h.url_for(controller='harvest', action='index', id=None))
 
+    def edit(self,id):
+
+        form_url = self.form_api_url + '/harvestsource/edit/%s' % id
+        if request.method == 'GET':
+            # Request the fields
+            c.form = self._do_request(form_url).read()
+            c.mode = 'edit'
+
+            return render('ckanext/harvest/create.html')
+        if request.method == 'POST':
+            # Build an object like the one expected by the DGU form API
+            data = {
+                'form_data':
+                    {'HarvestSource-%s-url' % id: request.POST['HarvestSource-%s-url' % id] ,
+                     'HarvestSource-%s-description' % id: request.POST['HarvestSource-%s-description' % id]},
+                'user_ref':'',
+                'publisher_ref':''
+            }
+            data = json.dumps(data)
+            try:
+                r = self._do_request(form_url,data)
+  
+                h.flash_success('Harvesting source edited successfully')
+            except urllib2.HTTPError as e:
+                msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
+                h.flash_error(msg)
+            finally:
+                redirect(h.url_for(controller='harvest', action='index', id=None))
+ 
     def create_harvesting_job(self,id):
         form_url = self.api_url + '/harvestingjob'
         data = {

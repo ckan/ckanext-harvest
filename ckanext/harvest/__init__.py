@@ -55,7 +55,11 @@ class Harvest(SingletonPlugin):
             controller='ckanext.harvest.controllers.view:ViewController',
             action='show')
 
-        map.connect('harvest_show', '/harvest/:id/delete',
+        map.connect('harvest_edit', '/harvest/:id/edit',
+            controller='ckanext.harvest.controllers.view:ViewController',
+            action='edit')
+
+        map.connect('harvest_delete', '/harvest/:id/delete',
             controller='ckanext.harvest.controllers.view:ViewController',
             action='delete')
 
