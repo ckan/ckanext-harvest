@@ -108,7 +108,7 @@ class Harvester(CkanCommand):
         import pylons
         pylons.translator._push_object(_get_translator(pylons.config.get('lang')))
 
-        from ckan.controllers.harvesting import HarvestingJobController
+        from ckanext.harvest.controllers.harvesting import HarvestingJobController        
         from ckanext.csw.validation import Validator
 
         jobs = HarvestingJob.filter(status=u"New").all()
