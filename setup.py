@@ -33,6 +33,6 @@ setup(
 	# Add plugins here, eg
 	harvest=ckanext.harvest:Harvest
 	[paste.paster_command]
-	package-scores = ckanext.harvest.commands.package_score:PackageScore
+	harvester = ckanext.harvest.commands.harvester:Harvester
 	""",
 )
