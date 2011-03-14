@@ -3,6 +3,8 @@ import re
 from pprint import pprint
 
 from ckan.lib.cli import CkanCommand
+from ckan.model import repo
+from ckanext.harvest.model import HarvestSource, HarvestingJob, HarvestedDocument
 
 class Harvester(CkanCommand):
     '''Harvests remotely mastered metadata
@@ -106,7 +108,6 @@ class Harvester(CkanCommand):
         import pylons
         pylons.translator._push_object(_get_translator(pylons.config.get('lang')))
 
-        from ckan.model import HarvestingJob
         from ckan.controllers.harvesting import HarvestingJobController
         from ckanext.csw.validation import Validator
 
@@ -138,18 +139,15 @@ class Harvester(CkanCommand):
             print "There are no new harvesting jobs."
 
     def remove_harvesting_job(self, job_id):
-        from ckan import model
         try:
-            job = model.HarvestingJob.get(job_id)
+            job = HarvestingJob.get(job_id)
             job.delete()
-            model.repo.commit_and_remove()
+            repo.commit_and_remove()
             print "Removed job: %s" % job_id
-        except model.HarvestingObjectNotFound:
+        except:
             print "No such job"
 
     def register_harvesting_job(self, source_id, user_ref):
-        from ckan.model import HarvestSource
-        from ckan.model import HarvestingJob
         if re.match('(http|file)://', source_id):
             source_url = unicode(source_id)
             source_id = None
@@ -176,7 +174,6 @@ class Harvester(CkanCommand):
         self.print_there_are("harvesting job", jobs, condition=status)
 
     def register_harvest_source(self, url, user_ref, publisher_ref):
-        from ckan.model import HarvestSource
         existing = self.get_harvest_sources(url=url)
         if existing:
             print "Error, there is already a harvesting source for that URL"
@@ -191,19 +188,18 @@ class Harvester(CkanCommand):
             self.print_there_are("harvest source", sources)
 
     def remove_harvest_source(self, url):
-        from ckan import model
-        model.repo.new_revision()
-        sources = model.HarvestSource.filter(url=url)
+        repo.new_revision()
+        sources = HarvestSource.filter(url=url)
         if sources.count() == 0:
             print "No such source"
         else:
             source = sources[0]
-            jobs = model.HarvestingJob.filter(source=source)
+            jobs = HarvestingJob.filter(source=source)
             print "Removing %d jobs" % jobs.count()
             for job in jobs:
                 job.delete()
             source.delete()
-            model.repo.commit_and_remove()
+            repo.commit_and_remove()
             print "Removed harvest source: %s" % url
 
     def list_harvest_sources(self):
@@ -217,21 +213,17 @@ class Harvester(CkanCommand):
         self.print_there_are(what="harvesting job", sequence=jobs)
 
     def get_harvest_sources(self, **kwds):
-        from ckan.model import HarvestSource
         return HarvestSource.filter(**kwds).all()
 
     def get_harvesting_jobs(self, **kwds):
-        from ckan.model import HarvestingJob
         return HarvestingJob.filter(**kwds).all()
 
     def create_harvest_source(self, **kwds):
-        from ckan.model import HarvestSource
         source = HarvestSource(**kwds)
         source.save()
         return source
 
     def create_harvesting_job(self, **kwds):
-        from ckan.model import HarvestingJob
         job = HarvestingJob(**kwds)
         job.save()
         return job
