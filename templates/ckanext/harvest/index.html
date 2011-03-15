@@ -11,6 +11,7 @@
   
 <div py:match="content">
   <div class="harvest-content">
+  <py:if test="c.sources">
   <h1>Harvesting Sources</h1>
     <a id="new-harvest-source" href="harvest/create">Add a harvesting source</a>
     <table id="harvest-sources">
@@ -36,6 +37,7 @@
             <td>${source.created}</td>
          </tr>
     </table>
+    </py:if>
   </div>
 </div>
 <xi:include href="../../layout.html" />

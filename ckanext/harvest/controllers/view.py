@@ -30,19 +30,24 @@ class ViewController(BaseController):
     def index(self):
         # Request all harvesting sources
         sources_url = self.api_url + '/harvestsource'
-        
-        doc = self._do_request(sources_url).read()
-        sources_ids = json.loads(doc)
+        try:
+            doc = self._do_request(sources_url).read()
 
-        source_url = sources_url + '/%s'
-        sources = []
-        
-        # For each source, request its details
-        for source_id in sources_ids:
-            doc = self._do_request(source_url % source_id).read()
-            sources.append(json.loads(doc))
+            sources_ids = json.loads(doc)
 
-        c.sources = sources
+            source_url = sources_url + '/%s'
+            sources = []
+            
+            # For each source, request its details
+            for source_id in sources_ids:
+                doc = self._do_request(source_url % source_id).read()
+                sources.append(json.loads(doc))
+
+            c.sources = sources
+        except urllib2.HTTPError as e:
+            msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
+            h.flash_error(msg)
+       
         return render('ckanext/harvest/index.html')
     
     def create(self):
