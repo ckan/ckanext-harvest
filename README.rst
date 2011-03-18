@@ -33,7 +33,15 @@ The API URL used can be also defined in the ini file (it defaults to
 http://localhost:5000/)::
 
     ckan.api_url = <api_url>
- 
+
+If you are using the spatial search feature, you can define the projection
+in which extents are stored in the database with the following option. Use 
+the EPSG code as an integer (e.g 4326, 4258, 27700, etc). It defaults to 
+4258::
+    
+    ckan.harvesting.srid = 4258
+
+
 
 Command line interface
 ======================
