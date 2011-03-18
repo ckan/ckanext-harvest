@@ -66,7 +66,11 @@ class Harvest(SingletonPlugin):
         map.connect('harvest_create', '/harvest/:id/refresh',
             controller='ckanext.harvest.controllers.view:ViewController',
             action='create_harvesting_job')
-       
+
+        map.connect('api_spatial_query', '/api/2/search/package/geo',
+            controller='ckanext.harvest.controllers.api:ApiController',
+            action='spatial_query')
+      
         return map
 
     def update_config(self, config):
