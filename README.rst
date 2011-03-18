@@ -68,3 +68,22 @@ the config explicitly though::
 
         paster harvester sources --config=../ckan/development.ini
 
+
+API
+===
+
+The extension adds the following call to the CKAN search API, which returns
+packages with an extent that intersects with the bounding box provided::
+
+    /api/2/search/package/geo?bbox={minx,miny,maxx,maxy}[&crs={srid}]
+
+If the bounding box coordinates are not in the same projection as the one
+defined in the database, a CRS must be provided, in one of the following
+forms:
+
+- urn:ogc:def:crs:EPSG::4258
+- EPSG:4258
+- 4258
+
+
+
