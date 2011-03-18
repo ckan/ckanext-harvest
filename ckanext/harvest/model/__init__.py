@@ -356,7 +356,7 @@ class GeminiDocument(MappedXmlDocument):
         GeminiElement(
             name="spatial-reference-system",
             search_paths=[
-                "gmd:referenceSystemInfo/gmd:MD_ReferenceSystem",
+                "gmd:referenceSystemInfo/gmd:MD_ReferenceSystem/gmd:referenceSystemIdentifier/gmd:RS_Identifier/gmd:code/gco:CharacterString/text()",
             ],
             multiplicity="0..1",
         ),
