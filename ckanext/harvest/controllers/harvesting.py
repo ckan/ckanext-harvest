@@ -157,10 +157,10 @@ class HarvestingJobController(object):
             'bbox-east-long', 
             'bbox-north-lat', 
             'bbox-south-lat', 
-            'bbox-west-long', 
+            'bbox-west-long',
+            'spatial-reference-system',
             'guid', 
             # Usefuls
-            'spatial-reference-system',
             'dataset-reference-date',
             'resource-type',
             'metadata-language', # Language
@@ -217,6 +217,9 @@ class HarvestingJobController(object):
         if package == None:
             # Create new package from data.
             package = self._create_package_from_data(package_data)
+            if package.extras.get('bbox-east-long'):
+                self._save_extent(package)
+
             log.info("Created new package ID %s with GEMINI guid %s", package.id, gemini_guid)
             harvested_doc = HarvestedDocument(
                 content=content,
@@ -231,6 +234,9 @@ class HarvestingJobController(object):
             return package
         else:
             package = self._create_package_from_data(package_data, package = package)
+            if package.extras.get('bbox-east-long'):
+                self._save_extent(package)
+   
             log.info("Updated existing package ID %s with existing GEMINI guid %s", package.id, gemini_guid)
             harvested_doc.content = content
             harvested_doc.source = self.job.source
@@ -238,6 +244,52 @@ class HarvestingJobController(object):
             if not harvested_doc.source_id:
                 raise Exception('Failed to set the source for document %r'%harvested_doc.id)
             assert gemini_guid == package.documents[0].guid
+            return package
+
+    def _save_extent(self,package):
+        #TODO: configure SRID
+        conn = model.Session.connection()
+
+        minx = float(package.extras.get('bbox-east-long'))
+        miny = float(package.extras.get('bbox-south-lat'))
+        maxx = float(package.extras.get('bbox-west-long'))
+        maxy = float(package.extras.get('bbox-north-lat'))
+        
+        try:
+            
+            # Check if extent already exists
+            rows = conn.execute('SELECT package_id FROM package_extent WHERE package_id = %s',package.id).fetchall()
+            update =(len(rows) > 0)
+
+            if update:
+                # Update
+                statement = """UPDATE package_extent SET 
+                                the_geom = ST_GeomFromText('POLYGON ((%(minx)s %(miny)s, 
+                                                            %(maxx)s %(miny)s,
+                                                            %(maxx)s %(maxy)s,
+                                                            %(minx)s %(maxy)s,
+                                                            %(minx)s %(miny)s))',4258)
+                                WHERE package_id = %(id)s
+                                """
+                msg = 'Updated extent for package %s' 
+            else:
+                # Insert
+                statement = """INSERT INTO package_extent (package_id,the_geom) VALUES (
+                                %(id)s,
+                                ST_GeomFromText('POLYGON ((%(minx)s %(miny)s, 
+                                                            %(maxx)s %(miny)s,
+                                                            %(maxx)s %(maxy)s,
+                                                            %(minx)s %(maxy)s,
+                                                            %(minx)s %(miny)s))',4258))"""
+                msg = 'Created new extent for package %s' 
+
+            conn.execute(statement,{'id':package.id, 'minx':minx,'miny':miny,'maxx':maxx,'maxy':maxy})
+
+            model.Session.commit()
+            log.info(msg, package.id)
+        except:
+            log.error('An error occurred when saving the extent for package %s',package.id)
+        finally:
             return package
 
     def get_content(self, url):
