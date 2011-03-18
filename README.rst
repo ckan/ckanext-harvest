@@ -61,7 +61,11 @@ The following operations can be run from the command line using the
 
       harvester run
         - runs harvesting jobs
-        
+
+      harvester extents
+        - creates or updates the extent geometry column for packages with
+          a bounding box defined in extras
+       
 The commands should be run from the ckanext-harvest directory and expect
 a development.ini file to be present. Most of the time you will specify 
 the config explicitly though::

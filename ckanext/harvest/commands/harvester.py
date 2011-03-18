@@ -6,6 +6,8 @@ from ckan.lib.cli import CkanCommand
 from ckan.model import repo
 from ckanext.harvest.model import HarvestSource, HarvestingJob, HarvestedDocument
 
+from ckanext.harvest.lib import save_extent
+
 class Harvester(CkanCommand):
     '''Harvests remotely mastered metadata
 
@@ -93,6 +95,9 @@ class Harvester(CkanCommand):
             self.list_harvesting_jobs()
         elif cmd == 'run':
             self.run_harvester()
+        elif cmd == 'extents':
+            self.update_extents()
+
         else:
             print 'Command %s not recognized' % cmd
 
@@ -102,6 +107,17 @@ class Harvester(CkanCommand):
         logging.basicConfig()
         logger_vdm = logging.getLogger('vdm')
         logger_vdm.setLevel(logging.ERROR)
+
+    def update_extents(self):
+        from  ckan.model import PackageExtra, Package, Session
+        conn = Session.connection()
+        packages = [extra.package \
+                    for extra in \
+                    Session.query(PackageExtra).filter(PackageExtra.key == 'bbox-east-long').all()]
+        for package in packages:
+            save_extent(package)
+
+        print "Done. Extents generated for %i packages" % len(packages)
 
     def run_harvester(self, *args, **kwds):
         from pylons.i18n.translation import _get_translator
