@@ -3,7 +3,9 @@ import urllib2
 import ckan.lib.helpers as h
 from ckan.lib.base import BaseController, c, g, request, \
                           response, session, render, config, abort, redirect
-#from ..dictization import *
+
+from ckan.model import Package
+
 
 class ViewController(BaseController):
 
@@ -146,3 +148,27 @@ class ViewController(BaseController):
             h.flash_error(msg) 
         finally:
             redirect(h.url_for(controller='harvest', action='index', id=None))
+
+
+    def map_view(self,id):
+        #check if package exists
+        pkg = Package.get(id)
+        if pkg is None:
+            abort(404, 'Package not found')
+
+        c.url = pkg.url
+        return render('ckanext/harvest/map.html')
+
+
+    def proxy(self):
+        if not 'url' in request.params:
+            abort(400)
+        try:
+            server_response = urllib2.urlopen(request.params['url'])
+            headers = server_response.info()
+            if headers.get('Content-Type'):
+                response.content_type = headers.get('Content-Type')
+            return server_response.read()
+        except urllib2.HTTPError as e:
+            response.status_int = e.getcode()
+            return

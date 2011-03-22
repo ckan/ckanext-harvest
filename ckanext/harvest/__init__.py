@@ -18,7 +18,7 @@ from ckan.plugins import implements, SingletonPlugin
 from ckan.plugins import IRoutes, IConfigurer
 from ckan.plugins import IConfigurable, IGenshiStreamFilter
 
-#import html
+import html
 
 log = getLogger(__name__)
 
@@ -34,6 +34,21 @@ class Harvest(SingletonPlugin):
         #self.enable_organizations = config.get('qa.organizations', False)
     
     def filter(self, stream):
+        from pylons import request, tmpl_context as c
+        routes = request.environ.get('pylons.routes_dict')
+
+        if routes.get('controller') == 'package' and \
+            routes.get('action') == 'read' and c.pkg.id:
+
+            is_inspire = (c.pkg.extras.get('INSPIRE') == 'True')
+            # TODO: What about WFS, WCS...
+            is_wms = (c.pkg.extras.get('resource-type') == 'service')
+            if is_inspire and is_wms:
+                data = {'name': c.pkg.name}
+                stream = stream | Transformer('body//div[@class="resources subsection"]')\
+                    .append(HTML(html.MAP_VIEW % data))
+
+
         return stream
 
     def before_map(self, map):
@@ -63,9 +78,17 @@ class Harvest(SingletonPlugin):
             controller='ckanext.harvest.controllers.view:ViewController',
             action='delete')
 
-        map.connect('harvest_create', '/harvest/:id/refresh',
+        map.connect('harvesting_job_create', '/harvest/:id/refresh',
             controller='ckanext.harvest.controllers.view:ViewController',
             action='create_harvesting_job')
+
+        map.connect('map_view', '/package/:id/map',
+            controller='ckanext.harvest.controllers.view:ViewController',
+            action='map_view')
+
+        map.connect('proxy', '/proxy',
+            controller='ckanext.harvest.controllers.view:ViewController',
+            action='proxy')
 
         map.connect('api_spatial_query', '/api/2/search/package/geo',
             controller='ckanext.harvest.controllers.api:ApiController',

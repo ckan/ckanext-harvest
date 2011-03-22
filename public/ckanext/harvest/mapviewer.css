@@ -1,0 +1,9 @@
+#map{
+    float: left;
+    display: inline;
+}
+#layers{
+    float: left;
+    display: inline;
+    margin-left: 20px;
+}
