@@ -144,7 +144,7 @@ CKAN.MapViewer = function($){
 
 
 OpenLayers.ImgPath = "/ckanext/harvest/js/openlayers/img/";
-OpenLayers.Lang.en.overlays = "Layers";
+OpenLayers.Lang.en.overlays = "Available Layers:";
 
 OpenLayers.Control.CustomMousePosition = OpenLayers.Class(OpenLayers.Control.MousePosition,{
         formatOutput: function(lonLat) {

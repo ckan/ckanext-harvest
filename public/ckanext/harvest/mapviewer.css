@@ -7,3 +7,13 @@
     display: inline;
     margin-left: 20px;
 }
+
+/* OpenLayers */
+.dataLbl{
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.dataLayersDiv span{
+    margin-left: 10px;
+}

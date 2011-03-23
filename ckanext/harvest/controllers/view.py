@@ -152,11 +152,10 @@ class ViewController(BaseController):
 
     def map_view(self,id):
         #check if package exists
-        pkg = Package.get(id)
-        if pkg is None:
+        c.pkg = Package.get(id)
+        if c.pkg is None:
             abort(404, 'Package not found')
 
-        c.url = pkg.url
         return render('ckanext/harvest/map.html')
 
 
