@@ -17,11 +17,13 @@
   
 <div py:match="content">
     <div class="harvest-content">
+        <py:if test="c.sources">
         <h1>${title}</h1>
         <form action="${c.mode}" method="POST">
         ${Markup(c.form)}
             <input id="save" name="save" value="Save" type="submit" />
         </form>
+        </py:if>
     </div>
 </div>
 <xi:include href="../../layout.html" />

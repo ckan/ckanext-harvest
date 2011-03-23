@@ -57,9 +57,13 @@ class ViewController(BaseController):
         # This is the DGU form API, so we don't use self.api_url
         form_url = self.form_api_url + '/harvestsource/create'
         if request.method == 'GET':
-            # Request the fields
-            c.form = self._do_request(form_url).read()
-            c.mode = 'create'
+            try:
+                # Request the fields
+                c.form = self._do_request(form_url).read()
+                c.mode = 'create'
+            except urllib2.HTTPError as e:
+                msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
+                h.flash_error(msg)
 
             return render('ckanext/harvest/create.html')
         if request.method == 'POST':
@@ -88,16 +92,25 @@ class ViewController(BaseController):
  
     def show(self,id):
         sources_url = self.api_url + '/harvestsource/%s' % id
-        doc = self._do_request(sources_url).read()
-        c.source = json.loads(doc)
-        
+        try:
+            doc = self._do_request(sources_url).read()
+            c.source = json.loads(doc)
+        except urllib2.HTTPError as e:
+            msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
+            h.flash_error(msg)
+
         return render('ckanext/harvest/show.html')
 
     def delete(self,id):
         form_url = self.form_api_url + '/harvestsource/delete/%s' % id
-        r = self._do_request(form_url)
+        try:
+            r = self._do_request(form_url)
     
-        h.flash_success('Harvesting source deleted successfully')
+            h.flash_success('Harvesting source deleted successfully')
+        except urllib2.HTTPError as e:
+            msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
+            h.flash_error(msg)
+
         redirect(h.url_for(controller='harvest', action='index', id=None))
 
     def edit(self,id):

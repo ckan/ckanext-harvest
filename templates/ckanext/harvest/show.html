@@ -11,6 +11,7 @@
   
 <div py:match="content">
   <div class="harvest-content">
+  <py:if test="c.source">
   <h1>Harvest Source Details</h1>
     <table id="harvest-source-details">
         <tr>
@@ -74,6 +75,7 @@
             </td>
         </tr>
     </table>
+    </py:if>
   </div>
 </div>
 <xi:include href="../../layout.html" />
