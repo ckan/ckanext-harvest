@@ -14,3 +14,7 @@ distribution:
 
     python build.py {path-to-ckan.cfg} {output-file}
 
+The theme used for the OpenLayers controls is the "dark" theme made available
+by Development Seed under the BSD License:
+
+https://github.com/developmentseed/openlayers_themes/blob/master/LICENSE.txt
