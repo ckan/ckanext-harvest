@@ -1,6 +1,8 @@
-from ckan.lib.helpers import json
 import urllib2
-import ckan.lib.helpers as h
+
+from pylons.i18n import _
+
+import ckan.lib.helpers as h, json
 from ckan.lib.base import BaseController, c, g, request, \
                           response, session, render, config, abort, redirect
 
@@ -12,6 +14,14 @@ class ViewController(BaseController):
     api_url = config.get('ckan.api_url', 'http://localhost:5000').rstrip('/')+'/api/2/rest'
     form_api_url = config.get('ckan.api_url', 'http://localhost:5000').rstrip('/')+'/api/2/form'
     api_key = config.get('ckan.harvesting.api_key')
+
+    def __before__(self, action, **env):
+        super(ViewController, self).__before__(action, **env)
+        # All calls to this controller must be with a sysadmin key
+        if not self.authorizer.is_sysadmin(c.user):
+            response_msg = _('Not authorized to see this page')
+            status = 401
+            abort(status, response_msg)
 
     def _do_request(self,url,data = None):
 
@@ -48,6 +58,9 @@ class ViewController(BaseController):
             c.sources = sources
         except urllib2.HTTPError as e:
             msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
+            h.flash_error(msg)
+        except urllib2.URLError as e:
+            msg = 'Could not find server %r: %r' % (sources_url, e)
             h.flash_error(msg)
        
         return render('ckanext/harvest/index.html')

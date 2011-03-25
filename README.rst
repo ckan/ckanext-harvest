@@ -15,6 +15,19 @@ If you want to use the spatial search API, you will need PostGIS installed
 and enable the spatial features of your PostgreSQL database. See the
 "Setting up PostGIS" section for details.
 
+Tests
+=====
+
+To run the tests, this is the basic command::
+
+    $ nosetests --ckan tests/
+
+Or with postgres::
+
+    $ nosetests --ckan --with-pylons=../ckan/test-core.ini tests/
+
+(See the Ckan README for more information.)
+
 Configuration
 =============
 
