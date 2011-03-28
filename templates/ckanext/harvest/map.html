@@ -20,7 +20,7 @@
     <!-- Source URL -->    
     <div class="url" py:if="c.pkg.url">
       <p>
-        Source: <a href="${c.pkg.url}" target="_blank">${c.pkg.url}</a>
+        Source: <a href="${c.wms.url}" target="_blank">${c.wms.url}</a>
       </p>
     </div>
     <p>
@@ -34,7 +34,7 @@
       <script type="text/javascript">
         //<![CDATA[
         $(document).ready(function(){
-            CKAN.MapViewer.setup("${c.pkg.url}");
+            CKAN.MapViewer.setup("${c.wms.url}");
         })
         //]]>
       </script>

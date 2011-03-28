@@ -182,8 +182,14 @@ class ViewController(BaseController):
         if c.pkg is None:
             abort(404, 'Package not found')
 
-        return render('ckanext/harvest/map.html')
+        for res in c.pkg.resources:
+            if res.format == "WMS":
+                c.wms = res
+                break
+        if not c.wms:
+            abort(400, 'This package does not have a WMS')
 
+        return render('ckanext/harvest/map.html')
 
     def proxy(self):
         if not 'url' in request.params:
