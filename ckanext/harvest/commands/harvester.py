@@ -118,10 +118,20 @@ class Harvester(CkanCommand):
         packages = [extra.package \
                     for extra in \
                     Session.query(PackageExtra).filter(PackageExtra.key == 'bbox-east-long').all()]
-        for package in packages:
-            save_extent(package)
 
-        print "Done. Extents generated for %i packages" % len(packages)
+        error = False
+        for package in packages:
+            try:
+                save_extent(package)
+            except:
+                errors = True
+ 
+        if error:
+            msg = "There was an error saving the package extent. Have you set up the package_extent table in the DB?"
+        else:
+            msg = "Done. Extents generated for %i packages" % len(packages)
+
+        print msg
 
     def run_harvester(self, *args, **kwds):
         from pylons.i18n.translation import _get_translator

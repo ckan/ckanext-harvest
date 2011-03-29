@@ -224,8 +224,7 @@ class HarvestingJobController(object):
             # Create new package from data.
             package = self._create_package_from_data(package_data)
             if package.extras.get('bbox-east-long'):
-                save_extent(package)
-
+                self.save_package_extent(package)
             log.info("Created new package ID %s with GEMINI guid %s", package.id, gemini_guid)
             harvested_doc = HarvestedDocument(
                 content=content,
@@ -241,8 +240,7 @@ class HarvestingJobController(object):
         else:
             package = self._create_package_from_data(package_data, package = package)
             if package.extras.get('bbox-east-long'):
-                save_extent(package)
-   
+                self.save_package_extent(package)
             log.info("Updated existing package ID %s with existing GEMINI guid %s", package.id, gemini_guid)
             harvested_doc.content = content
             harvested_doc.source = self.job.source
@@ -251,6 +249,13 @@ class HarvestingJobController(object):
                 raise Exception('Failed to set the source for document %r'%harvested_doc.id)
             assert gemini_guid == package.documents[0].guid
             return package
+
+    def save_package_extent(self,package):
+        try:
+            save_extent(package)
+        except:
+           log.error("There was an error saving the package extent. Have you set up the package_extent table in the DB?")
+           raise Exception
 
     def get_content(self, url):
         try:

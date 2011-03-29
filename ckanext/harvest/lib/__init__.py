@@ -106,8 +106,7 @@ def save_extent(package,extent=False):
 
         Session.commit()
         log.info(msg, package.id)
+        return package
     except:
         log.error('An error occurred when saving the extent for package %s',package.id)
-    finally:
-        return package
-
+        raise Exception
