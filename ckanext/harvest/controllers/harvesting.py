@@ -42,6 +42,7 @@ def gen_new_name(title):
         while counter < 101:
             if name+str(counter) not in taken:
                 return name+str(counter)
+            counter = counter + 1
         return None
 
 class HarvestingJobController(object):
@@ -192,11 +193,13 @@ class HarvestingJobController(object):
             package_data['name'] = name
         resource_locator = gemini_values.get('resource-locator', []) and gemini_values['resource-locator'][0].get('url') or ''
         if resource_locator:
+            # TODO: Are we sure that all services are WMS?
+            _format = 'WMS' if extras['resource-type'] == 'service' else 'Unverified'
             package_data['resources'] = [
                 {
                     'url': resource_locator,
                     'description': 'Resource locator',
-                    'format': 'Unverified',
+                    'format': _format,
                 },
                 # These are generated in Drupal now
                 #{
