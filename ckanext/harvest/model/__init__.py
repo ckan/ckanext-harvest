@@ -106,8 +106,8 @@ harvest_job_table = Table('harvest_job', metadata,
     Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
     Column('created', DateTime, default=datetime.datetime.utcnow),
     Column('source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
-    # Not sure about these ones:
     Column('status', types.UnicodeText, default=u'New', nullable=False),
+    # Not sure about these ones:
     Column('user_ref', types.UnicodeText, nullable=False),
 )
 # Was harvested_document
