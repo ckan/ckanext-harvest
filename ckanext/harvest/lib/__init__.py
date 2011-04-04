@@ -89,7 +89,7 @@ def save_extent(package,extent=False):
                                                             %(maxx)s %(maxy)s,
                                                             %(minx)s %(maxy)s,
                                                             %(minx)s %(miny)s))',%(srid)s),
-                                        %(db_srid))
+                                        %(db_srid)s)
                                         )"""
                 params.update({'srid': srid})          
             else:
@@ -107,6 +107,7 @@ def save_extent(package,extent=False):
         Session.commit()
         log.info(msg, package.id)
         return package
-    except:
-        log.error('An error occurred when saving the extent for package %s',package.id)
+    except Exception as e:
+        log.error(e)
+        log.error('An error occurred when saving the extent for package %s' % package.id)
         raise Exception
