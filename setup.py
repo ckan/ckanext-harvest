@@ -20,7 +20,8 @@ setup(
 	include_package_data=True,
 	zip_safe=False,
 	install_requires=[
-        #
+        	'ckanext-dgu',
+		'ckanext-csw',
 	],
 	tests_require=[
 		'nose',
