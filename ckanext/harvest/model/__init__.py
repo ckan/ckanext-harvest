@@ -15,7 +15,7 @@ __all__ = [
     'HarvestJob', 'harvest_job_table',
     'HarvestObject', 'harvest_object_table',
     'HarvestGatherError', 'harvest_gather_error_table',
-    'HarvestObjectError', 'harvest_object_error_table', 
+    'HarvestObjectError', 'harvest_object_error_table',
 ]
 
 class HarvestError(Exception):
@@ -57,7 +57,7 @@ class HarvestSource(HarvestDomainObject):
 class HarvestJob(HarvestDomainObject):
     '''A Harvesting Job is performed in two phases. In first place, the
        **gather** stage collects all the Ids and URLs that need to be fetched
-       from the harvest source. Errors occurring in this phase 
+       from the harvest source. Errors occurring in this phase
        (``HarvestGatherError``) are stored in the ``harvest_gather_error``
        table. During the next phase, the **fetch** stage retrieves the
        ``HarvestedObjects`` and, if necessary, the **import** stage stores
@@ -82,7 +82,7 @@ class HarvestGatherError(HarvestDomainObject):
     pass
 
 class HarvestObjectError(HarvestDomainObject):
-    '''Object errors are raised during the **fetch** or **import** stage of a 
+    '''Object errors are raised during the **fetch** or **import** stage of a
        harvesting job, and are referenced to a specific harvest object.
     '''
     pass
@@ -135,16 +135,16 @@ harvest_object_error_table = Table('harvest_object_error',metadata,
 )
 
 mapper(
-    HarvestSource, 
+    HarvestSource,
     harvest_source_table,
-    properties={ 
+    properties={
         'objects': relation(
             HarvestObject,
             backref=u'source',
         ),
         'jobs': relation(
             HarvestJob,
-            backref=u'source', 
+            backref=u'source',
             order_by=harvest_job_table.c.created,
         ),
     },
@@ -156,7 +156,7 @@ mapper(
 )
 
 mapper(
-    HarvestObject, 
+    HarvestObject,
     harvest_object_table,
     properties={
         'package':relation(

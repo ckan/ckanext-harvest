@@ -18,6 +18,8 @@ def _source_as_dict(source):
     for obj in source.objects:
         out['objects'].append(obj.as_dict())
 
+    #TODO: Get some report data
+
     return out
 
 def _job_as_dict(job):
@@ -35,9 +37,9 @@ def _job_as_dict(job):
 
     for error in job.gather_errors:
         out['object_errors'].append(error.as_dict())
-    
+
     return out
-  
+
 
 def get_harvest_source(id,default=Exception,attr=None):
     source = HarvestSource.get(id,default=default,attr=attr)
@@ -56,7 +58,7 @@ def create_harvest_source(source_dict):
     exists = get_harvest_sources(url=source_dict['url'])
     if len(exists):
         raise Exception('There is already a Harvest Source for this URL: %s' % source_dict['url'])
-    
+
     source = HarvestSource()
     source.url = source_dict['url']
     source.type = source_dict['type']
@@ -66,10 +68,10 @@ def create_harvest_source(source_dict):
             source.__setattr__(o,source_dict[o])
 
     source.save()
-    
+
 
     return _source_as_dict(source)
-    
+
 
 def delete_harvest_source(source_id):
     try:
@@ -79,7 +81,7 @@ def delete_harvest_source(source_id):
 
     source.delete()
     repo.commit_and_remove()
-    
+
     #TODO: Jobs?
 
     return True
@@ -95,7 +97,8 @@ def get_harvest_jobs(**kwds):
 def create_harvest_job(source_id):
     # Check if source exists
     try:
-        source = get_harvest_source(source_id)
+        #We'll need the actual HarvestSource
+        source = HarvestSource.get(source_id)
     except:
         raise Exception('Source %s does not exist' % source_id)
 
@@ -106,7 +109,7 @@ def create_harvest_job(source_id):
 
     job = HarvestJob()
     job.source = source
-    
+
     job.save()
 
     return _job_as_dict(job)
@@ -119,7 +122,7 @@ def delete_harvest_job(job_id):
 
     job.delete()
     repo.commit_and_remove()
-    
+
     #TODO: objects?
 
     return True
@@ -141,7 +144,7 @@ def get_srid(crs):
 
     return int(srid)
 
-#TODO: move to ckanext-?? for geo stuff    
+#TODO: move to ckanext-?? for geo stuff
 def save_extent(package,extent=False):
     '''Updates the package extent in the package_extent geometry column
        If no extent provided (as a dict with minx,miny,maxx,maxy and srid keys),
@@ -152,12 +155,12 @@ def save_extent(package,extent=False):
 
     srid = None
     if extent:
-        minx = extent['minx'] 
+        minx = extent['minx']
         miny = extent['miny']
         maxx = extent['maxx']
         maxy = extent['maxy']
         if 'srid' in extent:
-            srid = extent['srid'] 
+            srid = extent['srid']
     else:
         minx = float(package.extras.get('bbox-east-long'))
         miny = float(package.extras.get('bbox-south-lat'))
@@ -165,22 +168,22 @@ def save_extent(package,extent=False):
         maxy = float(package.extras.get('bbox-north-lat'))
         crs = package.extras.get('spatial-reference-system')
         if crs:
-            srid = get_srid(crs) 
+            srid = get_srid(crs)
     try:
-        
+
         # Check if extent already exists
         rows = conn.execute('SELECT package_id FROM package_extent WHERE package_id = %s',package.id).fetchall()
         update =(len(rows) > 0)
-        
+
         params = {'id':package.id, 'minx':minx,'miny':miny,'maxx':maxx,'maxy':maxy, 'db_srid': db_srid}
-        
+
         if update:
             # Update
             if srid and srid != db_srid:
                 # We need to reproject the input geometry
-                statement = """UPDATE package_extent SET 
+                statement = """UPDATE package_extent SET
                                 the_geom = ST_Transform(
-                                            ST_GeomFromText('POLYGON ((%(minx)s %(miny)s, 
+                                            ST_GeomFromText('POLYGON ((%(minx)s %(miny)s,
                                                             %(maxx)s %(miny)s,
                                                             %(maxx)s %(maxy)s,
                                                             %(minx)s %(maxy)s,
@@ -190,15 +193,15 @@ def save_extent(package,extent=False):
                                 """
                 params.update({'srid': srid})
             else:
-                statement = """UPDATE package_extent SET 
-                                the_geom = ST_GeomFromText('POLYGON ((%(minx)s %(miny)s, 
+                statement = """UPDATE package_extent SET
+                                the_geom = ST_GeomFromText('POLYGON ((%(minx)s %(miny)s,
                                                             %(maxx)s %(miny)s,
                                                             %(maxx)s %(maxy)s,
                                                             %(minx)s %(maxy)s,
                                                             %(minx)s %(miny)s))',%(db_srid)s)
                                 WHERE package_id = %(id)s
                                 """
-            msg = 'Updated extent for package %s' 
+            msg = 'Updated extent for package %s'
         else:
             # Insert
             if srid and srid != db_srid:
@@ -206,23 +209,23 @@ def save_extent(package,extent=False):
                 statement = """INSERT INTO package_extent (package_id,the_geom) VALUES (
                                 %(id)s,
                                 ST_Transform(
-                                    ST_GeomFromText('POLYGON ((%(minx)s %(miny)s, 
+                                    ST_GeomFromText('POLYGON ((%(minx)s %(miny)s,
                                                             %(maxx)s %(miny)s,
                                                             %(maxx)s %(maxy)s,
                                                             %(minx)s %(maxy)s,
                                                             %(minx)s %(miny)s))',%(srid)s),
                                         %(db_srid))
                                         )"""
-                params.update({'srid': srid})          
+                params.update({'srid': srid})
             else:
                 statement = """INSERT INTO package_extent (package_id,the_geom) VALUES (
                                 %(id)s,
-                                ST_GeomFromText('POLYGON ((%(minx)s %(miny)s, 
+                                ST_GeomFromText('POLYGON ((%(minx)s %(miny)s,
                                                             %(maxx)s %(miny)s,
                                                             %(maxx)s %(maxy)s,
                                                             %(minx)s %(maxy)s,
                                                             %(minx)s %(miny)s))',%(db_srid)s))"""
-            msg = 'Created new extent for package %s' 
+            msg = 'Created new extent for package %s'
 
         conn.execute(statement,params)
 

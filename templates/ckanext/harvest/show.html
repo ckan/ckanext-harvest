@@ -23,21 +23,34 @@
             <td>${c.source.url}</td>
         </tr>
         <tr>
+            <th>Type</th>
+            <td>${c.source.type}</td>
+        </tr>
+        <tr>
+            <th>Active</th>
+            <td>${c.source.active}</td>
+        </tr>
+        <tr>
             <th>Description</th>
             <td>${c.source.description}</td>
         </tr>
         <tr>
             <th>User</th>
-            <td>${c.source.user_ref}</td>
+            <td>${c.source.user_id}</td>
         </tr>
         <tr>
             <th>Publisher</th>
-            <td>${c.source.publisher_ref}</td>
+            <td>${c.source.publisher_id}</td>
         </tr>
         <tr>
             <th>Created</th>
             <td>${c.source.created}</td>
         </tr>
+        <tr>
+            <th>Total jobs</th>
+            <td>${len(c.source.jobs)}</td>
+        </tr>
+        <!--
         <tr>
             <th>Status</th>
             <td>
@@ -74,6 +87,7 @@
                 </div>
             </td>
         </tr>
+        -->
     </table>
     </py:if>
   </div>
