@@ -162,6 +162,10 @@ mapper(
             Package,
             backref='harvest_objects',
         ),
+        'job': relation(
+            HarvestJob,
+            backref=u'objects',
+        ),
     },
 )
 
