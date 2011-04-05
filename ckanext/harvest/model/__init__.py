@@ -123,13 +123,14 @@ harvest_object_table = Table('harvest_object', metadata,
 harvest_gather_error_table = Table('harvest_gather_error',metadata,
     Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
     Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
-    Column('error', types.UnicodeText),
+    Column('message', types.UnicodeText),
 )
 # New table
 harvest_object_error_table = Table('harvest_object_error',metadata,
     Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
     Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
     Column('harvest_object_id', types.UnicodeText, ForeignKey('harvest_object.id')),
+    Column('message',types.UnicodeText),
     Column('stage', types.UnicodeText),
 )
 
