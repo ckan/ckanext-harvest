@@ -9,7 +9,9 @@ Dependencies
 ============
 
 You will need ckan installed, as well as the ckanext-dgu and ckanext-csw
-plugins activated.
+plugins activated. The present module should be installed at least 
+with `setup.py develop` if not installed in the normal way with
+`setup.py install` or using pip or easy_install.
 
 If you want to use the spatial search API, you will need PostGIS installed
 and enable the spatial features of your PostgreSQL database. See the
@@ -31,6 +33,10 @@ Or with postgres::
 Configuration
 =============
 
+Plugins are configured as follows,
+
+    ckan.plugins = cswserver,dgu_form_api,harvest
+
 The extension needs a user with sysadmin privileges to perform the 
 harvesting jobs. You can create such a user running these two commands in
 the ckan directory::
@@ -43,7 +49,6 @@ The user's API key must be defined in the CKAN
 configuration file (.ini) in the [app:main] section::
 
     ckan.harvesting.api_key = 4e1dac58-f642-4e54-bbc4-3ea262271fe2
-
 
 The API URL used can be also defined in the ini file (it defaults to 
 http://localhost:5000/)::
