@@ -121,7 +121,7 @@ class Harvester(CkanCommand):
         self.print_there_are('harvest source', sources)
         
         # Create a Harvest Job for the new Source
-        create_harvest_job(source.id)
+        create_harvest_job(source['id'])
         print 'A new Harvest Job for this source has also been created'
 
     def remove_harvest_source(self):
@@ -233,13 +233,14 @@ class Harvester(CkanCommand):
             self.print_harvest_source(source)
 
     def print_harvest_source(self, source):
-        print 'Source id: %s' % source.id
-        print '      url: %s' % source.url
-        print '     type: %s' % source.type
-        print '   active: %s' % source.active 
-        print '     user: %s' % source.user_id
-        print 'publisher: %s' % source.publisher_id
-        print '  objects: %s' % len(source.objects)
+        print 'Source id: %s' % source['id']
+        print '      url: %s' % source['url']
+        print '     type: %s' % source['type']
+        print '   active: %s' % source['active'] 
+        print '     user: %s' % source['user_id']
+        print 'publisher: %s' % source['publisher_id']
+        print '     jobs: %s' % len(source['jobs'])
+        print '  objects: %s' % len(source['objects'])
         print ''
 
     def print_harvest_jobs(self, jobs):
@@ -249,20 +250,22 @@ class Harvester(CkanCommand):
             self.print_harvest_job(job)
 
     def print_harvest_job(self, job):
-        print 'Job id: %s' % job.id
-        print 'status: %s' % job.status
-        print 'source: %s' % job.source.id
-        print '   url: %s' % job.source.url
-        #print "report: %s" % job.report
-        #TODO: print errors
-        '''
-        if job.report and job.report['added']:
-            for package_id in job.report['added']:
-                print "   doc: %s" % package_id
-        if job.report and job.report['errors']:
-            for msg in job.report['errors']:
-                print " error: %s" % msg
-        '''
+        print '       Job id: %s' % job['id']
+        print '       status: %s' % job['status']
+        print '       source: %s' % job['source']['id']
+        print '          url: %s' % job['source']['url']
+        print '      objects: %s' % len(job['objects'])
+
+        print 'gather_errors: %s' % len(job['gather_errors'])
+        if (len(job['gather_errors']) > 0):
+            for error in job['gather_errors']:
+                print '               %s' % error['message']
+
+        print 'object_errors: %s' % len(job['object_errors'])
+        if (len(job['object_errors']) > 0):
+            for error in job['object_errors']:
+                print '               %s' % error['message']
+        
         print ''
 
     def print_there_are(self, what, sequence, condition=''):

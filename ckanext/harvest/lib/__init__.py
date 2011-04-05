@@ -7,11 +7,45 @@ from ckanext.harvest.model import HarvestSource, HarvestJob
 
 log = __import__("logging").getLogger(__name__)
 
+def _source_as_dict(source):
+    out = source.as_dict()
+    out['jobs'] = []
+    out['objects'] = []
+
+    for job in source.jobs:
+        out['jobs'].append(job.as_dict())
+
+    for obj in source.objects:
+        out['objects'].append(obj.as_dict())
+
+    return out
+
+def _job_as_dict(job):
+    out = job.as_dict()
+    out['source'] = job.source.as_dict()
+    out['objects'] = []
+    out['gather_errors'] = []
+    out['object_errors'] = []
+
+    for obj in job.objects:
+        out['objects'].append(obj.as_dict())
+
+    for error in job.gather_errors:
+        out['gather_errors'].append(error.as_dict())
+
+    for error in job.gather_errors:
+        out['object_errors'].append(error.as_dict())
+    
+    return out
+  
+
 def get_harvest_source(id,default=Exception,attr=None):
-    return HarvestSource.get(id,default=default,attr=attr)
+    source = HarvestSource.get(id,default=default,attr=attr)
+    return _source_as_dict(source)
 
 def get_harvest_sources(**kwds):
-    return HarvestSource.filter(**kwds).all()
+    sources = HarvestSource.filter(**kwds).all()
+    return [_source_as_dict(source) for source in sources]
 
 def create_harvest_source(source_dict):
     if not 'url' in source_dict or not source_dict['url'] or \
@@ -26,15 +60,16 @@ def create_harvest_source(source_dict):
     source = HarvestSource()
     source.url = source_dict['url']
     source.type = source_dict['type']
-    print str(source_dict['active'])
     opt = ['active','description','user_id','publisher_id']
     for o in opt:
         if o in source_dict and source_dict[o] is not None:
             source.__setattr__(o,source_dict[o])
 
     source.save()
+    
 
-    return source 
+    return _source_as_dict(source)
+    
 
 def delete_harvest_source(source_id):
     try:
@@ -50,10 +85,12 @@ def delete_harvest_source(source_id):
     return True
 
 def get_harvest_job(id,attr=None):
-    return HarvestJob.get(id,attr)
+    job = HarvestJob.get(id,attr)
+    return _job_as_dict(job)
 
 def get_harvest_jobs(**kwds):
-    return HarvestJob.filter(**kwds).all()
+    jobs = HarvestJob.filter(**kwds).all()
+    return [_job_as_dict(job) for job in jobs]
 
 def create_harvest_job(source_id):
     # Check if source exists
@@ -72,7 +109,7 @@ def create_harvest_job(source_id):
     
     job.save()
 
-    return job
+    return _job_as_dict(job)
 
 def delete_harvest_job(job_id):
     try:
