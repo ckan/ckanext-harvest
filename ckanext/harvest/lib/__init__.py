@@ -1,9 +1,93 @@
 from ckan.model import Session
+from ckan.model import repo
 from ckan.lib.base import config
+
+from ckanext.harvest.model import HarvestSource, HarvestJob
 
 
 log = __import__("logging").getLogger(__name__)
 
+def get_harvest_source(id,default=Exception,attr=None):
+    return HarvestSource.get(id,default=default,attr=attr)
+
+def get_harvest_sources(**kwds):
+    return HarvestSource.filter(**kwds).all()
+
+def create_harvest_source(source_dict):
+    if not 'url' in source_dict or not source_dict['url'] or \
+        not 'type' in source_dict or not source_dict['type']:
+        raise Exception('Missing mandatory properties: url, type')
+
+    # Check if source already exists
+    exists = get_harvest_sources(url=source_dict['url'])
+    if len(exists):
+        raise Exception('There is already a Harvest Source for this URL: %s' % source_dict['url'])
+    
+    source = HarvestSource()
+    source.url = source_dict['url']
+    source.type = source_dict['type']
+    print str(source_dict['active'])
+    opt = ['active','description','user_id','publisher_id']
+    for o in opt:
+        if o in source_dict and source_dict[o] is not None:
+            source.__setattr__(o,source_dict[o])
+
+    source.save()
+
+    return source 
+
+def delete_harvest_source(source_id):
+    try:
+        source = HarvestSource.get(source_id)
+    except:
+        raise Exception('Source %s does not exist' % source_id)
+
+    source.delete()
+    repo.commit_and_remove()
+    
+    #TODO: Jobs?
+
+    return True
+
+def get_harvest_job(id,attr=None):
+    return HarvestJob.get(id,attr)
+
+def get_harvest_jobs(**kwds):
+    return HarvestJob.filter(**kwds).all()
+
+def create_harvest_job(source_id):
+    # Check if source exists
+    try:
+        source = get_harvest_source(source_id)
+    except:
+        raise Exception('Source %s does not exist' % source_id)
+
+    # Check if there already is an unrun job for this source
+    exists = get_harvest_jobs(source=source,status=u'New')
+    if len(exists):
+        raise Exception('There already is an unrun job for this source')
+
+    job = HarvestJob()
+    job.source = source
+    
+    job.save()
+
+    return job
+
+def delete_harvest_job(job_id):
+    try:
+        job = HarvestJob.get(job_id)
+    except:
+        raise Exception('Job %s does not exist' % job_id)
+
+    job.delete()
+    repo.commit_and_remove()
+    
+    #TODO: objects?
+
+    return True
+
+#TODO: move to ckanext-?? for geo stuff
 def get_srid(crs):
     """Returns the SRID for the provided CRS definition
         The CRS can be defined in the following formats
@@ -20,6 +104,7 @@ def get_srid(crs):
 
     return int(srid)
 
+#TODO: move to ckanext-?? for geo stuff    
 def save_extent(package,extent=False):
     '''Updates the package extent in the package_extent geometry column
        If no extent provided (as a dict with minx,miny,maxx,maxy and srid keys),
