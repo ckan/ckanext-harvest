@@ -3,7 +3,6 @@ import datetime
 
 from ckan.model.meta import *
 from ckan.model.types import make_uuid
-from ckan.model.types import JsonType
 from ckan.model.core import *
 from ckan.model.domain_object import DomainObject
 from ckan.model.package import Package
@@ -93,13 +92,12 @@ harvest_source_table = Table('harvest_source', metadata,
     Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
     Column('url', types.UnicodeText, unique=True, nullable=False),
     Column('description', types.UnicodeText, default=u''),
+    Column('config', types.UnicodeText, default=u''),
     Column('created', DateTime, default=datetime.datetime.utcnow),
-    # New ones:
     Column('type',types.UnicodeText,nullable=False),
-    Column('status',types.UnicodeText,nullable=False),
-    # Not sure about these ones:
-    Column('user_ref', types.UnicodeText, default=u''),
-    Column('publisher_ref', types.UnicodeText, default=u''),
+    Column('active',types.Boolean,default=True),
+    Column('user_id', types.UnicodeText, default=u''),
+    Column('publisher_id', types.UnicodeText, default=u''),
 )
 # Was harvesting_job
 harvest_job_table = Table('harvest_job', metadata,
@@ -107,8 +105,6 @@ harvest_job_table = Table('harvest_job', metadata,
     Column('created', DateTime, default=datetime.datetime.utcnow),
     Column('source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
     Column('status', types.UnicodeText, default=u'New', nullable=False),
-    # Not sure about these ones:
-    Column('user_ref', types.UnicodeText, nullable=False),
 )
 # Was harvested_document
 harvest_object_table = Table('harvest_object', metadata,
@@ -117,13 +113,11 @@ harvest_object_table = Table('harvest_object', metadata,
     Column('created', DateTime, default=datetime.datetime.utcnow),
     Column('content', types.UnicodeText, nullable=False),
     Column('source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
-    # New ones:
     Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
     Column('fetch_started', DateTime),
     Column('fetch_finished', DateTime),
     Column('retry_times',types.Integer),
-    # Not sure about this one. Will we always create packages from harvest objects?
-    Column('package_id', types.UnicodeText, ForeignKey('package.id')),
+    Column('package_id', types.UnicodeText, ForeignKey('package.id'), nullable=True),
 )
 # New table
 harvest_gather_error_table = Table('harvest_gather_error',metadata,
@@ -138,11 +132,6 @@ harvest_object_error_table = Table('harvest_object_error',metadata,
     Column('harvest_object_id', types.UnicodeText, ForeignKey('harvest_object.id')),
     Column('stage', types.UnicodeText),
 )
-
-# harvest_objects (harvested_documents) are no longer revisioned, new objects 
-# are created everytime they are fetched
-#vdm.sqlalchemy.make_table_stateful(harvested_document_table)
-#harvested_document_revision_table = vdm.sqlalchemy.make_revisioned_table(harvested_document_table)
 
 mapper(
     HarvestSource, 
@@ -168,11 +157,9 @@ mapper(
 mapper(
     HarvestObject, 
     harvest_object_table,
-    # Not sure about this one
     properties={
         'package':relation(
             Package,
-            # Using the plural but there should only ever be one
             backref='harvest_objects',
         ),
     },
@@ -195,7 +182,7 @@ mapper(
     properties={
         'job':relation(
             HarvestJob,
-            backref='gather_errors'
+            backref='object_errors'
         ),
         'object':relation(
             HarvestObject,
@@ -203,6 +190,3 @@ mapper(
         ),
     },
 )
-#vdm.sqlalchemy.modify_base_object_mapper(HarvestedDocument, Revision, State)
-#HarvestedDocumentRevision = vdm.sqlalchemy.create_object_version(
-#                mapper, HarvestedDocument, harvested_document_revision_table)
