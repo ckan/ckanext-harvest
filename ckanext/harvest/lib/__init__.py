@@ -2,8 +2,8 @@ from ckan.model import Session
 from ckan.model import repo
 from ckan.lib.base import config
 
-from ckanext.harvest.model import HarvestSource, HarvestJob
-
+from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
+from ckanext.harvest.queue import get_gather_publisher
 
 log = __import__("logging").getLogger(__name__)
 
@@ -37,6 +37,21 @@ def _job_as_dict(job):
 
     for error in job.gather_errors:
         out['object_errors'].append(error.as_dict())
+
+    return out
+
+def _object_as_dict(obj):
+    out = obj.as_dict()
+    out['source'] = obj.source.as_dict()
+    out['job'] = obj.job.as_dict()
+
+    if obj.package:
+        out['package'] = obj.package.as_dict()
+
+    out['errors'] = []
+
+    for error in obj.errors:
+        out['errors'].append(error.as_dict())
 
     return out
 
@@ -126,6 +141,30 @@ def delete_harvest_job(job_id):
     #TODO: objects?
 
     return True
+
+def run_harvest_jobs():
+    # Check if there are pending harvest jobs
+    jobs = get_harvest_jobs(status=u'New')
+    if len(jobs) == 0:
+        raise Exception('There are no new harvesting jobs')
+    
+    # Send each job to the gather queue
+    publisher = get_gather_publisher()
+    for job in jobs:
+        publisher.send({'harvest_job_id': job['id']})
+        log.info('Sent job %s to the gather queue' % job['id'])
+
+    publisher.close()
+    return jobs
+
+def get_harvest_object(id,attr=None):
+    obj = HarvestObject.get(id,attr)
+    return _object_as_dict(obj)
+
+def get_harvest_objects(**kwds):
+    objects = HarvestObject.filter(**kwds).all()
+    return [_object_as_dict(obj) for obj in objects]
+
 
 #TODO: move to ckanext-?? for geo stuff
 def get_srid(crs):

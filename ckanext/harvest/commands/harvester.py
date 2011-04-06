@@ -1,12 +1,14 @@
 import sys
 import re
+#import logging
 from pprint import pprint
 
 from ckan.lib.cli import CkanCommand
 from ckan.model import repo
-#from ckanext.harvest.model import HarvestSource, HarvestingJob, HarvestedDocument
-#from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 from ckanext.harvest.lib import *
+from ckanext.harvest.queue import get_gather_consumer, get_fetch_consumer
+#log = logging.getLogger(__name__)
+#log.setLevel(logging.DEBUG)
 
 class Harvester(CkanCommand):
     '''Harvests remotely mastered metadata
@@ -32,7 +34,13 @@ class Harvester(CkanCommand):
 
       harvester run
         - runs harvest jobs
- 
+
+      harvester gather_consumer
+        - starts the consumer for the gathering queue
+
+      harvester fetch_consumer
+        - starts the consumer for the fetching queue
+
       harvester extents
         - creates or updates the extent geometry column for packages with
           a bounding box defined in extras
@@ -52,12 +60,14 @@ class Harvester(CkanCommand):
 
     def command(self):
         self._load_config()
-        print ""
+        print ''
 
         if len(self.args) == 0:
             self.parser.print_usage()
             sys.exit(1)
         cmd = self.args[0]
+        #log.info(cmd)
+        #sys.exit(0)
         if cmd == 'source':
             self.create_harvest_source()            
         elif cmd == "rmsource":
@@ -74,6 +84,12 @@ class Harvester(CkanCommand):
             self.run_harvester()
         elif cmd == 'extents':
             self.update_extents()
+        elif cmd == 'gather_consumer':
+            consumer = get_gather_consumer()
+            consumer.wait()
+        elif cmd == 'fetch_consumer':
+            consumer = get_fetch_consumer()
+            consumer.wait()
 
         else:
             print 'Command %s not recognized' % cmd
@@ -168,8 +184,16 @@ class Harvester(CkanCommand):
         self.print_harvest_jobs(jobs)
         self.print_there_are(what='harvest job', sequence=jobs)
     
-    #TODO: Move to lib and implement the queue system
     def run_harvester(self, *args, **kwds):
+
+        jobs = run_harvest_jobs()
+
+        print 'Sent %s jobs to the gather queue' % len(jobs)
+
+        sys.exit(0)
+        
+        
+        #TODO: move all this stuff to ckanext-inspire
         from pylons.i18n.translation import _get_translator
         import pylons
         pylons.translator._push_object(_get_translator(pylons.config.get('lang')))
@@ -228,7 +252,7 @@ class Harvester(CkanCommand):
 
     def print_harvest_sources(self, sources):
         if sources:
-            print ""
+            print ''
         for source in sources:
             self.print_harvest_source(source)
 
