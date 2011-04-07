@@ -23,7 +23,8 @@ class IHarvester(Interface):
         responsible for:
             - gathering all the necessary objects to fetch on a later.
               stage (e.g. for a CSW server, perform a GetRecords request)
-            - creating the necessary HarvestObjects in the database.
+            - creating the necessary HarvestObjects in the database, specifying
+              the guid and a reference to its source and job.
             - creating and storing any suitable HarvestGatherErrors that may
               occur.
             - returning a list with all the ids of the created HarvestObjects.
@@ -39,8 +40,6 @@ class IHarvester(Interface):
             - getting the contents of the remote object (e.g. for a CSW server,
               perform a GetRecordById request).
             - saving the content in the provided HarvestObject.
-            - update the fetch_started, fetch_finished and retry_times as
-              necessary.
             - creating and storing any suitable HarvestObjectErrors that may
               occur.
             - returning True if everything went as expected, False otherwise.
@@ -55,10 +54,10 @@ class IHarvester(Interface):
         responsible for:
             - performing any necessary action with the fetched object (e.g 
               create a CKAN package).
-            - creatingg the HarvestObject - Package relation (if necessary)
+            - creating the HarvestObject - Package relation (if necessary)
             - creating and storing any suitable HarvestObjectErrors that may
               occur.
-            - returning True if everything went as expected, False otherwisie.
+            - returning True if everything went as expected, False otherwise.
 
         :param harvest_object: HarvestObject object
         :returns: True if everything went right, False if errors were found

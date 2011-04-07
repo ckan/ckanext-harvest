@@ -1,4 +1,5 @@
 import logging
+import datetime
 
 from carrot.connection import BrokerConnection
 from carrot.messaging import Publisher
@@ -15,7 +16,7 @@ log = logging.getLogger(__name__)
 __all__ = ['get_gather_publisher', 'get_gather_consumer', \
            'get_fetch_publisher', 'get_fetch_consumer']
 
-PORT = 5672 
+PORT = 5672
 USERID = 'guest'
 PASSWORD = 'guest'
 HOSTNAME = 'localhost'
@@ -36,7 +37,7 @@ def get_carrot_connection():
     password = config.get('ckan.harvest.mq.password', PASSWORD)
     hostname = config.get('ckan.harvest.mq.hostname', HOSTNAME)
     virtual_host = config.get('ckan.harvest.mq.virtual_host', VIRTUAL_HOST)
-    
+
     backend_cls = 'carrot.backends.%s.Backend' % backend
     return BrokerConnection(hostname=hostname, port=port,
                             userid=userid, password=password,
@@ -51,23 +52,26 @@ def get_publisher(routing_key):
 
 def get_consumer(queue_name, routing_key):
     return Consumer(connection=get_carrot_connection(),
-                    queue=queue_name, 
+                    queue=queue_name,
                     routing_key=routing_key,
                     exchange=EXCHANGE_NAME,
                     exchange_type=EXCHANGE_TYPE,
                     durable=True, auto_delete=False)
 
+
 def gather_callback(message_data,message):
     try:
         id = message_data['harvest_job_id']
-        log.info('Received harvest job id: %s' % id)
+        log.debug('Received harvest job id: %s' % id)
 
         # Get a publisher for the fetch queue
         publisher = get_fetch_publisher()
 
         try:
             job = HarvestJob.get(id)
-        
+        except:
+            log.error('Harvest job does not exist: %s' % id)
+        else:
             # Send the harvest job to the plugins that implement
             # the Harvester interface, only if the source type
             # matches
@@ -76,15 +80,15 @@ def gather_callback(message_data,message):
 
                     # Get a list of harvest object ids from the plugin
                     harvest_object_ids = harvester.gather_stage(job)
-                    
-                    if len(harvest_object_ids) > 0:
+                    log.debug('Received from plugin''s gather_stage: %r' % harvest_object_ids)
+                    if harvest_object_ids and len(harvest_object_ids) > 0:
                         for id in harvest_object_ids:
                             # Send the id to the fetch queue
                             publisher.send({'harvest_object_id':id})
-                            log.info('Sent object %s to the fetch queue' % id)
+                            log.debug('Sent object %s to the fetch queue' % id)
 
-        except:
-            log.error('Harvest job does not exist: %s' % id)
+            job.status = u'Finished'
+            job.save()
 
         finally:
             publisher.close()
@@ -102,22 +106,26 @@ def fetch_callback(message_data,message):
 
         try:
             obj = HarvestObject.get(id)
-
+        except:
+            log.error('Harvest object does not exist: %s' % id)
+        else:
             # Send the harvest object to the plugins that implement
             # the Harvester interface, only if the source type
             # matches
             for harvester in PluginImplementations(IHarvester):
                 if harvester.get_type() == obj.source.type:
 
-                    # See if the plugin can fetch the harvest object 
+                    # See if the plugin can fetch the harvest object
+                    obj.fetch_started = datetime.datetime.now()
                     success = harvester.fetch_stage(obj)
+                    obj.fetch_finished = datetime.datetime.now()
+                    obj.save()
+                    #TODO: retry times?
                     if success:
                         # If no errors where found, call the import method
                         harvester.import_stage(obj)
-                    
-    
-        except:
-            log.error('Harvest object does not exist: %s' % id)
+
+
 
     except KeyError:
         log.error('No harvest object id received')
@@ -139,4 +147,7 @@ def get_gather_publisher():
 
 def get_fetch_publisher():
     return get_publisher('harvest_object_id')
+
+# Get a publisher for the fetch queue
+#fetch_publisher = get_fetch_publisher()
 
