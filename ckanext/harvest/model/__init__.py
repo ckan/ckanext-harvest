@@ -18,6 +18,15 @@ __all__ = [
     'HarvestObjectError', 'harvest_object_error_table',
 ]
 
+
+def setup():
+    harvest_source_table.create()
+    harvest_job_table.create()
+    harvest_object_table.create()
+    harvest_gather_error_table.create()
+    harvest_object_error_table.create()
+
+
 class HarvestError(Exception):
     pass
 
@@ -111,7 +120,7 @@ harvest_object_table = Table('harvest_object', metadata,
     Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
     Column('guid', types.UnicodeText, default=''),
     Column('created', DateTime, default=datetime.datetime.utcnow),
-    Column('content', types.UnicodeText, nullable=False),
+    Column('content', types.UnicodeText, nullable=True),
     Column('source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
     Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
     Column('fetch_started', DateTime),
@@ -124,6 +133,7 @@ harvest_gather_error_table = Table('harvest_gather_error',metadata,
     Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
     Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
     Column('message', types.UnicodeText),
+    Column('created', DateTime, default=datetime.datetime.utcnow),
 )
 # New table
 harvest_object_error_table = Table('harvest_object_error',metadata,
@@ -132,6 +142,7 @@ harvest_object_error_table = Table('harvest_object_error',metadata,
     Column('harvest_object_id', types.UnicodeText, ForeignKey('harvest_object.id')),
     Column('message',types.UnicodeText),
     Column('stage', types.UnicodeText),
+    Column('created', DateTime, default=datetime.datetime.utcnow),  
 )
 
 mapper(
