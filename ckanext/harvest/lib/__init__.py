@@ -81,16 +81,15 @@ def create_harvest_source(source_dict):
     return _source_as_dict(source)
 
 
-def delete_harvest_source(source_id):
+def remove_harvest_source(source_id):
     try:
         source = HarvestSource.get(source_id)
     except:
         raise Exception('Source %s does not exist' % source_id)
-
-    source.delete()
-    repo.commit_and_remove()
-
-    #TODO: Jobs?
+    
+    # Don't actually delete the record, just flag it as inactive
+    source.active = False
+    source.save()
 
     return True
 
@@ -121,19 +120,6 @@ def create_harvest_job(source_id):
     job.save()
 
     return _job_as_dict(job)
-
-def delete_harvest_job(job_id):
-    try:
-        job = HarvestJob.get(job_id)
-    except:
-        raise Exception('Job %s does not exist' % job_id)
-
-    job.delete()
-    repo.commit_and_remove()
-
-    #TODO: objects?
-
-    return True
 
 def run_harvest_jobs():
     # Check if there are pending harvest jobs

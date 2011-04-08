@@ -14,16 +14,14 @@ class Harvester(CkanCommand):
         - create new harvest source
 
       harvester rmsource {id}
-        - remove a harvester source (and associated jobs)
+        - remove (inactivate) a harvester source
 
-      harvester sources                                 
+      harvester sources [all]        
         - lists harvest sources
+          If 'all' is defined, it also shows the Inactive sources
 
       harvester job {source-id}
         - create new harvest job
-
-      harvester rmjob {job-id}
-        - remove a harvest job
   
       harvester jobs
         - lists harvest jobs
@@ -70,8 +68,6 @@ class Harvester(CkanCommand):
             self.list_harvest_sources()
         elif cmd == 'job':
             self.create_harvest_job()
-        elif cmd == "rmjob":
-            self.remove_harvest_job()
         elif cmd == 'jobs':
             self.list_harvest_jobs()
         elif cmd == 'run':
@@ -145,13 +141,19 @@ class Harvester(CkanCommand):
             print 'Please provide a source id'
             sys.exit(1)
 
-        delete_harvest_source(source_id)
+        remove_harvest_source(source_id)
         print 'Removed harvest source: %s' % source_id
     
     def list_harvest_sources(self):
-        sources = get_harvest_sources()
+        if len(self.args) >= 2 and self.args[1] == 'all':
+            sources = get_harvest_sources()
+            what = 'harvest source'
+        else:
+            sources = get_harvest_sources(active=True)
+            what = 'active harvest source'
+
         self.print_harvest_sources(sources)
-        self.print_there_are(what="harvest source", sequence=sources)
+        self.print_there_are(what=what, sequence=sources)
 
     def create_harvest_job(self):
         if len(self.args) >= 2:
@@ -166,16 +168,6 @@ class Harvester(CkanCommand):
         status = u'New'
         jobs = get_harvest_jobs(status=status)
         self.print_there_are('harvest jobs', jobs, condition=status)
-
-    def remove_harvest_job(self):
-        if len(self.args) >= 2:
-            job_id = unicode(self.args[1])
-        else:
-            print 'Please provide a job id'
-            sys.exit(1)
-
-        delete_harvest_job(job_id)
-        print 'Removed harvest job: %s' % job_id
 
     def list_harvest_jobs(self):
         jobs = get_harvest_jobs()
