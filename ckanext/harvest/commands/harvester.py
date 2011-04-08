@@ -1,14 +1,10 @@
 import sys
 import re
-#import logging
 from pprint import pprint
 
 from ckan.lib.cli import CkanCommand
-from ckan.model import repo
-from ckanext.harvest.lib import *
-from ckanext.harvest.queue import get_gather_consumer, get_fetch_consumer
-#log = logging.getLogger(__name__)
-#log.setLevel(logging.DEBUG)
+#from ckanext.harvest.lib import *
+#from ckanext.harvest.queue import get_gather_consumer, get_fetch_consumer
 
 class Harvester(CkanCommand):
     '''Harvests remotely mastered metadata
@@ -66,8 +62,6 @@ class Harvester(CkanCommand):
             self.parser.print_usage()
             sys.exit(1)
         cmd = self.args[0]
-        #log.info(cmd)
-        #sys.exit(0)
         if cmd == 'source':
             self.create_harvest_source()            
         elif cmd == "rmsource":
@@ -85,9 +79,13 @@ class Harvester(CkanCommand):
         elif cmd == 'extents':
             self.update_extents()
         elif cmd == 'gather_consumer':
+            import logging
+            logging.getLogger('amqplib').setLevel(logging.INFO)
             consumer = get_gather_consumer()
             consumer.wait()
         elif cmd == 'fetch_consumer':
+            import logging
+            logging.getLogger('amqplib').setLevel(logging.INFO)
             consumer = get_fetch_consumer()
             consumer.wait()
 
@@ -184,49 +182,10 @@ class Harvester(CkanCommand):
         self.print_harvest_jobs(jobs)
         self.print_there_are(what='harvest job', sequence=jobs)
     
-    def run_harvester(self, *args, **kwds):
-
+    def run_harvester(self):
         jobs = run_harvest_jobs()
-
         print 'Sent %s jobs to the gather queue' % len(jobs)
 
-        sys.exit(0)
-        
-        
-        #TODO: move all this stuff to ckanext-inspire
-        from pylons.i18n.translation import _get_translator
-        import pylons
-        pylons.translator._push_object(_get_translator(pylons.config.get('lang')))
-
-        from ckanext.harvest.controllers.harvesting import HarvestingJobController        
-        from ckanext.csw.validation import Validator
-
-        jobs = HarvestingJob.filter(status=u"New").all()
-        jobs_len = len(jobs)
-        jobs_count = 0
-        if jobs_len:
-            print "Running %s harvesting jobs..." % jobs_len
-            profiles = [
-                x.strip() for x in
-                pylons.config.get(
-                    "ckan.harvestor.validator.profiles", 
-                    "iso19139,gemini2",
-                ).split(",")
-            ]
-            validator = Validator(profiles=profiles)
-            print ""
-            for job in jobs:
-                jobs_count += 1
-                if job.source is None:
-                    print 'ERRROR: no source associated with this job'
-                else:
-                    print "Running job %s/%s: %s" % (jobs_count, jobs_len, job.id)
-                    self.print_harvesting_job(job)
-                    job_controller = HarvestingJobController(job, validator)
-                    job_controller.harvest_documents()
-                    pprint (job.report)
-        else:
-            print "There are no new harvesting jobs."
 
     #TODO: move to ckanext-?? for geo stuff
     def update_extents(self):
