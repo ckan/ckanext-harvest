@@ -3,8 +3,8 @@ import re
 from pprint import pprint
 
 from ckan.lib.cli import CkanCommand
-#from ckanext.harvest.lib import *
-#from ckanext.harvest.queue import get_gather_consumer, get_fetch_consumer
+from ckanext.harvest.lib import *
+from ckanext.harvest.queue import get_gather_consumer, get_fetch_consumer
 
 class Harvester(CkanCommand):
     '''Harvests remotely mastered metadata
@@ -223,7 +223,6 @@ class Harvester(CkanCommand):
         print '     user: %s' % source['user_id']
         print 'publisher: %s' % source['publisher_id']
         print '     jobs: %s' % len(source['jobs'])
-        print '  objects: %s' % len(source['objects'])
         print ''
 
     def print_harvest_jobs(self, jobs):
@@ -242,11 +241,6 @@ class Harvester(CkanCommand):
         print 'gather_errors: %s' % len(job['gather_errors'])
         if (len(job['gather_errors']) > 0):
             for error in job['gather_errors']:
-                print '               %s' % error['message']
-
-        print 'object_errors: %s' % len(job['object_errors'])
-        if (len(job['object_errors']) > 0):
-            for error in job['object_errors']:
                 print '               %s' % error['message']
         
         print ''

@@ -10,13 +10,10 @@ log = __import__("logging").getLogger(__name__)
 def _source_as_dict(source):
     out = source.as_dict()
     out['jobs'] = []
-    out['objects'] = []
 
     for job in source.jobs:
         out['jobs'].append(job.as_dict())
 
-    for obj in source.objects:
-        out['objects'].append(obj.as_dict())
 
     #TODO: Get some report data
 
@@ -27,16 +24,12 @@ def _job_as_dict(job):
     out['source'] = job.source.as_dict()
     out['objects'] = []
     out['gather_errors'] = []
-    out['object_errors'] = []
 
     for obj in job.objects:
         out['objects'].append(obj.as_dict())
 
     for error in job.gather_errors:
         out['gather_errors'].append(error.as_dict())
-
-    for error in job.gather_errors:
-        out['object_errors'].append(error.as_dict())
 
     return out
 

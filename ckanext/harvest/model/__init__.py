@@ -82,7 +82,10 @@ class HarvestObject(HarvestDomainObject):
        packages, RDF graphs, etc.
 
     '''
-    pass
+
+    @property
+    def source(self):
+        return self.job.source
 
 class HarvestGatherError(HarvestDomainObject):
     '''Gather errors are raised during the **gather** stage of a harvesting
@@ -121,7 +124,6 @@ harvest_object_table = Table('harvest_object', metadata,
     Column('guid', types.UnicodeText, default=''),
     Column('created', DateTime, default=datetime.datetime.utcnow),
     Column('content', types.UnicodeText, nullable=True),
-    Column('source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
     Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
     Column('fetch_started', DateTime),
     Column('fetch_finished', DateTime),
@@ -138,7 +140,6 @@ harvest_gather_error_table = Table('harvest_gather_error',metadata,
 # New table
 harvest_object_error_table = Table('harvest_object_error',metadata,
     Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
-    Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
     Column('harvest_object_id', types.UnicodeText, ForeignKey('harvest_object.id')),
     Column('message',types.UnicodeText),
     Column('stage', types.UnicodeText),
@@ -149,10 +150,6 @@ mapper(
     HarvestSource,
     harvest_source_table,
     properties={
-        'objects': relation(
-            HarvestObject,
-            backref=u'source',
-        ),
         'jobs': relation(
             HarvestJob,
             backref=u'source',
@@ -196,10 +193,6 @@ mapper(
     HarvestObjectError,
     harvest_object_error_table,
     properties={
-        'job':relation(
-            HarvestJob,
-            backref='object_errors'
-        ),
         'object':relation(
             HarvestObject,
             backref='errors'
