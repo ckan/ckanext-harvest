@@ -85,10 +85,13 @@ class ViewController(BaseController):
                 redirect(h.url_for(controller='harvest', action='index'))
 
     def show(self,id):
-        c.source = get_harvest_source(id)
+        try:
+            c.source = get_harvest_source(id)
 
-        #TODO: show source reports
-        return render('ckanext/harvest/show.html')
+            return render('ckanext/harvest/show.html')
+        except:
+            abort(404,'Harvest source not found')
+
 
     def delete(self,id):
         try:

@@ -50,22 +50,20 @@
             <th>Total jobs</th>
             <td>${len(c.source.jobs)}</td>
         </tr>
-        <!--
         <tr>
             <th>Status</th>
             <td>
-                Last Harvest Status: ${c.source.status.last_harvest_status}<br/>
-                Last Harvest Errors: <span py:for="errors in c.source.status.last_harvest_errors"></span><br/>
-                Last Harvest Added or Updated: 
+                Last Harvest Errors: ${c.source.status.last_harvest_statistics.errors}<br/> 
                 <py:choose>
-                    <py:when test="'added' in c.source.status.last_harvest_statistics">
-                        ${c.source.status.last_harvest_statistics.added}<br/>
+                    <py:when test="len(c.source.status.last_harvest_errors)>0">
+                        <ul>
+                        <li py:for="error in c.source.status.last_harvest_errors">${error}</li>
+                        </ul>
                     </py:when>
-                    <py:otherwise>
-                        None<br/>
-                    </py:otherwise>
                 </py:choose>
-                Last Harvest Request: ${c.source.status.last_harvest_request} <br/>
+                Last Harvest Added: ${c.source.status.last_harvest_statistics.added}<br/>
+                Last Harvest Updated: ${c.source.status.last_harvest_statistics.updated}<br/>
+                Last Harvest: ${c.source.status.last_harvest_request} <br/>
                 Next Harvest: ${c.source.status.next_harvest}
             </td>
         </tr>
@@ -87,7 +85,6 @@
                 </div>
             </td>
         </tr>
-        -->
     </table>
     </py:if>
   </div>

@@ -11,10 +11,13 @@
 
 <div py:match="content">
   <div class="harvest-content">
-  <py:if test="c.sources">
   <h1>Harvesting Sources</h1>
     <a id="new-harvest-source" href="harvest/create">Add a harvesting source</a>
-    <table id="harvest-sources">
+    <py:choose>
+        <py:when test="c.sources">
+
+
+       <table id="harvest-sources">
         <tr>
             <th></th>
             <th></th>
@@ -22,9 +25,8 @@
             <th>URL</th>
             <th>Type</th>
             <th>Active</th>
-<!--            <th>Status</th>
             <th>Statistics</th>
-            <th>Next Harvest</th>-->
+            <th>Next Harvest</th>
             <th>Created</th>
         </tr>
 
@@ -35,13 +37,17 @@
             <td>${source.url}</td>
             <td>${source.type}</td>
             <td>${source.active}</td>
-<!--            <td>${source.status.last_harvest_status}</td>
             <td>${source.status.overall_statistics.added} pkgs ${source.status.overall_statistics.errors} errors</td>
-            <td>${source.status.next_harvest}</td>-->
+            <td>${source.status.next_harvest}</td>
             <td>${source.created}</td>
          </tr>
     </table>
-    </py:if>
+   </py:when>
+    <py:otherwise>
+        <div id="no-harvest-sources">No harvest sources defined yet.</div>
+    </py:otherwise>
+  </py:choose>
+ 
   </div>
 </div>
 <xi:include href="../../layout.html" />

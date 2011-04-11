@@ -54,6 +54,8 @@ class IHarvester(Interface):
         responsible for:
             - performing any necessary action with the fetched object (e.g 
               create a CKAN package).
+              Note: if this stage creates or updates a package, a reference
+              to the package should be added to the HarvestObject.
             - creating the HarvestObject - Package relation (if necessary)
             - creating and storing any suitable HarvestObjectErrors that may
               occur.
