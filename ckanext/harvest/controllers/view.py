@@ -142,30 +142,3 @@ class ViewController(BaseController):
 
         redirect(h.url_for(controller='harvest', action='index', id=None))
 
-    def map_view(self,id):
-        #check if package exists
-        c.pkg = Package.get(id)
-        if c.pkg is None:
-            abort(404, 'Package not found')
-
-        for res in c.pkg.resources:
-            if res.format == "WMS":
-                c.wms = res
-                break
-        if not c.wms:
-            abort(400, 'This package does not have a WMS')
-
-        return render('ckanext/harvest/map.html')
-
-    def proxy(self):
-        if not 'url' in request.params:
-            abort(400)
-        try:
-            server_response = urllib2.urlopen(request.params['url'])
-            headers = server_response.info()
-            if headers.get('Content-Type'):
-                response.content_type = headers.get('Content-Type')
-            return server_response.read()
-        except urllib2.HTTPError as e:
-            response.status_int = e.getcode()
-            return

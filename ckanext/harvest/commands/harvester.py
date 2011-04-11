@@ -34,10 +34,6 @@ class Harvester(CkanCommand):
 
       harvester fetch_consumer
         - starts the consumer for the fetching queue
-
-      harvester extents
-        - creates or updates the extent geometry column for packages with
-          a bounding box defined in extras
        
     The commands should be run from the ckanext-harvest directory and expect
     a development.ini file to be present. Most of the time you will
@@ -72,8 +68,6 @@ class Harvester(CkanCommand):
             self.list_harvest_jobs()
         elif cmd == 'run':
             self.run_harvester()
-        elif cmd == 'extents':
-            self.update_extents()
         elif cmd == 'gather_consumer':
             import logging
             logging.getLogger('amqplib').setLevel(logging.INFO)
@@ -177,29 +171,6 @@ class Harvester(CkanCommand):
     def run_harvester(self):
         jobs = run_harvest_jobs()
         print 'Sent %s jobs to the gather queue' % len(jobs)
-
-
-    #TODO: move to ckanext-?? for geo stuff
-    def update_extents(self):
-        from ckan.model import PackageExtra, Package, Session
-        conn = Session.connection()
-        packages = [extra.package \
-                    for extra in \
-                    Session.query(PackageExtra).filter(PackageExtra.key == 'bbox-east-long').all()]
-
-        error = False
-        for package in packages:
-            try:
-                save_extent(package)
-            except:
-                errors = True
- 
-        if error:
-            msg = "There was an error saving the package extent. Have you set up the package_extent table in the DB?"
-        else:
-            msg = "Done. Extents generated for %i packages" % len(packages)
-
-        print msg
 
     def print_harvest_sources(self, sources):
         if sources:
