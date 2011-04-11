@@ -115,6 +115,8 @@ harvest_source_table = Table('harvest_source', metadata,
 harvest_job_table = Table('harvest_job', metadata,
     Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
     Column('created', DateTime, default=datetime.datetime.utcnow),
+    Column('gather_started', DateTime),
+    Column('gather_finished', DateTime),
     Column('source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
     Column('status', types.UnicodeText, default=u'New', nullable=False),
 )

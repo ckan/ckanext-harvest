@@ -79,7 +79,10 @@ def gather_callback(message_data,message):
                 if harvester.get_type() == job.source.type:
 
                     # Get a list of harvest object ids from the plugin
+                    job.gather_started = datetime.datetime.now()
                     harvest_object_ids = harvester.gather_stage(job)
+                    job.gather_finished = datetime.datetime.now()
+                    job.save()
                     log.debug('Received from plugin''s gather_stage: %r' % harvest_object_ids)
                     if harvest_object_ids and len(harvest_object_ids) > 0:
                         for id in harvest_object_ids:
