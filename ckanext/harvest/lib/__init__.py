@@ -36,7 +36,8 @@ def _get_source_status(source):
                .order_by(HarvestJob.created.desc()).limit(1).first()
 
     if  last_job:
-        out['last_harvest_request'] = last_job.gather_finished
+        #TODO: Should we encode the dates as strings?
+        out['last_harvest_request'] = str(last_job.gather_finished)
         
        
         #Get HarvestObjects from last job whit links to packages
@@ -145,7 +146,10 @@ def _object_as_dict(obj):
 
 def get_harvest_source(id,default=Exception,attr=None):
     source = HarvestSource.get(id,default=default,attr=attr)
-    return _source_as_dict(source)
+    if source:
+        return _source_as_dict(source)
+    else:
+        return default
 
 def get_harvest_sources(**kwds):
     sources = HarvestSource.filter(**kwds).all()
@@ -187,9 +191,12 @@ def remove_harvest_source(source_id):
 
     return True
 
-def get_harvest_job(id,attr=None):
-    job = HarvestJob.get(id,attr)
-    return _job_as_dict(job)
+def get_harvest_job(id,default=Exception,attr=None):
+    job = HarvestJob.get(id,default=default,attr=attr)
+    if job:
+        return _job_as_dict(job)
+    else:
+        return default
 
 def get_harvest_jobs(**kwds):
     jobs = HarvestJob.filter(**kwds).all()
@@ -230,9 +237,12 @@ def run_harvest_jobs():
     publisher.close()
     return jobs
 
-def get_harvest_object(id,attr=None):
-    obj = HarvestObject.get(id,attr)
-    return _object_as_dict(obj)
+def get_harvest_object(id,default=Exception,attr=None):
+    obj = HarvestObject.get(id,default=default,attr=attr)
+    if obj:
+        return _object_as_dict(obj)
+    else:
+        return default
 
 def get_harvest_objects(**kwds):
     objects = HarvestObject.filter(**kwds).all()
