@@ -37,8 +37,17 @@
             <td>${source.url}</td>
             <td>${source.type}</td>
             <td>${source.active}</td>
-            <td>${source.status.overall_statistics.added} pkgs ${source.status.overall_statistics.errors} errors</td>
-            <td>${source.status.next_harvest}</td>
+            <py:choose>
+                <py:when test="'msg' in source.status">
+                    <td>${source.status.msg}</td>
+                    <td>${source.status.msg}</td>
+                </py:when>
+                <py:otherwise>
+                    <td>${source.status.overall_statistics.added} pkgs ${source.status.overall_statistics.errors} errors</td>
+                    <td>${source.status.next_harvest}</td>
+                </py:otherwise>
+            </py:choose>
+
             <td>${source.created}</td>
          </tr>
     </table>

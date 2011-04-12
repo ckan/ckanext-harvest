@@ -43,7 +43,6 @@ class ViewController(BaseController):
         # Request all harvest sources
         c.sources = get_harvest_sources()
 
-        #TODO: show source reports
         return render('ckanext/harvest/index.html')
 
     def create(self):
@@ -58,31 +57,37 @@ class ViewController(BaseController):
             except urllib2.HTTPError as e:
                 msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
                 h.flash_error(msg)
-
             return render('ckanext/harvest/create.html')
         if request.method == 'POST':
             # Build an object like the one expected by the DGU form API
             data = {
                 'form_data':
                     {'HarvestSource--url': request.POST['HarvestSource--url'],
-                     'HarvestSource--description': request.POST['HarvestSource--description']},
-                'user_ref':'',
-                'publisher_ref':''
+                     'HarvestSource--description': request.POST['HarvestSource--description'],
+                     'HarvestSource--type': request.POST['HarvestSource--type'],
+                    },
+                'user_id':'',
+                'publisher_id':''
             }
             data = json.dumps(data)
             try:
-                r = self._do_request(form_url,data)
+                rq = self._do_request(form_url,data)
 
                 h.flash_success('Harvesting source added successfully')
+                redirect(h.url_for(controller='harvest', action='index'))
             except urllib2.HTTPError as e:
                 msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
                 # The form API returns just a 500, so we are not exactly sure of what
                 # happened, but most probably it was a duplicate entry
                 if e.getcode() == 500:
                     msg = msg + ' Does the source already exist?'
-                h.flash_error(msg)
-            finally:
-                redirect(h.url_for(controller='harvest', action='index'))
+                elif e.getcode() == 400:
+                    c.form = e.read()
+                    c.mode = 'create'
+                    return render('ckanext/harvest/create.html')
+                else:
+                    h.flash_error(msg)
+                    redirect(h.url_for(controller='harvest', action='index'))
 
     def show(self,id):
         try:
@@ -117,20 +122,27 @@ class ViewController(BaseController):
             data = {
                 'form_data':
                     {'HarvestSource-%s-url' % id: request.POST['HarvestSource-%s-url' % id] ,
+                     'HarvestSource-%s-type' % id: request.POST['HarvestSource-%s-type' % id],
                      'HarvestSource-%s-description' % id: request.POST['HarvestSource-%s-description' % id]},
-                'user_ref':'',
-                'publisher_ref':''
+                'user_id':'',
+                'publisher_id':''
             }
             data = json.dumps(data)
             try:
                 r = self._do_request(form_url,data)
 
                 h.flash_success('Harvesting source edited successfully')
-            except urllib2.HTTPError as e:
-                msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
-                h.flash_error(msg)
-            finally:
+
                 redirect(h.url_for(controller='harvest', action='index', id=None))
+            except urllib2.HTTPError as e:
+                if e.getcode() == 400:
+                    c.form = e.read()
+                    c.mode = 'edit'
+                    return render('ckanext/harvest/create.html')
+                else:
+                    msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
+                    h.flash_error(msg)
+                    redirect(h.url_for(controller='harvest', action='index',id=None))
 
     def create_harvesting_job(self,id):
         try:
