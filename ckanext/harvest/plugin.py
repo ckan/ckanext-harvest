@@ -15,7 +15,6 @@ log = getLogger(__name__)
 class Harvest(SingletonPlugin):
     
     implements(IConfigurable)
-    implements(IGenshiStreamFilter)
     implements(IRoutes, inherit=True)
     implements(IConfigurer, inherit=True)
     
