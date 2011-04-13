@@ -10,6 +10,10 @@ class Harvester(CkanCommand):
     '''Harvests remotely mastered metadata
 
     Usage:
+
+      harvester initdb
+        - Creates the necessary tables in the database
+
       harvester source {url} {type} [{active}] [{user-id}] [{publisher-id}] 
         - create new harvest source
 
@@ -78,12 +82,20 @@ class Harvester(CkanCommand):
             logging.getLogger('amqplib').setLevel(logging.INFO)
             consumer = get_fetch_consumer()
             consumer.wait()
+        elif cmd == "initdb":
+            self.initdb()
 
         else:
             print 'Command %s not recognized' % cmd
 
     def _load_config(self):
         super(Harvester, self)._load_config()
+    
+    def initdb(self):
+        from ckanext.harvest.model import setup as db_setup
+        db_setup()
+
+        print 'DB tables created'
 
     def create_harvest_source(self):
 
