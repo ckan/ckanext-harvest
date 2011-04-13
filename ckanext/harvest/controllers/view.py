@@ -14,7 +14,7 @@ class ViewController(BaseController):
 
     api_url = config.get('ckan.api_url', 'http://localhost:5000').rstrip('/')+'/api/2/rest'
     form_api_url = config.get('ckan.api_url', 'http://localhost:5000').rstrip('/')+'/api/2/form'
-    api_key = config.get('ckan.harvesting.api_key')
+    api_key = config.get('ckan.harvest.api_key')
 
     def __before__(self, action, **env):
         super(ViewController, self).__before__(action, **env)

@@ -25,7 +25,7 @@ the ckan directory::
 The user's API key must be defined in the CKAN
 configuration file (.ini) in the [app:main] section::
 
-    ckan.harvesting.api_key = 4e1dac58-f642-4e54-bbc4-3ea262271fe2
+    ckan.harvest.api_key = 4e1dac58-f642-4e54-bbc4-3ea262271fe2
 
 
 The API URL used can be also defined in the ini file (it defaults to 
