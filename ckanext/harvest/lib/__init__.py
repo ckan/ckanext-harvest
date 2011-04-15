@@ -210,6 +210,10 @@ def create_harvest_job(source_id):
     except:
         raise Exception('Source %s does not exist' % source_id)
 
+    # Check if the source is active
+    if not source.active:
+        raise Exception('Can not create jobs on inactive sources')
+
     # Check if there already is an unrun job for this source
     exists = get_harvest_jobs(source=source,status=u'New')
     if len(exists):
@@ -230,12 +234,15 @@ def run_harvest_jobs():
     
     # Send each job to the gather queue
     publisher = get_gather_publisher()
+    sent_jobs = []
     for job in jobs:
-        publisher.send({'harvest_job_id': job['id']})
-        log.info('Sent job %s to the gather queue' % job['id'])
+        if job['source']['active']:
+            publisher.send({'harvest_job_id': job['id']})
+            log.info('Sent job %s to the gather queue' % job['id'])
+            sent_jobs.append(job)
 
     publisher.close()
-    return jobs
+    return sent_jobs
 
 def get_harvest_object(id,default=Exception,attr=None):
     obj = HarvestObject.get(id,default=default,attr=attr)
