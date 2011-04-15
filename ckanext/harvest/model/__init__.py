@@ -97,7 +97,7 @@ class HarvestObjectError(HarvestDomainObject):
 
 harvest_source_table = Table('harvest_source', metadata,
     Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
-    Column('url', types.UnicodeText, unique=True, nullable=False),
+    Column('url', types.UnicodeText, nullable=False),
     Column('description', types.UnicodeText, default=u''),
     Column('config', types.UnicodeText, default=u''),
     Column('created', DateTime, default=datetime.datetime.utcnow),
