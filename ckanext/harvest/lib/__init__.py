@@ -178,6 +178,20 @@ def create_harvest_source(source_dict):
 
     return _source_as_dict(source)
 
+def edit_harvest_source(source_id,source_dict):
+    try:
+        source = HarvestSource.get(source_id)
+    except:
+        raise Exception('Source %s does not exist' % source_id)
+    fields = ['url','type','active','description','user_id','publisher_id']
+    for f in fields:
+        if f in source_dict and source_dict[f] is not None and source_dict[f] != '':
+            source.__setattr__(f,source_dict[f])
+
+    source.save()
+
+    return _source_as_dict(source)
+
 
 def remove_harvest_source(source_id):
     try:
