@@ -8,7 +8,7 @@ from carrot.messaging import Consumer
 from ckan.lib.base import config
 from ckan.plugins import PluginImplementations
 
-from ckanext.harvest.model import HarvestJob, HarvestObject
+from ckanext.harvest.model import HarvestJob, HarvestObject,HarvestGatherError
 from ckanext.harvest.interfaces import IHarvester
 
 log = logging.getLogger(__name__)
@@ -75,9 +75,10 @@ def gather_callback(message_data,message):
             # Send the harvest job to the plugins that implement
             # the Harvester interface, only if the source type
             # matches
+            harvester_found = False
             for harvester in PluginImplementations(IHarvester):
                 if harvester.get_type() == job.source.type:
-
+                    harvester_found = True
                     # Get a list of harvest object ids from the plugin
                     job.gather_started = datetime.datetime.now()
                     harvest_object_ids = harvester.gather_stage(job)
@@ -89,6 +90,12 @@ def gather_callback(message_data,message):
                             # Send the id to the fetch queue
                             publisher.send({'harvest_object_id':id})
                             log.debug('Sent object %s to the fetch queue' % id)
+
+            if not harvester_found:
+                msg = 'No harvester could be found for source type %s' % job.source.type
+                err = HarvestGatherError(message=msg,job=job)
+                err.save()
+                log.error(msg)
 
             job.status = u'Finished'
             job.save()
