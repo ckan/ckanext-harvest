@@ -181,8 +181,12 @@ class Harvester(CkanCommand):
         self.print_there_are(what='harvest job', sequence=jobs)
     
     def run_harvester(self):
-        jobs = run_harvest_jobs()
-        print 'Sent %s jobs to the gather queue' % len(jobs)
+        try:
+            jobs = run_harvest_jobs()
+        except:
+            pass
+        sys.exit(1)
+        #print 'Sent %s jobs to the gather queue' % len(jobs)
 
     def print_harvest_sources(self, sources):
         if sources:
