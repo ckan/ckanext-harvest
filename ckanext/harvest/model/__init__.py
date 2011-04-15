@@ -20,12 +20,7 @@ __all__ = [
 
 
 def setup():
-    harvest_source_table.create()
-    harvest_job_table.create()
-    harvest_object_table.create()
-    harvest_gather_error_table.create()
-    harvest_object_error_table.create()
-
+    metadata.create_all()
 
 class HarvestError(Exception):
     pass
