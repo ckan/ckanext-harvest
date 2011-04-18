@@ -1,2 +1,2 @@
-recursive-include templates *
-recursive-include public *
+recursive-include ckanext/harvest/templates *
+recursive-include ckanext/harvest/public *

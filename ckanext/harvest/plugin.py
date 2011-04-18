@@ -56,11 +56,8 @@ class Harvest(SingletonPlugin):
 
     def update_config(self, config):
         here = os.path.dirname(__file__)
-        rootdir = os.path.dirname(os.path.dirname(here))
-
-        template_dir = os.path.join(rootdir, 'templates')
-        public_dir = os.path.join(rootdir, 'public')
-        
+        template_dir = os.path.join(here, 'templates')
+        public_dir = os.path.join(here, 'public')
         if config.get('extra_template_paths'):
             config['extra_template_paths'] += ','+template_dir
         else:
