@@ -82,12 +82,16 @@ class ViewController(BaseController):
                 if e.getcode() == 500:
                     msg = msg + ' Does the source already exist?'
                 elif e.getcode() == 400:
-                    c.form = e.read()
-                    c.mode = 'create'
-                    return render('ckanext/harvest/create.html')
-                else:
-                    h.flash_error(msg)
-                    redirect(h.url_for(controller='harvest', action='index'))
+                    err_msg = e.read()
+                    if '<form' in c.form:
+                        c.form = err_msg
+                        c.mode = 'create'
+                        return render('ckanext/harvest/create.html')
+                    else:
+                        msg = err_msg
+
+                h.flash_error(msg)
+                redirect(h.url_for(controller='harvest', action='index'))
 
     def show(self,id):
         try:

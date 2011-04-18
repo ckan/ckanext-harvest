@@ -161,9 +161,9 @@ def create_harvest_source(source_dict):
         raise Exception('Missing mandatory properties: url, type')
 
     # Check if source already exists
-    exists = get_harvest_sources(url=source_dict['url'])
+    exists = get_harvest_sources(url=source_dict['url'],active=True)
     if len(exists):
-        raise Exception('There is already a Harvest Source for this URL: %s' % source_dict['url'])
+        raise Exception('There already is an active Harvest Source for this URL: %s' % source_dict['url'])
 
     source = HarvestSource()
     source.url = source_dict['url']
