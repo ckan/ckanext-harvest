@@ -32,6 +32,7 @@ setup(
     [ckan.plugins]
 	# Add plugins here, eg
 	harvest=ckanext.harvest.plugin:Harvest
+	ckan_harvester=ckanext.harvest.harvesters:CKANHarvester
 	[paste.paster_command]
 	harvester = ckanext.harvest.commands.harvester:Harvester
 	""",
