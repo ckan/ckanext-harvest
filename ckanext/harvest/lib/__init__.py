@@ -74,7 +74,9 @@ def _get_source_status(source):
             out['last_harvest_errors'].append(gather_error.message)
 
         for object_error in object_errors:
-            out['last_harvest_errors'].append(object_error.message)
+            msg = 'GUID %s: %s' % (object_error.object.guid,object_error.message)
+            out['last_harvest_errors'].append(msg)
+
         
 
         # Overall statistics
