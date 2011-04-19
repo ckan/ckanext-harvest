@@ -137,19 +137,26 @@ class CKANHarvester(SingletonPlugin):
             from ckan.logic.action.create import package_create_rest
             from ckan.logic.action.update import package_update_rest
             from ckan.logic.action.get import package_show
+            from ckan.logic.schema import default_package_schema
             from ckan.logic import ValidationError,NotFound
             from ckan import model
             from ckan.model import Session
+            from ckan.lib.navl.validators import ignore_missing
 
             # harvest_object.content is the result of an API call like
             # http://ec2-46-51-149-132.eu-west-1.compute.amazonaws.com:8081/api/2/rest/package/77d93608-3a3e-42e5-baab-3521afb504f1
             package_dict = json.loads(harvest_object.content)
+
+            ## change default schema
+            schema = default_package_schema()
+            schema["id"] = [ignore_missing, unicode]
+
             context = {
                 'model': model,
                 'session':Session,
-                #TODO: configure?
                 'user': u'harvest',
-                'api_version':'2'
+                'api_version':'2',
+                'schema': schema,
             }
             
             # Ugly Hack: tags in DGU are created with Upper case and spaces,
