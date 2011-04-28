@@ -10,8 +10,8 @@ from ckanext.harvest.model import HarvestedDocument
 from ckanext.harvest.controllers.harvesting import HarvestingJobController
 
 from ckan.tests import *
-from ckan.tests.gemini2_examples.expected_values import expect_values0
-from ckan.tests.gemini2_examples.expected_values import expect_values1
+from gemini2_examples.expected_values import expect_values0
+from gemini2_examples.expected_values import expect_values1
 
 
 class HarvesterTestCase(TestCase):
@@ -366,12 +366,17 @@ class GeminiExamples(object):
     def folder_path(self):
         from pylons import config
         here_path = config['here']
-        return os.path.join(here_path, 'ckan', 'tests', 'gemini2_examples')
+        here_path = self.script_path()
+        return os.path.join(here_path, 'gemini2_examples')
 
     def folder_path_bad(self):
         from pylons import config
         here_path = config['here']
-        return os.path.join(here_path, 'ckan', 'tests', 'gemini2_examples_bad')
+        here_path = self.script_path()
+        return os.path.join(here_path, 'gemini2_examples_bad')
+
+    def script_path(self):
+        return os.path.dirname(os.path.abspath(__file__))
 
     def get_from_url(self, url):
         import urllib2

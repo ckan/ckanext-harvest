@@ -9,13 +9,13 @@ Dependencies
 ============
 
 The harvest extension uses Message Queuing to handle the different gather
-stages.
+stages. 
 
 You will need to install the RabbitMQ server::
 
     sudo apt-get install rabbitmq-server
 
-The extension uses `carrot` as messaging library:
+The extension uses `carrot` as messaging library::
 
     http://ask.github.com/carrot/
 
@@ -27,7 +27,6 @@ Run the following command (in the ckanext-harvest directory) to create
 the necessary tables in the database::
 
     paster harvester initdb --config=../ckan/development.ini
-
 
 The extension needs a user with sysadmin privileges to perform the 
 harvesting jobs. You can create such a user running these two commands in
@@ -41,7 +40,6 @@ The user's API key must be defined in the CKAN
 configuration file (.ini) in the [app:main] section::
 
     ckan.harvest.api_key = 4e1dac58-f642-4e54-bbc4-3ea262271fe2
-
 
 The API URL used can be also defined in the ini file (it defaults to 
 http://localhost:5000/)::

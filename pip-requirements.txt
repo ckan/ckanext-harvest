@@ -1,0 +1,2 @@
+-e hg+https://bitbucket.org/okfn/ckanext-dgu@default#egg=ckanext-dgu
+-e hg+https://bitbucket.org/okfn/ckanext-csw@default#egg=ckanext-csw
