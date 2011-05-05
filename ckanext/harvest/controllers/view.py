@@ -74,7 +74,8 @@ class ViewController(BaseController):
                 rq = self._do_request(form_url,data)
 
                 h.flash_success('Harvesting source added successfully')
-                redirect(h.url_for(controller='harvest', action='index'))
+                redirect(h.url_for('harvest'))
+
             except urllib2.HTTPError as e:
                 msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
                 # The form API returns just a 500, so we are not exactly sure of what
@@ -91,7 +92,7 @@ class ViewController(BaseController):
                         msg = err_msg
 
                 h.flash_error(msg)
-                redirect(h.url_for(controller='harvest', action='index'))
+                redirect(h.url_for('harvest'))
 
     def show(self,id):
         try:
@@ -110,7 +111,7 @@ class ViewController(BaseController):
             msg = 'An error occurred: [%s]' % e.message
             h.flash_error(msg)
 
-        redirect(h.url_for(controller='harvest', action='index', id=None))
+        redirect(h.url_for('harvest'))
 
     def edit(self,id):
 
@@ -137,7 +138,7 @@ class ViewController(BaseController):
 
                 h.flash_success('Harvesting source edited successfully')
 
-                redirect(h.url_for(controller='harvest', action='index', id=None))
+                redirect(h.url_for('harvest'))
             except urllib2.HTTPError as e:
                 if e.getcode() == 400:
                     c.form = e.read()
@@ -146,7 +147,7 @@ class ViewController(BaseController):
                 else:
                     msg = 'An error occurred: [%s %s]' % (str(e.getcode()),e.msg)
                     h.flash_error(msg)
-                    redirect(h.url_for(controller='harvest', action='index',id=None))
+                    redirect(h.url_for('harvest'))
 
     def create_harvesting_job(self,id):
         try:
@@ -156,5 +157,5 @@ class ViewController(BaseController):
             msg = 'An error occurred: [%s]' % e.message
             h.flash_error(msg)
 
-        redirect(h.url_for(controller='harvest', action='index', id=None))
+        redirect(h.url_for('harvest'))
 
