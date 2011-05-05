@@ -205,6 +205,13 @@ def remove_harvest_source(source_id):
     source.active = False
     source.save()
 
+    # Abort any pending jobs
+    jobs = HarvestJob.filter(source=source,status=u'New')
+    if jobs:
+        for job in jobs:
+            job.status = u'Aborted'
+            job.save()
+
     return True
 
 def get_harvest_job(id,default=Exception,attr=None):
