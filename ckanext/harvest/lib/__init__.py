@@ -1,3 +1,4 @@
+import urlparse
 from sqlalchemy import distinct,func
 from ckan.model import Session, repo
 from ckan.model import Package
@@ -145,6 +146,40 @@ def _object_as_dict(obj):
 
     return out
 
+def _url_exists(url):
+    new_url = _normalize_url(url)
+
+    existing_sources = get_harvest_sources()
+
+    for existing_source in existing_sources:
+        existing_url = _normalize_url(existing_source['url'])
+        if existing_url == new_url and existing_source['active'] == True:
+            return existing_source
+    return False
+
+def _normalize_url(url):
+    o = urlparse.urlparse(url)
+
+    # Normalize port
+    if ':' in o.netloc:
+        parts = o.netloc.split(':')
+        if parts[1] == '80':
+            netloc = parts[0]
+        else:
+            netloc = ':'.join(parts)
+    else:
+        netloc = o.netloc
+    
+    # Remove trailing slash
+    path = o.path.rstrip('/')
+
+    check_url = urlparse.urlunparse((
+            o.scheme,
+            netloc,
+            path,
+            None,None,None))
+
+    return check_url
 
 def get_harvest_source(id,default=Exception,attr=None):
     source = HarvestSource.get(id,default=default,attr=attr)
@@ -163,8 +198,8 @@ def create_harvest_source(source_dict):
         raise Exception('Missing mandatory properties: url, type')
 
     # Check if source already exists
-    exists = get_harvest_sources(url=source_dict['url'],active=True)
-    if len(exists):
+    existing_source = _url_exists(source_dict['url'])
+    if existing_source:
         raise Exception('There already is an active Harvest Source for this URL: %s' % source_dict['url'])
 
     source = HarvestSource()

@@ -20,6 +20,9 @@ class TestHarvest(WsgiAppCase, HtmlCheckMethods, CkanServerCase):
         model.repo.commit_and_remove()
         cls.extra_environ = {'REMOTE_USER': 'tester'}
 
+        from ckanext.harvest.model import setup as harvest_setup
+        harvest_setup()
+
 ##        cls.ckan_process = cls._start_ckan_server(config['__file__'])
 ##        cls._wait_for_url()
 
