@@ -163,7 +163,8 @@ def _normalize_url(url):
     # Normalize port
     if ':' in o.netloc:
         parts = o.netloc.split(':')
-        if parts[1] == '80':
+        if (o.scheme == 'http' and parts[1] == '80') or \
+           (o.scheme == 'https' and parts[1] == '443'):
             netloc = parts[0]
         else:
             netloc = ':'.join(parts)
