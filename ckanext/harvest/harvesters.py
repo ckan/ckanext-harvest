@@ -1,5 +1,14 @@
 import urllib2
 
+from ckan.logic.action.create import package_create_rest
+from ckan.logic.action.update import package_update_rest
+from ckan.logic.action.get import package_show
+from ckan.logic.schema import default_package_schema
+from ckan.logic import ValidationError,NotFound
+from ckan import model
+from ckan.model import Session
+from ckan.lib.navl.validators import ignore_missing
+
 from ckan.lib.helpers import json
 
 from ckan.plugins.core import SingletonPlugin, implements
@@ -134,18 +143,14 @@ class CKANHarvester(SingletonPlugin):
             self._save_object_error('Empty content for object %s' % harvest_object.id,harvest_object,'Import')
             return False
         try:
-            from ckan.logic.action.create import package_create_rest
-            from ckan.logic.action.update import package_update_rest
-            from ckan.logic.action.get import package_show
-            from ckan.logic.schema import default_package_schema
-            from ckan.logic import ValidationError,NotFound
-            from ckan import model
-            from ckan.model import Session
-            from ckan.lib.navl.validators import ignore_missing
 
             # harvest_object.content is the result of an API call like
             # http://ec2-46-51-149-132.eu-west-1.compute.amazonaws.com:8081/api/2/rest/package/77d93608-3a3e-42e5-baab-3521afb504f1
             package_dict = json.loads(harvest_object.content)
+
+            # Save reference date in Harvest Object
+            harvest_object.reference_date = package_dict['metadata_modified']
+            harvest_object.save()
 
             ## change default schema
             schema = default_package_schema()
