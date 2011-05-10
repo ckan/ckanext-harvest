@@ -345,6 +345,8 @@ def import_last_objects(source_id=None):
             imported_objects.append(obj)
             for harvester in PluginImplementations(IHarvester):
                 if harvester.get_type() == obj.job.source.type:
+                    if hasattr(harvester,'force_import'):
+                        harvester.force_import = True
                     harvester.import_stage(obj)
         last_obj_guid = obj.guid
 
