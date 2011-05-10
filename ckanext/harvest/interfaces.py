@@ -24,7 +24,10 @@ class IHarvester(Interface):
             - gathering all the necessary objects to fetch on a later.
               stage (e.g. for a CSW server, perform a GetRecords request)
             - creating the necessary HarvestObjects in the database, specifying
-              the guid and a reference to its source and job.
+              the guid and a reference to its job. The HarvestObjects need a
+              reference date with the last modified date for the resource, this
+              may need to be set in a different stage depending on the type of
+              source.
             - creating and storing any suitable HarvestGatherErrors that may
               occur.
             - returning a list with all the ids of the created HarvestObjects.
