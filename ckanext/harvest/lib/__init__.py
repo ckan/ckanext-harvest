@@ -2,10 +2,11 @@ import urlparse
 from sqlalchemy import distinct,func
 from ckan.model import Session, repo
 from ckan.model import Package
-
+from ckan.plugins import PluginImplementations
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject, \
                                   HarvestGatherError, HarvestObjectError
 from ckanext.harvest.queue import get_gather_publisher
+from ckanext.harvest.interfaces import IHarvester
 
 log = __import__("logging").getLogger(__name__)
 
@@ -314,3 +315,37 @@ def get_harvest_objects(**kwds):
     objects = HarvestObject.filter(**kwds).all()
     return [_object_as_dict(obj) for obj in objects]
 
+def import_last_objects(source_id=None):
+    if source_id:
+        try:
+            source = HarvestSource.get(source_id)
+        except:
+            raise Exception('Source %s does not exist' % source_id)
+        last_objects = Session.query(HarvestObject) \
+                .join(HarvestJob) \
+                .filter(HarvestJob.source==source) \
+                .filter(HarvestObject.package!=None) \
+                .order_by(HarvestObject.guid) \
+                .order_by(HarvestObject.reference_date.desc()) \
+                .order_by(HarvestObject.created.desc()) \
+                .all()
+    else:
+        last_objects = Session.query(HarvestObject) \
+                .filter(HarvestObject.package!=None) \
+                .order_by(HarvestObject.guid) \
+                .order_by(HarvestObject.reference_date.desc()) \
+                .order_by(HarvestObject.created.desc()) \
+                .all()
+
+
+    last_obj_guid = ''
+    imported_objects = []
+    for obj in last_objects:
+        if obj.guid != last_obj_guid:
+            imported_objects.append(obj)
+            for harvester in PluginImplementations(IHarvester):
+                if harvester.get_type() == obj.job.source.type:
+                    harvester.import_stage(obj)
+        last_obj_guid = obj.guid
+
+    return imported_objects

@@ -38,7 +38,12 @@ class Harvester(CkanCommand):
 
       harvester fetch_consumer
         - starts the consumer for the fetching queue
-       
+
+      harvester import [{source-id}]
+        - perform the import stage with the last fetched objects, optionally belonging to a certain source.
+          Please note that no objects will be fetched from the remote server. It will only affect
+          the last fetched objects already present in the database.
+
     The commands should be run from the ckanext-harvest directory and expect
     a development.ini file to be present. Most of the time you will
     specify the config explicitly though::
@@ -82,9 +87,10 @@ class Harvester(CkanCommand):
             logging.getLogger('amqplib').setLevel(logging.INFO)
             consumer = get_fetch_consumer()
             consumer.wait()
-        elif cmd == "initdb":
+        elif cmd == 'initdb':
             self.initdb()
-
+        elif cmd == 'import':
+            self.import_stage()
         else:
             print 'Command %s not recognized' % cmd
 
@@ -185,8 +191,15 @@ class Harvester(CkanCommand):
             jobs = run_harvest_jobs()
         except:
             pass
-        sys.exit(1)
+        sys.exit(0)
         #print 'Sent %s jobs to the gather queue' % len(jobs)
+
+    def import_stage(self):
+        if len(self.args) >= 2:
+            source_id = unicode(self.args[1])
+        else:
+            source_id = None
+        import_last_objects(source_id)
 
     def print_harvest_sources(self, sources):
         if sources:
