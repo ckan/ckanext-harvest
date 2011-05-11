@@ -148,8 +148,8 @@ class CKANHarvester(SingletonPlugin):
             # http://ec2-46-51-149-132.eu-west-1.compute.amazonaws.com:8081/api/2/rest/package/77d93608-3a3e-42e5-baab-3521afb504f1
             package_dict = json.loads(harvest_object.content)
 
-            # Save reference date in Harvest Object
-            harvest_object.reference_date = package_dict['metadata_modified']
+            # Save metadata modified date in Harvest Object
+            harvest_object.metadata_modified_date = package_dict['metadata_modified']
             harvest_object.save()
 
             ## change default schema

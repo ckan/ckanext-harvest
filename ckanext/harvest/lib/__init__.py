@@ -326,15 +326,15 @@ def import_last_objects(source_id=None):
                 .filter(HarvestJob.source==source) \
                 .filter(HarvestObject.package!=None) \
                 .order_by(HarvestObject.guid) \
-                .order_by(HarvestObject.reference_date.desc()) \
-                .order_by(HarvestObject.created.desc()) \
+                .order_by(HarvestObject.metadata_modified_date.desc()) \
+                .order_by(HarvestObject.gathered.desc()) \
                 .all()
     else:
         last_objects = Session.query(HarvestObject) \
                 .filter(HarvestObject.package!=None) \
                 .order_by(HarvestObject.guid) \
-                .order_by(HarvestObject.reference_date.desc()) \
-                .order_by(HarvestObject.created.desc()) \
+                .order_by(HarvestObject.metadata_modified_date.desc()) \
+                .order_by(HarvestObject.gathered.desc()) \
                 .all()
 
 
