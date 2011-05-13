@@ -9,7 +9,7 @@ Dependencies
 ============
 
 The harvest extension uses Message Queuing to handle the different gather
-stages. 
+stages.
 
 You will need to install the RabbitMQ server::
 
@@ -23,12 +23,12 @@ The extension uses `carrot` as messaging library::
 Configuration
 =============
 
-Run the following command (in the ckanext-harvest directory) to create 
+Run the following command (in the ckanext-harvest directory) to create
 the necessary tables in the database::
 
     paster harvester initdb --config=../ckan/development.ini
 
-The extension needs a user with sysadmin privileges to perform the 
+The extension needs a user with sysadmin privileges to perform the
 harvesting jobs. You can create such a user running these two commands in
 the ckan directory::
 
@@ -53,25 +53,25 @@ Or with postgres::
 Command line interface
 ======================
 
-The following operations can be run from the command line using the 
+The following operations can be run from the command line using the
 ``paster harvester`` command::
 
       harvester initdb
         - Creates the necessary tables in the database
 
-      harvester source {url} {type} [{active}] [{user-id}] [{publisher-id}] 
+      harvester source {url} {type} [{active}] [{user-id}] [{publisher-id}]
         - create new harvest source
 
       harvester rmsource {id}
         - remove (inactivate) a harvester source
 
-      harvester sources [all]        
+      harvester sources [all]
         - lists harvest sources
           If 'all' is defined, it also shows the Inactive sources
 
       harvester job {source-id}
         - create new harvest job
-  
+
       harvester jobs
         - lists harvest jobs
 
@@ -83,9 +83,9 @@ The following operations can be run from the command line using the
 
       harvester fetch_consumer
         - starts the consumer for the fetching queue
-       
+
 The commands should be run from the ckanext-harvest directory and expect
-a development.ini file to be present. Most of the time you will specify 
+a development.ini file to be present. Most of the time you will specify
 the config explicitly though::
 
         paster harvester sources --config=../ckan/development.ini
@@ -103,18 +103,18 @@ Extensions can implement the harvester interface to perform harvesting
 operations. The harvesting process takes place on three stages:
 
 1. The **gather** stage compiles all the resource identifiers that need to
-   be fetched in the next stage (e.g. in a CSW server, it will perform a 
+   be fetched in the next stage (e.g. in a CSW server, it will perform a
    `GetRecords` operation).
 
 2. The **fetch** stage gets the contents of the remote objects and stores
-   them in the database (e.g. in a CSW server, it will perform n 
+   them in the database (e.g. in a CSW server, it will perform n
    `GetRecordById` operations).
 
 3. The **import** stage performs any necessary actions on the fetched
    resource (generally creating a CKAN package, but it can be anything the
    extension needs).
 
-Plugins willing to implement the harvesting interface must provide the 
+Plugins willing to implement the harvesting interface must provide the
 following methods::
 
     from ckan.plugins.core import SingletonPlugin, implements
@@ -126,16 +126,31 @@ following methods::
     '''
     implements(IHarvester)
 
-    def get_type(self):
+    def info(self):
         '''
-        Plugins must provide this method, which will return a string with the
-        Harvester type implemented by the plugin (e.g ``CSW``,``INSPIRE``, etc).
-        This will ensure that they only receive Harvest Jobs and Objects
-        relevant to them.
+        Harvesting implementations must provide this method, which will return a
+        dictionary containing different descriptors of the harvester. The
+        returned dictionary should contain:
 
-        returns: A string with the harvester type
+        * name: machine-readable name. This will be the value stored in the
+          database, and the one used by ckanext-harvest to call the appropiate
+          harvester.
+        * title: human-readable name. This will appear in the form's select box
+          in the WUI.
+        * description: a small description of what the harvester does. This will
+          appear on the form as a guidance to the user.
+
+        A complete example may be::
+
+            {
+                'name': 'csw',
+                'title': 'CSW Server',
+                'description': 'A server that implements OGC's Catalog Service
+                                for the Web (CSW) standard'
+            }
+
+        returns: A dictionary with the harvester descriptors
         '''
-
 
     def gather_stage(self, harvest_job):
         '''
@@ -172,7 +187,7 @@ following methods::
         '''
         The import stage will receive a HarvestObject object and will be
         responsible for:
-            - performing any necessary action with the fetched object (e.g 
+            - performing any necessary action with the fetched object (e.g
               create a CKAN package).
               Note: if this stage creates or updates a package, a reference
               to the package should be added to the HarvestObject.
@@ -196,7 +211,7 @@ Running the harvest jobs
 
 The harvesting extension uses two different queues, one that handles the
 gathering and another one that handles the fetching and importing. To start
-the consumers run the following command from the ckanext-harvest directory 
+the consumers run the following command from the ckanext-harvest directory
 (make sure you have your python environment activated)::
 
       paster harvester gather_consumer --config=../ckan/development.ini

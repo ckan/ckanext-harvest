@@ -75,8 +75,12 @@ class CKANHarvester(SingletonPlugin):
         err.save()
         log.error(message)
 
-    def get_type(self):
-        return 'CKAN'
+    def info(self):
+        return {
+            'name': 'ckan',
+            'title': 'CKAN',
+            'description': 'Harvests remote CKAN instances'
+        }
 
     def gather_stage(self,harvest_job):
         log.debug('In CKANHarvester gather_stage')

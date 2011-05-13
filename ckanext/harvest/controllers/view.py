@@ -9,7 +9,7 @@ from ckan.logic import NotFound, ValidationError
 from ckanext.harvest.logic.schema import harvest_source_form_schema
 from ckanext.harvest.lib import create_harvest_source, edit_harvest_source, \
                                 get_harvest_source, get_harvest_sources, \
-                                create_harvest_job, get_registered_harvesters_types
+                                create_harvest_job, get_registered_harvesters_info
     
 import logging
 log = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ class ViewController(BaseController):
         errors = errors or {}
         error_summary = error_summary or {}
         #TODO: Use new description interface to build the types select and descriptions
-        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'types': get_registered_harvesters_types()}
+        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': get_registered_harvesters_info()}
         
         c.form = render('source/new_source_form.html', extra_vars=vars)
         return render('source/new.html')
@@ -61,7 +61,7 @@ class ViewController(BaseController):
             abort(400, 'Integrity Error')
         except ValidationError,e:
             errors = e.error_dict
-            error_summary = e.error_summary if 'error_summary' in e else None
+            error_summary = e.error_summary if hasattr(e,'error_summary') else None
             return self.new(data_dict, errors, error_summary)
 
     def edit(self, id, data = None,errors = None, error_summary = None):
@@ -79,7 +79,7 @@ class ViewController(BaseController):
         errors = errors or {}
         error_summary = error_summary or {}
         #TODO: Use new description interface to build the types select and descriptions
-        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'types': get_registered_harvesters_types()}
+        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': get_registered_harvesters_info()}
         
         c.form = render('source/new_source_form.html', extra_vars=vars)
         return render('source/edit.html')
@@ -99,7 +99,7 @@ class ViewController(BaseController):
             abort(404, _('Harvest Source not found'))
         except ValidationError,e:
             errors = e.error_dict
-            error_summary = e.error_summary if 'error_summary' in e else None
+            error_summary = e.error_summary if hasattr(e,'error_summary') else None
             return self.edit(id,data_dict, errors, error_summary)
 
     def _check_data_dict(self, data_dict):

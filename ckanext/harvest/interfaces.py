@@ -6,16 +6,31 @@ class IHarvester(Interface):
 
     '''
 
-    def get_type(self):
+    def info(self):
         '''
-        Plugins must provide this method, which will return a string with the
-        Harvester type implemented by the plugin (e.g ``CSW``,``INSPIRE``, etc).
-        This will ensure that they only receive Harvest Jobs and Objects
-        relevant to them.
+        Harvesting implementations must provide this method, which will return a
+        dictionary containing different descriptors of the harvester. The
+        returned dictionary should contain:
 
-        returns: A string with the harvester type
+        * name: machine-readable name. This will be the value stored in the
+          database, and the one used by ckanext-harvest to call the appropiate
+          harvester.
+        * title: human-readable name. This will appear in the form's select box
+          in the WUI.
+        * description: a small description of what the harvester does. This will
+          appear on the form as a guidance to the user.
+
+        A complete example may be::
+
+            {
+                'name': 'csw',
+                'title': 'CSW Server',
+                'description': 'A server that implements OGC's Catalog Service
+                                for the Web (CSW) standard'
+            }
+
+        returns: A dictionary with the harvester descriptors
         '''
-
 
     def gather_stage(self, harvest_job):
         '''
@@ -55,7 +70,7 @@ class IHarvester(Interface):
         '''
         The import stage will receive a HarvestObject object and will be
         responsible for:
-            - performing any necessary action with the fetched object (e.g 
+            - performing any necessary action with the fetched object (e.g
               create a CKAN package).
               Note: if this stage creates or updates a package, a reference
               to the package should be added to the HarvestObject.

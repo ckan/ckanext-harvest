@@ -77,7 +77,7 @@ def gather_callback(message_data,message):
             # matches
             harvester_found = False
             for harvester in PluginImplementations(IHarvester):
-                if harvester.get_type() == job.source.type:
+                if harvester.info()['name'] == job.source.type:
                     harvester_found = True
                     # Get a list of harvest object ids from the plugin
                     job.gather_started = datetime.datetime.now()
@@ -123,7 +123,7 @@ def fetch_callback(message_data,message):
             # the Harvester interface, only if the source type
             # matches
             for harvester in PluginImplementations(IHarvester):
-                if harvester.get_type() == obj.source.type:
+                if harvester.info()['name'] == obj.source.type:
 
                     # See if the plugin can fetch the harvest object
                     obj.fetch_started = datetime.datetime.now()

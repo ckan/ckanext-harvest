@@ -196,7 +196,6 @@ def _prettify(field_name):
     return field_name.replace('_', ' ')
 
 def _error_summary(error_dict):
-
     error_summary = {}
     for key, error in error_dict.iteritems():
         error_summary[_prettify(key)] = error[0]
@@ -373,7 +372,7 @@ def import_last_objects(source_id=None):
         if obj.guid != last_obj_guid:
             imported_objects.append(obj)
             for harvester in PluginImplementations(IHarvester):
-                if harvester.get_type() == obj.job.source.type:
+                if harvester.info()['name'] == obj.job.source.type:
                     if hasattr(harvester,'force_import'):
                         harvester.force_import = True
                     harvester.import_stage(obj)
@@ -381,9 +380,14 @@ def import_last_objects(source_id=None):
 
     return imported_objects
 
-def get_registered_harvesters_types():
+def get_registered_harvesters_info():
     # TODO: Use new description interface when implemented
-    available_types = []
+    available_harvesters = []
     for harvester in PluginImplementations(IHarvester):
-        available_types.append(harvester.get_type())
-    return available_types
+        info = harvester.info()
+        if not info or 'name' not in info:
+            log.error('Harvester %r does not provide the harvester name in the info response' % str(harvester))
+            continue
+        available_harvesters.append(info)
+
+    return available_harvesters

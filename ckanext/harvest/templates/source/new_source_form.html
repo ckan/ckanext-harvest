@@ -22,18 +22,17 @@
             <dt><label class="field_req" for="type">Source Type *</label></dt> 
             <dd> 
                 <select id="type" name="type">
-                    <py:for each="type in types">
-                     <option value="${type}" py:attrs="{'selected': 'selected' if data.get('type', '') == type else None}" >${type}</option>
+                    <py:for each="harvester in harvesters">
+                     <option value="${harvester.name}" py:attrs="{'selected': 'selected' if data.get('type', '') == harvester.name else None}" >${harvester.title}</option>
                     </py:for>
                 </select>
             </dd>
             <dd class="field_error" py:if="errors.get('type', '')">${errors.get('type', '')}</dd>
             <dd class="instructions basic">Which type of source does the URL above represent?
-                <!--TODO: get these from the harvesters-->
-                <ul> 
-                    <li>A server's CSW interface</li> 
-                    <li>A Web Accessible Folder (WAF) displaying a list of GEMINI 2.1 documents</li> 
-                    <li>A single GEMINI 2.1 document</li> 
+                <ul>
+                    <py:for each="harvester in harvesters">
+                    <li><span class="harvester-title">${harvester.title}</span>: ${harvester.description}</li>
+                    </py:for>
                 </ul>         
             </dd> 
             <dt><label class="field_opt" for="description">Description</label></dt> 
