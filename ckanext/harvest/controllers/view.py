@@ -136,11 +136,10 @@ class ViewController(BaseController):
         try:
             create_harvest_job(id)
             h.flash_success(_('Refresh requested, harvesting will take place within 15 minutes.'))
-            redirect(h.url_for('harvest'))
         except NotFound:
             abort(404,_('Harvest source not found'))
-        except Exception as e:
+        except Exception, e:
             msg = 'An error occurred: [%s]' % e.message
             h.flash_error(msg)
-            redirect(h.url_for('harvest'))
 
+        redirect(h.url_for('harvest'))

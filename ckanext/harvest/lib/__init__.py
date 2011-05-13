@@ -211,7 +211,9 @@ def get_harvest_source(id,attr=None):
     return _source_as_dict(source)
 
 def get_harvest_sources(**kwds):
-    sources = HarvestSource.filter(**kwds).all()
+    sources = HarvestSource.filter(**kwds) \
+                .order_by(HarvestSource.created.desc()) \
+                .all()
     return [_source_as_dict(source) for source in sources]
 
 def create_harvest_source(data_dict):

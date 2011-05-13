@@ -1,4 +1,11 @@
 /* Harvest styles */
 #new-harvest-source {
+	background: transparent url("images/icons/source_new.png") no-repeat 0px 0px;
+    padding-left: 20px;
+    margin-bottom: 10px;
     font-weight: bold;
+}
+
+#harvest-sources th.action{
+    font-style: italic;
 }

@@ -12,16 +12,16 @@
 <div py:match="content">
   <div class="harvest-content">
   <h1>Harvesting Sources</h1>
-    <a id="new-harvest-source" href="harvest/new">Add a harvesting source</a>
+    <div id="new-harvest-source"><a href="harvest/new">Add a harvesting source</a></div>
     <py:choose>
         <py:when test="c.sources">
 
 
        <table id="harvest-sources">
         <tr>
-            <th></th>
-            <th></th>
-            <th></th>
+            <th class="action">View</th>
+            <th class="action">Edit</th>
+            <th class="action">Refresh</th>
             <th>URL</th>
             <th>Type</th>
             <th>Active</th>
@@ -31,9 +31,9 @@
         </tr>
 
         <tr py:for="source in c.sources">
-            <td>${h.link_to('view', 'harvest/%s' % source.id)}</td>
-            <td>${h.link_to('edit', 'harvest/edit/%s' % source.id)}</td>
-            <td>${h.link_to('refresh', 'harvest/refresh/%s' % source.id)}</td>
+            <td><a href="harvest/${source.id}"><img src="ckanext/harvest/images/icons/source_view.png" alt="View" title="View" /></a></td>
+            <td><a href="harvest/edit/${source.id}"><img src="ckanext/harvest/images/icons/source_edit.png" alt="Edit" title="Edit" /></a></td>
+            <td><a href="harvest/refresh/${source.id}"><img src="ckanext/harvest/images/icons/source_refresh.png" alt="Refresh" title="Refresh" /></a></td>
             <td>${source.url}</td>
             <td>${source.type}</td>
             <td>${source.active}</td>
