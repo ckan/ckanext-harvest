@@ -36,16 +36,6 @@ the ckan directory::
 
     paster sysadmin add harvest
 
-The user's API key must be defined in the CKAN
-configuration file (.ini) in the [app:main] section::
-
-    ckan.harvest.api_key = 4e1dac58-f642-4e54-bbc4-3ea262271fe2
-
-The API URL used can be also defined in the ini file (it defaults to 
-http://localhost:5000/)::
-
-    ckan.api_url = <api_url>
-
 Tests
 =====
 
@@ -99,6 +89,12 @@ a development.ini file to be present. Most of the time you will specify
 the config explicitly though::
 
         paster harvester sources --config=../ckan/development.ini
+
+The CKAN haverster
+==================
+
+TODO
+
 
 The harvesting interface
 ========================

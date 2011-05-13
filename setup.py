@@ -6,7 +6,7 @@ version = '0.1'
 setup(
 	name='ckanext-harvest',
 	version=version,
-	description="CSW harvesting plugin for CKAN",
+	description="Harvesting interface plugin for CKAN",
 	long_description="""\
 	""",
 	classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers

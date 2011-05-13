@@ -3,8 +3,3 @@
 # to suit the packaging system.
 
 carrot==0.10.1
-
-# These are other dependencies to bear in mind:
-
-# -e hg+https://bitbucket.org/okfn/ckanext-dgu@default#egg=ckanext-dgu
-# -e hg+https://bitbucket.org/okfn/ckanext-csw@default#egg=ckanext-csw
