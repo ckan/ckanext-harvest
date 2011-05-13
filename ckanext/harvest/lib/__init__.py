@@ -1,14 +1,22 @@
 import urlparse
+import re
+
 from sqlalchemy import distinct,func
 from ckan.model import Session, repo
 from ckan.model import Package
+from ckan.lib.navl.dictization_functions import validate 
+from ckan.logic import NotFound, ValidationError
+
+from ckanext.harvest.logic.schema import harvest_source_form_schema
+
 from ckan.plugins import PluginImplementations
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject, \
                                   HarvestGatherError, HarvestObjectError
 from ckanext.harvest.queue import get_gather_publisher
 from ckanext.harvest.interfaces import IHarvester
 
-log = __import__("logging").getLogger(__name__)
+import logging
+log = logging.getLogger(__name__)
 
 
 def _get_source_status(source):
@@ -183,49 +191,68 @@ def _normalize_url(url):
 
     return check_url
 
-def get_harvest_source(id,default=Exception,attr=None):
-    source = HarvestSource.get(id,default=default,attr=attr)
-    if source:
-        return _source_as_dict(source)
-    else:
-        return default
+def _prettify(field_name):
+    field_name = re.sub('(?<!\w)[Uu]rl(?!\w)', 'URL', field_name.replace('_', ' ').capitalize())
+    return field_name.replace('_', ' ')
+
+def _error_summary(error_dict):
+
+    error_summary = {}
+    for key, error in error_dict.iteritems():
+        error_summary[_prettify(key)] = error[0]
+    return error_summary
+
+def get_harvest_source(id,attr=None):
+    source = HarvestSource.get(id,attr=attr)
+
+    if not source:
+        raise NotFound
+
+    return _source_as_dict(source)
 
 def get_harvest_sources(**kwds):
     sources = HarvestSource.filter(**kwds).all()
     return [_source_as_dict(source) for source in sources]
 
-def create_harvest_source(source_dict):
-    if not 'url' in source_dict or not source_dict['url'] or \
-        not 'type' in source_dict or not source_dict['type']:
-        raise Exception('Missing mandatory properties: url, type')
+def create_harvest_source(data_dict):
 
-    # Check if source already exists
-    existing_source = _url_exists(source_dict['url'])
-    if existing_source:
-        raise Exception('There already is an active Harvest Source for this URL: %s' % source_dict['url'])
+    schema = harvest_source_form_schema()
+    data, errors = validate(data_dict, schema)
+
+    if errors:
+        Session.rollback()
+        raise ValidationError(errors,_error_summary(errors))
 
     source = HarvestSource()
-    source.url = source_dict['url']
-    source.type = source_dict['type']
+    source.url = data['url']
+    source.type = data['type']
+
     opt = ['active','description','user_id','publisher_id']
     for o in opt:
-        if o in source_dict and source_dict[o] is not None:
-            source.__setattr__(o,source_dict[o])
+        if o in data and data[o] is not None:
+            source.__setattr__(o,data[o])
 
     source.save()
 
-
     return _source_as_dict(source)
 
-def edit_harvest_source(source_id,source_dict):
-    try:
-        source = HarvestSource.get(source_id)
-    except:
-        raise Exception('Source %s does not exist' % source_id)
+def edit_harvest_source(source_id,data_dict):
+    schema = harvest_source_form_schema()
+
+    source = HarvestSource.get(source_id)
+    
+    # Add source id to the dict, as some validators will need it
+    data_dict["id"] = source.id
+
+    data, errors = validate(data_dict, schema)
+    if errors:
+        Session.rollback()
+        raise ValidationError(errors,_error_summary(errors))
+
     fields = ['url','type','active','description','user_id','publisher_id']
     for f in fields:
-        if f in source_dict and source_dict[f] is not None and source_dict[f] != '':
-            source.__setattr__(f,source_dict[f])
+        if f in data_dict and data_dict[f] is not None and data_dict[f] != '':
+            source.__setattr__(f,data_dict[f])
 
     source.save()
 
@@ -251,12 +278,12 @@ def remove_harvest_source(source_id):
 
     return True
 
-def get_harvest_job(id,default=Exception,attr=None):
-    job = HarvestJob.get(id,default=default,attr=attr)
-    if job:
-        return _job_as_dict(job)
-    else:
-        return default
+def get_harvest_job(id,attr=None):
+    job = HarvestJob.get(id,attr=attr)
+    if not job:
+        raise NotFound
+
+    return _job_as_dict(job)
 
 def get_harvest_jobs(**kwds):
     jobs = HarvestJob.filter(**kwds).all()
@@ -304,13 +331,13 @@ def run_harvest_jobs():
     publisher.close()
     return sent_jobs
 
-def get_harvest_object(id,default=Exception,attr=None):
-    obj = HarvestObject.get(id,default=default,attr=attr)
-    if obj:
-        return _object_as_dict(obj)
-    else:
-        return default
+def get_harvest_object(id,attr=None):
+    obj = HarvestObject.get(id,attr=attr)
+    if not obj:
+        raise NotFound
 
+    return _object_as_dict(obj)
+    
 def get_harvest_objects(**kwds):
     objects = HarvestObject.filter(**kwds).all()
     return [_object_as_dict(obj) for obj in objects]
@@ -351,3 +378,10 @@ def import_last_objects(source_id=None):
         last_obj_guid = obj.guid
 
     return imported_objects
+
+def get_registered_harvesters_types():
+    # TODO: Use new description interface when implemented
+    available_types = []
+    for harvester in PluginImplementations(IHarvester):
+        available_types.append(harvester.get_type())
+    return available_types

@@ -22,35 +22,17 @@ class Harvest(SingletonPlugin):
         pass
 
     def before_map(self, map):
-        map.connect('harvest', '/harvest',
-            controller='ckanext.harvest.controllers.view:ViewController',
-            action='index')
-            
-        map.connect('harvest_create_form', '/harvest/create',
-            controller='ckanext.harvest.controllers.view:ViewController',
-            conditions=dict(method=['GET']),
-            action='create')
 
-        map.connect('harvest_create', '/harvest/create',
-            controller='ckanext.harvest.controllers.view:ViewController',
-            conditions=dict(method=['POST']),
-            action='create')
+        controller = 'ckanext.harvest.controllers.view:ViewController'
+        map.connect('harvest', '/harvest',controller=controller,action='index')
 
-        map.connect('harvest_show', '/harvest/:id',
-            controller='ckanext.harvest.controllers.view:ViewController',
-            action='show')
+        map.connect('/harvest/new', controller=controller, action='new')
+        map.connect('/harvest/edit/:id', controller=controller, action='edit') 
+        map.connect('/harvest/delete/:id',controller=controller, action='delete')
+        map.connect('/harvest/:id', controller=controller, action='read')
 
-        map.connect('harvest_edit', '/harvest/:id/edit',
-            controller='ckanext.harvest.controllers.view:ViewController',
-            action='edit')
-
-        map.connect('harvest_delete', '/harvest/:id/delete',
-            controller='ckanext.harvest.controllers.view:ViewController',
-            action='delete')
-
-        map.connect('harvesting_job_create', '/harvest/:id/refresh',
-            controller='ckanext.harvest.controllers.view:ViewController',
-            action='create_harvesting_job')
+        map.connect('harvesting_job_create', '/harvest/refresh/:id',controller=controller, 
+                action='create_harvesting_job')
       
         return map
 

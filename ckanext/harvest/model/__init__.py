@@ -31,7 +31,7 @@ class HarvestDomainObject(DomainObject):
     key_attr = 'id'
 
     @classmethod
-    def get(self, key, default=Exception, attr=None):
+    def get(self, key, default=None, attr=None):
         '''Finds a single entity in the register.'''
         if attr == None:
             attr = self.key_attr
@@ -39,10 +39,8 @@ class HarvestDomainObject(DomainObject):
         o = self.filter(**kwds).first()
         if o:
             return o
-        if default != Exception:
-            return default
         else:
-            raise Exception('%s not found: %s' % (self.__name__, key))
+            return default
 
     @classmethod
     def filter(self, **kwds):

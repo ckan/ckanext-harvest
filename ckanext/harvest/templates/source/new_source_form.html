@@ -1,0 +1,47 @@
+<form id="source-new" class="ckan" method="post"
+  py:attrs="{'class':'has-errors'} if errors else {}"
+  xmlns:i18n="http://genshi.edgewall.org/i18n"
+  xmlns:py="http://genshi.edgewall.org/"
+  xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <div class="error-explanation" py:if="error_summary">
+<h2>Errors in form</h2>
+<p>The form contains invalid entries:</p>
+<ul>
+  <li py:for="key, error in error_summary.items()">${"%s: %s" % (key, error)}</li>
+</ul>
+</div>
+
+    <fieldset> 
+    <legend>Details</legend> 
+        <dl> 
+            <dt><label class="field_req" for="url">URL for source of metadata *</label></dt> 
+            <dd><input id="url" name="url" size="80" type="text" value="${data.get('url', '')}" /></dd>
+            <dd class="field_error" py:if="errors.get('url', '')">${errors.get('url', '')}</dd>
+            <dd class="instructions basic">This should include the <tt>http://</tt> part of the URL</dd> 
+            <dt><label class="field_req" for="type">Source Type *</label></dt> 
+            <dd> 
+                <select id="type" name="type">
+                    <py:for each="type in types">
+                     <option value="${type}" py:attrs="{'selected': 'selected' if data.get('type', '') == type else None}" >${type}</option>
+                    </py:for>
+                    <option value="FAKW">FAKW</option>
+                </select>
+            </dd>
+            <dd class="field_error" py:if="errors.get('type', '')">${errors.get('type', '')}</dd>
+            <dd class="instructions basic">Which type of source does the URL above represent?
+                TODO: get these from the harvesters
+                <ul> 
+                    <li>A server's CSW interface</li> 
+                    <li>A Web Accessible Folder (WAF) displaying a list of GEMINI 2.1 documents</li> 
+                    <li>A single GEMINI 2.1 document</li> 
+                </ul>         
+            </dd> 
+            <dt><label class="field_opt" for="description">Description</label></dt> 
+            <dd><textarea id="description" name="description" cols="30" rows="2" style="height:75px">${data.get('description', '')}</textarea></dd> 
+            <dd class="instructions basic">You can add your own notes here about what the URL above represents to remind you later.</dd> 
+        </dl> 
+    </fieldset> 
+    <input id="save" name="save" value="Save" type="submit" /> 
+
+</form>

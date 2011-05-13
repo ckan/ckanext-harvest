@@ -12,7 +12,7 @@
 <div py:match="content">
   <div class="harvest-content">
   <h1>Harvesting Sources</h1>
-    <a id="new-harvest-source" href="harvest/create">Add a harvesting source</a>
+    <a id="new-harvest-source" href="harvest/new">Add a harvesting source</a>
     <py:choose>
         <py:when test="c.sources">
 
@@ -31,9 +31,9 @@
         </tr>
 
         <tr py:for="source in c.sources">
-            <td>${h.link_to('view', 'harvest/' + source.id)}</td>
-            <td>${h.link_to('edit', 'harvest/' + source.id + '/edit')}</td>
-            <td>${h.link_to('refresh', 'harvest/' + source.id + '/refresh')}</td>
+            <td>${h.link_to('view', 'harvest/%s' % source.id)}</td>
+            <td>${h.link_to('edit', 'harvest/edit/%s' % source.id)}</td>
+            <td>${h.link_to('refresh', 'harvest/refresh/%s' % source.id)}</td>
             <td>${source.url}</td>
             <td>${source.type}</td>
             <td>${source.active}</td>
@@ -59,5 +59,5 @@
  
   </div>
 </div>
-<xi:include href="../../layout.html" />
+<xi:include href="layout.html" />
 </html>
