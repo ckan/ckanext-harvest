@@ -4,7 +4,7 @@ import re
 from sqlalchemy import distinct,func
 from ckan.model import Session, repo
 from ckan.model import Package
-from ckan.lib.navl.dictization_functions import validate 
+from ckan.lib.navl.dictization_functions import validate
 from ckan.logic import NotFound, ValidationError
 
 from ckanext.harvest.logic.schema import harvest_source_form_schema
@@ -48,8 +48,8 @@ def _get_source_status(source):
     if  last_job:
         #TODO: Should we encode the dates as strings?
         out['last_harvest_request'] = str(last_job.gather_finished)
-        
-       
+
+
         #Get HarvestObjects from last job whit links to packages
         last_objects = [obj for obj in last_job.objects if obj.package is not None]
 
@@ -76,8 +76,8 @@ def _get_source_status(source):
         # We have the gathering errors in last_job.gather_errors, so let's also
         # get also the object errors.
         object_errors = Session.query(HarvestObjectError).join(HarvestObject) \
-                            .filter(HarvestObject.job==last_job).all()        
-        
+                            .filter(HarvestObject.job==last_job).all()
+
         out['last_harvest_statistics']['errors'] = len(last_job.gather_errors) \
                                             + len(object_errors)
         for gather_error in last_job.gather_errors:
@@ -87,7 +87,7 @@ def _get_source_status(source):
             msg = 'GUID %s: %s' % (object_error.object.guid,object_error.message)
             out['last_harvest_errors'].append(msg)
 
-        
+
 
         # Overall statistics
         packages = Session.query(distinct(HarvestObject.package_id),Package.name) \
@@ -120,7 +120,7 @@ def _source_as_dict(source):
 
     for job in source.jobs:
         out['jobs'].append(job.as_dict())
-    
+
     out['status'] = _get_source_status(source)
 
 
@@ -179,7 +179,7 @@ def _normalize_url(url):
             netloc = ':'.join(parts)
     else:
         netloc = o.netloc
-    
+
     # Remove trailing slash
     path = o.path.rstrip('/')
 
@@ -240,7 +240,9 @@ def edit_harvest_source(source_id,data_dict):
     schema = harvest_source_form_schema()
 
     source = HarvestSource.get(source_id)
-    
+    if not source:
+        raise NotFound('Harvest source %s does not exist' % source_id)
+
     # Add source id to the dict, as some validators will need it
     data_dict["id"] = source.id
 
@@ -260,11 +262,11 @@ def edit_harvest_source(source_id,data_dict):
 
 
 def remove_harvest_source(source_id):
-    try:
-        source = HarvestSource.get(source_id)
-    except:
-        raise Exception('Source %s does not exist' % source_id)
-    
+
+    source = HarvestSource.get(source_id)
+    if not source:
+        raise NotFound('Harvest source %s does not exist' % source_id)
+
     # Don't actually delete the record, just flag it as inactive
     source.active = False
     source.save()
@@ -291,11 +293,9 @@ def get_harvest_jobs(**kwds):
 
 def create_harvest_job(source_id):
     # Check if source exists
-    try:
-        #We'll need the actual HarvestSource
-        source = HarvestSource.get(source_id)
-    except:
-        raise Exception('Source %s does not exist' % source_id)
+    source = HarvestSource.get(source_id)
+    if not source:
+        raise NotFound('Harvest source %s does not exist' % source_id)
 
     # Check if the source is active
     if not source.active:
@@ -318,7 +318,7 @@ def run_harvest_jobs():
     jobs = get_harvest_jobs(status=u'New')
     if len(jobs) == 0:
         raise Exception('There are no new harvesting jobs')
-    
+
     # Send each job to the gather queue
     publisher = get_gather_publisher()
     sent_jobs = []
@@ -337,17 +337,17 @@ def get_harvest_object(id,attr=None):
         raise NotFound
 
     return _object_as_dict(obj)
-    
+
 def get_harvest_objects(**kwds):
     objects = HarvestObject.filter(**kwds).all()
     return [_object_as_dict(obj) for obj in objects]
 
 def import_last_objects(source_id=None):
     if source_id:
-        try:
-            source = HarvestSource.get(source_id)
-        except:
-            raise Exception('Source %s does not exist' % source_id)
+        source = HarvestSource.get(source_id)
+        if not source:
+            raise NotFound('Harvest source %s does not exist' % source_id)
+
         last_objects = Session.query(HarvestObject) \
                 .join(HarvestJob) \
                 .filter(HarvestJob.source==source) \
