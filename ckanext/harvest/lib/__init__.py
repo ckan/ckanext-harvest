@@ -16,7 +16,7 @@ from ckanext.harvest.queue import get_gather_publisher
 from ckanext.harvest.interfaces import IHarvester
 
 import logging
-log = logging.getLogger(__name__)
+log = logging.getLogger('ckanext')
 
 
 def _get_source_status(source):

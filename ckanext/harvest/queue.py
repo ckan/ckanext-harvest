@@ -11,7 +11,7 @@ from ckan.plugins import PluginImplementations
 from ckanext.harvest.model import HarvestJob, HarvestObject,HarvestGatherError
 from ckanext.harvest.interfaces import IHarvester
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('ckanext')
 
 __all__ = ['get_gather_publisher', 'get_gather_consumer', \
            'get_fetch_publisher', 'get_fetch_consumer']
