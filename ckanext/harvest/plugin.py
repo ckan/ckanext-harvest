@@ -9,6 +9,7 @@ import ckan.lib.helpers as h
 from ckan.plugins import implements, SingletonPlugin
 from ckan.plugins import IRoutes, IConfigurer
 from ckan.plugins import IConfigurable, IGenshiStreamFilter
+from ckanext.harvest.model import setup
 
 log = getLogger(__name__)
 
@@ -19,7 +20,7 @@ class Harvest(SingletonPlugin):
     implements(IConfigurer, inherit=True)
     
     def configure(self, config):
-        pass
+        setup()
 
     def before_map(self, map):
 
