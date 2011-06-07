@@ -42,10 +42,10 @@ class Harvest(SingletonPlugin):
         template_dir = os.path.join(here, 'templates')
         public_dir = os.path.join(here, 'public')
         if config.get('extra_template_paths'):
-            config['extra_template_paths'] += ', ' + template_dir
+            config['extra_template_paths'] += ',' + template_dir
         else:
             config['extra_template_paths'] = template_dir
         if config.get('extra_public_paths'):
-            config['extra_public_paths'] += ', ' + public_dir
+            config['extra_public_paths'] += ',' + public_dir
         else:
             config['extra_public_paths'] = public_dir
