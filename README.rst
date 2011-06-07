@@ -139,6 +139,10 @@ following methods::
           in the WUI.
         * description: a small description of what the harvester does. This will
           appear on the form as a guidance to the user.
+        * form_config_interface [optional]: Harvesters willing to store configuration
+          values in the database must provide this key. The only supported value is
+          'Text'. This will enable the configuration text box in the form. See also
+          the ``validate_config`` method.
 
         A complete example may be::
 
@@ -150,6 +154,15 @@ following methods::
             }
 
         returns: A dictionary with the harvester descriptors
+        '''
+
+    def validate_config(self, config):
+        '''
+        Harvesters can provide this method to validate the configuration entered in the
+        form. It should return a single string, which will be stored in the database.
+        Exceptions raised will be shown in the form's error messages.
+
+        returns A string with the validated configuration options
         '''
 
     def gather_stage(self, harvest_job):

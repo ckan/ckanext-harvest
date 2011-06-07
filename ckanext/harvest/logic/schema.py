@@ -7,7 +7,8 @@ from ckan.lib.navl.validators import (ignore_missing,
 
 from ckanext.harvest.logic.validators import harvest_source_id_exists, \
                                             harvest_source_url_validator, \
-                                            harvest_source_type_exists
+                                            harvest_source_type_exists, \
+                                            harvest_source_config_validator
 
 def default_harvest_source_schema():
 
@@ -19,7 +20,7 @@ def default_harvest_source_schema():
         'active': [ignore_missing],
         'user_id': [ignore_missing],
         'publisher_id': [ignore_missing],
-        #'config'
+        'config': [harvest_source_config_validator]
     }
 
     return schema

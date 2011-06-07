@@ -77,3 +77,20 @@ def harvest_source_type_exists(value,context):
         raise Invalid('Unknown harvester type: %s. Have you registered a harvester for this type?' % value)
     
     return value
+
+def harvest_source_config_validator(key,data,errors,context):
+    harvester_type = data.get(('type',),'')
+    for harvester in PluginImplementations(IHarvester):
+        info = harvester.info()
+        if info['name'] == harvester_type:
+            if info.get('form_config_interface','') != 'Text':
+                raise Invalid('This harvester does not allow configuration options: %s' % harvester_type)
+
+            if harvester.validate_config:
+                try:
+                    return harvester.validate_config(data[key])
+                except Exception, e:
+                    raise Invalid('Error parsing the configuration options: %s' % str(e))
+            else:
+                return data[key]
+

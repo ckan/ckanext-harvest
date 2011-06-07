@@ -12,18 +12,18 @@
 </ul>
 </div>
 
-    <fieldset> 
-    <legend>Details</legend> 
-        <dl> 
-            <dt><label class="field_req" for="url">URL for source of metadata *</label></dt> 
+    <fieldset>
+    <legend>Details</legend>
+        <dl>
+            <dt><label class="field_req" for="url">URL for source of metadata *</label></dt>
             <dd><input id="url" name="url" size="80" type="text" value="${data.get('url', '')}" /></dd>
             <dd class="field_error" py:if="errors.get('url', '')">${errors.get('url', '')}</dd>
-            <dd class="instructions basic">This should include the <tt>http://</tt> part of the URL</dd> 
-            <dt><label class="field_req" for="type">Source Type *</label></dt> 
-            <dd> 
+            <dd class="instructions basic">This should include the <tt>http://</tt> part of the URL</dd>
+            <dt><label class="field_req" for="type">Source Type *</label></dt>
+            <dd>
                 <select id="type" name="type">
                     <py:for each="harvester in harvesters">
-                     <option value="${harvester.name}" py:attrs="{'selected': 'selected' if data.get('type', '') == harvester.name else None}" >${harvester.title}</option>
+                     <option value="${harvester.name}" py:attrs="{'selected': 'selected' if data.get('type', '') == harvester.name else None, 'data-config': harvester.show_config}" >${harvester.title}</option>
                     </py:for>
                 </select>
             </dd>
@@ -33,13 +33,24 @@
                     <py:for each="harvester in harvesters">
                     <li><span class="harvester-title">${harvester.title}</span>: ${harvester.description}</li>
                     </py:for>
-                </ul>         
-            </dd> 
-            <dt><label class="field_opt" for="description">Description</label></dt> 
-            <dd><textarea id="description" name="description" cols="30" rows="2" style="height:75px">${data.get('description', '')}</textarea></dd> 
-            <dd class="instructions basic">You can add your own notes here about what the URL above represents to remind you later.</dd> 
-        </dl> 
-    </fieldset> 
-    <input id="save" name="save" value="Save" type="submit" /> or <a href="/harvest">Return to the harvest sources list</a> 
-
+                </ul>
+            </dd>
+            <dt><label class="field_opt" for="description">Description</label></dt>
+            <dd><textarea id="description" name="description" cols="30" rows="2" style="height:75px">${data.get('description', '')}</textarea></dd>
+            <dd class="instructions basic">You can add your own notes here about what the URL above represents to remind you later.</dd>
+            <dt><label class="field_opt" for="config">Configuration</label></dt>
+            <dd><textarea id="config" name="config" cols="30" rows="2" style="height:75px">${data.get('config', '')}</textarea></dd>
+        </dl>
+    </fieldset>
+    <input id="save" name="save" value="Save" type="submit" /> or <a href="/harvest">Return to the harvest sources list</a>
+    <script type="text/javascript">
+    $(document).ready(function() {
+       $("#type").change(function(){
+            var show_config = ($("#type option:selected").attr("data-config") == "True");
+            if (!show_config) $("#config").val("");
+            $("#config").attr("disabled", !show_config);
+        });
+       $("#type").trigger("change");
+    });
+    </script>
 </form>

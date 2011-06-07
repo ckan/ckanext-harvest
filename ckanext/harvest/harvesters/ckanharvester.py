@@ -44,8 +44,18 @@ class CKANHarvester(HarvesterBase):
         return {
             'name': 'ckan',
             'title': 'CKAN',
-            'description': 'Harvests remote CKAN instances'
+            'description': 'Harvests remote CKAN instances',
+            'form_config_interface':'Text'
         }
+
+    def validate_config(self,config):
+        try:
+            config_obj = json.loads(config)
+        except ValueError,e:
+            raise e
+
+        return config
+
 
     def gather_stage(self,harvest_job):
         log.debug('In CKANHarvester gather_stage (%s)' % harvest_job.source.url)
@@ -64,7 +74,7 @@ class CKANHarvester(HarvesterBase):
         base_url = harvest_job.source.url.rstrip('/')
         base_rest_url = base_url + self._get_rest_api_offset()
         base_search_url = base_url + self._get_search_api_offset()
-        
+
         if previous_job and not previous_job.gather_errors:
             get_all_packages = False
 
@@ -126,7 +136,7 @@ class CKANHarvester(HarvesterBase):
                 return object_ids
 
             else:
-               self._save_gather_error('No packages received for URL: %s' % url, 
+               self._save_gather_error('No packages received for URL: %s' % url,
                        harvest_job)
                return None
         except Exception, e:
@@ -159,7 +169,7 @@ class CKANHarvester(HarvesterBase):
             return False
 
         if harvest_object.content is None:
-            self._save_object_error('Empty content for object %s' % harvest_object.id, 
+            self._save_object_error('Empty content for object %s' % harvest_object.id,
                     harvest_object, 'Import')
             return False
 
@@ -167,7 +177,7 @@ class CKANHarvester(HarvesterBase):
             package_dict = json.loads(harvest_object.content)
             return self._create_or_update_package(package_dict,harvest_object)
         except ValidationError,e:
-            self._save_object_error('Invalid package with GUID %s: %r' % (harvest_object.guid, e.error_dict), 
+            self._save_object_error('Invalid package with GUID %s: %r' % (harvest_object.guid, e.error_dict),
                     harvest_object, 'Import')
         except Exception, e:
             self._save_object_error('%r'%e,harvest_object,'Import')

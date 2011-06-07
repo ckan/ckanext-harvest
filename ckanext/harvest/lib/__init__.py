@@ -228,7 +228,7 @@ def create_harvest_source(data_dict):
     source.url = data['url']
     source.type = data['type']
 
-    opt = ['active','description','user_id','publisher_id']
+    opt = ['active','description','user_id','publisher_id','config']
     for o in opt:
         if o in data and data[o] is not None:
             source.__setattr__(o,data[o])
@@ -245,14 +245,14 @@ def edit_harvest_source(source_id,data_dict):
         raise NotFound('Harvest source %s does not exist' % source_id)
 
     # Add source id to the dict, as some validators will need it
-    data_dict["id"] = source.id
+    data_dict['id'] = source.id
 
     data, errors = validate(data_dict, schema)
     if errors:
         Session.rollback()
         raise ValidationError(errors,_error_summary(errors))
 
-    fields = ['url','type','active','description','user_id','publisher_id']
+    fields = ['url','type','active','description','user_id','publisher_id','config']
     for f in fields:
         if f in data_dict and data_dict[f] is not None and data_dict[f] != '':
             source.__setattr__(f,data_dict[f])
@@ -381,13 +381,13 @@ def import_last_objects(source_id=None):
     return imported_objects
 
 def get_registered_harvesters_info():
-    # TODO: Use new description interface when implemented
     available_harvesters = []
     for harvester in PluginImplementations(IHarvester):
         info = harvester.info()
         if not info or 'name' not in info:
             log.error('Harvester %r does not provide the harvester name in the info response' % str(harvester))
             continue
+        info['show_config'] = (info.get('form_config_interface','') == 'Text')
         available_harvesters.append(info)
 
     return available_harvesters

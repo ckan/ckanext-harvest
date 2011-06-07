@@ -38,7 +38,6 @@ class ViewController(BaseController):
         data = data or {}
         errors = errors or {}
         error_summary = error_summary or {}
-        #TODO: Use new description interface to build the types select and descriptions
         vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': get_registered_harvesters_info()}
         
         c.form = render('source/new_source_form.html', extra_vars=vars)
@@ -104,7 +103,7 @@ class ViewController(BaseController):
 
     def _check_data_dict(self, data_dict):
         '''Check if the return data is correct'''
-        surplus_keys_schema = ['id','publisher_id','user_id','active','save']
+        surplus_keys_schema = ['id','publisher_id','user_id','active','save','config']
 
         schema_keys = harvest_source_form_schema().keys()
         keys_in_schema = set(schema_keys) - set(surplus_keys_schema)
