@@ -20,7 +20,7 @@ def default_harvest_source_schema():
         'active': [ignore_missing],
         'user_id': [ignore_missing],
         'publisher_id': [ignore_missing],
-        'config': [harvest_source_config_validator]
+        'config': [ignore_missing,harvest_source_config_validator]
     }
 
     return schema
