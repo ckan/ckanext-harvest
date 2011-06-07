@@ -18,6 +18,7 @@ class CKANHarvester(HarvesterBase):
     '''
     A Harvester for CKAN instances
     '''
+    config = None
 
     #TODO: check different API versions
     api_version = '2'
@@ -40,6 +41,13 @@ class CKANHarvester(HarvesterBase):
         except Exception, e:
             raise e
 
+    def _set_config(self,config_str):
+        if config_str:
+            self.config = json.loads(config_str)
+            log.debug('Using config: %r', self.config)
+        else:
+            self.config = {}
+
     def info(self):
         return {
             'name': 'ckan',
@@ -61,6 +69,9 @@ class CKANHarvester(HarvesterBase):
         log.debug('In CKANHarvester gather_stage (%s)' % harvest_job.source.url)
         get_all_packages = True
         package_ids = []
+
+        if not self.config:
+            self._set_config(harvest_job.source.config)
 
         # Check if this source has been harvested before
         previous_job = Session.query(HarvestJob) \
@@ -145,6 +156,10 @@ class CKANHarvester(HarvesterBase):
 
     def fetch_stage(self,harvest_object):
         log.debug('In CKANHarvester fetch_stage')
+
+        if not self.config:
+            self._set_config(harvest_object.job.source.config)
+
         # Get source URL
         url = harvest_object.source.url.rstrip('/')
         url = url + self._get_rest_api_offset() + '/package/' + harvest_object.guid
@@ -172,6 +187,9 @@ class CKANHarvester(HarvesterBase):
             self._save_object_error('Empty content for object %s' % harvest_object.id,
                     harvest_object, 'Import')
             return False
+
+        if not self.config:
+           self._set_config(harvest_object.job.source.config)
 
         try:
             package_dict = json.loads(harvest_object.content)
