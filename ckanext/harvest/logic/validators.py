@@ -83,10 +83,7 @@ def harvest_source_config_validator(key,data,errors,context):
     for harvester in PluginImplementations(IHarvester):
         info = harvester.info()
         if info['name'] == harvester_type:
-            if info.get('form_config_interface','') != 'Text':
-                raise Invalid('This harvester does not allow configuration options: %s' % harvester_type)
-
-            if harvester.validate_config:
+            if hasattr(harvester, 'validate_config'):
                 try:
                     return harvester.validate_config(data[key])
                 except Exception, e:
