@@ -19,12 +19,10 @@ import logging
 log = logging.getLogger('ckanext')
 
 
-def _get_source_status(source):
+def _get_source_status(source, detailed=True):
     out = dict()
-
-    jobs = get_harvest_jobs(source=source)
-
-    if not len(jobs):
+    job_count = HarvestJob.filter(source=source).count()
+    if not job_count:
         out['msg'] = 'No jobs yet'
         return out
     out = {'next_harvest':'',
@@ -33,7 +31,6 @@ def _get_source_status(source):
            'last_harvest_errors':[],
            'overall_statistics':{'added':0, 'errors':0},
            'packages':[]}
-
     # Get next scheduled job
     next_job = HarvestJob.filter(source=source,status=u'New').first()
     if next_job:
@@ -43,69 +40,69 @@ def _get_source_status(source):
 
     # Get the last finished job
     last_job = HarvestJob.filter(source=source,status=u'Finished') \
-               .order_by(HarvestJob.created.desc()).limit(1).first()
+               .order_by(HarvestJob.created.desc()).first()
 
-    if  last_job:
+    if last_job:
         #TODO: Should we encode the dates as strings?
         out['last_harvest_request'] = str(last_job.gather_finished)
 
-
         #Get HarvestObjects from last job whit links to packages
-        last_objects = [obj for obj in last_job.objects if obj.package is not None]
+        if detailed: 
+            last_objects = [obj for obj in last_job.objects if obj.package is not None]
 
-        if len(last_objects) == 0:
-            # No packages added or updated
-            out['last_harvest_statistics']['added'] = 0
-            out['last_harvest_statistics']['updated'] = 0
-        else:
-            # Check wether packages were added or updated
-            for last_object in last_objects:
-                # Check if the same package had been linked before
-                previous_objects = Session.query(HarvestObject) \
-                                         .filter(HarvestObject.package==last_object.package) \
-                                         .all()
+            if len(last_objects) == 0:
+                # No packages added or updated
+                out['last_harvest_statistics']['added'] = 0
+                out['last_harvest_statistics']['updated'] = 0
+            else:
+                # Check wether packages were added or updated
+                for last_object in last_objects:
+                    # Check if the same package had been linked before
+                    previous_objects = Session.query(HarvestObject) \
+                                             .filter(HarvestObject.package==last_object.package) \
+                                             .count()
 
-                if len(previous_objects) == 1:
-                    # It didn't previously exist, it has been added
-                    out['last_harvest_statistics']['added'] += 1
-                else:
-                    # Pacakge already existed, but it has been updated
-                    out['last_harvest_statistics']['updated'] += 1
+                    if previous_objects == 1:
+                        # It didn't previously exist, it has been added
+                        out['last_harvest_statistics']['added'] += 1
+                    else:
+                        # Pacakge already existed, but it has been updated
+                        out['last_harvest_statistics']['updated'] += 1
 
         # Last harvest errors
         # We have the gathering errors in last_job.gather_errors, so let's also
         # get also the object errors.
         object_errors = Session.query(HarvestObjectError).join(HarvestObject) \
-                            .filter(HarvestObject.job==last_job).all()
+                            .filter(HarvestObject.job==last_job)
 
         out['last_harvest_statistics']['errors'] = len(last_job.gather_errors) \
-                                            + len(object_errors)
-        for gather_error in last_job.gather_errors:
-            out['last_harvest_errors'].append(gather_error.message)
+                                            + object_errors.count()
+        if detailed: 
+            for gather_error in last_job.gather_errors:
+                out['last_harvest_errors'].append(gather_error.message)
 
-        for object_error in object_errors:
-            msg = 'GUID %s: %s' % (object_error.object.guid,object_error.message)
-            out['last_harvest_errors'].append(msg)
-
-
+            for object_error in object_errors:
+                msg = 'GUID %s: %s' % (object_error.object.guid, object_error.message)
+                out['last_harvest_errors'].append(msg)
 
         # Overall statistics
         packages = Session.query(distinct(HarvestObject.package_id),Package.name) \
                 .join(Package).join(HarvestJob).join(HarvestSource) \
-                .filter(HarvestJob.source==source).all()
+                .filter(HarvestJob.source==source)
 
-        out['overall_statistics']['added'] = len(packages)
-        for package in packages:
-            out['packages'].append(package.name)
+        out['overall_statistics']['added'] = packages.count()
+        if detailed:
+            for package in packages:
+                out['packages'].append(package.name)
 
         gather_errors = Session.query(HarvestGatherError) \
                 .join(HarvestJob).join(HarvestSource) \
-                .filter(HarvestJob.source==source).all()
+                .filter(HarvestJob.source==source).count()
 
         object_errors = Session.query(HarvestObjectError) \
                 .join(HarvestObject).join(HarvestJob).join(HarvestSource) \
-                .filter(HarvestJob.source==source).all()
-        out['overall_statistics']['errors'] = len(gather_errors) + len(object_errors)
+                .filter(HarvestJob.source==source).count()
+        out['overall_statistics']['errors'] = gather_errors + object_errors
     else:
         out['last_harvest_request'] = 'Not yet harvested'
 
@@ -114,14 +111,14 @@ def _get_source_status(source):
 
 
 
-def _source_as_dict(source):
+def _source_as_dict(source, detailed=True):
     out = source.as_dict()
     out['jobs'] = []
 
     for job in source.jobs:
         out['jobs'].append(job.as_dict())
 
-    out['status'] = _get_source_status(source)
+    out['status'] = _get_source_status(source, detailed=detailed)
 
 
     return out
@@ -213,7 +210,7 @@ def get_harvest_sources(**kwds):
     sources = HarvestSource.filter(**kwds) \
                 .order_by(HarvestSource.created.desc()) \
                 .all()
-    return [_source_as_dict(source) for source in sources]
+    return [_source_as_dict(source, detailed=False) for source in sources]
 
 def create_harvest_source(data_dict):
 

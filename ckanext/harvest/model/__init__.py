@@ -164,6 +164,7 @@ def create_harvester_tables():
         properties={
             'jobs': relation(
                 HarvestJob,
+                lazy=True,
                 backref=u'source',
                 order_by=harvest_job_table.c.created,
             ),
@@ -181,10 +182,12 @@ def create_harvester_tables():
         properties={
             'package':relation(
                 Package,
+                lazy=True,
                 backref='harvest_objects',
             ),
             'job': relation(
                 HarvestJob,
+                lazy=True,
                 backref=u'objects',
             ),
         },
