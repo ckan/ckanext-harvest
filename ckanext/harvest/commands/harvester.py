@@ -116,22 +116,27 @@ class Harvester(CkanCommand):
             print 'Please provide a source type'
             sys.exit(1)
         if len(self.args) >= 4:
-            active = not(self.args[3].lower() == 'false' or \
-                    self.args[3] == '0')
+            config = unicode(self.args[3])
+        else:
+            config = None
+        if len(self.args) >= 5:
+            active = not(self.args[4].lower() == 'false' or \
+                    self.args[4] == '0')
         else:
             active = True
-        if len(self.args) >= 5:
-            user_id = unicode(self.args[4])
+        if len(self.args) >= 6:
+            user_id = unicode(self.args[5])
         else:
             user_id = u''
-        if len(self.args) >= 6:
-            publisher_id = unicode(self.args[5])
+        if len(self.args) >= 7:
+            publisher_id = unicode(self.args[6])
         else:
             publisher_id = u''
         try:
             source = create_harvest_source({
                     'url':url,
                     'type':type,
+                    'config':config,
                     'active':active,
                     'user_id':user_id,
                     'publisher_id':publisher_id})
