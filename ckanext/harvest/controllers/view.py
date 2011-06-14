@@ -10,7 +10,7 @@ from ckanext.harvest.logic.schema import harvest_source_form_schema
 from ckanext.harvest.lib import create_harvest_source, edit_harvest_source, \
                                 get_harvest_source, get_harvest_sources, \
                                 create_harvest_job, get_registered_harvesters_info
-    
+from ckan.lib.helpers import Page
 import logging
 log = logging.getLogger(__name__)
 
@@ -115,6 +115,11 @@ class ViewController(BaseController):
     def read(self,id):
         try:
             c.source = get_harvest_source(id)
+            c.page = Page(
+                collection=c.source['status']['packages'],
+                page=request.params.get('page', 1),
+                items_per_page=20
+            )
 
             return render('source/read.html')
         except NotFound:

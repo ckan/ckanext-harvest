@@ -80,9 +80,17 @@
             <td>
                 <div>There could be a 10 minutes delay before these packages (or changes to them) appear on 
                 the site or on search results.</div>
-                <div py:for="package in c.source.status.packages">
-                    <a href="/package/${package}">${package}</a>
+
+                <p i18n:msg="item_count">There are <strong>${c.page.item_count}</strong> packages.</p>
+
+                ${c.page.pager()}
+                <py:for each="item in c.page.items">
+                <div>
+                <a href="/package/${item}">${item}</a>
                 </div>
+                </py:for>
+                ${c.page.pager()}
+
             </td>
         </tr>
     </table>
