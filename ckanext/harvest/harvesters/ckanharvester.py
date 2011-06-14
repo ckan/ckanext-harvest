@@ -70,8 +70,7 @@ class CKANHarvester(HarvesterBase):
         get_all_packages = True
         package_ids = []
 
-        if not self.config:
-            self._set_config(harvest_job.source.config)
+        self._set_config(harvest_job.source.config)
 
         # Check if this source has been harvested before
         previous_job = Session.query(HarvestJob) \
@@ -157,8 +156,7 @@ class CKANHarvester(HarvesterBase):
     def fetch_stage(self,harvest_object):
         log.debug('In CKANHarvester fetch_stage')
 
-        if not self.config:
-            self._set_config(harvest_object.job.source.config)
+        self._set_config(harvest_object.job.source.config)
 
         # Get source URL
         url = harvest_object.source.url.rstrip('/')
@@ -188,8 +186,7 @@ class CKANHarvester(HarvesterBase):
                     harvest_object, 'Import')
             return False
 
-        if not self.config:
-           self._set_config(harvest_object.job.source.config)
+        self._set_config(harvest_object.job.source.config)
 
         try:
             package_dict = json.loads(harvest_object.content)
