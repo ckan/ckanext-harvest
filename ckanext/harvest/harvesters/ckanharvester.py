@@ -86,7 +86,7 @@ class CKANHarvester(HarvesterBase):
         base_rest_url = base_url + self._get_rest_api_offset()
         base_search_url = base_url + self._get_search_api_offset()
 
-        if previous_job and not previous_job.gather_errors:
+        if previous_job and not previous_job.gather_errors and not len(previous_job.objects) == 0:
             get_all_packages = False
 
             # Request only the packages modified since last harvest job
