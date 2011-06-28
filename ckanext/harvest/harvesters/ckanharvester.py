@@ -57,6 +57,9 @@ class CKANHarvester(HarvesterBase):
         }
 
     def validate_config(self,config):
+        if not config:
+            return config
+
         try:
             config_obj = json.loads(config)
         except ValueError,e:
