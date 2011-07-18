@@ -20,7 +20,6 @@ class CKANHarvester(HarvesterBase):
     '''
     config = None
 
-    #TODO: check different API versions
     api_version = '2'
 
     def _get_rest_api_offset(self):
@@ -44,6 +43,10 @@ class CKANHarvester(HarvesterBase):
     def _set_config(self,config_str):
         if config_str:
             self.config = json.loads(config_str)
+
+            if 'api_version' in self.config:
+                self.api_version = self.config['api_version']
+
             log.debug('Using config: %r', self.config)
         else:
             self.config = {}
