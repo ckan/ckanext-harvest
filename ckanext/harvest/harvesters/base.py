@@ -21,17 +21,24 @@ log = logging.getLogger(__name__)
 
 class HarvesterBase(SingletonPlugin):
     '''
-    Generic class for publicdata.eu harvesters
+    Generic class for  harvesters with helper functions
     '''
     implements(IHarvester)
 
     def _gen_new_name(self,title):
+        '''
+        Creates a URL friendly name from a title
+        '''
         name = munge_title_to_name(title).replace('_', '-')
         while '--' in name:
             name = name.replace('--', '-')
         return name
 
     def _check_name(self,name):
+        '''
+        Checks if a package name already exists in the database, and adds
+        a counter at the end if it does exist.
+        '''
         like_q = u'%s%%' % name
         pkg_query = Session.query(Package).filter(Package.name.ilike(like_q)).limit(100)
         taken = [pkg.name for pkg in pkg_query]
@@ -46,16 +53,26 @@ class HarvesterBase(SingletonPlugin):
             return None
 
     def _save_gather_error(self,message,job):
+        '''
+        Helper function to create an error during the gather stage.
+        '''
         err = HarvestGatherError(message=message,job=job)
         err.save()
         log.error(message)
 
     def _save_object_error(self,message,obj,stage=u'Fetch'):
+        '''
+        Helper function to create an error during the fetch or import stage.
+        '''
         err = HarvestObjectError(message=message,object=obj,stage=stage)
         err.save()
         log.error(message)
 
     def _create_harvest_objects(self, remote_ids, harvest_job):
+        '''
+        Given a list of remote ids and a Harvest Job, create as many Harvest Objects and
+        return a list of its ids to be returned to the fetch stage.
+        '''
         try:
             object_ids = []
             if len(remote_ids):
@@ -87,9 +104,7 @@ class HarvesterBase(SingletonPlugin):
 
         '''
         try:
-            #from pprint import pprint 
-            #pprint(package_dict)
-            ## change default schema
+            # Change default schema
             schema = default_package_schema()
             schema["id"] = [ignore_missing, unicode]
 
@@ -144,9 +159,3 @@ class HarvesterBase(SingletonPlugin):
             self._save_object_error('%r'%e,harvest_object,'Import')
 
         return None
-
-
-
-
-
-
