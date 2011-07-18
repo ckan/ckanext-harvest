@@ -5,7 +5,7 @@ ckanext-harvest - Remote harvesting extension
 This extension provides a common harvesting framework for ckan extensions
 and adds a CLI and a WUI to CKAN to manage harvesting sources and jobs.
 
-Dependencies
+Installation
 ============
 
 The harvest extension uses Message Queuing to handle the different gather
@@ -15,9 +15,20 @@ You will need to install the RabbitMQ server::
 
     sudo apt-get install rabbitmq-server
 
-The extension uses `carrot` as messaging library::
+Clone the repository and set up the extension
 
-    http://ask.github.com/carrot/
+	hg clone https://bitbucket.org/okfn/ckanext-harvest
+
+	cd ckanext-harvest
+
+    pip install -r pip-requirements.txt
+
+	python setup.py develop
+
+Make sure the configuration ini file contains the harvest main plugin, as
+well as the harvester for CKAN instances (included with the extension)
+
+	ckan.plugins = harvest ckan_harvester
 
 
 Configuration
@@ -35,6 +46,11 @@ the ckan directory::
     paster user add harvest
 
     paster sysadmin add harvest
+
+After installation, the harvest interface should be available under /harvest
+if you're logged in with sysadmin permissions, eg.
+
+	http://localhost:5000/harvest
 
 Tests
 =====
@@ -84,6 +100,13 @@ The following operations can be run from the command line using the
       harvester fetch_consumer
         - starts the consumer for the fetching queue
 
+      harvester import [{source-id}]
+        - perform the import stage with the last fetched objects, optionally
+          belonging to a certain source.
+          Please note that no objects will be fetched from the remote server.
+          It will only affect the last fetched objects already present in the
+          database.
+
 The commands should be run from the ckanext-harvest directory and expect
 a development.ini file to be present. Most of the time you will specify
 the config explicitly though::
@@ -93,7 +116,12 @@ the config explicitly though::
 The CKAN haverster
 ==================
 
-TODO
+The plugin includes a harvester for remote CKAN instances. To use it, you need
+to add the `ckan_harvester` plugin to your options file:
+
+	ckan.plugins = harvest ckan_harvester
+
+After adding it, a 'CKAN' option should appear in the 'New harvest source' form.
 
 
 The harvesting interface
@@ -213,10 +241,14 @@ following methods::
         :returns: True if everything went right, False if errors were found
         '''
 
-See ckanext-inspire for a an example on how to implement the harvesting
+See the CKAN harvester for a an example on how to implement the harvesting
 interface:
 
-    https://bitbucket.org/okfn/ckanext-inspire/src/
+    ckanext-harvest/ckanext/harvest/harvesters/ckanharvester.py
+
+Here you can also find other examples of custom harvesters:
+
+    https://bitbucket.org/okfn/ckanext-pdeu/src/213d3fe4c36e/ckanext/pdeu/harvesters/
 
 
 Running the harvest jobs
@@ -237,3 +269,8 @@ Finally, on a third console, run the following command to start any
 pending harvesting jobs::
 
       paster harvester run --config=../ckan/development.ini
+      
+After packages have been imported, the search index will have to be updated
+before the packages appear in search results (from the ckan directory):
+
+      paster search-index
