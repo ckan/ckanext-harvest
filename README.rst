@@ -52,19 +52,6 @@ if you're logged in with sysadmin permissions, eg.
 
 	http://localhost:5000/harvest
 
-Tests
-=====
-
-To run the tests, this is the basic command::
-
-    $ nosetests --ckan tests/
-
-Or with postgres::
-
-    $ nosetests --ckan --with-pylons=../ckan/test-core.ini tests/
-
-(See the Ckan README for more information.)
-
 
 Command line interface
 ======================
