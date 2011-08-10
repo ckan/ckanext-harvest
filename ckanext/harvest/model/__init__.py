@@ -1,6 +1,7 @@
 import logging
 import datetime
 
+from ckan import model
 from ckan.model.meta import *
 from ckan.model.types import make_uuid
 from ckan.model.core import *
@@ -28,7 +29,12 @@ harvest_object_error_table = None
 def setup():
     if harvest_source_table is None:
         create_harvester_tables()
-    metadata.create_all()
+        log.debug('Harvest tables defined in memory')
+    if model.repo.are_tables_created():
+        metadata.create_all()
+        log.debug('Harvest tables created')
+    else:
+        log.debug('Harvest table creation deferred')
     
 
 class HarvestError(Exception):
