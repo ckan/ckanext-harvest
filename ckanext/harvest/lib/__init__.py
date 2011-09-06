@@ -377,6 +377,18 @@ def import_last_objects(source_id=None):
 
     return imported_objects
 
+def create_harvest_job_all():
+    
+    # Get all active sources
+    sources = get_harvest_sources(active=True)
+    jobs = []
+    # Create a new job for each
+    for source in sources:
+        job = create_harvest_job(source['id'])
+        jobs.append(job)
+
+    return jobs
+
 def get_registered_harvesters_info():
     available_harvesters = []
     for harvester in PluginImplementations(IHarvester):

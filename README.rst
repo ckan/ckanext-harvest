@@ -94,6 +94,9 @@ The following operations can be run from the command line using the
           It will only affect the last fetched objects already present in the
           database.
 
+      harvester job-all
+        - create new harvest jobs for all active sources.
+
 The commands should be run from the ckanext-harvest directory and expect
 a development.ini file to be present. Most of the time you will specify
 the config explicitly though::

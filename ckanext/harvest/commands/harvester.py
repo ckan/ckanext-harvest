@@ -44,6 +44,9 @@ class Harvester(CkanCommand):
           Please note that no objects will be fetched from the remote server. It will only affect
           the last fetched objects already present in the database.
 
+      harvester job-all
+        - create new harvest jobs for all active sources.
+
     The commands should be run from the ckanext-harvest directory and expect
     a development.ini file to be present. Most of the time you will
     specify the config explicitly though::
@@ -91,6 +94,8 @@ class Harvester(CkanCommand):
             self.initdb()
         elif cmd == 'import':
             self.import_stage()
+        elif cmd == 'job-all':
+            self.create_harvest_job_all()
         else:
             print 'Command %s not recognized' % cmd
 
@@ -211,6 +216,10 @@ class Harvester(CkanCommand):
         else:
             source_id = None
         import_last_objects(source_id)
+
+    def create_harvest_job_all(self):
+        jobs = create_harvest_job_all()
+        print "Created %s new harvest jobs" % len(jobs)
 
     def print_harvest_sources(self, sources):
         if sources:
