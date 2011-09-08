@@ -55,12 +55,33 @@
             <td>
                 Last Harvest Errors: ${c.source.status.last_harvest_statistics.errors}<br/> 
                 <py:choose>
-                    <py:when test="len(c.source.status.last_harvest_errors)>0">
+                    <py:when test="len(c.source.status.last_harvest_errors.gather)>0">
+                        <i>Gathering errors</i>
                         <ul>
-                        <li py:for="error in c.source.status.last_harvest_errors">${error}</li>
+                        <li py:for="error in c.source.status.last_harvest_errors.gather">
+                            <?python
+                                lines = error.split('\n')
+                            ?>
+                            <div py:for="line in lines">${line}</div>
+                        </li>
                         </ul>
                     </py:when>
                 </py:choose>
+                <py:choose>
+                    <py:when test="len(c.source.status.last_harvest_errors.object)>0">
+                       <i>Object errors</i>
+                        <ul>
+                        <li py:for="error in c.source.status.last_harvest_errors.object">
+                            <div>GUID ${error.object_guid}</div>
+                            <?python
+                                lines = error['message'].split('\n')
+                            ?>
+                            <div py:for="line in lines">${line}</div>
+                        </li>
+                        </ul>
+                    </py:when>
+                </py:choose>
+
                 Last Harvest Added: ${c.source.status.last_harvest_statistics.added}<br/>
                 Last Harvest Updated: ${c.source.status.last_harvest_statistics.updated}<br/>
                 Last Harvest: ${c.source.status.last_harvest_request} <br/>

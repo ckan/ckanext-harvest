@@ -28,7 +28,7 @@ def _get_source_status(source, detailed=True):
     out = {'next_harvest':'',
            'last_harvest_request':'',
            'last_harvest_statistics':{'added':0,'updated':0,'errors':0},
-           'last_harvest_errors':[],
+           'last_harvest_errors':{'gather':[],'object':[]},
            'overall_statistics':{'added':0, 'errors':0},
            'packages':[]}
     # Get next scheduled job
@@ -79,11 +79,11 @@ def _get_source_status(source, detailed=True):
                                             + object_errors.count()
         if detailed: 
             for gather_error in last_job.gather_errors:
-                out['last_harvest_errors'].append(gather_error.message)
+                out['last_harvest_errors']['gather'].append(gather_error.message)
 
             for object_error in object_errors:
-                msg = 'GUID %s: %s' % (object_error.object.guid, object_error.message)
-                out['last_harvest_errors'].append(msg)
+                err = {'object_id':object_error.object.id,'object_guid':object_error.object.guid,'message': object_error.message}
+                out['last_harvest_errors']['object'].append(err)
 
         # Overall statistics
         packages = Session.query(distinct(HarvestObject.package_id),Package.name) \
