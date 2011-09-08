@@ -1,3 +1,5 @@
+from lxml import etree
+from lxml.etree import XMLSyntaxError
 from pylons.i18n import _
 
 import ckan.lib.helpers as h, json
@@ -9,7 +11,8 @@ from ckan.logic import NotFound, ValidationError
 from ckanext.harvest.logic.schema import harvest_source_form_schema
 from ckanext.harvest.lib import create_harvest_source, edit_harvest_source, \
                                 get_harvest_source, get_harvest_sources, \
-                                create_harvest_job, get_registered_harvesters_info
+                                create_harvest_job, get_registered_harvesters_info, \
+                                get_harvest_object
 from ckan.lib.helpers import Page
 import logging
 log = logging.getLogger(__name__)
@@ -147,3 +150,28 @@ class ViewController(BaseController):
             h.flash_error(msg)
 
         redirect(h.url_for('harvest'))
+
+    def show_object(self,id):
+        try:
+            object = get_harvest_object(id)
+            # Check content type. It will probably be either XML or JSON
+            try:
+                etree.fromstring(object['content'])
+                response.content_type = 'application/xml'
+            except XMLSyntaxError:
+                try:
+                    json.loads(object['content'])
+                    response.content_type = 'application/json'
+                except ValueError:
+                    pass
+
+            response.headers["Content-Length"] = len(object['content'])
+            return object['content']
+        except NotFound:
+            abort(404,_('Harvest object not found'))
+        except Exception, e:
+            msg = 'An error occurred: [%s]' % e.message
+            h.flash_error(msg)
+
+        redirect(h.url_for('harvest'))
+

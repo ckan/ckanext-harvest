@@ -34,6 +34,9 @@ class Harvest(SingletonPlugin):
 
         map.connect('harvesting_job_create', '/harvest/refresh/:id',controller=controller, 
                 action='create_harvesting_job')
+
+        map.connect('/harvest/object/:id', controller=controller, action='show_object')
+
         return map
 
     def update_config(self, config):

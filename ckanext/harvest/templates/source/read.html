@@ -72,7 +72,7 @@
                        <i>Object errors</i>
                         <ul>
                         <li py:for="error in c.source.status.last_harvest_errors.object">
-                            <div>GUID ${error.object_guid}</div>
+                            <div>GUID <a href="${g.site_url}/harvest/object/${error.object_id}">${error.object_guid}</a></div>
                             <?python
                                 lines = error['message'].split('\n')
                             ?>
