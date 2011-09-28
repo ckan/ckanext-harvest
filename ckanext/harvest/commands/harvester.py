@@ -93,6 +93,7 @@ class Harvester(CkanCommand):
         elif cmd == 'initdb':
             self.initdb()
         elif cmd == 'import':
+            self.initdb()
             self.import_stage()
         elif cmd == 'job-all':
             self.create_harvest_job_all()

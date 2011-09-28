@@ -374,6 +374,7 @@ def import_last_objects(source_id=None):
                         harvester.force_import = True
                     harvester.import_stage(obj)
         last_obj_guid = obj.guid
+    
 
     return imported_objects
 
