@@ -3,10 +3,8 @@ import logging
 
 from ckan import model
 from ckan.model import Session, Package
-from ckan.logic import ValidationError, NotFound
-from ckan.logic.action.create import package_create_rest
-from ckan.logic.action.update import package_update_rest
-from ckan.logic.action.get import package_show
+from ckan.logic import ValidationError, NotFound, get_action
+
 from ckan.logic.schema import default_package_schema
 from ckan.lib.navl.validators import ignore_missing
 from ckan.lib.munge import munge_title_to_name, munge_tag
@@ -125,14 +123,14 @@ class HarvesterBase(SingletonPlugin):
             data_dict = {}
             data_dict['id'] = package_dict['id']
             try:
-                existing_package_dict = package_show(context, data_dict)
+                existing_package_dict = get_action('package_show')(context, data_dict)
                 # Check modified date
                 if not 'metadata_modified' in package_dict or \
                    package_dict['metadata_modified'] > existing_package_dict.get('metadata_modified'):
                     log.info('Package with GUID %s exists and needs to be updated' % harvest_object.guid)
                     # Update package
                     context.update({'id':package_dict['id']})
-                    updated_package = package_update_rest(context, package_dict)
+                    updated_package = get_action('package_update_rest')(context, package_dict)
 
                     harvest_object.package_id = updated_package['id']
                     harvest_object.save()
@@ -146,7 +144,7 @@ class HarvesterBase(SingletonPlugin):
                 package_dict['name'] = self._check_name(package_dict['name'])
 
                 log.info('Package with GUID %s does not exist, let\'s create it' % harvest_object.guid)
-                new_package = package_create_rest(context, package_dict)
+                new_package = get_action('package_create_rest')(context, package_dict)
                 harvest_object.package_id = new_package['id']
                 harvest_object.save()
 
