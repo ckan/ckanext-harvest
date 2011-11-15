@@ -346,7 +346,7 @@ def import_last_objects(source_id=None):
         if not source:
             raise NotFound('Harvest source %s does not exist' % source_id)
 
-        last_objects = Session.query(HarvestObject) \
+        last_objects_ids = Session.query(HarvestObject.id) \
                 .join(HarvestJob) \
                 .filter(HarvestJob.source==source) \
                 .filter(HarvestObject.package!=None) \
@@ -355,7 +355,7 @@ def import_last_objects(source_id=None):
                 .order_by(HarvestObject.gathered.desc()) \
                 .all()
     else:
-        last_objects = Session.query(HarvestObject) \
+        last_objects_ids = Session.query(HarvestObject.id) \
                 .filter(HarvestObject.package!=None) \
                 .order_by(HarvestObject.guid) \
                 .order_by(HarvestObject.metadata_modified_date.desc()) \
@@ -365,7 +365,8 @@ def import_last_objects(source_id=None):
 
     last_obj_guid = ''
     imported_objects = []
-    for obj in last_objects:
+    for obj_id in last_objects_ids:
+        obj = Session.query(HarvestObject).get(obj_id)
         if obj.guid != last_obj_guid:
             imported_objects.append(obj)
             for harvester in PluginImplementations(IHarvester):
@@ -373,8 +374,8 @@ def import_last_objects(source_id=None):
                     if hasattr(harvester,'force_import'):
                         harvester.force_import = True
                     harvester.import_stage(obj)
+                    break
         last_obj_guid = obj.guid
-    
 
     return imported_objects
 
