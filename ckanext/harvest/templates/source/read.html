@@ -35,6 +35,15 @@
             <td>${c.source.description}</td>
         </tr>
         <tr>
+            <th>Configuration</th>
+            <py:if test="c.source.config">
+            <td>${c.source.config}</td>
+            </py:if>
+            <py:if test="not c.source.config">
+            <td>-</td>
+            </py:if>
+        </tr>
+        <tr>
             <th>User</th>
             <td>${c.source.user_id}</td>
         </tr>
