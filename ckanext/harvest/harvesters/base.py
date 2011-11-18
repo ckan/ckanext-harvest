@@ -112,7 +112,7 @@ class HarvesterBase(SingletonPlugin):
                 #TODO: use site user when available
                 user_name = self.config.get('user',u'harvest')
             else:
-                api_verion = '2'
+                api_version = '2'
                 user_name = u'harvest'
 
             context = {
