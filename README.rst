@@ -132,6 +132,12 @@ field. The currently supported configuration options are:
     needs to have permission for creating packages, and if default groups were
     defined, the user must have permission to assign packages to these groups.
 
+* read_only: Create harvested packages in read-only mode. Only the user who
+    performed the harvest (the one defined in the previous setting or the
+    'harvest' sysadmin) will be able to edit and administer the packages
+    created from this harvesting source. Logged in users and visitors will be
+    only able to read them.
+
 Here is an example of a configuration object (the one that must be entered in
 the configuration field)::
 
@@ -139,7 +145,8 @@ the configuration field)::
      "api_version":"1",
      "default_tags":["new-tag-1","new-tag-2"],
      "default_groups":["my-own-group"],
-     "user":"harverster-user"
+     "user":"harverster-user",
+     "read_only": true
     }
 
 
@@ -288,7 +295,7 @@ Finally, on a third console, run the following command to start any
 pending harvesting jobs::
 
       paster harvester run --config=../ckan/development.ini
-      
+
 After packages have been imported, the search index will have to be updated
 before the packages appear in search results (from the ckan directory):
 

@@ -234,7 +234,26 @@ class CKANHarvester(HarvesterBase):
                     package_dict['groups'] = []
                 package_dict['groups'].extend([g for g in default_groups if g not in package_dict['groups']])
 
-            return self._create_or_update_package(package_dict,harvest_object)
+            result = self._create_or_update_package(package_dict,harvest_object)
+
+            if result and self.config.get('read_only',False) == True:
+
+                package = model.Package.get(package_dict['id'])
+
+                # Clear default permissions
+                model.clear_user_roles(package)
+
+                # Setup harvest user as admin
+                user_name = self.config.get('user',u'harvest')
+                user = model.User.get(user_name)
+                pkg_role = model.PackageRole(package=package, user=user, role=model.Role.ADMIN)
+
+                # Other users can only read
+                for user_name in (u'visitor',u'logged_in'):
+                    user = model.User.get(user_name)
+                    pkg_role = model.PackageRole(package=package, user=user, role=model.Role.READER)
+
+
         except ValidationError,e:
             self._save_object_error('Invalid package with GUID %s: %r' % (harvest_object.guid, e.error_dict),
                     harvest_object, 'Import')
