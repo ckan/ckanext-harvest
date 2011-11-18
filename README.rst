@@ -117,7 +117,7 @@ The CKAN harvesters support a number of configuration options to control their
 behaviour. Those need to defined as a JSON object in the configuration form
 field. The currently supported configuration options are:
 
-* api_version: You can force the harvester to use eithoer version '1' or
+* api_version: You can force the harvester to use either version '1' or
     '2' of the CKAN API. Default is '2'.
 
 * default_tags: A list of tags that will be added to all harvested datasets.
@@ -128,13 +128,18 @@ field. The currently supported configuration options are:
     define the groups according to the API version you defined (names for
     version '1', ids for version '2')
 
+* user: User who will run the harvesting process. Please note that this user
+    needs to have permission for creating packages, and if default groups were
+    defined, the user must have permission to assign packages to these groups.
+
 Here is an example of a configuration object (the one that must be entered in
 the configuration field)::
 
     {
      "api_version":"1",
      "default_tags":["new-tag-1","new-tag-2"],
-     "default_groups":["my-own-group"]
+     "default_groups":["my-own-group"],
+     "user":"harverster-user"
     }
 
 

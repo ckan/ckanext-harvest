@@ -77,6 +77,14 @@ class CKANHarvester(HarvesterBase):
                     except NotFound,e:
                         raise ValueError('Default group not found')
 
+            if 'user' in config_obj:
+                # Check if user exists
+                context = {'model':model,'user':c.user}
+                try:
+                    user = get_action('user_show')(context,{'id':config_obj.get('user')})
+                except NotFound,e:
+                    raise ValueError('User not found')
+
         except ValueError,e:
             raise e
 

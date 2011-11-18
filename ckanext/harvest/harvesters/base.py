@@ -109,13 +109,16 @@ class HarvesterBase(SingletonPlugin):
             # Check API version
             if self.config:
                 api_version = self.config.get('api_version','2')
+                #TODO: use site user when available
+                user_name = self.config.get('user',u'harvest')
             else:
                 api_verion = '2'
+                user_name = u'harvest'
 
             context = {
                 'model': model,
                 'session': Session,
-                'user': u'harvest',
+                'user': user_name,
                 'api_version': api_version,
                 'schema': schema,
             }
