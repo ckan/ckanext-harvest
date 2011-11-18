@@ -106,11 +106,17 @@ class HarvesterBase(SingletonPlugin):
             schema = default_package_schema()
             schema["id"] = [ignore_missing, unicode]
 
+            # Check API version
+            if self.config:
+                api_version = self.config.get('api_version','2')
+            else:
+                api_verion = '2'
+
             context = {
                 'model': model,
                 'session': Session,
                 'user': u'harvest',
-                'api_version':'2',
+                'api_version': api_version,
                 'schema': schema,
             }
 

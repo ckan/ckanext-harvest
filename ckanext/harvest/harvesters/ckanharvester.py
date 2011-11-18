@@ -1,7 +1,9 @@
 import urllib2
 
+from ckan.lib.base import c
+from ckan import model
 from ckan.model import Session, Package
-from ckan.logic import ValidationError, NotFound
+from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
 
 from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError, \
@@ -65,6 +67,16 @@ class CKANHarvester(HarvesterBase):
 
         try:
             config_obj = json.loads(config)
+
+            if 'default_groups' in config_obj:
+                # Check if default groups exist
+                context = {'model':model,'user':c.user}
+                for group_name in config_obj['default_groups']:
+                    try:
+                        group = get_action('group_show')(context,{'id':group_name})
+                    except NotFound,e:
+                        raise ValueError('Default group not found')
+
         except ValueError,e:
             raise e
 
@@ -196,6 +208,24 @@ class CKANHarvester(HarvesterBase):
 
         try:
             package_dict = json.loads(harvest_object.content)
+
+            # Set default tags if needed
+            default_tags = self.config.get('default_tags',[])
+            if default_tags:
+                if not 'tags' in package_dict:
+                    package_dict['tags'] = []
+                package_dict['tags'].extend([t for t in default_tags if t not in package_dict['tags']])
+
+            # Ignore remote groups for the time being
+            del package_dict['groups']
+
+            # Set default groups if needed
+            default_groups = self.config.get('default_groups',[])
+            if default_groups:
+                if not 'groups' in package_dict:
+                    package_dict['groups'] = []
+                package_dict['groups'].extend([g for g in default_groups if g not in package_dict['groups']])
+
             return self._create_or_update_package(package_dict,harvest_object)
         except ValidationError,e:
             self._save_object_error('Invalid package with GUID %s: %r' % (harvest_object.guid, e.error_dict),
