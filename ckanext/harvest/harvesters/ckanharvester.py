@@ -36,6 +36,9 @@ class CKANHarvester(HarvesterBase):
         )
 
         try:
+            api_key = self.config.get('api_key',None)
+            if api_key:
+                http_request.add_header('Authorization',api_key)
             http_response = urllib2.urlopen(http_request)
 
             return http_response.read()
