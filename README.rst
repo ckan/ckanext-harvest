@@ -132,6 +132,9 @@ field. The currently supported configuration options are:
     needs to have permission for creating packages, and if default groups were
     defined, the user must have permission to assign packages to these groups.
 
+* api_key: If the remote CKAN instance has restricted access to the API you
+    can provide a CKAN API key, which will be sent in any request.
+
 * read_only: Create harvested packages in read-only mode. Only the user who
     performed the harvest (the one defined in the previous setting or the
     'harvest' sysadmin) will be able to edit and administer the packages
@@ -146,6 +149,7 @@ the configuration field)::
      "default_tags":["new-tag-1","new-tag-2"],
      "default_groups":["my-own-group"],
      "user":"harverster-user",
+     "api_key":"<REMOTE_API_KEY>",
      "read_only": true
     }
 
