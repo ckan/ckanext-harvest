@@ -15,20 +15,17 @@ You will need to install the RabbitMQ server::
 
     sudo apt-get install rabbitmq-server
 
-Clone the repository and set up the extension
+Clone the repository and set up the extension::
 
-	hg clone https://bitbucket.org/okfn/ckanext-harvest
-
-	cd ckanext-harvest
-
+    git clone https://github.com/okfn/ckanext-harvest
+    cd ckanext-harvest
     pip install -r pip-requirements.txt
+    python setup.py develop
 
-	python setup.py develop
+Make sure the CKAN configuration ini file contains the harvest main plugin, as
+well as the harvester for CKAN instances (included with the extension)::
 
-Make sure the configuration ini file contains the harvest main plugin, as
-well as the harvester for CKAN instances (included with the extension)
-
-	ckan.plugins = harvest ckan_harvester
+    ckan.plugins = harvest ckan_harvester
 
 
 Configuration
@@ -107,7 +104,7 @@ The CKAN haverster
 ==================
 
 The plugin includes a harvester for remote CKAN instances. To use it, you need
-to add the `ckan_harvester` plugin to your options file:
+to add the `ckan_harvester` plugin to your options file::
 
 	ckan.plugins = harvest ckan_harvester
 
@@ -238,7 +235,7 @@ interface:
 
 Here you can also find other examples of custom harvesters:
 
-    https://bitbucket.org/okfn/ckanext-pdeu/src/213d3fe4c36e/ckanext/pdeu/harvesters/
+    https://github.com/okfn/ckanext-pdeu/tree/master/ckanext/pdeu/harvesters
 
 
 Running the harvest jobs
