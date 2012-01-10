@@ -100,7 +100,7 @@ the config explicitly though::
 
         paster harvester sources --config=../ckan/development.ini
 
-The CKAN haverster
+The CKAN harverster
 ==================
 
 The plugin includes a harvester for remote CKAN instances. To use it, you need
@@ -111,7 +111,7 @@ to add the `ckan_harvester` plugin to your options file::
 After adding it, a 'CKAN' option should appear in the 'New harvest source' form.
 
 The CKAN harvesters support a number of configuration options to control their
-behaviour. Those need to defined as a JSON object in the configuration form
+behaviour. Those need to be defined as a JSON object in the configuration form
 field. The currently supported configuration options are:
 
 *   api_version: You can force the harvester to use either version '1' or '2' of
@@ -142,7 +142,7 @@ field. The currently supported configuration options are:
     needs to have permission for creating packages, and if default groups were
     defined, the user must have permission to assign packages to these groups.
 
-*   api_key: If the remote CKAN instance has restricted access to the API you
+*   api_key: If the remote CKAN instance has restricted access to the API, you
     can provide a CKAN API key, which will be sent in any request.
 
 *   read_only: Create harvested packages in read-only mode. Only the user who
