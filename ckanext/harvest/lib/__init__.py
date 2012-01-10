@@ -249,10 +249,12 @@ def edit_harvest_source(source_id,data_dict):
         Session.rollback()
         raise ValidationError(errors,_error_summary(errors))
 
-    fields = ['url','type','active','description','user_id','publisher_id','config']
+    fields = ['url','type','active','description','user_id','publisher_id']
     for f in fields:
         if f in data_dict and data_dict[f] is not None and data_dict[f] != '':
             source.__setattr__(f,data_dict[f])
+
+    source.config = data_dict['config']
 
     source.save()
 

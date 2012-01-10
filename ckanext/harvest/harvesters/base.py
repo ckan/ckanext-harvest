@@ -1,13 +1,13 @@
 import logging
-
+import re
 
 from ckan import model
 from ckan.model import Session, Package
 from ckan.logic import ValidationError, NotFound, get_action
 
 from ckan.logic.schema import default_package_schema
-from ckan.lib.navl.validators import ignore_missing
-from ckan.lib.munge import munge_title_to_name, munge_tag
+from ckan.lib.navl.validators import ignore_missing,ignore
+from ckan.lib.munge import munge_title_to_name,substitute_ascii_equivalents
 
 from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError, \
                                     HarvestObjectError
@@ -16,6 +16,11 @@ from ckan.plugins.core import SingletonPlugin, implements
 from ckanext.harvest.interfaces import IHarvester
 
 log = logging.getLogger(__name__)
+
+def munge_tag(tag):
+    tag = substitute_ascii_equivalents(tag)
+    tag = tag.lower().strip()
+    return re.sub(r'[^a-zA-Z0-9 -]', '', tag).replace(' ', '-')
 
 class HarvesterBase(SingletonPlugin):
     '''
@@ -104,13 +109,23 @@ class HarvesterBase(SingletonPlugin):
         try:
             # Change default schema
             schema = default_package_schema()
-            schema["id"] = [ignore_missing, unicode]
+            schema['id'] = [ignore_missing, unicode]
+            schema['__junk'] = [ignore]
+
+            # Check API version
+            if self.config:
+                api_version = self.config.get('api_version','2')
+                #TODO: use site user when available
+                user_name = self.config.get('user',u'harvest')
+            else:
+                api_version = '2'
+                user_name = u'harvest'
 
             context = {
                 'model': model,
                 'session': Session,
-                'user': u'harvest',
-                'api_version':'2',
+                'user': user_name,
+                'api_version': api_version,
                 'schema': schema,
             }
 

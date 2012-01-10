@@ -1,7 +1,9 @@
 import urllib2
 
+from ckan.lib.base import c
+from ckan import model
 from ckan.model import Session, Package
-from ckan.logic import ValidationError, NotFound
+from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
 
 from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError, \
@@ -34,6 +36,9 @@ class CKANHarvester(HarvesterBase):
         )
 
         try:
+            api_key = self.config.get('api_key',None)
+            if api_key:
+                http_request.add_header('Authorization',api_key)
             http_response = urllib2.urlopen(http_request)
 
             return http_response.read()
@@ -65,6 +70,35 @@ class CKANHarvester(HarvesterBase):
 
         try:
             config_obj = json.loads(config)
+
+            if 'default_tags' in config_obj:
+                if not isinstance(config_obj['default_tags'],list):
+                    raise ValueError('default_tags must be a list')
+
+            if 'default_groups' in config_obj:
+                if not isinstance(config_obj['default_groups'],list):
+                    raise ValueError('default_groups must be a list')
+
+                # Check if default groups exist
+                context = {'model':model,'user':c.user}
+                for group_name in config_obj['default_groups']:
+                    try:
+                        group = get_action('group_show')(context,{'id':group_name})
+                    except NotFound,e:
+                        raise ValueError('Default group not found')
+
+            if 'default_extras' in config_obj:
+                if not isinstance(config_obj['default_extras'],dict):
+                    raise ValueError('default_extras must be a dictionary')
+
+            if 'user' in config_obj:
+                # Check if user exists
+                context = {'model':model,'user':c.user}
+                try:
+                    user = get_action('user_show')(context,{'id':config_obj.get('user')})
+                except NotFound,e:
+                    raise ValueError('User not found')
+
         except ValueError,e:
             raise e
 
@@ -196,7 +230,61 @@ class CKANHarvester(HarvesterBase):
 
         try:
             package_dict = json.loads(harvest_object.content)
-            return self._create_or_update_package(package_dict,harvest_object)
+
+            # Set default tags if needed
+            default_tags = self.config.get('default_tags',[])
+            if default_tags:
+                if not 'tags' in package_dict:
+                    package_dict['tags'] = []
+                package_dict['tags'].extend([t for t in default_tags if t not in package_dict['tags']])
+
+            # Ignore remote groups for the time being
+            del package_dict['groups']
+
+            # Set default groups if needed
+            default_groups = self.config.get('default_groups',[])
+            if default_groups:
+                if not 'groups' in package_dict:
+                    package_dict['groups'] = []
+                package_dict['groups'].extend([g for g in default_groups if g not in package_dict['groups']])
+
+            # Set default extras if needed
+            default_extras = self.config.get('default_extras',{})
+            if default_extras:
+                override_extras = self.config.get('override_extras',False)
+                if not 'extras' in package_dict:
+                    package_dict['extras'] = {}
+                for key,value in default_extras.iteritems():
+                    if not key in package_dict['extras'] or override_extras:
+                        # Look for replacement strings
+                        if isinstance(value,basestring):
+                            value = value.format(harvest_source_id=harvest_object.job.source.id,
+                                     harvest_source_url=harvest_object.job.source.url.strip('/'),
+                                     harvest_job_id=harvest_object.job.id,
+                                     harvest_object_id=harvest_object.id,
+                                     dataset_id=package_dict['id'])
+                        package_dict['extras'][key] = value
+
+            result = self._create_or_update_package(package_dict,harvest_object)
+
+            if result and self.config.get('read_only',False) == True:
+
+                package = model.Package.get(package_dict['id'])
+
+                # Clear default permissions
+                model.clear_user_roles(package)
+
+                # Setup harvest user as admin
+                user_name = self.config.get('user',u'harvest')
+                user = model.User.get(user_name)
+                pkg_role = model.PackageRole(package=package, user=user, role=model.Role.ADMIN)
+
+                # Other users can only read
+                for user_name in (u'visitor',u'logged_in'):
+                    user = model.User.get(user_name)
+                    pkg_role = model.PackageRole(package=package, user=user, role=model.Role.READER)
+
+
         except ValidationError,e:
             self._save_object_error('Invalid package with GUID %s: %r' % (harvest_object.guid, e.error_dict),
                     harvest_object, 'Import')
