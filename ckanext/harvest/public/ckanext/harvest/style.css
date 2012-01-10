@@ -13,3 +13,12 @@
 .harvester-title{
     font-weight: bold;
 }
+
+#harvest-source-actions {
+    margin-bottom: 10px;
+}
+
+#harvest-source-actions img{
+    vertical-align: middle;
+    margin: 0 5px;
+}

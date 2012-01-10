@@ -13,6 +13,9 @@
   <div class="harvest-content">
   <py:if test="c.source">
   <h1>Harvest Source Details</h1>
+  <div id="harvest-source-actions">
+    <img src="/ckanext/harvest/images/icons/source_edit.png" alt="Edit" /><a href="/harvest/edit/${c.source.id}">Edit source</a> |
+    <img src="/ckanext/harvest/images/icons/source_refresh.png" alt="Refresh" /><a href="/harvest/refresh/${c.source.id}">Refresh source</a></div>
     <table id="harvest-source-details">
         <tr>
             <th>ID</th>
