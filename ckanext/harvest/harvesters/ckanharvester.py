@@ -71,7 +71,14 @@ class CKANHarvester(HarvesterBase):
         try:
             config_obj = json.loads(config)
 
+            if 'default_tags' in config_obj:
+                if not isinstance(config_obj['default_tags'],list):
+                    raise ValueError('default_tags must be a list')
+
             if 'default_groups' in config_obj:
+                if not isinstance(config_obj['default_groups'],list):
+                    raise ValueError('default_groups must be a list')
+
                 # Check if default groups exist
                 context = {'model':model,'user':c.user}
                 for group_name in config_obj['default_groups']:
@@ -79,6 +86,10 @@ class CKANHarvester(HarvesterBase):
                         group = get_action('group_show')(context,{'id':group_name})
                     except NotFound,e:
                         raise ValueError('Default group not found')
+
+            if 'default_extras' in config_obj:
+                if not isinstance(config_obj['default_extras'],dict):
+                    raise ValueError('default_extras must be a dictionary')
 
             if 'user' in config_obj:
                 # Check if user exists
@@ -236,6 +247,23 @@ class CKANHarvester(HarvesterBase):
                 if not 'groups' in package_dict:
                     package_dict['groups'] = []
                 package_dict['groups'].extend([g for g in default_groups if g not in package_dict['groups']])
+
+            # Set default extras if needed
+            default_extras = self.config.get('default_extras',{})
+            if default_extras:
+                override_extras = self.config.get('override_extras',False)
+                if not 'extras' in package_dict:
+                    package_dict['extras'] = {}
+                for key,value in default_extras.iteritems():
+                    if not key in package_dict['extras'] or override_extras:
+                        # Look for replacement strings
+                        if isinstance(value,basestring):
+                            value = value.format(harvest_source_id=harvest_object.job.source.id,
+                                     harvest_source_url=harvest_object.job.source.url.strip('/'),
+                                     harvest_job_id=harvest_object.job.id,
+                                     harvest_object_id=harvest_object.id,
+                                     dataset_id=package_dict['id'])
+                        package_dict['extras'][key] = value
 
             result = self._create_or_update_package(package_dict,harvest_object)
 
