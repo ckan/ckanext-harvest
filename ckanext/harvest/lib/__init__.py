@@ -34,7 +34,7 @@ def _get_source_status(source, detailed=True):
     # Get next scheduled job
     next_job = HarvestJob.filter(source=source,status=u'New').first()
     if next_job:
-        out['next_harvest'] = 'Within 15 minutes'
+        out['next_harvest'] = 'Scheduled'
     else:
         out['next_harvest'] = 'Not yet scheduled'
 

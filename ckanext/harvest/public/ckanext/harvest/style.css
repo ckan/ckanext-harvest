@@ -1,4 +1,16 @@
 /* Harvest styles */
+
+
+
+body.index.ViewController #minornavigation {
+    display: none;
+}
+
+body.index.ViewController #content {
+    width: 100% !important;
+    border: 0 !important;
+}
+
 #new-harvest-source {
 	background: transparent url("images/icons/source_new.png") no-repeat 0px 0px;
     padding-left: 20px;
@@ -6,8 +18,32 @@
     font-weight: bold;
 }
 
+#show-inactive-sources-content{
+    float: right;
+    width: 150px;
+}
+
+#show-inactive-sources-content input{
+    float: left;
+}
+
+#show-inactive-sources-content label{
+    float: left;
+    font-weight: normal;
+    margin-top: -4px;
+    margin-left: 5px;
+}
+
 #harvest-sources th.action{
     font-style: italic;
+}
+
+#harvest-sources .inactive{
+    display:none;
+}
+
+#harvest-sources .inactive .state{
+    color: red;
 }
 
 .harvester-title{

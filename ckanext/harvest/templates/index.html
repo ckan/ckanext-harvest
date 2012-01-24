@@ -8,14 +8,21 @@
   <py:def function="optional_head">
     <link type="text/css" rel="stylesheet" media="all" href="/ckanext/harvest/style.css" />
   </py:def>
+  <py:def function="optional_footer">
+      <script>$("#show-inactive-sources").click(function(){$("#harvest-sources .inactive").toggle()});</script>
+  </py:def>
 
-<div py:match="content">
-  <div class="harvest-content">
-  <h1>Harvesting Sources</h1>
-    <div id="new-harvest-source"><a href="harvest/new">Add a harvesting source</a></div>
-    <py:choose>
-        <py:when test="c.sources">
+    <div py:match="content">
+        <div class="harvest-content">
+            <h1>Harvesting Sources</h1>
 
+            <div id="new-harvest-source"><a href="harvest/new">Add a harvesting source</a></div>
+            <py:choose>
+                <py:when test="c.sources">
+                    <div id="show-inactive-sources-content">
+                        <input type="checkbox" id="show-inactive-sources" />
+                        <label for="show-inactive-sources"> Show inactive sources</label>
+                    </div>
 
        <table id="harvest-sources">
         <tr>
@@ -30,25 +37,33 @@
             <th>Created</th>
         </tr>
 
-        <tr py:for="source in c.sources">
+        <tr py:for="source in c.sources" class="${'active' if source.active else 'inactive'}">
             <td><a href="harvest/${source.id}"><img src="ckanext/harvest/images/icons/source_view.png" alt="View" title="View" /></a></td>
             <td><a href="harvest/edit/${source.id}"><img src="ckanext/harvest/images/icons/source_edit.png" alt="Edit" title="Edit" /></a></td>
             <td><a href="harvest/refresh/${source.id}"><img src="ckanext/harvest/images/icons/source_refresh.png" alt="Refresh" title="Refresh" /></a></td>
-            <td>${source.url}</td>
+            <py:choose>
+                <py:when test="source.url and len(source.url)>50">
+                    <td>${source.url[:50]}<span title="${source.url}">...</span></td>
+                </py:when>
+                <py:otherwise>
+                    <td>${source.url}</td>
+                </py:otherwise>
+            </py:choose>
             <td>${source.type}</td>
-            <td>${source.active}</td>
+            <td class="state">${source.active}</td>
             <py:choose>
                 <py:when test="'msg' in source.status">
                     <td>${source.status.msg}</td>
                     <td>${source.status.msg}</td>
                 </py:when>
                 <py:otherwise>
-                    <td>${source.status.overall_statistics.added} pkgs ${source.status.overall_statistics.errors} errors</td>
+                    <td>Datasets: <a href="harvest/${source.id}#datasets">${source.status.overall_statistics.added}</a> <br/>
+                        Last errors: <a href="harvest/${source.id}#errors">${source.status.last_harvest_statistics.errors}</a></td>
                     <td>${source.status.next_harvest}</td>
                 </py:otherwise>
             </py:choose>
 
-            <td>${source.created}</td>
+            <td>${h.render_datetime(source.created)}</td>
          </tr>
     </table>
    </py:when>
@@ -56,7 +71,7 @@
         <div id="no-harvest-sources">No harvest sources defined yet.</div>
     </py:otherwise>
   </py:choose>
- 
+
   </div>
 </div>
 <xi:include href="layout.html" />
