@@ -138,7 +138,7 @@ def create_harvester_tables():
     # Was harvested_document
     harvest_object_table = Table('harvest_object', metadata,
         Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
-        Column('guid', types.UnicodeText, default=''),
+        Column('guid', types.UnicodeText, default=u''),
         Column('gathered', DateTime, default=datetime.datetime.utcnow),
         Column('fetch_started', DateTime),
         Column('content', types.UnicodeText, nullable=True),
