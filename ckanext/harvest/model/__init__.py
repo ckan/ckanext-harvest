@@ -27,15 +27,29 @@ harvest_gather_error_table = None
 harvest_object_error_table = None
 
 def setup():
+
+
     if harvest_source_table is None:
-        create_harvester_tables()
+        define_harvester_tables()
         log.debug('Harvest tables defined in memory')
+
     if model.repo.are_tables_created():
-        metadata.create_all()
-        log.debug('Harvest tables created')
+        if not harvest_source_table.exists():
+
+            # Create each table individually rahter than
+            # using metadata.create_all()
+            harvest_source_table.create()
+            harvest_job_table.create()
+            harvest_object_table.create()
+            harvest_gather_error_table.create()
+            harvest_object_error_table.create()
+
+            log.debug('Harvest tables created')
+        else:
+            log.debug('Harvest tables already exist')
     else:
         log.debug('Harvest table creation deferred')
-    
+
 
 class HarvestError(Exception):
     pass
@@ -46,20 +60,20 @@ class HarvestDomainObject(DomainObject):
     key_attr = 'id'
 
     @classmethod
-    def get(self, key, default=None, attr=None):
+    def get(cls, key, default=None, attr=None):
         '''Finds a single entity in the register.'''
         if attr == None:
-            attr = self.key_attr
+            attr = cls.key_attr
         kwds = {attr: key}
-        o = self.filter(**kwds).first()
+        o = cls.filter(**kwds).first()
         if o:
             return o
         else:
             return default
 
     @classmethod
-    def filter(self, **kwds):
-        query = Session.query(self).autoflush(False)
+    def filter(cls, **kwds):
+        query = Session.query(cls).autoflush(False)
         return query.filter_by(**kwds)
 
 
@@ -107,7 +121,7 @@ class HarvestObjectError(HarvestDomainObject):
     '''
     pass
 
-def create_harvester_tables():
+def define_harvester_tables():
 
     global harvest_source_table
     global harvest_job_table
@@ -161,7 +175,7 @@ def create_harvester_tables():
         Column('harvest_object_id', types.UnicodeText, ForeignKey('harvest_object.id')),
         Column('message',types.UnicodeText),
         Column('stage', types.UnicodeText),
-        Column('created', DateTime, default=datetime.datetime.utcnow),  
+        Column('created', DateTime, default=datetime.datetime.utcnow),
     )
 
     mapper(
