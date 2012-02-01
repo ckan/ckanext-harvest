@@ -1,6 +1,7 @@
 import logging
 import datetime
 
+from sqlalchemy import distinct
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import backref, relation
 
@@ -42,7 +43,7 @@ def setup():
     if model.repo.are_tables_created():
         if not harvest_source_table.exists():
 
-            # Create each table individually rahter than
+            # Create each table individually rather than
             # using metadata.create_all()
             harvest_source_table.create()
             harvest_job_table.create()
@@ -254,18 +255,42 @@ def define_harvester_tables():
 
 
 def migrate_v2():
+    log.debug('Migrating harvest tables to v2. This may take a while...')
     conn = Session.connection()
 
-    command = '''
+    statements = '''
     ALTER TABLE harvest_source ADD COLUMN title text;
 
     ALTER TABLE harvest_object ADD COLUMN current boolean;
     ALTER TABLE harvest_object ADD COLUMN harvest_source_id text;
     ALTER TABLE harvest_object ADD CONSTRAINT harvest_object_harvest_source_id_fkey FOREIGN KEY (harvest_source_id) REFERENCES harvest_source(id);
-    '''
-    conn.execute(command)
 
-    # TODO: scripts for populating current and harvest_source_id
+    UPDATE harvest_object o SET harvest_source_id = j.source_id FROM harvest_job j WHERE o.harvest_job_id = j.id;
+    '''
+    conn.execute(statements)
+
+    # Flag current harvest_objects
+    guids = Session.query(distinct(HarvestObject.guid)) \
+            .join(Package) \
+            .filter(HarvestObject.package!=None) \
+            .filter(Package.state==u'active')
+
+    update_statement = '''
+    UPDATE harvest_object
+    SET current = TRUE
+    WHERE id = (
+        SELECT o.id
+        FROM harvest_object o JOIN package p ON p.id = o.package_id
+        WHERE o.package_id IS NOT null AND p.state = 'active'
+            AND o.guid = '%s'
+        ORDER BY metadata_modified_date DESC, fetch_finished DESC, gathered DESC
+        LIMIT 1)
+    '''
+
+    for guid in guids:
+        conn.execute(update_statement % guid)
+
+    conn.execute('UPDATE harvest_object SET current = FALSE WHERE current IS NOT TRUE')
 
     Session.commit()
-    log.debug('Harvest tables migrated to v2')
+    log.info('Harvest tables migrated to v2')
