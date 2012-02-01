@@ -1,6 +1,7 @@
 import logging
 import datetime
 
+from sqlalchemy import event
 from sqlalchemy import distinct
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import backref, relation
@@ -120,10 +121,6 @@ class HarvestObject(HarvestDomainObject):
 
     '''
 
-    @property
-    def source(self):
-        return self.job.source
-
 class HarvestGatherError(HarvestDomainObject):
     '''Gather errors are raised during the **gather** stage of a harvesting
        job.
@@ -135,6 +132,18 @@ class HarvestObjectError(HarvestDomainObject):
        harvesting job, and are referenced to a specific harvest object.
     '''
     pass
+
+def harvest_object_before_insert_listener(mapper,connection,target):
+    '''
+        For compatibility with old harvesters, check if the source id has
+        been set, and set it automatically from the job if not.
+    '''
+    if not target.harvest_source_id or not target.source:
+        if not target.job:
+            raise Exception('You must define a Harvest Job for each Harvest Object')
+        target.source = target.job.source
+        target.harvest_source_id = target.job.source.id
+
 
 def define_harvester_tables():
 
@@ -228,6 +237,12 @@ def define_harvester_tables():
                 lazy=True,
                 backref=u'objects',
             ),
+            'source': relation(
+                HarvestSource,
+                lazy=True,
+                backref=u'objects',
+            ),
+
         },
     )
 
@@ -253,6 +268,7 @@ def define_harvester_tables():
         },
     )
 
+    event.listen(HarvestObject, 'before_insert', harvest_object_before_insert_listener)
 
 def migrate_v2():
     log.debug('Migrating harvest tables to v2. This may take a while...')
