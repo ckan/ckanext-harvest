@@ -87,8 +87,9 @@ def _get_source_status(source, detailed=True):
 
         # Overall statistics
         packages = Session.query(distinct(HarvestObject.package_id),Package.name) \
-                .join(Package).join(HarvestJob).join(HarvestSource) \
-                .filter(HarvestJob.source==source) \
+                .join(Package).join(HarvestSource) \
+                .filter(HarvestObject.source==source) \
+                .filter(HarvestObject.current==True) \
                 .filter(Package.state==u'active')
 
         out['overall_statistics']['added'] = packages.count()
@@ -353,40 +354,29 @@ def import_last_objects(source_id=None):
             raise Exception('This harvest source is not active')
 
         last_objects_ids = Session.query(HarvestObject.id) \
-                .join(HarvestJob).join(Package) \
-                .filter(HarvestJob.source==source) \
-                .filter(HarvestObject.package!=None) \
+                .join(HarvestSource).join(Package) \
+                .filter(HarvestObject.source==source) \
+                .filter(HarvestObject.current==True) \
                 .filter(Package.state==u'active') \
-                .order_by(HarvestObject.guid) \
-                .order_by(HarvestObject.metadata_modified_date.desc()) \
-                .order_by(HarvestObject.gathered.desc()) \
                 .all()
     else:
         last_objects_ids = Session.query(HarvestObject.id) \
                 .join(Package) \
-                .filter(HarvestObject.package!=None) \
+                .filter(HarvestObject.current==True) \
                 .filter(Package.state==u'active') \
-                .order_by(HarvestObject.guid) \
-                .order_by(HarvestObject.metadata_modified_date.desc()) \
-                .order_by(HarvestObject.gathered.desc()) \
                 .all()
 
-
-    last_obj_guid = ''
-    imported_objects = []
+    last_objects = []
     for obj_id in last_objects_ids:
         obj = Session.query(HarvestObject).get(obj_id)
-        if obj.guid != last_obj_guid:
-            imported_objects.append(obj)
-            for harvester in PluginImplementations(IHarvester):
-                if harvester.info()['name'] == obj.job.source.type:
-                    if hasattr(harvester,'force_import'):
-                        harvester.force_import = True
-                    harvester.import_stage(obj)
-                    break
-        last_obj_guid = obj.guid
-
-    return imported_objects
+        for harvester in PluginImplementations(IHarvester):
+            if harvester.info()['name'] == obj.source.type:
+                if hasattr(harvester,'force_import'):
+                    harvester.force_import = True
+                harvester.import_stage(obj)
+                break
+        last_objects.append(obj)
+    return last_objects
 
 def create_harvest_job_all():
 

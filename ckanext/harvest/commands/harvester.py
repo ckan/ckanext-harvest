@@ -216,7 +216,8 @@ class Harvester(CkanCommand):
             source_id = unicode(self.args[1])
         else:
             source_id = None
-        import_last_objects(source_id)
+        objs = import_last_objects(source_id)
+        print '%s objects reimported' % len(objs)
 
     def create_harvest_job_all(self):
         jobs = create_harvest_job_all()
