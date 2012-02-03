@@ -151,6 +151,11 @@ field. The currently supported configuration options are:
     created from this harvesting source. Logged in users and visitors will be
     only able to read them.
 
+*   force_all: By default, after the first harvesting, the harvester will gather
+    only the modified packages from the remote site since the last harvesting.
+    Setting this property to true will force the harvester to gather all remote
+    packages regardless of the modification date. Default is False.
+
 Here is an example of a configuration object (the one that must be entered in
 the configuration field)::
 
