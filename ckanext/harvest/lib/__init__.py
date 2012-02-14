@@ -111,8 +111,6 @@ def _get_source_status(source, detailed=True):
     return out
 
 
-
-
 def _source_as_dict(source, detailed=True):
     out = source.as_dict()
     out['jobs'] = []
@@ -153,42 +151,6 @@ def _object_as_dict(obj):
         out['errors'].append(error.as_dict())
 
     return out
-
-def _url_exists(url):
-    new_url = _normalize_url(url)
-
-    existing_sources = get_harvest_sources()
-
-    for existing_source in existing_sources:
-        existing_url = _normalize_url(existing_source['url'])
-        if existing_url == new_url and existing_source['active'] == True:
-            return existing_source
-    return False
-
-def _normalize_url(url):
-    o = urlparse.urlparse(url)
-
-    # Normalize port
-    if ':' in o.netloc:
-        parts = o.netloc.split(':')
-        if (o.scheme == 'http' and parts[1] == '80') or \
-           (o.scheme == 'https' and parts[1] == '443'):
-            netloc = parts[0]
-        else:
-            netloc = ':'.join(parts)
-    else:
-        netloc = o.netloc
-
-    # Remove trailing slash
-    path = o.path.rstrip('/')
-
-    check_url = urlparse.urlunparse((
-            o.scheme,
-            netloc,
-            path,
-            None,None,None))
-
-    return check_url
 
 def _prettify(field_name):
     field_name = re.sub('(?<!\w)[Uu]rl(?!\w)', 'URL', field_name.replace('_', ' ').capitalize())
