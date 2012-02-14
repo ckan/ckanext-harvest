@@ -40,6 +40,21 @@
             <dd class="instructions basic">You can add your own notes here about what the URL above represents to remind you later.</dd>
             <dt><label class="field_opt" for="config">Configuration</label></dt>
             <dd><textarea id="config" name="config" cols="30" rows="2" style="height:75px">${data.get('config', '')}</textarea></dd>
+
+            <dt><label class="field_opt" for="active">State</label></dt>
+            <dd>
+            <select id="active" name="active">
+                <option py:attrs="{'selected': 'selected' if data.get('active') or not 'active' in data else None}" value="True">active</option>
+                <option py:attrs="{'selected': 'selected' if 'active' in data and not data.get('active') else None}" value="False">inactive</option>
+            </select>
+            <py:if test="data.get('active') or not 'active' in data">
+                <div>This harvest source is <span class="source-state-active">Active</span></div>
+            </py:if>
+            <py:if test="'active' in data and not data.get('active')">
+                 <div>This harvest source is <span class="source-state-inactive">Inactive</span></div>
+            </py:if>
+
+            </dd>
         </dl>
     </fieldset>
     <input id="save" name="save" value="Save" type="submit" /> or <a href="/harvest">Return to the harvest sources list</a>

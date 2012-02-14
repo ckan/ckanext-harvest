@@ -194,6 +194,9 @@ def create_harvest_source(data_dict):
         if o in data and data[o] is not None:
             source.__setattr__(o,data[o])
 
+    if 'active' in data_dict:
+        source.active = data['active']
+
     source.save()
 
     return _source_as_dict(source)
@@ -213,14 +216,25 @@ def edit_harvest_source(source_id,data_dict):
         Session.rollback()
         raise ValidationError(errors,_error_summary(errors))
 
-    fields = ['url','type','active','description','user_id','publisher_id']
+    fields = ['url','type','description','user_id','publisher_id']
     for f in fields:
-        if f in data_dict and data_dict[f] is not None and data_dict[f] != '':
-            source.__setattr__(f,data_dict[f])
+        if f in data and data[f] is not None and data[f] != '':
+            source.__setattr__(f,data[f])
 
-    source.config = data_dict['config']
+    if 'active' in data_dict:
+        source.active = data['active']
+
+    if 'config' in data_dict:
+        source.config = data['config']
 
     source.save()
+    # Abort any pending jobs
+    if not source.active:
+        jobs = HarvestJob.filter(source=source,status=u'New')
+        if jobs:
+            for job in jobs:
+                job.status = u'Aborted'
+                job.save()
 
     return _source_as_dict(source)
 
