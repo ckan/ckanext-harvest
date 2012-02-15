@@ -189,7 +189,7 @@ def create_harvest_source(data_dict):
     source.url = data['url']
     source.type = data['type']
 
-    opt = ['active','description','user_id','publisher_id','config']
+    opt = ['active','title','description','user_id','publisher_id','config']
     for o in opt:
         if o in data and data[o] is not None:
             source.__setattr__(o,data[o])
@@ -216,9 +216,9 @@ def edit_harvest_source(source_id,data_dict):
         Session.rollback()
         raise ValidationError(errors,_error_summary(errors))
 
-    fields = ['url','type','description','user_id','publisher_id']
+    fields = ['url','title','type','description','user_id','publisher_id']
     for f in fields:
-        if f in data and data[f] is not None and data[f] != '':
+        if f in data and data[f] is not None:
             source.__setattr__(f,data[f])
 
     if 'active' in data_dict:

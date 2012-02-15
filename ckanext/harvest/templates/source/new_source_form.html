@@ -35,6 +35,12 @@
                     </py:for>
                 </ul>
             </dd>
+
+            <dt class="harvest-source-title"><label class="field_req" for="title">Title</label></dt>
+            <dd class="harvest-source-title"><input id="title" name="title" size="80" type="text" value="${data.get('title', '')}" /></dd>
+            <dd class="harvest-source-title field_error" py:if="errors.get('title', '')">${errors.get('title', '')}</dd>
+            <dd class="harvest-source-title instructions basic">This will be shown as the datasets source.</dd>
+
             <dt><label class="field_opt" for="description">Description</label></dt>
             <dd><textarea id="description" name="description" cols="30" rows="2" style="height:75px">${data.get('description', '')}</textarea></dd>
             <dd class="instructions basic">You can add your own notes here about what the URL above represents to remind you later.</dd>
