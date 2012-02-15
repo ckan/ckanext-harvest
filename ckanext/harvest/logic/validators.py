@@ -55,8 +55,8 @@ def harvest_source_url_validator(key,data,errors,context):
 
     for url,active in existing_sources:
         url = _normalize_url(url)
-        if url == new_url and active == True:
-            raise Invalid('There already is an active Harvest Source for this URL: %s' % data[key])
+        if url == new_url:
+            raise Invalid('There already is a Harvest Source for this URL: %s' % data[key])
 
     return data[key] 
 
@@ -90,4 +90,12 @@ def harvest_source_config_validator(key,data,errors,context):
                     raise Invalid('Error parsing the configuration options: %s' % str(e))
             else:
                 return data[key]
+
+def harvest_source_active_validator(value,context):
+    if isinstance(value,basestring):
+        if value.lower() == 'true':
+            return True
+        else:
+            return False
+    return bool(value)
 

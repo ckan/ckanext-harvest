@@ -1,6 +1,8 @@
 import logging
 import re
 
+from sqlalchemy.sql import update,and_, bindparam
+
 from ckan import model
 from ckan.model import Session, Package
 from ckan.logic import ValidationError, NotFound, get_action
@@ -145,10 +147,8 @@ class HarvesterBase(SingletonPlugin):
                     log.info('Package with GUID %s exists and needs to be updated' % harvest_object.guid)
                     # Update package
                     context.update({'id':package_dict['id']})
-                    updated_package = get_action('package_update_rest')(context, package_dict)
+                    new_package = get_action('package_update_rest')(context, package_dict)
 
-                    harvest_object.package_id = updated_package['id']
-                    harvest_object.save()
                 else:
                     log.info('Package with GUID %s not updated, skipping...' % harvest_object.guid)
 
@@ -161,7 +161,21 @@ class HarvesterBase(SingletonPlugin):
                 log.info('Package with GUID %s does not exist, let\'s create it' % harvest_object.guid)
                 new_package = get_action('package_create_rest')(context, package_dict)
                 harvest_object.package_id = new_package['id']
-                harvest_object.save()
+
+            # Flag the other objects linking to this package as not current anymore
+            from ckanext.harvest.model import harvest_object_table
+            conn = Session.connection()
+            u = update(harvest_object_table) \
+                    .where(harvest_object_table.c.package_id==bindparam('b_package_id')) \
+                    .values(current=False)
+            conn.execute(u, b_package_id=new_package['id'])
+            Session.commit()
+
+            # Flag this as the current harvest object
+
+            harvest_object.package_id = new_package['id']
+            harvest_object.current = True
+            harvest_object.save()
 
             return True
 

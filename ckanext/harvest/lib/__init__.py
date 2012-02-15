@@ -87,8 +87,9 @@ def _get_source_status(source, detailed=True):
 
         # Overall statistics
         packages = Session.query(distinct(HarvestObject.package_id),Package.name) \
-                .join(Package).join(HarvestJob).join(HarvestSource) \
-                .filter(HarvestJob.source==source) \
+                .join(Package).join(HarvestSource) \
+                .filter(HarvestObject.source==source) \
+                .filter(HarvestObject.current==True) \
                 .filter(Package.state==u'active')
 
         out['overall_statistics']['added'] = packages.count()
@@ -108,8 +109,6 @@ def _get_source_status(source, detailed=True):
         out['last_harvest_request'] = 'Not yet harvested'
 
     return out
-
-
 
 
 def _source_as_dict(source, detailed=True):
@@ -153,42 +152,6 @@ def _object_as_dict(obj):
 
     return out
 
-def _url_exists(url):
-    new_url = _normalize_url(url)
-
-    existing_sources = get_harvest_sources()
-
-    for existing_source in existing_sources:
-        existing_url = _normalize_url(existing_source['url'])
-        if existing_url == new_url and existing_source['active'] == True:
-            return existing_source
-    return False
-
-def _normalize_url(url):
-    o = urlparse.urlparse(url)
-
-    # Normalize port
-    if ':' in o.netloc:
-        parts = o.netloc.split(':')
-        if (o.scheme == 'http' and parts[1] == '80') or \
-           (o.scheme == 'https' and parts[1] == '443'):
-            netloc = parts[0]
-        else:
-            netloc = ':'.join(parts)
-    else:
-        netloc = o.netloc
-
-    # Remove trailing slash
-    path = o.path.rstrip('/')
-
-    check_url = urlparse.urlunparse((
-            o.scheme,
-            netloc,
-            path,
-            None,None,None))
-
-    return check_url
-
 def _prettify(field_name):
     field_name = re.sub('(?<!\w)[Uu]rl(?!\w)', 'URL', field_name.replace('_', ' ').capitalize())
     return field_name.replace('_', ' ')
@@ -226,10 +189,13 @@ def create_harvest_source(data_dict):
     source.url = data['url']
     source.type = data['type']
 
-    opt = ['active','description','user_id','publisher_id','config']
+    opt = ['active','title','description','user_id','publisher_id','config']
     for o in opt:
         if o in data and data[o] is not None:
             source.__setattr__(o,data[o])
+
+    if 'active' in data_dict:
+        source.active = data['active']
 
     source.save()
 
@@ -250,14 +216,25 @@ def edit_harvest_source(source_id,data_dict):
         Session.rollback()
         raise ValidationError(errors,_error_summary(errors))
 
-    fields = ['url','type','active','description','user_id','publisher_id']
+    fields = ['url','title','type','description','user_id','publisher_id']
     for f in fields:
-        if f in data_dict and data_dict[f] is not None and data_dict[f] != '':
-            source.__setattr__(f,data_dict[f])
+        if f in data and data[f] is not None:
+            source.__setattr__(f,data[f])
 
-    source.config = data_dict['config']
+    if 'active' in data_dict:
+        source.active = data['active']
+
+    if 'config' in data_dict:
+        source.config = data['config']
 
     source.save()
+    # Abort any pending jobs
+    if not source.active:
+        jobs = HarvestJob.filter(source=source,status=u'New')
+        if jobs:
+            for job in jobs:
+                job.status = u'Aborted'
+                job.save()
 
     return _source_as_dict(source)
 
@@ -353,40 +330,29 @@ def import_last_objects(source_id=None):
             raise Exception('This harvest source is not active')
 
         last_objects_ids = Session.query(HarvestObject.id) \
-                .join(HarvestJob).join(Package) \
-                .filter(HarvestJob.source==source) \
-                .filter(HarvestObject.package!=None) \
+                .join(HarvestSource).join(Package) \
+                .filter(HarvestObject.source==source) \
+                .filter(HarvestObject.current==True) \
                 .filter(Package.state==u'active') \
-                .order_by(HarvestObject.guid) \
-                .order_by(HarvestObject.metadata_modified_date.desc()) \
-                .order_by(HarvestObject.gathered.desc()) \
                 .all()
     else:
         last_objects_ids = Session.query(HarvestObject.id) \
                 .join(Package) \
-                .filter(HarvestObject.package!=None) \
+                .filter(HarvestObject.current==True) \
                 .filter(Package.state==u'active') \
-                .order_by(HarvestObject.guid) \
-                .order_by(HarvestObject.metadata_modified_date.desc()) \
-                .order_by(HarvestObject.gathered.desc()) \
                 .all()
 
-
-    last_obj_guid = ''
-    imported_objects = []
+    last_objects = []
     for obj_id in last_objects_ids:
         obj = Session.query(HarvestObject).get(obj_id)
-        if obj.guid != last_obj_guid:
-            imported_objects.append(obj)
-            for harvester in PluginImplementations(IHarvester):
-                if harvester.info()['name'] == obj.job.source.type:
-                    if hasattr(harvester,'force_import'):
-                        harvester.force_import = True
-                    harvester.import_stage(obj)
-                    break
-        last_obj_guid = obj.guid
-
-    return imported_objects
+        for harvester in PluginImplementations(IHarvester):
+            if harvester.info()['name'] == obj.source.type:
+                if hasattr(harvester,'force_import'):
+                    harvester.force_import = True
+                harvester.import_stage(obj)
+                break
+        last_objects.append(obj)
+    return last_objects
 
 def create_harvest_job_all():
 

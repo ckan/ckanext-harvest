@@ -42,7 +42,7 @@ class ViewController(BaseController):
         errors = errors or {}
         error_summary = error_summary or {}
         vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': get_registered_harvesters_info()}
-        
+
         c.form = render('source/new_source_form.html', extra_vars=vars)
         return render('source/new.html')
 
@@ -80,9 +80,9 @@ class ViewController(BaseController):
         data = data or old_data
         errors = errors or {}
         error_summary = error_summary or {}
-        #TODO: Use new description interface to build the types select and descriptions
+
         vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': get_registered_harvesters_info()}
-        
+
         c.form = render('source/new_source_form.html', extra_vars=vars)
         return render('source/edit.html')
 

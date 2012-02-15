@@ -58,3 +58,12 @@ body.index.ViewController #content {
     vertical-align: middle;
     margin: 0 5px;
 }
+
+.source-state-active{
+    font-weight:bold;
+}
+
+.source-state-inactive{
+    font-weight:bold;
+    color: red;
+}
