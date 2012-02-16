@@ -417,6 +417,9 @@ following steps with the one you are using.
 
 3. Start the supervisor tasks with the following commands::
 
+    sudo supervisorctl reread
+    sudo supervisorctl add ckan_gather_consumer
+    sudo supervisorctl add ckan_fetch_consumer
     sudo supervisorctl start ckan_gather_consumer
     sudo supervisorctl start ckan_fetch_consumer
 
