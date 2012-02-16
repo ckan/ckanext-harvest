@@ -363,7 +363,39 @@ following steps with the one you are using.
 
    Create a file named `/etc/supervisor/conf.d/ckan_harvesting.conf`, and copy the following contents::
 
-        .. include:: config/supervisor/ckan_harvesting.conf
+
+        ; ===============================
+        ; ckan harvester
+        ; ===============================
+
+        [program:ckan_gather_consumer]
+
+        command=/var/lib/ckan/std/pyenv/bin/paster --plugin=ckanext-harvest harvester gather_consumer --config=/etc/ckan/std/std.ini
+
+        ; user that owns virtual environment.
+        user=okfn
+
+        numprocs=1
+        stdout_logfile=/var/log/ckan/std/gather_consumer.log
+        stderr_logfile=/var/log/ckan/std/gather_consumer.log
+        autostart=true
+        autorestart=true
+        startsecs=10
+
+        [program:ckan_fetch_consumer]
+
+        command=/var/lib/ckan/std/pyenv/bin/paster --plugin=ckanext-harvest harvester fetch_consumer --config=/etc/ckan/std/std.ini
+
+        ; user that owns virtual environment.
+        user=okfn
+
+        numprocs=1
+        stdout_logfile=/var/log/ckan/std/fetch_consumer.log
+        stderr_logfile=/var/log/ckan/std/fetch_consumer.log
+        autostart=true
+        autorestart=true
+        startsecs=10
+
 
    There are a number of things that you will need to replace with your
    specific installation settings (the example above shows paths from a
