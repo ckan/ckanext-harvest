@@ -101,7 +101,7 @@ the config explicitly though::
         paster harvester sources --config=../ckan/development.ini
 
 The CKAN harverster
-==================
+===================
 
 The plugin includes a harvester for remote CKAN instances. To use it, you need
 to add the `ckan_harvester` plugin to your options file::
@@ -318,7 +318,149 @@ pending harvesting jobs::
 
       paster harvester run --config=../ckan/development.ini
 
-After packages have been imported, the search index will have to be updated
-before the packages appear in search results (from the ckan directory):
+Note: If you don't have the `synchronous_search` plugin loaded, you will need
+to update the search index after the harvesting in order for the packages to
+appear in search results (from the ckan directory):
 
-      paster search-index
+      paster search-index rebuild
+
+
+Setting up the harvesters on a production server
+================================================
+
+The previous approach works fine during development or debugging, but it is
+not recommended for production servers. There are several possible ways of
+setting up the harvesters, which will depend on your particular infrastructure
+and needs. The bottom line is that the gather and fetch process should be kept
+running somehow and then the run command should be run periodically to start
+any pending jobs.
+
+The following approach is the one generally used on CKAN deployments, and it
+will probably suit most of the users. It uses Supervisor_, a tool to monitor
+processes, and a cron job to run the harvest jobs, and it assumes that you
+have already installed and configured the harvesting extension (See
+`Installation` if not).
+
+Note: It is recommended to run the harvest process from a non-root user
+(generally the one you are running CKAN with). Replace the user `okfn` in the
+following steps with the one you are using.
+
+1. Install Supervisor::
+
+       sudo apt-get install supervisor
+
+   You can check if it is running with this command::
+
+       ps aux | grep supervisord
+
+   You should see a line similar to this one::
+
+       root      9224  0.0  0.3  56420 12204 ?        Ss   15:52   0:00 /usr/bin/python /usr/bin/supervisord
+
+2. Supervisor needs to have programs added to its configuration, which will
+   describe the tasks that need to be monitored. This configuration files are
+   stored in `/etc/supervisor/conf.d`.
+
+   Create a file named `/etc/supervisor/conf.d/ckan_harvesting.conf`, and copy the following contents::
+
+
+        ; ===============================
+        ; ckan harvester
+        ; ===============================
+
+        [program:ckan_gather_consumer]
+
+        command=/var/lib/ckan/std/pyenv/bin/paster --plugin=ckanext-harvest harvester gather_consumer --config=/etc/ckan/std/std.ini
+
+        ; user that owns virtual environment.
+        user=okfn
+
+        numprocs=1
+        stdout_logfile=/var/log/ckan/std/gather_consumer.log
+        stderr_logfile=/var/log/ckan/std/gather_consumer.log
+        autostart=true
+        autorestart=true
+        startsecs=10
+
+        [program:ckan_fetch_consumer]
+
+        command=/var/lib/ckan/std/pyenv/bin/paster --plugin=ckanext-harvest harvester fetch_consumer --config=/etc/ckan/std/std.ini
+
+        ; user that owns virtual environment.
+        user=okfn
+
+        numprocs=1
+        stdout_logfile=/var/log/ckan/std/fetch_consumer.log
+        stderr_logfile=/var/log/ckan/std/fetch_consumer.log
+        autostart=true
+        autorestart=true
+        startsecs=10
+
+
+   There are a number of things that you will need to replace with your
+   specific installation settings (the example above shows paths from a
+   ckan instance installed via Debian packages):
+
+    * command: The absolute path to the paster command located in the
+      python virtual environment and the absolute path to the config
+      ini file.
+
+    * user: The unix user you are running CKAN with
+
+    * stdout_logfile and stderr_logfile: All output coming from the
+      harvest consumers will be written to this file. Ensure that the
+      necessary permissions are setup.
+
+   The rest of the configuration options are pretty self explanatory. Refer
+   to the `Supervisor documentation <http://supervisord.org/configuration.html#program-x-section-settings>`_
+   to know more about these and other options available.
+
+3. Start the supervisor tasks with the following commands::
+
+    sudo supervisorctl start ckan_gather_consumer
+    sudo supervisorctl start ckan_fetch_consumer
+
+   To check that the processes are running, you can run::
+
+    sudo supervisorctl status
+
+    ckan_fetch_consumer              RUNNING    pid 6983, uptime 0:22:06
+    ckan_gather_consumer             RUNNING    pid 6968, uptime 0:22:45
+
+   Some problems you may encounter when starting the processes:
+
+    * `ckan_gather_consumer: ERROR (no such process)`
+       Double-check your supervisor configuration file and stop and restart the supervisor daemon::
+
+           sudo service supervisor start; sudo service supervisor stop
+
+    * `ckan_gather_consumer: ERROR (abnormal termination)`
+       Something prevented the command from running properly. Have a look at the log file that
+       you defined in the `stdout_logfile` section to see what happened. Common errors include:
+
+       * `socket.error: [Errno 111] Connection refused`
+          RabbitMQ is not running::
+
+            sudo service rabbitmq-server start
+
+4. Once we have the two consumers running and monitored, we just need to create a cron job
+   that will run the `run` harvester command periodically. To do so, edit the cron table with
+   the following command (it may ask you to choose an editor)::
+
+    sudo crontab -e -u okfn
+
+   Note that we are running this command as the same user we configured the processes to be run with
+   (`okfn` in our example).
+
+   Paste this line into your crontab, again replacing the paths to paster and the ini file with yours::
+
+    # m  h  dom mon dow   command
+    */15 *  *   *   *     /var/lib/ckan/std/pyenv/bin/paster --plugin=ckanext-harvest harvester run --config=/etc/ckan/std/std.ini
+
+   This particular example will check for pending jobs every fifteen minutes.
+   You can of course modify this periodicity, this `Wikipedia page <http://en.wikipedia.org/wiki/Cron#CRON_expression>`_
+   has a good overview of the crontab syntax.
+
+
+.. _Supervisor: http://supervisord.org
+
