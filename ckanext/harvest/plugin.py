@@ -8,7 +8,7 @@ import ckan.lib.helpers as h
 
 from ckan.plugins import implements, SingletonPlugin
 from ckan.plugins import IRoutes, IConfigurer
-from ckan.plugins import IConfigurable, IGenshiStreamFilter
+from ckan.plugins import IConfigurable, IActions
 from ckanext.harvest.model import setup
 
 log = getLogger(__name__)
@@ -18,7 +18,9 @@ class Harvest(SingletonPlugin):
     implements(IConfigurable)
     implements(IRoutes, inherit=True)
     implements(IConfigurer, inherit=True)
+    implements(IActions)
     
+
     def configure(self, config):
         setup()
 
@@ -51,3 +53,17 @@ class Harvest(SingletonPlugin):
             config['extra_public_paths'] += ',' + public_dir
         else:
             config['extra_public_paths'] = public_dir
+
+    def get_actions(self):
+        from ckanext.harvest.logic.action.get import (harvest_source_show,
+                                                      harvest_source_list,
+                                                      harvest_job_show,
+                                                      harvest_job_list,)
+
+        return {
+            'harvest_source_show': harvest_source_show,
+            'harvest_source_list': harvest_source_list,
+            'harvest_job_show': harvest_job_show,
+            'harvest_job_list': harvest_job_list,
+
+        }

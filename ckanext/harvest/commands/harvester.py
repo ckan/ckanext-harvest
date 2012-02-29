@@ -2,6 +2,9 @@ import sys
 import re
 from pprint import pprint
 
+from ckan import model
+from ckan.logic import get_action
+
 from ckan.lib.cli import CkanCommand
 from ckanext.harvest.lib import *
 from ckanext.harvest.queue import get_gather_consumer, get_fetch_consumer
@@ -150,7 +153,8 @@ class Harvester(CkanCommand):
             print 'Created new harvest source:'
             self.print_harvest_source(source)
 
-            sources = get_harvest_sources()
+            context = {'model': model}
+            sources = get_action('harvest_source_list')(context,{})
             self.print_there_are('harvest source', sources)
 
             # Create a Harvest Job for the new Source
@@ -175,12 +179,14 @@ class Harvester(CkanCommand):
 
     def list_harvest_sources(self):
         if len(self.args) >= 2 and self.args[1] == 'all':
-            sources = get_harvest_sources()
+            data_dict = {}
             what = 'harvest source'
         else:
-            sources = get_harvest_sources(active=True)
+            data_dict = {'only_active':True}
             what = 'active harvest source'
 
+        context = {'model': model}
+        sources = get_action('harvest_source_list')(context,data_dict)
         self.print_harvest_sources(sources)
         self.print_there_are(what=what, sequence=sources)
 
@@ -194,12 +200,14 @@ class Harvester(CkanCommand):
         job = create_harvest_job(source_id)
 
         self.print_harvest_job(job)
-        status = u'New'
-        jobs = get_harvest_jobs(status=status)
+        context = {'model': model}
+        jobs = get_action('harvest_job_list')(context,{'status':u'New'})
         self.print_there_are('harvest jobs', jobs, condition=status)
 
     def list_harvest_jobs(self):
-        jobs = get_harvest_jobs()
+        context = {'model': model}
+        jobs = get_action('harvest_job_list')(context,{})
+
         self.print_harvest_jobs(jobs)
         self.print_there_are(what='harvest job', sequence=jobs)
 
@@ -248,8 +256,7 @@ class Harvester(CkanCommand):
     def print_harvest_job(self, job):
         print '       Job id: %s' % job['id']
         print '       status: %s' % job['status']
-        print '       source: %s' % job['source']['id']
-        print '          url: %s' % job['source']['url']
+        print '       source: %s' % job['source']
         print '      objects: %s' % len(job['objects'])
 
         print 'gather_errors: %s' % len(job['gather_errors'])

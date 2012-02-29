@@ -2,15 +2,16 @@ from lxml import etree
 from lxml.etree import XMLSyntaxError
 from pylons.i18n import _
 
+from ckan import model
+
 import ckan.lib.helpers as h, json
 from ckan.lib.base import BaseController, c, g, request, \
                           response, session, render, config, abort, redirect
 
 from ckan.lib.navl.dictization_functions import DataError
-from ckan.logic import NotFound, ValidationError
+from ckan.logic import NotFound, ValidationError, get_action
 from ckanext.harvest.logic.schema import harvest_source_form_schema
 from ckanext.harvest.lib import create_harvest_source, edit_harvest_source, \
-                                get_harvest_source, get_harvest_sources, \
                                 create_harvest_job, get_registered_harvesters_info, \
                                 get_harvest_object
 from ckan.lib.helpers import Page
@@ -29,7 +30,9 @@ class ViewController(BaseController):
 
     def index(self):
         # Request all harvest sources
-        c.sources = get_harvest_sources()
+        context = {'model':model}
+
+        c.sources = get_action('harvest_source_list')(context,{})
 
         return render('index.html')
 
@@ -71,9 +74,12 @@ class ViewController(BaseController):
         if ('save' in request.params) and not data:
             return self._save_edit(id)
 
+
         if not data:
             try:
-                old_data = get_harvest_source(id)
+                context = {'model':model}
+
+                old_data = get_action('harvest_source_show')(context, {'id':id})
             except NotFound:
                 abort(404, _('Harvest Source not found'))
 
@@ -117,7 +123,9 @@ class ViewController(BaseController):
 
     def read(self,id):
         try:
-            c.source = get_harvest_source(id)
+            context = {'model':model}
+            c.source = get_action('harvest_source_show')(context, {'id':id})
+
             c.page = Page(
                 collection=c.source['status']['packages'],
                 page=request.params.get('page', 1),
@@ -153,20 +161,22 @@ class ViewController(BaseController):
 
     def show_object(self,id):
         try:
-            object = get_harvest_object(id)
+            context = {'model':model}
+            obj = get_action('harvest_object_show')(context, {'id':id})
+
             # Check content type. It will probably be either XML or JSON
             try:
-                etree.fromstring(object['content'])
+                etree.fromstring(obj['content'])
                 response.content_type = 'application/xml'
             except XMLSyntaxError:
                 try:
-                    json.loads(object['content'])
+                    json.loads(obj['content'])
                     response.content_type = 'application/json'
                 except ValueError:
                     pass
 
-            response.headers["Content-Length"] = len(object['content'])
-            return object['content']
+            response.headers['Content-Length'] = len(obj['content'])
+            return obj['content']
         except NotFound:
             abort(404,_('Harvest object not found'))
         except Exception, e:
