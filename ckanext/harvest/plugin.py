@@ -58,12 +58,27 @@ class Harvest(SingletonPlugin):
         from ckanext.harvest.logic.action.get import (harvest_source_show,
                                                       harvest_source_list,
                                                       harvest_job_show,
-                                                      harvest_job_list,)
+                                                      harvest_job_list,
+                                                      harvesters_info_show,)
+        from ckanext.harvest.logic.action.create import (harvest_source_create,
+                                                         harvest_job_create,
+                                                         harvest_job_create_all,)
+        from ckanext.harvest.logic.action.update import (harvest_source_update,
+                                                         harvest_objects_import,
+                                                         harvest_jobs_run)
+        from ckanext.harvest.logic.action.delete import (harvest_source_delete,)
 
         return {
             'harvest_source_show': harvest_source_show,
             'harvest_source_list': harvest_source_list,
             'harvest_job_show': harvest_job_show,
             'harvest_job_list': harvest_job_list,
-
+            'harvest_source_create': harvest_source_create,
+            'harvest_job_create': harvest_job_create,
+            'harvest_job_create_all': harvest_job_create_all,
+            'harvest_source_update': harvest_source_update,
+            'harvest_source_delete': harvest_source_delete,
+            'harvesters_info_show': harvesters_info_show,
+            'harvest_objects_import': harvest_objects_import,
+            'harvest_jobs_run':harvest_jobs_run
         }

@@ -1,4 +1,8 @@
-from ckan.logic import NotFound, ValidationError
+from ckan.plugins import PluginImplementations
+from ckanext.harvest.interfaces import IHarvester
+
+
+from ckan.logic import NotFound
 
 from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject)
 from ckanext.harvest.logic.dictization import (harvest_source_dictize,
@@ -51,14 +55,18 @@ def harvest_job_list(context,data_dict):
 
     model = context['model']
 
+    source_id = data_dict.get('source_id',False)
     status = data_dict.get('status',False)
 
+    query = model.Session.query(HarvestJob)
+
+    if source_id:
+        query = query.filter(HarvestJob.source_id==source_id)
+
     if status:
-        jobs = model.Session.query(HarvestJob) \
-                    .filter(HarvestJob.status==status) \
-                    .all()
-    else:
-        jobs = model.Session.query(HarvestJob).all()
+        query = query.filter(HarvestJob.status==status)
+
+    jobs = query.all()
 
     return [harvest_job_dictize(job,context) for job in jobs]
 
@@ -87,3 +95,15 @@ def harvest_object_list(context,data_dict):
         objects = model.Session.query(HarvestObject).all()
 
     return [getattr(obj,'id') for obj in objects]
+
+def harvesters_info_show(context = {},data_dict = {}):
+    available_harvesters = []
+    for harvester in PluginImplementations(IHarvester):
+        info = harvester.info()
+        if not info or 'name' not in info:
+            log.error('Harvester %r does not provide the harvester name in the info response' % str(harvester))
+            continue
+        info['show_config'] = (info.get('form_config_interface','') == 'Text')
+        available_harvesters.append(info)
+
+    return available_harvesters

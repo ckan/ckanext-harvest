@@ -11,9 +11,6 @@ from ckan.lib.base import BaseController, c, g, request, \
 from ckan.lib.navl.dictization_functions import DataError
 from ckan.logic import NotFound, ValidationError, get_action
 from ckanext.harvest.logic.schema import harvest_source_form_schema
-from ckanext.harvest.lib import create_harvest_source, edit_harvest_source, \
-                                create_harvest_job, get_registered_harvesters_info, \
-                                get_harvest_object
 from ckan.lib.helpers import Page
 import logging
 log = logging.getLogger(__name__)
@@ -44,7 +41,8 @@ class ViewController(BaseController):
         data = data or {}
         errors = errors or {}
         error_summary = error_summary or {}
-        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': get_registered_harvesters_info()}
+        harvesters_info = get_action('harvesters_info_show')()
+        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': harvesters_info}
 
         c.form = render('source/new_source_form.html', extra_vars=vars)
         return render('source/new.html')
@@ -54,10 +52,11 @@ class ViewController(BaseController):
             data_dict = dict(request.params)
             self._check_data_dict(data_dict)
 
-            source = create_harvest_source(data_dict)
+            context = {'model':model}
+            source = get_action('harvest_source_create')(context,data_dict)
 
             # Create a harvest job for the new source
-            create_harvest_job(source['id'])
+            get_action('harvest_job_create')(context,{'source_id':source['id']})
 
             h.flash_success(_('New harvest source added successfully.'
                     'A new harvest job for the source has also been created.'))
@@ -87,7 +86,8 @@ class ViewController(BaseController):
         errors = errors or {}
         error_summary = error_summary or {}
 
-        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': get_registered_harvesters_info()}
+        harvesters_info = get_action('harvesters_info_show')()
+        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': harvesters_info}
 
         c.form = render('source/new_source_form.html', extra_vars=vars)
         return render('source/edit.html')
@@ -95,9 +95,11 @@ class ViewController(BaseController):
     def _save_edit(self,id):
         try:
             data_dict = dict(request.params)
+            data_dict['id'] = id
             self._check_data_dict(data_dict)
+            context = {'model':model}
 
-            source = edit_harvest_source(id,data_dict)
+            source = get_action('harvest_source_update')(context,data_dict)
 
             h.flash_success(_('Harvest source edited successfully.'))
             redirect(h.url_for('harvest'))
@@ -139,9 +141,10 @@ class ViewController(BaseController):
 
     def delete(self,id):
         try:
-            delete_harvest_source(id)
+            context = {'model':model}
+            get_action('harvest_source_delete')(context, {'id':id})
 
-            h.flash_success(_('Harvesting source deleted successfully'))
+            h.flash_success(_('Harvesting source successfully inactivated'))
             redirect(h.url_for('harvest'))
         except NotFound:
             abort(404,_('Harvest source not found'))
@@ -149,7 +152,8 @@ class ViewController(BaseController):
 
     def create_harvesting_job(self,id):
         try:
-            create_harvest_job(id)
+            context = {'model':model}
+            get_action('harvest_job_create')(context,{'source_id':id})
             h.flash_success(_('Refresh requested, harvesting will take place within 15 minutes.'))
         except NotFound:
             abort(404,_('Harvest source not found'))

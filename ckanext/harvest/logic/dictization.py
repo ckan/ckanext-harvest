@@ -46,16 +46,6 @@ def harvest_object_dictize(obj, context):
 
     return out
 
-def _prettify(field_name):
-    field_name = re.sub('(?<!\w)[Uu]rl(?!\w)', 'URL', field_name.replace('_', ' ').capitalize())
-    return field_name.replace('_', ' ')
-
-def _error_summary(error_dict):
-    error_summary = {}
-    for key, error in error_dict.iteritems():
-        error_summary[_prettify(key)] = error[0]
-    return error_summary
-
 def _get_source_status(source, context):
 
     model = context.get('model')
