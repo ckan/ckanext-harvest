@@ -1,6 +1,6 @@
 import re
 
-from ckan.logic import NotFound, ValidationError
+from ckan.logic import NotFound, ValidationError, check_access
 from ckan.lib.navl.dictization_functions import validate
 
 from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject)
@@ -11,13 +11,16 @@ from ckanext.harvest.logic.action.get import harvest_source_list,harvest_job_lis
 
 def harvest_source_create(context,data_dict):
 
+    check_access('harvest_source_create',context,data_dict)
+
     model = context['model']
+    session = context['session']
 
     schema = harvest_source_form_schema()
     data, errors = validate(data_dict, schema)
 
     if errors:
-        model.Session.rollback()
+        session.rollback()
         raise ValidationError(errors,_error_summary(errors))
 
     source = HarvestSource()
@@ -37,6 +40,8 @@ def harvest_source_create(context,data_dict):
     return harvest_source_dictize(source,context)
 
 def harvest_job_create(context,data_dict):
+
+    check_access('harvest_job_create',context,data_dict)
 
     source_id = data_dict['source_id']
 
@@ -65,6 +70,8 @@ def harvest_job_create(context,data_dict):
     return harvest_job_dictize(job,context)
 
 def harvest_job_create_all(context,data_dict):
+
+    check_access('harvest_job_create_all',context,data_dict)
 
     data_dict.update({'only_active':True})
 

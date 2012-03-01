@@ -152,12 +152,11 @@ class Harvester(CkanCommand):
                     'user_id':user_id,
                     'publisher_id':publisher_id}
 
-            context = {'model':model}
+            context = {'model':model, 'session':model.Session}
             source = get_action('harvest_source_create')(context,data_dict)
             print 'Created new harvest source:'
             self.print_harvest_source(source)
 
-            context = {'model': model}
             sources = get_action('harvest_source_list')(context,{})
             self.print_there_are('harvest source', sources)
 
@@ -189,7 +188,7 @@ class Harvester(CkanCommand):
             data_dict = {'only_active':True}
             what = 'active harvest source'
 
-        context = {'model': model}
+        context = {'model': model,'session':model.Session}
         sources = get_action('harvest_source_list')(context,data_dict)
         self.print_harvest_sources(sources)
         self.print_there_are(what=what, sequence=sources)
@@ -204,7 +203,7 @@ class Harvester(CkanCommand):
         job = create_harvest_job(source_id)
 
         self.print_harvest_job(job)
-        context = {'model': model}
+        context = {'model': model,'session':model.Session}
         jobs = get_action('harvest_job_list')(context,{'status':u'New'})
         self.print_there_are('harvest jobs', jobs, condition=status)
 
@@ -226,7 +225,7 @@ class Harvester(CkanCommand):
             source_id = unicode(self.args[1])
         else:
             source_id = None
-        context = {'model': model}
+        context = {'model': model, 'session':model.Session}
         objs = get_action('harvest_objects_import')(context,{'source_id':source_id})
 
         print '%s objects reimported' % len(objs)

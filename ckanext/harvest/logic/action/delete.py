@@ -1,9 +1,11 @@
-from ckan.logic import NotFound
+from ckan.logic import NotFound, check_access
 
 from ckanext.harvest.model import (HarvestSource, HarvestJob)
 
 
 def harvest_source_delete(context,data_dict):
+
+    check_access('harvest_source_delete',context,data_dict)
 
     source_id = data_dict.get('id')
     source = HarvestSource.get(source_id)

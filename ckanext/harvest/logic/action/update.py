@@ -5,7 +5,7 @@ from ckanext.harvest.interfaces import IHarvester
 
 from ckan.model import Package
 
-from ckan.logic import NotFound, ValidationError
+from ckan.logic import NotFound, ValidationError, check_access
 from ckan.lib.navl.dictization_functions import validate
 
 from ckanext.harvest.queue import get_gather_publisher
@@ -22,7 +22,11 @@ log = logging.getLogger(__name__)
 
 def harvest_source_update(context,data_dict):
 
+    check_access('harvest_source_update',context,data_dict)
+
     model = context['model']
+    session = context['session']
+
     source_id = data_dict.get('id')
 
     schema = harvest_source_form_schema()
@@ -33,7 +37,7 @@ def harvest_source_update(context,data_dict):
 
     data, errors = validate(data_dict, schema)
     if errors:
-        model.Session.rollback()
+        session.rollback()
         raise ValidationError(errors,_error_summary(errors))
 
     fields = ['url','title','type','description','user_id','publisher_id']
@@ -67,7 +71,10 @@ def harvest_objects_import(context,data_dict):
         It will only affect the last fetched objects already present in the
         database.
     '''
+    check_access('harvest_objects_import',context,data_dict)
+
     model = context['model']
+    session = context['session']
     source_id = data_dict.get('source_id',None)
 
     if source_id:
@@ -78,14 +85,14 @@ def harvest_objects_import(context,data_dict):
         if not source.active:
             raise Exception('This harvest source is not active')
 
-        last_objects_ids = model.Session.query(HarvestObject.id) \
+        last_objects_ids = session.query(HarvestObject.id) \
                 .join(HarvestSource).join(Package) \
                 .filter(HarvestObject.source==source) \
                 .filter(HarvestObject.current==True) \
                 .filter(Package.state==u'active') \
                 .all()
     else:
-        last_objects_ids = model.Session.query(HarvestObject.id) \
+        last_objects_ids = session.query(HarvestObject.id) \
                 .join(Package) \
                 .filter(HarvestObject.current==True) \
                 .filter(Package.state==u'active') \
@@ -93,7 +100,7 @@ def harvest_objects_import(context,data_dict):
 
     last_objects = []
     for obj_id in last_objects_ids:
-        obj = model.Session.query(HarvestObject).get(obj_id)
+        obj = session.query(HarvestObject).get(obj_id)
         for harvester in PluginImplementations(IHarvester):
             if harvester.info()['name'] == obj.source.type:
                 if hasattr(harvester,'force_import'):
@@ -104,6 +111,8 @@ def harvest_objects_import(context,data_dict):
     return last_objects
 
 def harvest_jobs_run(context,data_dict):
+
+    check_access('harvest_jobs_run',context,data_dict)
 
     # Check if there are pending harvest jobs
     jobs = harvest_job_list(context,{'status':u'New'})
