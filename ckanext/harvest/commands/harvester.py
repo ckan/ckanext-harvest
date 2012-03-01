@@ -3,7 +3,7 @@ import re
 from pprint import pprint
 
 from ckan import model
-from ckan.logic import get_action
+from ckan.logic import get_action, ValidationError
 
 from ckan.lib.cli import CkanCommand
 from ckanext.harvest.queue import get_gather_consumer, get_fetch_consumer
@@ -64,6 +64,13 @@ class Harvester(CkanCommand):
 
     def command(self):
         self._load_config()
+
+        # We'll need a sysadmin user to perform most of the actions
+        # We will use the sysadmin site user (named as the site_id)
+        context = {'model':model,'session':model.Session,'ignore_auth':True}
+        self.admin_user = get_action('get_site_user')(context,{})
+
+
         print ''
 
         if len(self.args) == 0:
@@ -152,7 +159,7 @@ class Harvester(CkanCommand):
                     'user_id':user_id,
                     'publisher_id':publisher_id}
 
-            context = {'model':model, 'session':model.Session}
+            context = {'model':model, 'session':model.Session, 'user': self.admin_user['name']}
             source = get_action('harvest_source_create')(context,data_dict)
             print 'Created new harvest source:'
             self.print_harvest_source(source)
@@ -163,12 +170,10 @@ class Harvester(CkanCommand):
             # Create a harvest job for the new source
             get_action('harvest_job_create')(context,{'source_id':source['id']})
             print 'A new Harvest Job for this source has also been created'
-
         except ValidationError,e:
            print 'An error occurred:'
            print str(e.error_dict)
            raise e
-
 
     def remove_harvest_source(self):
         if len(self.args) >= 2:
@@ -176,7 +181,7 @@ class Harvester(CkanCommand):
         else:
             print 'Please provide a source id'
             sys.exit(1)
-        context = {'model': model}
+        context = {'model': model, 'user': self.admin_user['name']}
         get_action('harvest_source_delete')(context,{'id':source_id})
         print 'Removed harvest source: %s' % source_id
 
@@ -188,7 +193,7 @@ class Harvester(CkanCommand):
             data_dict = {'only_active':True}
             what = 'active harvest source'
 
-        context = {'model': model,'session':model.Session}
+        context = {'model': model,'session':model.Session, 'user': self.admin_user['name']}
         sources = get_action('harvest_source_list')(context,data_dict)
         self.print_harvest_sources(sources)
         self.print_there_are(what=what, sequence=sources)
@@ -203,19 +208,19 @@ class Harvester(CkanCommand):
         job = create_harvest_job(source_id)
 
         self.print_harvest_job(job)
-        context = {'model': model,'session':model.Session}
+        context = {'model': model,'session':model.Session, 'user': self.admin_user['name']}
         jobs = get_action('harvest_job_list')(context,{'status':u'New'})
         self.print_there_are('harvest jobs', jobs, condition=status)
 
     def list_harvest_jobs(self):
-        context = {'model': model}
+        context = {'model': model, 'user': self.admin_user['name']}
         jobs = get_action('harvest_job_list')(context,{})
 
         self.print_harvest_jobs(jobs)
         self.print_there_are(what='harvest job', sequence=jobs)
 
     def run_harvester(self):
-        context = {'model': model}
+        context = {'model': model, 'user': self.admin_user['name']}
         jobs = get_action('harvest_jobs_run')(context,{})
 
         #print 'Sent %s jobs to the gather queue' % len(jobs)
@@ -225,13 +230,13 @@ class Harvester(CkanCommand):
             source_id = unicode(self.args[1])
         else:
             source_id = None
-        context = {'model': model, 'session':model.Session}
+        context = {'model': model, 'session':model.Session, 'user': self.admin_user['name']}
         objs = get_action('harvest_objects_import')(context,{'source_id':source_id})
 
         print '%s objects reimported' % len(objs)
 
     def create_harvest_job_all(self):
-        context = {'model': model}
+        context = {'model': model, 'user': self.admin_user['name']}
         jobs = get_action('harvest_job_create_all')(context,{})
         print 'Created %s new harvest jobs' % len(jobs)
 
