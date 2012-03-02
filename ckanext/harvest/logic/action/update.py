@@ -114,8 +114,10 @@ def harvest_jobs_run(context,data_dict):
 
     check_access('harvest_jobs_run',context,data_dict)
 
+    source_id = data_dict.get('source_id',None)
+
     # Check if there are pending harvest jobs
-    jobs = harvest_job_list(context,{'status':u'New'})
+    jobs = harvest_job_list(context,{'source_id':source_id,'status':u'New'})
     if len(jobs) == 0:
         raise Exception('There are no new harvesting jobs')
 

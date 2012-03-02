@@ -1,7 +1,27 @@
-try:
-    import pkg_resources
-    pkg_resources.declare_namespace(__name__)
-except ImportError:
-    import pkgutil
-    __path__ = pkgutil.extend_path(__path__, __name__)
+from ckan.logic import NotFound
+from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 
+
+def get_source_object(context, data_dict = {}):
+    if not 'source' in context:
+        model = context['model']
+        id = data_dict.get('id',None)
+        source = HarvestSource.get(id)
+        if not source:
+            raise NotFound
+    else:
+        source = context['source']
+
+    return source
+
+def get_job_object(context, data_dict = {}):
+    if not 'job' in context:
+        model = context['model']
+        id = data_dict.get('id',None)
+        job = HarvestJob.get(id)
+        if not job:
+            raise NotFound
+    else:
+        job = context['job']
+
+    return job

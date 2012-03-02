@@ -1,3 +1,7 @@
+from sqlalchemy import or_
+from ckan.authz import Authorizer
+from ckan.model import User
+
 from ckan.plugins import PluginImplementations
 from ckanext.harvest.interfaces import IHarvester
 
@@ -29,18 +33,9 @@ def harvest_source_list(context, data_dict):
 
     model = context['model']
     session = context['session']
+    user = context.get('user','')
 
-    only_active = data_dict.get('only_active',False)
-
-    if only_active:
-        sources = session.query(HarvestSource) \
-                    .filter(HarvestSource.active==True) \
-                    .order_by(HarvestSource.created.desc()) \
-                    .all()
-    else:
-        sources = session.query(HarvestSource) \
-                    .order_by(HarvestSource.created.desc()) \
-                    .all()
+    sources = _get_sources_for_user(context, data_dict)
 
     context.update({'detailed':False})
     return [harvest_source_dictize(source, context) for source in sources]
@@ -100,13 +95,17 @@ def harvest_object_list(context,data_dict):
     session = context['session']
 
     only_current = data_dict.get('only_current',True)
+    source_id = data_dict.get('source_id',False)
+
+    query = session.query(HarvestObject)
+
+    if source_id:
+        query = query.filter(HarvestObject.source_id==source_id)
 
     if only_current:
-        objects = session.query(HarvestObject) \
-                    .filter(HarvestObject.current==True) \
-                    .all()
-    else:
-        objects = session.query(HarvestObject).all()
+        query = query.filter(HarvestObject.current==True)
+
+    objects = query.all()
 
     return [getattr(obj,'id') for obj in objects]
 
@@ -124,3 +123,40 @@ def harvesters_info_show(context,data_dict):
         available_harvesters.append(info)
 
     return available_harvesters
+
+def _get_sources_for_user(context,data_dict):
+
+    model = context['model']
+    session = context['session']
+    user = context.get('user','')
+
+    only_active = data_dict.get('only_active',False)
+
+    query = session.query(HarvestSource) \
+                .order_by(HarvestSource.created.desc())
+
+    if only_active:
+        query = query.filter(HarvestSource.active==True) \
+
+    # Sysadmins will get all sources
+    if not Authorizer().is_sysadmin(user):
+        # This only applies to a non sysadmin user when using the
+        # publisher auth profile. When using the default profile,
+        # normal users will never arrive at this point, but even if they
+        # do, they will get an empty list.
+        user_obj = User.get(user)
+
+        publisher_filters = []
+
+        for publisher_id in [g.id for g in user_obj.get_groups()]:
+            publisher_filters.append(HarvestSource.publisher_id==publisher_id)
+
+        if len(publisher_filters):
+            query = query.filter(or_(*publisher_filters))
+        else:
+            # This user does not belong to a publisher yet, no sources for him/her
+            return []
+
+    sources = query.all()
+
+    return sources

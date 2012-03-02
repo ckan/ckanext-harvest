@@ -1,6 +1,7 @@
 import os
 from logging import getLogger
 
+from pylons import config
 from genshi.input import HTML
 from genshi.filters import Transformer
 
@@ -88,35 +89,36 @@ class Harvest(SingletonPlugin):
         }
 
     def get_auth_functions(self):
-        from ckanext.harvest.logic.auth.get import (harvest_source_show,
-                                                      harvest_source_list,
-                                                      harvest_job_show,
-                                                      harvest_job_list,
-                                                      harvest_object_show,
-                                                      harvest_object_list,
-                                                      harvesters_info_show,)
-        from ckanext.harvest.logic.auth.create import (harvest_source_create,
-                                                         harvest_job_create,
-                                                         harvest_job_create_all,)
-        from ckanext.harvest.logic.auth.update import (harvest_source_update,
-                                                         harvest_objects_import,
-                                                         harvest_jobs_run)
-        from ckanext.harvest.logic.auth.delete import (harvest_source_delete,)
 
-        return {
-            'harvest_source_show': harvest_source_show,
-            'harvest_source_list': harvest_source_list,
-            'harvest_job_show': harvest_job_show,
-            'harvest_job_list': harvest_job_list,
-            'harvest_object_show': harvest_object_show,
-            'harvest_object_list': harvest_object_list,
-            'harvesters_info_show': harvesters_info_show,
-            'harvest_source_create': harvest_source_create,
-            'harvest_job_create': harvest_job_create,
-            'harvest_job_create_all': harvest_job_create_all,
-            'harvest_source_update': harvest_source_update,
-            'harvest_source_delete': harvest_source_delete,
-            'harvest_objects_import': harvest_objects_import,
-            'harvest_jobs_run':harvest_jobs_run
-        }
+        module_root = 'ckanext.harvest.logic.auth'
+        auth_profile = config.get('ckan.harvest.auth.profile', '')
+
+        auth_functions = _get_auth_functions(module_root)
+        if auth_profile:
+            module_root = '%s.%s' % (module_root, auth_profile)
+            auth_functions = _get_auth_functions(module_root,auth_functions)
+
+        log.info('Using auth profile at %s' % module_root)
+
+        return auth_functions
+
+def _get_auth_functions(module_root, auth_functions = {}):
+
+    for auth_module_name in ['get', 'create', 'update','delete']:
+        module_path = '%s.%s' % (module_root, auth_module_name,)
+        try:
+            module = __import__(module_path)
+        except ImportError,e:
+            log.debug('No auth module for action "%s"' % auth_module_name)
+            continue
+
+        for part in module_path.split('.')[1:]:
+            module = getattr(module, part)
+
+        for key, value in module.__dict__.items():
+            if not key.startswith('_'):
+                auth_functions[key] = value
+
+
+    return auth_functions
 
