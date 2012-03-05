@@ -10,7 +10,7 @@ import ckan.lib.helpers as h
 from ckan.plugins import implements, SingletonPlugin
 from ckan.plugins import IRoutes, IConfigurer
 from ckan.plugins import IConfigurable, IActions, IAuthFunctions
-from ckanext.harvest.model import setup
+from ckanext.harvest.model import setup as model_setup
 
 log = getLogger(__name__)
 
@@ -23,7 +23,28 @@ class Harvest(SingletonPlugin):
     implements(IAuthFunctions)
 
     def configure(self, config):
-        setup()
+
+        auth_profile = config.get('ckan.harvest.auth.profile',None)
+
+        if auth_profile:
+            # Check if auth profile exists
+            module_root = 'ckanext.harvest.logic.auth'
+            module_path = '%s.%s' % (module_root, auth_profile)
+            try:
+                module = __import__(module_path)
+            except ImportError,e:
+                raise ImportError('Unknown auth profile: %s' % auth_profile)
+
+            # If we are using the publisher auth profile, make sure CKAN core
+            # also uses it.
+            if auth_profile == 'publisher' and \
+                not config.get('ckan.auth.profile','') == 'publisher':
+                raise Exception('You must enable the "publisher" auth profile'
+                      +' in CKAN in order to use it on the harvest extension'
+                      +' (adding "ckan.auth.profile=publisher" to your ini file)')
+
+        # Setup harvest model
+        model_setup()
 
     def before_map(self, map):
 
