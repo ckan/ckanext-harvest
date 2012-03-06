@@ -20,7 +20,7 @@ def harvest_source_delete(context,data_dict):
         
     # Check if the source publisher id exists on the user's groups
     user_obj = User.get(user)
-    if not source.publisher_id in [g.id for g in user_obj.get_groups()]:
+    if not source.publisher_id in [g.id for g in user_obj.get_groups(u'publisher',u'admin')]:
         return {'success': False, 'msg': _('User %s not authorized to delete harvest source %s') % (str(user),source.id)}
     else:
         return {'success': True}

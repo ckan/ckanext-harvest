@@ -148,7 +148,7 @@ def _get_sources_for_user(context,data_dict):
 
         publisher_filters = []
 
-        for publisher_id in [g.id for g in user_obj.get_groups()]:
+        for publisher_id in [g.id for g in user_obj.get_groups(u'publisher',u'admin')]:
             publisher_filters.append(HarvestSource.publisher_id==publisher_id)
 
         if len(publisher_filters):
