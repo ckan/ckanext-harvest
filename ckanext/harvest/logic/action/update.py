@@ -28,14 +28,14 @@ def harvest_source_update(context,data_dict):
     session = context['session']
 
     source_id = data_dict.get('id')
-
-    schema = harvest_source_form_schema()
+    schema = context.get('schema') or default_harvest_source_schema()
 
     source = HarvestSource.get(source_id)
     if not source:
         raise NotFound('Harvest source %s does not exist' % source_id)
 
     data, errors = validate(data_dict, schema)
+
     if errors:
         session.rollback()
         raise ValidationError(errors,_error_summary(errors))

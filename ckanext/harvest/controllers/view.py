@@ -2,7 +2,9 @@ from lxml import etree
 from lxml.etree import XMLSyntaxError
 from pylons.i18n import _
 
+from ckan.authz import Authorizer
 from ckan import model
+from ckan.model.group import Group
 
 import ckan.lib.helpers as h, json
 from ckan.lib.base import BaseController, c, g, request, \
@@ -18,6 +20,33 @@ log = logging.getLogger(__name__)
 class ViewController(BaseController):
 
     not_auth_message = _('Not authorized to see this page')
+
+    def __before__(self, action, **params):
+
+        super(ViewController,self).__before__(action, **params)
+
+        c.publisher_auth = (config.get('ckan.harvest.auth.profile',None) == 'publisher')
+
+    def _get_publishers(self):
+        groups = None
+
+        if c.publisher_auth:
+            if Authorizer().is_sysadmin(c.user):
+                groups = Group.all(group_type='publisher')
+            elif c.userobj:
+                groups = c.userobj.get_groups('publisher')
+            else: # anonymous user shouldn't have access to this page anyway.
+                groups = []
+
+            # Be explicit about which fields we make available in the template
+            groups = [ {
+                'name': g.name,
+                'id': g.id,
+                'title': g.title,
+            } for g in groups ]
+
+        return groups
+
 
     def index(self):
         context = {'model':model, 'user':c.user,'session':model.Session}
@@ -46,6 +75,7 @@ class ViewController(BaseController):
 
         vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': harvesters_info}
 
+        c.groups = self._get_publishers()
         c.form = render('source/new_source_form.html', extra_vars=vars)
         return render('source/new.html')
 
@@ -53,7 +83,9 @@ class ViewController(BaseController):
         try:
             data_dict = dict(request.params)
             self._check_data_dict(data_dict)
-            context = {'model':model, 'user':c.user, 'session':model.Session}
+            context = {'model':model, 'user':c.user, 'session':model.Session,
+                       'schema':harvest_source_form_schema()}
+
             source = get_action('harvest_source_create')(context,data_dict)
 
             # Create a harvest job for the new source
@@ -61,7 +93,7 @@ class ViewController(BaseController):
 
             h.flash_success(_('New harvest source added successfully.'
                     'A new harvest job for the source has also been created.'))
-            redirect(h.url_for('harvest'))
+            redirect('/harvest/%s' % source['id'])
         except NotAuthorized,e:
             abort(401,self.not_auth_message)
         except DataError,e:
@@ -98,6 +130,7 @@ class ViewController(BaseController):
 
         vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': harvesters_info}
 
+        c.groups = self._get_publishers()
         c.form = render('source/new_source_form.html', extra_vars=vars)
         return render('source/edit.html')
 
@@ -106,12 +139,13 @@ class ViewController(BaseController):
             data_dict = dict(request.params)
             data_dict['id'] = id
             self._check_data_dict(data_dict)
-            context = {'model':model, 'user':c.user, 'session':model.Session}
+            context = {'model':model, 'user':c.user, 'session':model.Session,
+                       'schema':harvest_source_form_schema()}
 
             source = get_action('harvest_source_update')(context,data_dict)
 
             h.flash_success(_('Harvest source edited successfully.'))
-            redirect(h.url_for('harvest'))
+            redirect('/harvest/%s' %id)
         except NotAuthorized,e:
             abort(401,self.not_auth_message)
         except DataError,e:
@@ -125,11 +159,14 @@ class ViewController(BaseController):
 
     def _check_data_dict(self, data_dict):
         '''Check if the return data is correct'''
-        surplus_keys_schema = ['id','publisher_id','user_id','active','save','config']
-
+        surplus_keys_schema = ['id','publisher_id','user_id','config','save']
         schema_keys = harvest_source_form_schema().keys()
         keys_in_schema = set(schema_keys) - set(surplus_keys_schema)
 
+        # user_id is not yet used, we'll set the logged user one for the time being
+        if not data_dict.get('user_id',None):
+            if c.userobj:
+                data_dict['user_id'] = c.userobj.id
         if keys_in_schema - set(data_dict.keys()):
             log.info(_('Incorrect form fields posted'))
             raise DataError(data_dict)

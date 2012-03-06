@@ -51,11 +51,11 @@
             <td>-</td>
             </py:if>
         </tr>
-        <tr>
+        <tr py:if="c.publisher_auth">
             <th>User</th>
             <td>${c.source.user_id}</td>
         </tr>
-        <tr>
+        <tr py:if="c.publisher_auth">
             <th>Publisher</th>
             <td>${c.source.publisher_id}</td>
         </tr>

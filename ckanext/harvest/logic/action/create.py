@@ -15,8 +15,8 @@ def harvest_source_create(context,data_dict):
 
     model = context['model']
     session = context['session']
+    schema = context.get('schema') or default_harvest_source_schema()
 
-    schema = harvest_source_form_schema()
     data, errors = validate(data_dict, schema)
 
     if errors:
