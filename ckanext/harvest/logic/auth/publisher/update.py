@@ -20,7 +20,7 @@ def harvest_source_update(context,data_dict):
 
     # Check if the source publisher id exists on the user's groups
     user_obj = User.get(user)
-    if not source.publisher_id in [g.id for g in user_obj.get_groups(u'publisher',u'admin')]:
+    if not user_obj or not source.publisher_id in [g.id for g in user_obj.get_groups(u'publisher',u'admin')]:
         return {'success': False, 'msg': _('User %s not authorized to update harvest source %s') % (str(user),source.id)}
     else:
         return {'success': True}
@@ -37,7 +37,7 @@ def harvest_objects_import(context,data_dict):
 
     # Checks for non sysadmin users
     if not Authorizer().is_sysadmin(user):
-        if len(user_obj.get_groups(u'publisher',u'admin')) == 0:
+        if not user_obj or len(user_obj.get_groups(u'publisher',u'admin')) == 0:
             return {'success': False, 'msg': _('User %s must belong to a publisher to reimport harvest objects') % str(user)}
 
         source_id = data_dict.get('source_id',False)
@@ -65,7 +65,7 @@ def harvest_jobs_run(context,data_dict):
 
     # Checks for non sysadmin users
     if not Authorizer().is_sysadmin(user):
-        if len(user_obj.get_groups(u'publisher',u'admin')) == 0:
+        if not user_obj or len(user_obj.get_groups(u'publisher',u'admin')) == 0:
             return {'success': False, 'msg': _('User %s must belong to a publisher to run harvest jobs') % str(user)}
 
         source_id = data_dict.get('source_id',False)
