@@ -56,8 +56,8 @@
             <dd py:if="c.publisher_auth and not c.groups"><em>Cannot add any publishers.</em></dd>
 
 
-            <dt><label class="field_opt" for="config">Configuration</label></dt>
-            <dd><textarea id="config" name="config" cols="30" rows="2" style="height:75px">${data.get('config', '')}</textarea></dd>
+            <dt class="harvest-source-config"><label class="field_opt" for="config">Configuration</label></dt>
+            <dd class="harvest-source-config"><textarea id="config" name="config" cols="30" rows="2" style="height:75px">${data.get('config', '')}</textarea></dd>
 
             <dt><label class="field_opt" for="active">State</label></dt>
             <dd>
