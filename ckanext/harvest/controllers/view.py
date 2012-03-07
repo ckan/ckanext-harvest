@@ -13,7 +13,9 @@ from ckan.lib.base import BaseController, c, g, request, \
 from ckan.lib.navl.dictization_functions import DataError
 from ckan.logic import NotFound, ValidationError, get_action, NotAuthorized
 from ckanext.harvest.logic.schema import harvest_source_form_schema
-from ckan.lib.helpers import Page
+
+from ckan.lib.helpers import Page,pager_url
+
 import logging
 log = logging.getLogger(__name__)
 
@@ -182,7 +184,8 @@ class ViewController(BaseController):
             c.page = Page(
                 collection=c.source['status']['packages'],
                 page=request.params.get('page', 1),
-                items_per_page=20
+                items_per_page=20,
+                url=pager_url
             )
 
             return render('source/read.html')
