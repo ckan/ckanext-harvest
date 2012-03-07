@@ -4,7 +4,7 @@ from ckan.logic import NotFound, ValidationError, check_access
 from ckan.lib.navl.dictization_functions import validate
 
 from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject)
-from ckanext.harvest.logic.schema import harvest_source_form_schema
+from ckanext.harvest.logic.schema import default_harvest_source_schema
 from ckanext.harvest.logic.dictization import (harvest_source_dictize,
                                                harvest_job_dictize)
 from ckanext.harvest.logic.action.get import harvest_source_list,harvest_job_list
