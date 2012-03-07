@@ -56,6 +56,9 @@ class ViewController(BaseController):
         except NotAuthorized,e:
             abort(401,self.not_auth_message)
 
+        if c.publisher_auth:
+            c.sources = sorted(c.sources,key=lambda source : source['publisher_title'])
+
         return render('index.html')
 
     def new(self,data = None,errors = None, error_summary = None):

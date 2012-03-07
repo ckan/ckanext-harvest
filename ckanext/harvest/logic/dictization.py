@@ -1,16 +1,20 @@
 from sqlalchemy import distinct
 
-from ckan.model import Package
+from ckan.model import Package,Group
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject, \
                                   HarvestGatherError, HarvestObjectError
 
 
 def harvest_source_dictize(source, context):
     out = source.as_dict()
-    out['jobs'] = []
 
-    for job in source.jobs:
-        out['jobs'].append(job.as_dict())
+    out['publisher_title'] = u''
+
+    publisher_id = out.get('publisher_id')
+    if publisher_id:
+        group  = Group.get(publisher_id)
+        if group:
+            out['publisher_title'] = group.title
 
     out['status'] = _get_source_status(source, context)
 
@@ -58,7 +62,10 @@ def _get_source_status(source, context):
     if not job_count:
         out['msg'] = 'No jobs yet'
         return out
-    out = {'next_harvest':'',
+
+    out = {
+           'job_count': job_count,
+           'next_harvest':'',
            'last_harvest_request':'',
            'last_harvest_statistics':{'added':0,'updated':0,'errors':0},
            'last_harvest_errors':{'gather':[],'object':[]},
