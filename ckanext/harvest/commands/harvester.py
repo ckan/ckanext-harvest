@@ -181,7 +181,7 @@ class Harvester(CkanCommand):
         else:
             print 'Please provide a source id'
             sys.exit(1)
-        context = {'model': model, 'user': self.admin_user['name']}
+        context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
         get_action('harvest_source_delete')(context,{'id':source_id})
         print 'Removed harvest source: %s' % source_id
 
@@ -213,14 +213,14 @@ class Harvester(CkanCommand):
         self.print_there_are('harvest jobs', jobs, condition=status)
 
     def list_harvest_jobs(self):
-        context = {'model': model, 'user': self.admin_user['name']}
+        context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
         jobs = get_action('harvest_job_list')(context,{})
 
         self.print_harvest_jobs(jobs)
         self.print_there_are(what='harvest job', sequence=jobs)
 
     def run_harvester(self):
-        context = {'model': model, 'user': self.admin_user['name']}
+        context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
         jobs = get_action('harvest_jobs_run')(context,{})
 
         #print 'Sent %s jobs to the gather queue' % len(jobs)
@@ -236,7 +236,7 @@ class Harvester(CkanCommand):
         print '%s objects reimported' % len(objs)
 
     def create_harvest_job_all(self):
-        context = {'model': model, 'user': self.admin_user['name']}
+        context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
         jobs = get_action('harvest_job_create_all')(context,{})
         print 'Created %s new harvest jobs' % len(jobs)
 
