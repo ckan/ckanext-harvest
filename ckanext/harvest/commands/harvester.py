@@ -253,7 +253,7 @@ class Harvester(CkanCommand):
         print '   active: %s' % source['active']
         print '     user: %s' % source['user_id']
         print 'publisher: %s' % source['publisher_id']
-        print '     jobs: %s' % len(source['jobs'])
+        print '     jobs: %s' % source['status']['job_count']
         print ''
 
     def print_harvest_jobs(self, jobs):
