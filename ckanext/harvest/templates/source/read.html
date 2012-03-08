@@ -15,7 +15,10 @@
   <h1>Harvest Source Details</h1>
   <div id="harvest-source-actions">
     <img src="/ckanext/harvest/images/icons/source_edit.png" alt="Edit" /><a href="/harvest/edit/${c.source.id}">Edit source</a> |
-    <img src="/ckanext/harvest/images/icons/source_refresh.png" alt="Refresh" /><a href="/harvest/refresh/${c.source.id}">Refresh source</a></div>
+    <img src="/ckanext/harvest/images/icons/source_refresh.png" alt="Refresh" /><a href="/harvest/refresh/${c.source.id}">Refresh source</a> |
+    <a href="/harvest">Sources list</a>
+
+    </div>
     <table id="harvest-source-details">
         <tr>
             <th>ID</th>
@@ -51,13 +54,18 @@
             <td>-</td>
             </py:if>
         </tr>
-        <tr>
+        <tr py:if="c.publisher_auth">
             <th>User</th>
             <td>${c.source.user_id}</td>
         </tr>
-        <tr>
+        <tr py:if="c.publisher_auth">
             <th>Publisher</th>
+            <py:if test="c.source.publisher_title">
+            <td>${c.source.publisher_title}</td>
+            </py:if>
+            <py:if test="not c.source.publisher_title">
             <td>${c.source.publisher_id}</td>
+            </py:if>
         </tr>
         <tr>
             <th>Created</th>
@@ -65,7 +73,7 @@
         </tr>
         <tr>
             <th>Total jobs</th>
-            <td>${len(c.source.jobs)}</td>
+            <td>${c.source.status.job_count}</td>
         </tr>
         <tr>
             <th>Status</th>

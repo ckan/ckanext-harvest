@@ -44,8 +44,20 @@
             <dt><label class="field_opt" for="description">Description</label></dt>
             <dd><textarea id="description" name="description" cols="30" rows="2" style="height:75px">${data.get('description', '')}</textarea></dd>
             <dd class="instructions basic">You can add your own notes here about what the URL above represents to remind you later.</dd>
-            <dt><label class="field_opt" for="config">Configuration</label></dt>
-            <dd><textarea id="config" name="config" cols="30" rows="2" style="height:75px">${data.get('config', '')}</textarea></dd>
+
+            <dt py:if="c.publisher_auth"><label class="field_opt" for="groups__${len(data.get('groups', []))}__id">Publisher</label></dt>
+            <dd py:if="c.publisher_auth and c.groups">
+              <select id="publisher_id" name="publisher_id">
+                <py:for each="group in c.groups">
+                <option value="${group['id']}" py:attrs="{'selected': 'selected' if group['id'] == data.get('publisher_id',None) else None}">${group['title']}</option>
+                </py:for>
+              </select>
+            </dd>
+            <dd py:if="c.publisher_auth and not c.groups"><em>Cannot add any publishers.</em></dd>
+
+
+            <dt class="harvest-source-config"><label class="field_opt" for="config">Configuration</label></dt>
+            <dd class="harvest-source-config"><textarea id="config" name="config" cols="30" rows="2" style="height:75px">${data.get('config', '')}</textarea></dd>
 
             <dt><label class="field_opt" for="active">State</label></dt>
             <dd>
