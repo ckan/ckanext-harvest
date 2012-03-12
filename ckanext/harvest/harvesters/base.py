@@ -30,6 +30,8 @@ class HarvesterBase(SingletonPlugin):
     '''
     implements(IHarvester)
 
+    config = None
+
     def _gen_new_name(self,title):
         '''
         Creates a URL friendly name from a title
