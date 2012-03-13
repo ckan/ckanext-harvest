@@ -153,6 +153,7 @@ class HarvesterBase(SingletonPlugin):
 
                 else:
                     log.info('Package with GUID %s not updated, skipping...' % harvest_object.guid)
+                    return
 
             except NotFound:
                 # Package needs to be created

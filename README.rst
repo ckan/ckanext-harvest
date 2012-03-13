@@ -160,6 +160,7 @@ field. The currently supported configuration options are:
     * {dataset_id}
     * {harvest_source_id}
     * {harvest_source_url}   # Will be stripped of trailing forward slashes (/)
+    * {harvest_source_title}   # Requires CKAN 1.6
     * {harvest_job_id}
     * {harvest_object_id}
 

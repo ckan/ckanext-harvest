@@ -266,9 +266,11 @@ class CKANHarvester(HarvesterBase):
                         if isinstance(value,basestring):
                             value = value.format(harvest_source_id=harvest_object.job.source.id,
                                      harvest_source_url=harvest_object.job.source.url.strip('/'),
+                                     harvest_source_title=harvest_object.job.source.title,
                                      harvest_job_id=harvest_object.job.id,
                                      harvest_object_id=harvest_object.id,
                                      dataset_id=package_dict['id'])
+
                         package_dict['extras'][key] = value
 
             result = self._create_or_update_package(package_dict,harvest_object)
