@@ -1,9 +1,10 @@
 from ckan.lib.base import _
+from ckan.logic import NotFound
 from ckan.authz import Authorizer
 from ckan.model import User
 
 from ckanext.harvest.model import HarvestSource
-from ckanext.harvest.logic.auth import get_source_object, get_job_object
+from ckanext.harvest.logic.auth import get_source_object, get_job_object, get_obj_object
 
 def harvest_source_show(context,data_dict):
     model = context['model']

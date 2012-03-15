@@ -25,3 +25,15 @@ def get_job_object(context, data_dict = {}):
         job = context['job']
 
     return job
+
+def get_obj_object(context, data_dict = {}):
+    if not 'obj' in context:
+        model = context['model']
+        id = data_dict.get('id',None)
+        job = HarvestObject.get(id)
+        if not job:
+            raise NotFound
+    else:
+        job = context['job']
+
+    return job
