@@ -130,42 +130,42 @@ class CKANHarvester(HarvesterBase):
         base_rest_url = base_url + self._get_rest_api_offset()
         base_search_url = base_url + self._get_search_api_offset()
 
-        if (previous_job and not previous_job.gather_errors and not len(previous_job.objects) == 0) \
-           or not self.config.get('force_all',False):
-            get_all_packages = False
+        if (previous_job and not previous_job.gather_errors and not len(previous_job.objects) == 0):
+            if not self.config.get('force_all',False):
+                get_all_packages = False
 
-            # Request only the packages modified since last harvest job
-            last_time = harvest_job.gather_started.isoformat()
-            url = base_search_url + '/revision?since_time=%s' % last_time
+                # Request only the packages modified since last harvest job
+                last_time = harvest_job.gather_started.isoformat()
+                url = base_search_url + '/revision?since_time=%s' % last_time
 
-            try:
-                content = self._get_content(url)
+                try:
+                    content = self._get_content(url)
 
-                revision_ids = json.loads(content)
-                if len(revision_ids):
-                    for revision_id in revision_ids:
-                        url = base_rest_url + '/revision/%s' % revision_id
-                        try:
-                            content = self._get_content(url)
-                        except Exception,e:
-                            self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
-                            continue
+                    revision_ids = json.loads(content)
+                    if len(revision_ids):
+                        for revision_id in revision_ids:
+                            url = base_rest_url + '/revision/%s' % revision_id
+                            try:
+                                content = self._get_content(url)
+                            except Exception,e:
+                                self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
+                                continue
 
-                        revision = json.loads(content)
-                        for package_id in revision.packages:
-                            if not package_id in package_ids:
-                                package_ids.append(package_id)
-                else:
-                    log.info('No packages have been updated on the remote CKAN instance since the last harvest job')
-                    return None
+                            revision = json.loads(content)
+                            for package_id in revision.packages:
+                                if not package_id in package_ids:
+                                    package_ids.append(package_id)
+                    else:
+                        log.info('No packages have been updated on the remote CKAN instance since the last harvest job')
+                        return None
 
-            except urllib2.HTTPError,e:
-                if e.getcode() == 400:
-                    log.info('CKAN instance %s does not suport revision filtering' % base_url)
-                    get_all_packages = True
-                else:
-                    self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
-                    return None
+                except urllib2.HTTPError,e:
+                    if e.getcode() == 400:
+                        log.info('CKAN instance %s does not suport revision filtering' % base_url)
+                        get_all_packages = True
+                    else:
+                        self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
+                        return None
 
 
 
