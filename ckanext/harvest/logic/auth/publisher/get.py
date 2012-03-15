@@ -99,6 +99,9 @@ def harvest_object_show(context,data_dict):
 
     obj = get_obj_object(context,data_dict)
 
+    if context.get('ignore_auth', False):
+        return {'success': True}
+
     if not user:
         return {'success': False, 'msg': _('Non-logged in users are not authorized to see harvest objects')}
 
