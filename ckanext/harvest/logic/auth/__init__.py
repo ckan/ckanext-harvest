@@ -30,10 +30,10 @@ def get_obj_object(context, data_dict = {}):
     if not 'obj' in context:
         model = context['model']
         id = data_dict.get('id',None)
-        job = HarvestObject.get(id)
-        if not job:
+        obj = HarvestObject.get(id)
+        if not obj:
             raise NotFound
     else:
-        job = context['job']
+        obj = context['obj']
 
-    return job
+    return obj
