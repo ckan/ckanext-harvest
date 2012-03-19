@@ -205,12 +205,12 @@ class Harvester(CkanCommand):
             print 'Please provide a source id'
             sys.exit(1)
 
-        job = create_harvest_job(source_id)
+        context = {'model': model,'session':model.Session, 'user': self.admin_user['name']}
+        job = get_action('harvest_job_create')(context,{'source_id':source_id})
 
         self.print_harvest_job(job)
-        context = {'model': model,'session':model.Session, 'user': self.admin_user['name']}
         jobs = get_action('harvest_job_list')(context,{'status':u'New'})
-        self.print_there_are('harvest jobs', jobs, condition=status)
+        self.print_there_are('harvest jobs', jobs, condition=u'New')
 
     def list_harvest_jobs(self):
         context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
