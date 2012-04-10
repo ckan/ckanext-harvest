@@ -107,9 +107,9 @@ different authorization profiles. These can be defined in your ini file as::
 The two available profiles right now are:
 
 * `default`: This is the default profile, the same one that this extension has
-   used historically. Basically, only sysadmins can manage anything related to
-   harvesting, including creating and editing harvest sources or running harvest
-   jobs.
+  used historically. Basically, only sysadmins can manage anything related to
+  harvesting, including creating and editing harvest sources or running harvest
+  jobs.
 
 * `publisher`: When using this profile, sysadmins can still perform any
   harvesting related action, but in addition, users belonging to a publisher
@@ -119,7 +119,7 @@ The two available profiles right now are:
 
     ckan.auth.profile = publisher
 
- To know more about the CKAN publisher auth profile, visit
+To know more about the CKAN publisher auth profile, visit:
 
  http://wiki.ckan.org/Working_with_the_publisher_auth_profile
 
