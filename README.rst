@@ -31,18 +31,16 @@ well as the harvester for CKAN instances (included with the extension)::
 Configuration
 =============
 
-Run the following command (in the ckanext-harvest directory) to create
-the necessary tables in the database::
+Run the following command to create the necessary tables in the database::
 
-    paster harvester initdb --config=../ckan/development.ini
+    paster --plugin=ckanext-harvest harvester initdb --config=mysite.ini
 
 The extension needs a user with sysadmin privileges to perform the
-harvesting jobs. You can create such a user running these two commands in
-the ckan directory::
+harvesting jobs. You can create such a user running these two commands::
 
-    paster user add harvest
+    paster --plugin=ckan user add harvest
 
-    paster sysadmin add harvest
+    paster --plugin=ckan sysadmin add harvest
 
 After installation, the harvest interface should be available under /harvest
 if you're logged in with sysadmin permissions, eg.
@@ -54,7 +52,7 @@ Command line interface
 ======================
 
 The following operations can be run from the command line using the
-``paster harvester`` command::
+``paster --plugin=ckanext-harvest harvester`` command::
 
       harvester initdb
         - Creates the necessary tables in the database
@@ -94,11 +92,9 @@ The following operations can be run from the command line using the
       harvester job-all
         - create new harvest jobs for all active sources.
 
-The commands should be run from the ckanext-harvest directory and expect
-a development.ini file to be present. Most of the time you will specify
-the config explicitly though::
+The commands should be run with the pyenv activated and refer to your sites configuration file (mysite.ini in this example)::
 
-        paster harvester sources --config=../ckan/development.ini
+        paster --plugin=ckanext-harvest harvester sources --config=mysite.ini
 
 The CKAN harverster
 ==================
@@ -298,21 +294,21 @@ Running the harvest jobs
 
 The harvesting extension uses two different queues, one that handles the
 gathering and another one that handles the fetching and importing. To start
-the consumers run the following command from the ckanext-harvest directory
+the consumers run the following command
 (make sure you have your python environment activated)::
 
-      paster harvester gather_consumer --config=../ckan/development.ini
+      paster --plugin=ckanext-harvest harvester gather_consumer --config=mysite.ini
 
 On another terminal, run the following command::
 
-      paster harvester fetch_consumer --config=../ckan/development.ini
+      paster --plugin=ckanext-harvest harvester fetch_consumer --config=mysite.ini
 
 Finally, on a third console, run the following command to start any
 pending harvesting jobs::
 
-      paster harvester run --config=../ckan/development.ini
+      paster --plugin=ckanext-harvest harvester run --config=mysite.ini
 
 After packages have been imported, the search index will have to be updated
-before the packages appear in search results (from the ckan directory):
+before the packages appear in search results::
 
-      paster search-index
+      paster --plugin=ckan search-index rebuild
