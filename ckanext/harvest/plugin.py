@@ -13,6 +13,7 @@ from ckan.plugins import IConfigurable, IActions, IAuthFunctions
 from ckanext.harvest.model import setup as model_setup
 
 log = getLogger(__name__)
+assert not log.disabled
 
 class Harvest(SingletonPlugin):
 

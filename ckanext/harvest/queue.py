@@ -12,6 +12,7 @@ from ckanext.harvest.model import HarvestJob, HarvestObject,HarvestGatherError
 from ckanext.harvest.interfaces import IHarvester
 
 log = logging.getLogger(__name__)
+assert not log.disabled
 
 __all__ = ['get_gather_publisher', 'get_gather_consumer', \
            'get_fetch_publisher', 'get_fetch_consumer']
