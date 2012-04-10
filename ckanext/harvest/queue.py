@@ -11,7 +11,7 @@ from ckan.plugins import PluginImplementations
 from ckanext.harvest.model import HarvestJob, HarvestObject,HarvestGatherError
 from ckanext.harvest.interfaces import IHarvester
 
-log = logging.getLogger('ckanext')
+log = logging.getLogger(__name__)
 
 __all__ = ['get_gather_publisher', 'get_gather_consumer', \
            'get_fetch_publisher', 'get_fetch_consumer']
@@ -145,11 +145,13 @@ def fetch_callback(message_data,message):
 def get_gather_consumer():
     consumer = get_consumer('ckan.harvest.gather','harvest_job_id')
     consumer.register_callback(gather_callback)
+    log.debug('Gather queue consumer registered')
     return consumer
 
 def get_fetch_consumer():
     consumer = get_consumer('ckan.harvert.fetch','harvest_object_id')
     consumer.register_callback(fetch_callback)
+    log.debug('Fetch queue consumer registered')
     return consumer
 
 def get_gather_publisher():
