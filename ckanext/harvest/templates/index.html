@@ -5,6 +5,8 @@
 
   <py:def function="page_title">Harvesting Sources</py:def>
 
+  <py:def function="body_class">harvest</py:def>
+
   <py:def function="optional_head">
     <link type="text/css" rel="stylesheet" media="all" href="/ckanext/harvest/style.css" />
   </py:def>
@@ -24,7 +26,7 @@
                         <label for="show-inactive-sources"> Show inactive sources</label>
                     </div>
 
-       <table id="harvest-sources">
+       <table id="harvest-sources" class="${'publishers' if c.publisher_auth else ''}" >
         <tr>
             <th class="action">View</th>
             <th class="action">Edit</th>
@@ -36,35 +38,49 @@
             <th>Next Harvest</th>
             <th>Created</th>
         </tr>
+        <?python old_publisher = None ?>
+        <py:for each="source in c.sources">
+            <tr class="publisher" py:if="c.publisher_auth and old_publisher != source['publisher_id']">
+                <py:choose>
+                    <py:when test="source.get('publisher_title')">
+                        <td colspan="9">${source['publisher_title']}</td>
+                    </py:when>
+                    <py:otherwise>
+                        <td colspan="9">${source['publisher_id']}</td>
+                    </py:otherwise>
+                </py:choose>
 
-        <tr py:for="source in c.sources" class="${'active' if source.active else 'inactive'}">
-            <td><a href="harvest/${source.id}"><img src="ckanext/harvest/images/icons/source_view.png" alt="View" title="View" /></a></td>
-            <td><a href="harvest/edit/${source.id}"><img src="ckanext/harvest/images/icons/source_edit.png" alt="Edit" title="Edit" /></a></td>
-            <td><a href="harvest/refresh/${source.id}"><img src="ckanext/harvest/images/icons/source_refresh.png" alt="Refresh" title="Refresh" /></a></td>
-            <py:choose>
-                <py:when test="source.url and len(source.url)>50">
-                    <td>${source.url[:50]}<span title="${source.url}">...</span></td>
-                </py:when>
-                <py:otherwise>
-                    <td>${source.url}</td>
-                </py:otherwise>
-            </py:choose>
-            <td>${source.type}</td>
-            <td class="state">${source.active}</td>
-            <py:choose>
-                <py:when test="'msg' in source.status">
-                    <td>${source.status.msg}</td>
-                    <td>${source.status.msg}</td>
-                </py:when>
-                <py:otherwise>
-                    <td>Datasets: <a href="harvest/${source.id}#datasets">${source.status.overall_statistics.added}</a> <br/>
-                        Last errors: <a href="harvest/${source.id}#errors">${source.status.last_harvest_statistics.errors}</a></td>
-                    <td>${source.status.next_harvest}</td>
-                </py:otherwise>
-            </py:choose>
+            </tr>
+            <?python old_publisher = source['publisher_id'] ?>
+            <tr class="${'active' if source.active else 'inactive'}">
+                <td><a href="harvest/${source.id}"><img src="ckanext/harvest/images/icons/source_view.png" alt="View" title="View" /></a></td>
+                <td><a href="harvest/edit/${source.id}"><img src="ckanext/harvest/images/icons/source_edit.png" alt="Edit" title="Edit" /></a></td>
+                <td><a href="harvest/refresh/${source.id}"><img src="ckanext/harvest/images/icons/source_refresh.png" alt="Refresh" title="Refresh" /></a></td>
+                <py:choose>
+                    <py:when test="source.url and len(source.url)>50">
+                        <td>${source.url[:50]}<span title="${source.url}">...</span></td>
+                    </py:when>
+                    <py:otherwise>
+                        <td>${source.url}</td>
+                    </py:otherwise>
+                </py:choose>
+                <td>${source.type}</td>
+                <td class="state">${source.active}</td>
+                <py:choose>
+                    <py:when test="'msg' in source.status">
+                        <td>${source.status.msg}</td>
+                        <td>${source.status.msg}</td>
+                    </py:when>
+                    <py:otherwise>
+                        <td>Datasets: <a href="harvest/${source.id}#datasets">${source.status.overall_statistics.added}</a> <br/>
+                            Last errors: <a href="harvest/${source.id}#errors">${source.status.last_harvest_statistics.errors}</a></td>
+                        <td>${source.status.next_harvest}</td>
+                    </py:otherwise>
+                </py:choose>
 
-            <td>${h.render_datetime(source.created)}</td>
-         </tr>
+                <td>${h.render_datetime(source.created)}</td>
+             </tr>
+         </py:for>
     </table>
    </py:when>
     <py:otherwise>

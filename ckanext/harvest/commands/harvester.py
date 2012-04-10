@@ -2,8 +2,10 @@ import sys
 import re
 from pprint import pprint
 
+from ckan import model
+from ckan.logic import get_action, ValidationError
+
 from ckan.lib.cli import CkanCommand
-from ckanext.harvest.lib import *
 from ckanext.harvest.queue import get_gather_consumer, get_fetch_consumer
 
 class Harvester(CkanCommand):
@@ -62,6 +64,13 @@ class Harvester(CkanCommand):
 
     def command(self):
         self._load_config()
+
+        # We'll need a sysadmin user to perform most of the actions
+        # We will use the sysadmin site user (named as the site_id)
+        context = {'model':model,'session':model.Session,'ignore_auth':True}
+        self.admin_user = get_action('get_site_user')(context,{})
+
+
         print ''
 
         if len(self.args) == 0:
@@ -97,6 +106,9 @@ class Harvester(CkanCommand):
             self.import_stage()
         elif cmd == 'job-all':
             self.create_harvest_job_all()
+        elif cmd == 'harvesters-info':
+            harvesters_info = get_action('harvesters_info_show')()
+            pprint(harvesters_info)
         else:
             print 'Command %s not recognized' % cmd
 
@@ -139,29 +151,29 @@ class Harvester(CkanCommand):
         else:
             publisher_id = u''
         try:
-            source = create_harvest_source({
+            data_dict = {
                     'url':url,
                     'type':type,
                     'config':config,
                     'active':active,
                     'user_id':user_id,
-                    'publisher_id':publisher_id})
+                    'publisher_id':publisher_id}
 
+            context = {'model':model, 'session':model.Session, 'user': self.admin_user['name']}
+            source = get_action('harvest_source_create')(context,data_dict)
             print 'Created new harvest source:'
             self.print_harvest_source(source)
 
-            sources = get_harvest_sources()
+            sources = get_action('harvest_source_list')(context,{})
             self.print_there_are('harvest source', sources)
 
-            # Create a Harvest Job for the new Source
-            create_harvest_job(source['id'])
+            # Create a harvest job for the new source
+            get_action('harvest_job_create')(context,{'source_id':source['id']})
             print 'A new Harvest Job for this source has also been created'
-
         except ValidationError,e:
            print 'An error occurred:'
            print str(e.error_dict)
            raise e
-
 
     def remove_harvest_source(self):
         if len(self.args) >= 2:
@@ -169,18 +181,20 @@ class Harvester(CkanCommand):
         else:
             print 'Please provide a source id'
             sys.exit(1)
-
-        remove_harvest_source(source_id)
+        context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
+        get_action('harvest_source_delete')(context,{'id':source_id})
         print 'Removed harvest source: %s' % source_id
 
     def list_harvest_sources(self):
         if len(self.args) >= 2 and self.args[1] == 'all':
-            sources = get_harvest_sources()
+            data_dict = {}
             what = 'harvest source'
         else:
-            sources = get_harvest_sources(active=True)
+            data_dict = {'only_active':True}
             what = 'active harvest source'
 
+        context = {'model': model,'session':model.Session, 'user': self.admin_user['name']}
+        sources = get_action('harvest_source_list')(context,data_dict)
         self.print_harvest_sources(sources)
         self.print_there_are(what=what, sequence=sources)
 
@@ -191,24 +205,24 @@ class Harvester(CkanCommand):
             print 'Please provide a source id'
             sys.exit(1)
 
-        job = create_harvest_job(source_id)
+        context = {'model': model,'session':model.Session, 'user': self.admin_user['name']}
+        job = get_action('harvest_job_create')(context,{'source_id':source_id})
 
         self.print_harvest_job(job)
-        status = u'New'
-        jobs = get_harvest_jobs(status=status)
-        self.print_there_are('harvest jobs', jobs, condition=status)
+        jobs = get_action('harvest_job_list')(context,{'status':u'New'})
+        self.print_there_are('harvest jobs', jobs, condition=u'New')
 
     def list_harvest_jobs(self):
-        jobs = get_harvest_jobs()
+        context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
+        jobs = get_action('harvest_job_list')(context,{})
+
         self.print_harvest_jobs(jobs)
         self.print_there_are(what='harvest job', sequence=jobs)
 
     def run_harvester(self):
-        try:
-            jobs = run_harvest_jobs()
-        except:
-            pass
-        sys.exit(0)
+        context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
+        jobs = get_action('harvest_jobs_run')(context,{})
+
         #print 'Sent %s jobs to the gather queue' % len(jobs)
 
     def import_stage(self):
@@ -216,11 +230,15 @@ class Harvester(CkanCommand):
             source_id = unicode(self.args[1])
         else:
             source_id = None
-        import_last_objects(source_id)
+        context = {'model': model, 'session':model.Session, 'user': self.admin_user['name']}
+        objs = get_action('harvest_objects_import')(context,{'source_id':source_id})
+
+        print '%s objects reimported' % len(objs)
 
     def create_harvest_job_all(self):
-        jobs = create_harvest_job_all()
-        print "Created %s new harvest jobs" % len(jobs)
+        context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
+        jobs = get_action('harvest_job_create_all')(context,{})
+        print 'Created %s new harvest jobs' % len(jobs)
 
     def print_harvest_sources(self, sources):
         if sources:
@@ -235,7 +253,7 @@ class Harvester(CkanCommand):
         print '   active: %s' % source['active']
         print '     user: %s' % source['user_id']
         print 'publisher: %s' % source['publisher_id']
-        print '     jobs: %s' % len(source['jobs'])
+        print '     jobs: %s' % source['status']['job_count']
         print ''
 
     def print_harvest_jobs(self, jobs):
@@ -247,8 +265,7 @@ class Harvester(CkanCommand):
     def print_harvest_job(self, job):
         print '       Job id: %s' % job['id']
         print '       status: %s' % job['status']
-        print '       source: %s' % job['source']['id']
-        print '          url: %s' % job['source']['url']
+        print '       source: %s' % job['source']
         print '      objects: %s' % len(job['objects'])
 
         print 'gather_errors: %s' % len(job['gather_errors'])

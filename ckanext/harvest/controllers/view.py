@@ -2,34 +2,64 @@ from lxml import etree
 from lxml.etree import XMLSyntaxError
 from pylons.i18n import _
 
+from ckan.authz import Authorizer
+from ckan import model
+from ckan.model.group import Group
+
 import ckan.lib.helpers as h, json
 from ckan.lib.base import BaseController, c, g, request, \
                           response, session, render, config, abort, redirect
 
 from ckan.lib.navl.dictization_functions import DataError
-from ckan.logic import NotFound, ValidationError
+from ckan.logic import NotFound, ValidationError, get_action, NotAuthorized
 from ckanext.harvest.logic.schema import harvest_source_form_schema
-from ckanext.harvest.lib import create_harvest_source, edit_harvest_source, \
-                                get_harvest_source, get_harvest_sources, \
-                                create_harvest_job, get_registered_harvesters_info, \
-                                get_harvest_object
-from ckan.lib.helpers import Page
+
+from ckan.lib.helpers import Page,pager_url
+
 import logging
 log = logging.getLogger(__name__)
 
 class ViewController(BaseController):
 
-    def __before__(self, action, **env):
-        super(ViewController, self).__before__(action, **env)
-        # All calls to this controller must be with a sysadmin key
-        if not self.authorizer.is_sysadmin(c.user):
-            response_msg = _('Not authorized to see this page')
-            status = 401
-            abort(status, response_msg)
+    not_auth_message = _('Not authorized to see this page')
+
+    def __before__(self, action, **params):
+
+        super(ViewController,self).__before__(action, **params)
+
+        c.publisher_auth = (config.get('ckan.harvest.auth.profile',None) == 'publisher')
+
+    def _get_publishers(self):
+        groups = None
+
+        if c.publisher_auth:
+            if Authorizer().is_sysadmin(c.user):
+                groups = Group.all(group_type='publisher')
+            elif c.userobj:
+                groups = c.userobj.get_groups('publisher')
+            else: # anonymous user shouldn't have access to this page anyway.
+                groups = []
+
+            # Be explicit about which fields we make available in the template
+            groups = [ {
+                'name': g.name,
+                'id': g.id,
+                'title': g.title,
+            } for g in groups ]
+
+        return groups
+
 
     def index(self):
-        # Request all harvest sources
-        c.sources = get_harvest_sources()
+        context = {'model':model, 'user':c.user,'session':model.Session}
+        try:
+            # Request all harvest sources
+            c.sources = get_action('harvest_source_list')(context,{})
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+
+        if c.publisher_auth:
+            c.sources = sorted(c.sources,key=lambda source : source['publisher_title'])
 
         return render('index.html')
 
@@ -41,8 +71,16 @@ class ViewController(BaseController):
         data = data or {}
         errors = errors or {}
         error_summary = error_summary or {}
-        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': get_registered_harvesters_info()}
-        
+
+        try:
+            context = {'model':model, 'user':c.user}
+            harvesters_info = get_action('harvesters_info_show')(context,{})
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+
+        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': harvesters_info}
+
+        c.groups = self._get_publishers()
         c.form = render('source/new_source_form.html', extra_vars=vars)
         return render('source/new.html')
 
@@ -50,15 +88,19 @@ class ViewController(BaseController):
         try:
             data_dict = dict(request.params)
             self._check_data_dict(data_dict)
+            context = {'model':model, 'user':c.user, 'session':model.Session,
+                       'schema':harvest_source_form_schema()}
 
-            source = create_harvest_source(data_dict)
+            source = get_action('harvest_source_create')(context,data_dict)
 
             # Create a harvest job for the new source
-            create_harvest_job(source['id'])
+            get_action('harvest_job_create')(context,{'source_id':source['id']})
 
             h.flash_success(_('New harvest source added successfully.'
                     'A new harvest job for the source has also been created.'))
-            redirect(h.url_for('harvest'))
+            redirect('/harvest/%s' % source['id'])
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
         except DataError,e:
             abort(400, 'Integrity Error')
         except ValidationError,e:
@@ -71,30 +113,46 @@ class ViewController(BaseController):
         if ('save' in request.params) and not data:
             return self._save_edit(id)
 
+
         if not data:
             try:
-                old_data = get_harvest_source(id)
+                context = {'model':model, 'user':c.user}
+
+                old_data = get_action('harvest_source_show')(context, {'id':id})
             except NotFound:
                 abort(404, _('Harvest Source not found'))
+            except NotAuthorized,e:
+                abort(401,self.not_auth_message)
 
         data = data or old_data
         errors = errors or {}
         error_summary = error_summary or {}
-        #TODO: Use new description interface to build the types select and descriptions
-        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': get_registered_harvesters_info()}
-        
+        try:
+            context = {'model':model, 'user':c.user}
+            harvesters_info = get_action('harvesters_info_show')(context,{})
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+
+        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': harvesters_info}
+
+        c.groups = self._get_publishers()
         c.form = render('source/new_source_form.html', extra_vars=vars)
         return render('source/edit.html')
 
     def _save_edit(self,id):
         try:
             data_dict = dict(request.params)
+            data_dict['id'] = id
             self._check_data_dict(data_dict)
+            context = {'model':model, 'user':c.user, 'session':model.Session,
+                       'schema':harvest_source_form_schema()}
 
-            source = edit_harvest_source(id,data_dict)
+            source = get_action('harvest_source_update')(context,data_dict)
 
             h.flash_success(_('Harvest source edited successfully.'))
-            redirect(h.url_for('harvest'))
+            redirect('/harvest/%s' %id)
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
         except DataError,e:
             abort(400, _('Integrity Error'))
         except NotFound, e:
@@ -106,45 +164,60 @@ class ViewController(BaseController):
 
     def _check_data_dict(self, data_dict):
         '''Check if the return data is correct'''
-        surplus_keys_schema = ['id','publisher_id','user_id','active','save','config']
-
+        surplus_keys_schema = ['id','publisher_id','user_id','config','save']
         schema_keys = harvest_source_form_schema().keys()
         keys_in_schema = set(schema_keys) - set(surplus_keys_schema)
 
+        # user_id is not yet used, we'll set the logged user one for the time being
+        if not data_dict.get('user_id',None):
+            if c.userobj:
+                data_dict['user_id'] = c.userobj.id
         if keys_in_schema - set(data_dict.keys()):
             log.info(_('Incorrect form fields posted'))
             raise DataError(data_dict)
 
     def read(self,id):
         try:
-            c.source = get_harvest_source(id)
+            context = {'model':model, 'user':c.user}
+            c.source = get_action('harvest_source_show')(context, {'id':id})
+
             c.page = Page(
                 collection=c.source['status']['packages'],
                 page=request.params.get('page', 1),
-                items_per_page=20
+                items_per_page=20,
+                url=pager_url
             )
 
             return render('source/read.html')
         except NotFound:
             abort(404,_('Harvest source not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+
 
 
     def delete(self,id):
         try:
-            delete_harvest_source(id)
+            context = {'model':model, 'user':c.user}
+            get_action('harvest_source_delete')(context, {'id':id})
 
-            h.flash_success(_('Harvesting source deleted successfully'))
+            h.flash_success(_('Harvesting source successfully inactivated'))
             redirect(h.url_for('harvest'))
         except NotFound:
             abort(404,_('Harvest source not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
 
 
     def create_harvesting_job(self,id):
         try:
-            create_harvest_job(id)
+            context = {'model':model, 'user':c.user, 'session':model.Session}
+            get_action('harvest_job_create')(context,{'source_id':id})
             h.flash_success(_('Refresh requested, harvesting will take place within 15 minutes.'))
         except NotFound:
             abort(404,_('Harvest source not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
         except Exception, e:
             msg = 'An error occurred: [%s]' % e.message
             h.flash_error(msg)
@@ -152,23 +225,28 @@ class ViewController(BaseController):
         redirect(h.url_for('harvest'))
 
     def show_object(self,id):
+
         try:
-            object = get_harvest_object(id)
+            context = {'model':model, 'user':c.user}
+            obj = get_action('harvest_object_show')(context, {'id':id})
+
             # Check content type. It will probably be either XML or JSON
             try:
-                etree.fromstring(object['content'])
+                etree.fromstring(obj['content'])
                 response.content_type = 'application/xml'
             except XMLSyntaxError:
                 try:
-                    json.loads(object['content'])
+                    json.loads(obj['content'])
                     response.content_type = 'application/json'
                 except ValueError:
                     pass
 
-            response.headers["Content-Length"] = len(object['content'])
-            return object['content']
+            response.headers['Content-Length'] = len(obj['content'])
+            return obj['content']
         except NotFound:
             abort(404,_('Harvest object not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
         except Exception, e:
             msg = 'An error occurred: [%s]' % e.message
             h.flash_error(msg)
