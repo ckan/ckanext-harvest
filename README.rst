@@ -99,7 +99,7 @@ The commands should be run with the pyenv activated and refer to your sites conf
 Authorization Profiles
 ======================
 
-Starting from CKAN 1.6.1, the harvester extension offers the hability to use
+Starting from CKAN 1.6.1, the harvester extension offers the ability to use
 different authorization profiles. These can be defined in your ini file as::
 
     ckan.harvest.auth.profile = <profile_name>
@@ -124,7 +124,7 @@ The two available profiles right now are:
  http://wiki.ckan.org/Working_with_the_publisher_auth_profile
 
 
-The CKAN harverster
+The CKAN harvester
 ===================
 
 The plugin includes a harvester for remote CKAN instances. To use it, you need
@@ -249,7 +249,7 @@ following methods::
             {
                 'name': 'csw',
                 'title': 'CSW Server',
-                'description': 'A server that implements OGC's Catalog Service
+                'description': 'A server that implements OGC\'s Catalog Service
                                 for the Web (CSW) standard'
             }
 
@@ -321,7 +321,8 @@ interface:
 
 Here you can also find other examples of custom harvesters:
 
-    https://github.com/okfn/ckanext-pdeu/tree/master/ckanext/pdeu/harvesters
+* https://github.com/okfn/ckanext-pdeu/tree/master/ckanext/pdeu/harvesters
+* https://github.com/okfn/ckanext-inspire/ckanext/inspire/harvesters.py
 
 
 Running the harvest jobs
