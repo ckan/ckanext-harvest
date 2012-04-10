@@ -314,10 +314,10 @@ following methods::
         :returns: True if everything went right, False if errors were found
         '''
 
-See the CKAN harvester for a an example on how to implement the harvesting
+See the CKAN harvester for an example of how to implement the harvesting
 interface:
 
-    ckanext-harvest/ckanext/harvest/harvesters/ckanharvester.py
+ ckanext-harvest/ckanext/harvest/harvesters/ckanharvester.py
 
 Here you can also find other examples of custom harvesters:
 
@@ -385,9 +385,9 @@ following steps with the one you are using.
 
 2. Supervisor needs to have programs added to its configuration, which will
    describe the tasks that need to be monitored. This configuration files are
-   stored in `/etc/supervisor/conf.d`.
+   stored in ``/etc/supervisor/conf.d``.
 
-   Create a file named `/etc/supervisor/conf.d/ckan_harvesting.conf`, and copy the following contents::
+   Create a file named ``/etc/supervisor/conf.d/ckan_harvesting.conf``, and copy the following contents::
 
 
         ; ===============================
@@ -427,15 +427,15 @@ following steps with the one you are using.
    specific installation settings (the example above shows paths from a
    ckan instance installed via Debian packages):
 
-    * command: The absolute path to the paster command located in the
-      python virtual environment and the absolute path to the config
-      ini file.
+   * command: The absolute path to the paster command located in the
+     python virtual environment and the absolute path to the config
+     ini file.
 
-    * user: The unix user you are running CKAN with
+   * user: The unix user you are running CKAN with
 
-    * stdout_logfile and stderr_logfile: All output coming from the
-      harvest consumers will be written to this file. Ensure that the
-      necessary permissions are setup.
+   * stdout_logfile and stderr_logfile: All output coming from the
+     harvest consumers will be written to this file. Ensure that the
+     necessary permissions are setup.
 
    The rest of the configuration options are pretty self explanatory. Refer
    to the `Supervisor documentation <http://supervisord.org/configuration.html#program-x-section-settings>`_
