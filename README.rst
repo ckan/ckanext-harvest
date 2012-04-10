@@ -458,18 +458,18 @@ following steps with the one you are using.
 
    Some problems you may encounter when starting the processes:
 
-    * `ckan_gather_consumer: ERROR (no such process)`
-       Double-check your supervisor configuration file and stop and restart the supervisor daemon::
+   * `ckan_gather_consumer: ERROR (no such process)`
+      Double-check your supervisor configuration file and stop and restart the supervisor daemon::
 
            sudo service supervisor start; sudo service supervisor stop
 
-    * `ckan_gather_consumer: ERROR (abnormal termination)`
-       Something prevented the command from running properly. Have a look at the log file that
-       you defined in the `stdout_logfile` section to see what happened. Common errors include:
+   * `ckan_gather_consumer: ERROR (abnormal termination)`
+      Something prevented the command from running properly. Have a look at the log file that
+      you defined in the `stdout_logfile` section to see what happened. Common errors include::
 
-       * `socket.error: [Errno 111] Connection refused`
-          RabbitMQ is not running::
-
+          `socket.error: [Errno 111] Connection refused`
+          RabbitMQ is not running:: 
+          
             sudo service rabbitmq-server start
 
 4. Once we have the two consumers running and monitored, we just need to create a cron job
