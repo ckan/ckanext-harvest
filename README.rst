@@ -188,7 +188,7 @@ the configuration field)::
      "api_version":"1",
      "default_tags":["new-tag-1","new-tag-2"],
      "default_groups":["my-own-group"],
-     "default_extras":{"new_extra":"Test",harvest_url":"{harvest_source_url}/dataset/{dataset_id}"},
+     "default_extras":{"new_extra":"Test","harvest_url":"{harvest_source_url}/dataset/{dataset_id}"},
      "override_extras": true,
      "user":"harverster-user",
      "api_key":"<REMOTE_API_KEY>",
