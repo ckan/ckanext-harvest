@@ -59,18 +59,20 @@ def _get_source_status(source, context):
 
     job_count = HarvestJob.filter(source=source).count()
 
-    if not job_count:
-        out['msg'] = 'No jobs yet'
-        return out
-
     out = {
-           'job_count': job_count,
+           'job_count': 0,
            'next_harvest':'',
            'last_harvest_request':'',
            'last_harvest_statistics':{'added':0,'updated':0,'errors':0},
            'last_harvest_errors':{'gather':[],'object':[]},
            'overall_statistics':{'added':0, 'errors':0},
            'packages':[]}
+
+    if not job_count:
+        out['msg'] = 'No jobs yet'
+        return out
+    else:
+        out['job_count'] = job_count
 
     # Get next scheduled job
     next_job = HarvestJob.filter(source=source,status=u'New').first()
