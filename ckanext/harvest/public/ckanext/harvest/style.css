@@ -11,6 +11,14 @@ body.index.ViewController #content {
     border: 0 !important;
 }
 
+body.index.ViewController .content-outer {
+    width: 100% !important;
+}
+
+#harvest-sources{
+    width: 100%;
+}
+
 #new-harvest-source {
 	background: transparent url("images/icons/source_new.png") no-repeat 0px 0px;
     padding-left: 20px;
@@ -30,7 +38,6 @@ body.index.ViewController #content {
 #show-inactive-sources-content label{
     float: left;
     font-weight: normal;
-    margin-top: -4px;
     margin-left: 5px;
 }
 
@@ -44,11 +51,6 @@ body.index.ViewController #content {
 
 #harvest-sources .inactive .state{
     color: red;
-}
-
-#harvest-sources td{
-    background-color: white !important;
-    border-bottom: 1px solid #E3E3E3;
 }
 
 .harvester-title{
