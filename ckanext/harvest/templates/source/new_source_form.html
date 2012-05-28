@@ -63,13 +63,13 @@
             <dd>
             <select id="active" name="active">
                 <option py:attrs="{'selected': 'selected' if data.get('active') or not 'active' in data else None}" value="True">active</option>
-                <option py:attrs="{'selected': 'selected' if 'active' in data and not data.get('active') else None}" value="False">inactive</option>
+                <option py:attrs="{'selected': 'selected' if 'active' in data and not data.get('active') else None}" value="False">withdrawn</option>
             </select>
             <py:if test="data.get('active') or not 'active' in data">
                 <div>This harvest source is <span class="source-state-active">Active</span></div>
             </py:if>
             <py:if test="'active' in data and not data.get('active')">
-                 <div>This harvest source is <span class="source-state-inactive">Inactive</span></div>
+                 <div>This harvest source is <span class="source-state-inactive">Withdrawn</span></div>
             </py:if>
 
             </dd>

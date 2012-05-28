@@ -19,6 +19,7 @@
     <a href="/harvest">Sources list</a>
 
     </div>
+    <div py:if="not c.source.active" class="alert alert-block">NB: This Harvest Source is Withdrawn. Therefore the Gemini XML will not be harvested again. Any metadata that was previously harvested, remains on this site.</div>
     <table id="harvest-source-details" class="table table-bordered table-condensed">
         <tr>
             <th>ID</th>
@@ -33,8 +34,8 @@
             <td>${c.source.type}</td>
         </tr>
         <tr>
-            <th>Active</th>
-            <td>${c.source.active}</td>
+            <th>Withdrawn</th>
+            <td>${not c.source.active}</td>
         </tr>
         <tr py:if="c.source.title">
             <th>Title</th>
