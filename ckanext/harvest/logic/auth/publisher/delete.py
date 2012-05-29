@@ -10,7 +10,7 @@ def harvest_source_delete(context,data_dict):
     
     source = get_source_object(context,data_dict)
     
-    # Non-logged users can not delete this source
+    # Non-logged users cannot delete this source
     if not user:
         return {'success': False, 'msg': _('Non-logged in users are not authorized to delete harvest sources')} 
 
@@ -20,7 +20,7 @@ def harvest_source_delete(context,data_dict):
         
     # Check if the source publisher id exists on the user's groups
     user_obj = User.get(user)
-    if not user_obj or not source.publisher_id in [g.id for g in user_obj.get_groups(u'publisher',u'admin')]:
+    if not user_obj or not source.publisher_id in [g.id for g in user_obj.get_groups(u'publisher')]:
         return {'success': False, 'msg': _('User %s not authorized to delete harvest source %s') % (str(user),source.id)}
     else:
         return {'success': True}

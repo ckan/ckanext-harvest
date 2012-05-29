@@ -1,3 +1,4 @@
+import logging
 from sqlalchemy import or_
 from ckan.authz import Authorizer
 from ckan.model import User
@@ -12,6 +13,8 @@ from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject)
 from ckanext.harvest.logic.dictization import (harvest_source_dictize,
                                                harvest_job_dictize,
                                                harvest_object_dictize)
+
+log = logging.getLogger(__name__)
 
 def harvest_source_show(context,data_dict):
 
@@ -147,8 +150,8 @@ def _get_sources_for_user(context,data_dict):
         user_obj = User.get(user)
 
         publisher_filters = []
-
-        for publisher_id in [g.id for g in user_obj.get_groups(u'publisher',u'admin')]:
+        publishers_for_the_user = user_obj.get_groups(u'publisher')
+        for publisher_id in [g.id for g in publishers_for_the_user]:
             publisher_filters.append(HarvestSource.publisher_id==publisher_id)
 
         if len(publisher_filters):
@@ -156,6 +159,9 @@ def _get_sources_for_user(context,data_dict):
         else:
             # This user does not belong to a publisher yet, no sources for him/her
             return []
+
+        log.debug('User %s with publishers %r has Harvest Sources: %r',
+                  user, publishers_for_the_user, [(hs.id, hs.url) for hs in query])
 
     sources = query.all()
 
