@@ -17,7 +17,6 @@ from ckanext.harvest.logic.dictization import (harvest_source_dictize,
 log = logging.getLogger(__name__)
 
 def harvest_source_show(context,data_dict):
-
     check_access('harvest_source_show',context,data_dict)
 
     id = data_dict.get('id')
@@ -42,6 +41,26 @@ def harvest_source_list(context, data_dict):
 
     context.update({'detailed':False})
     return [harvest_source_dictize(source, context) for source in sources]
+
+def harvest_source_for_a_dataset(context, data_dict):
+    '''For a given dataset, return the harvest source that
+    created or last updated it, otherwise NotFound.'''
+
+    model = context['model']
+    session = context['session']
+
+    dataset_id = data_dict.get('id')
+
+    query = session.query(HarvestSource)\
+            .join(HarvestObject)\
+            .filter_by(package_id=dataset_id)\
+            .order_by(HarvestObject.gathered.desc())
+    source = query.first() # newest
+
+    if not source:
+        raise NotFound
+
+    return harvest_source_dictize(source,context)
 
 def harvest_job_show(context,data_dict):
 
@@ -166,3 +185,4 @@ def _get_sources_for_user(context,data_dict):
     sources = query.all()
 
     return sources
+

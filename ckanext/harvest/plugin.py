@@ -80,6 +80,7 @@ class Harvest(SingletonPlugin):
     def get_actions(self):
         from ckanext.harvest.logic.action.get import (harvest_source_show,
                                                       harvest_source_list,
+                                                      harvest_source_for_a_dataset,
                                                       harvest_job_show,
                                                       harvest_job_list,
                                                       harvest_object_show,
@@ -96,6 +97,7 @@ class Harvest(SingletonPlugin):
         return {
             'harvest_source_show': harvest_source_show,
             'harvest_source_list': harvest_source_list,
+            'harvest_source_for_a_dataset': harvest_source_for_a_dataset,
             'harvest_job_show': harvest_job_show,
             'harvest_job_list': harvest_job_list,
             'harvest_object_show': harvest_object_show,
