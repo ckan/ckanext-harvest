@@ -57,14 +57,10 @@
                 <td><a href="harvest/${source.id}"><img src="ckanext/harvest/images/icons/source_view.png" alt="View" title="View" /></a></td>
                 <td><a href="harvest/edit/${source.id}"><img src="ckanext/harvest/images/icons/source_edit.png" alt="Edit" title="Edit" /></a></td>
                 <td><a href="harvest/refresh/${source.id}"><img src="ckanext/harvest/images/icons/source_refresh.png" alt="Refresh" title="Refresh" /></a></td>
-                <py:choose>
-                    <py:when test="source.url and len(source.url)>50">
-                        <td>${source.url[:50]}<span title="${source.url}">...</span></td>
-                    </py:when>
-                    <py:otherwise>
-                        <td>${source.url}</td>
-                    </py:otherwise>
-                </py:choose>
+<?python
+from webhelpers.text import truncate
+?>
+                <td title="${source.url}">${truncate(source.url, 50)}</td>
                 <td>${source.type}</td>
                 <td class="state">${source.active}</td>
                 <py:choose>

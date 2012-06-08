@@ -36,7 +36,6 @@ harvest_object_error_table = None
 
 def setup():
 
-
     if harvest_source_table is None:
         define_harvester_tables()
         log.debug('Harvest tables defined in memory')

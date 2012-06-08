@@ -1,4 +1,5 @@
 import re
+import logging
 
 from ckan.logic import NotFound, ValidationError, check_access
 from ckan.lib.navl.dictization_functions import validate
@@ -9,8 +10,11 @@ from ckanext.harvest.logic.dictization import (harvest_source_dictize,
                                                harvest_job_dictize)
 from ckanext.harvest.logic.action.get import harvest_source_list,harvest_job_list
 
+log = logging.getLogger(__name__)
+
 def harvest_source_create(context,data_dict):
 
+    log.info('Creating harvest source: %r', data_dict)
     check_access('harvest_source_create',context,data_dict)
 
     model = context['model']
@@ -21,6 +25,7 @@ def harvest_source_create(context,data_dict):
 
     if errors:
         session.rollback()
+        log.warn('Harvest source does not validate: %r', errors)
         raise ValidationError(errors,_error_summary(errors))
 
     source = HarvestSource()
@@ -36,11 +41,12 @@ def harvest_source_create(context,data_dict):
         source.active = data['active']
 
     source.save()
+    log.info('Harvest source created: %s', source.id)
 
     return harvest_source_dictize(source,context)
 
 def harvest_job_create(context,data_dict):
-
+    log.info('Harvest job create: %r', data_dict)
     check_access('harvest_job_create',context,data_dict)
 
     source_id = data_dict['source_id']
@@ -48,10 +54,12 @@ def harvest_job_create(context,data_dict):
     # Check if source exists
     source = HarvestSource.get(source_id)
     if not source:
+        log.warn('Harvest source %s does not exist', source_id)
         raise NotFound('Harvest source %s does not exist' % source_id)
 
     # Check if the source is active
     if not source.active:
+        log.warn('Harvest job cannot be created for inactive source %s', source_id)
         raise Exception('Can not create jobs on inactive sources')
 
     # Check if there already is an unrun job for this source
@@ -61,16 +69,18 @@ def harvest_job_create(context,data_dict):
     }
     exists = harvest_job_list(context,data_dict)
     if len(exists):
+        log.warn('There is already an unrun job %r for this source %s', exists, source_id)
         raise Exception('There already is an unrun job for this source')
 
     job = HarvestJob()
     job.source = source
 
     job.save()
+    log.info('Harvest job saved %s', job.id)
     return harvest_job_dictize(job,context)
 
 def harvest_job_create_all(context,data_dict):
-
+    log.info('Harvest job create all: %r', data_dict)
     check_access('harvest_job_create_all',context,data_dict)
 
     data_dict.update({'only_active':True})
@@ -92,6 +102,7 @@ def harvest_job_create_all(context,data_dict):
         job = harvest_job_create(context,{'source_id':source['id']})
         jobs.append(job)
 
+    log.info('Created jobs for %i harvest sources', len(jobs))
     return jobs
 
 def _error_summary(error_dict):

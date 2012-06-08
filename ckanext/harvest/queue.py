@@ -29,7 +29,7 @@ EXCHANGE_NAME = 'ckan.harvest'
 
 def get_carrot_connection():
     backend = config.get('ckan.harvest.mq.library', 'pyamqplib')
-    log.info("Carrot connnection using %s backend" % backend)
+    log.debug("Carrot connection using %s backend" % backend)
     try:
         port = int(config.get('ckan.harvest.mq.port', PORT))
     except ValueError:

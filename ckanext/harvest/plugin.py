@@ -122,7 +122,7 @@ class Harvest(SingletonPlugin):
             module_root = '%s.%s' % (module_root, auth_profile)
             auth_functions = _get_auth_functions(module_root,auth_functions)
 
-        log.info('Using auth profile at %s' % module_root)
+        log.debug('Using auth profile at %s' % module_root)
 
         return auth_functions
 

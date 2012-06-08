@@ -30,8 +30,10 @@ def harvest_source_update(context,data_dict):
     source_id = data_dict.get('id')
     schema = context.get('schema') or default_harvest_source_schema()
 
+    log.info('Harvest source %s update: %r', source_id, data_dict)
     source = HarvestSource.get(source_id)
     if not source:
+        log.error('Harvest source %s does not exist', source_id)
         raise NotFound('Harvest source %s does not exist' % source_id)
 
     data, errors = validate(data_dict, schema)
@@ -55,6 +57,7 @@ def harvest_source_update(context,data_dict):
     # Abort any pending jobs
     if not source.active:
         jobs = HarvestJob.filter(source=source,status=u'New')
+        log.info('Harvest source %s not active, so aborting %i outstanding jobs', source_id, jobs.count())
         if jobs:
             for job in jobs:
                 job.status = u'Aborted'
@@ -71,6 +74,7 @@ def harvest_objects_import(context,data_dict):
         It will only affect the last fetched objects already present in the
         database.
     '''
+    log.info('Harvest objects import: %r', data_dict)
     check_access('harvest_objects_import',context,data_dict)
 
     model = context['model']
@@ -80,9 +84,11 @@ def harvest_objects_import(context,data_dict):
     if source_id:
         source = HarvestSource.get(source_id)
         if not source:
+            log.error('Harvest source %s does not exist', source_id)
             raise NotFound('Harvest source %s does not exist' % source_id)
 
         if not source.active:
+            log.warn('Harvest source %s is not active.', source_id)
             raise Exception('This harvest source is not active')
 
         last_objects_ids = session.query(HarvestObject.id) \
@@ -108,10 +114,11 @@ def harvest_objects_import(context,data_dict):
                 harvester.import_stage(obj)
                 break
         last_objects.append(harvest_object_dictize(obj,context))
+    log.info('Harvest objects imported: %r', last_objects)
     return last_objects
 
 def harvest_jobs_run(context,data_dict):
-
+    log.info('Harvest job run: %r', data_dict)
     check_access('harvest_jobs_run',context,data_dict)
 
     source_id = data_dict.get('source_id',None)
@@ -119,6 +126,7 @@ def harvest_jobs_run(context,data_dict):
     # Check if there are pending harvest jobs
     jobs = harvest_job_list(context,{'source_id':source_id,'status':u'New'})
     if len(jobs) == 0:
+        log.info('No new harvest jobs.')
         raise Exception('There are no new harvesting jobs')
 
     # Send each job to the gather queue
