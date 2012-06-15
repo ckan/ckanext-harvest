@@ -36,9 +36,7 @@ Run the following command to create the necessary tables in the database::
     paster --plugin=ckanext-harvest harvester initdb --config=mysite.ini
 
 The extension needs a user with sysadmin privileges to perform the
-harvesting jobs. You can create such a user running these two commands::
-
-    paster --plugin=ckan user add harvest
+harvesting jobs. You can create such a user running this command::
 
     paster --plugin=ckan sysadmin add harvest
 
