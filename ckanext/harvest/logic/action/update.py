@@ -133,6 +133,7 @@ def harvest_jobs_run(context,data_dict):
     publisher = get_gather_publisher()
     sent_jobs = []
     for job in jobs:
+        context['detailed'] = False
         source = harvest_source_show(context,{'id':job['source']})
         if source['active']:
             publisher.send({'harvest_job_id': job['id']})
