@@ -61,6 +61,8 @@ class ViewController(BaseController):
         if c.publisher_auth:
             c.sources = sorted(c.sources,key=lambda source : source['publisher_title'])
 
+        c.status = config.get('ckan.harvest.status')
+
         return render('index.html')
 
     def new(self,data = None,errors = None, error_summary = None):

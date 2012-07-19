@@ -19,6 +19,11 @@
         <div class="harvest-content">
             <h1>Harvesting Sources</h1>
 
+            <div py:if="c.status" class="status">
+              <h3>Status:</h3>
+              ${c.status}
+            </div>
+
             <div id="new-harvest-source"><a href="harvest/new">Add a harvesting source</a></div>
             <py:choose>
                 <py:when test="c.sources">
