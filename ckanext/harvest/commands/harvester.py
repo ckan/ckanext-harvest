@@ -40,10 +40,13 @@ class Harvester(CkanCommand):
       harvester fetch_consumer
         - starts the consumer for the fetching queue
 
-      harvester import [{source-id}]
+      harvester [-j] import [{source-id}]
         - perform the import stage with the last fetched objects, optionally belonging to a certain source.
           Please note that no objects will be fetched from the remote server. It will only affect
           the last fetched objects already present in the database.
+
+          If the -j flag is provided, the objects are not joined to existing datasets. This may be useful
+          when importing objects for the first time.
 
       harvester job-all
         - create new harvest jobs for all active sources.
@@ -60,6 +63,13 @@ class Harvester(CkanCommand):
     usage = __doc__
     max_args = 6
     min_args = 0
+
+    def __init__(self,name):
+
+        super(Harvester,self).__init__(name)
+
+        self.parser.add_option('-j', '--no-join-datasets', dest='no_join_datasets',
+            action='store_true', default=False, help='Do not join harvest objects to existing datasets')
 
     def command(self):
         self._load_config()
@@ -231,7 +241,11 @@ class Harvester(CkanCommand):
             source_id = unicode(self.args[1])
         else:
             source_id = None
-        context = {'model': model, 'session':model.Session, 'user': self.admin_user['name']}
+
+        context = {'model': model, 'session':model.Session, 'user': self.admin_user['name'],
+                   'join_datasets': not self.options.no_join_datasets}
+
+
         objs = get_action('harvest_objects_import')(context,{'source_id':source_id})
 
         print '%s objects reimported' % len(objs)

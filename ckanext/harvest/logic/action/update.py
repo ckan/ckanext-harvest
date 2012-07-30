@@ -81,6 +81,8 @@ def harvest_objects_import(context,data_dict):
     session = context['session']
     source_id = data_dict.get('source_id',None)
 
+    join_datasets = context.get('join_datasets',True)
+
     if source_id:
         source = HarvestSource.get(source_id)
         if not source:
@@ -92,17 +94,19 @@ def harvest_objects_import(context,data_dict):
             raise Exception('This harvest source is not active')
 
         last_objects_ids = session.query(HarvestObject.id) \
-                .join(HarvestSource).join(Package) \
+                .join(HarvestSource) \
                 .filter(HarvestObject.source==source) \
-                .filter(HarvestObject.current==True) \
-                .filter(Package.state==u'active') \
-                .all()
+                .filter(HarvestObject.current==True)
+
     else:
         last_objects_ids = session.query(HarvestObject.id) \
-                .join(Package) \
                 .filter(HarvestObject.current==True) \
-                .filter(Package.state==u'active') \
-                .all()
+
+    if join_datasets:
+        last_objects_ids = last_objects_ids.join(Package) \
+            .filter(Package.state==u'active')
+
+    last_objects_ids = last_objects_ids.all()
 
     last_objects = []
     for obj_id in last_objects_ids:
@@ -114,7 +118,7 @@ def harvest_objects_import(context,data_dict):
                 harvester.import_stage(obj)
                 break
         last_objects.append(harvest_object_dictize(obj,context))
-    log.info('Harvest objects imported: %r', last_objects)
+    log.info('Harvest objects imported: %s', len(last_objects))
     return last_objects
 
 def harvest_jobs_run(context,data_dict):
