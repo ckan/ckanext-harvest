@@ -1,3 +1,5 @@
+import hashlib
+
 import logging
 
 from ckan.plugins import PluginImplementations
@@ -81,6 +83,8 @@ def harvest_objects_import(context,data_dict):
     session = context['session']
     source_id = data_dict.get('source_id',None)
 
+    segments = context.get('segments',None)
+
     join_datasets = context.get('join_datasets',True)
 
     if source_id:
@@ -109,8 +113,13 @@ def harvest_objects_import(context,data_dict):
     last_objects_ids = last_objects_ids.all()
 
     last_objects = []
+
     for obj_id in last_objects_ids:
+        if segments and str(hashlib.md5(obj_id[0]).hexdigest())[0] not in segments:
+            continue
+
         obj = session.query(HarvestObject).get(obj_id)
+
         for harvester in PluginImplementations(IHarvester):
             if harvester.info()['name'] == obj.source.type:
                 if hasattr(harvester,'force_import'):
