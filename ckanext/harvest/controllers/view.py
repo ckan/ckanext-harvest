@@ -1,3 +1,4 @@
+import re
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 from pylons.i18n import _
@@ -234,7 +235,8 @@ class ViewController(BaseController):
 
             # Check content type. It will probably be either XML or JSON
             try:
-                etree.fromstring(obj['content'])
+                content = re.sub('<\?xml(.*)\?>','', obj['content'])
+                etree.fromstring(content)
                 response.content_type = 'application/xml'
             except XMLSyntaxError:
                 try:
@@ -250,8 +252,5 @@ class ViewController(BaseController):
         except NotAuthorized,e:
             abort(401,self.not_auth_message)
         except Exception, e:
-            msg = 'An error occurred: [%s]' % e.message
-            h.flash_error(msg)
-
-        redirect(h.url_for('harvest'))
-
+            msg = 'An error occurred: [%s]' % str(e)
+            abort(500,msg)
