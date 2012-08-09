@@ -43,7 +43,7 @@ def setup():
         define_harvester_tables()
         log.debug('Harvest tables defined in memory')
 
-    if model.repo.are_tables_created():
+    if model.package_table.exists():
         if not harvest_source_table.exists():
 
             # Create each table individually rather than
