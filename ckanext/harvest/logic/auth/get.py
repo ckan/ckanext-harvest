@@ -42,10 +42,7 @@ def harvest_object_show(context,data_dict):
     model = context['model']
     user = context.get('user')
 
-    if not Authorizer().is_sysadmin(user):
-        return {'success': False, 'msg': _('User %s not authorized to read this harvest object') % str(user)}
-    else:
-        return {'success': True}
+    return {'success': True}
 
 def harvest_object_list(context,data_dict):
     model = context['model']
