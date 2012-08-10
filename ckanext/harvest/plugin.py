@@ -7,21 +7,20 @@ from genshi.filters import Transformer
 
 import ckan.lib.helpers as h
 
-from ckan.plugins import implements, SingletonPlugin
-from ckan.plugins import IRoutes, IConfigurer
-from ckan.plugins import IConfigurable, IActions, IAuthFunctions
+import ckan.plugins as p
+
 from ckanext.harvest.model import setup as model_setup
 
 log = getLogger(__name__)
 assert not log.disabled
 
-class Harvest(SingletonPlugin):
+class Harvest(p.SingletonPlugin):
 
-    implements(IConfigurable)
-    implements(IRoutes, inherit=True)
-    implements(IConfigurer, inherit=True)
-    implements(IActions)
-    implements(IAuthFunctions)
+    p.implements(p.IConfigurable)
+    p.implements(p.IRoutes, inherit=True)
+    p.implements(p.IConfigurer, inherit=True)
+    p.implements(p.IActions)
+    p.implements(p.IAuthFunctions)
 
     def configure(self, config):
 
@@ -65,17 +64,13 @@ class Harvest(SingletonPlugin):
         return map
 
     def update_config(self, config):
-        here = os.path.dirname(__file__)
-        template_dir = os.path.join(here, 'templates')
-        public_dir = os.path.join(here, 'public')
-        if config.get('extra_template_paths'):
-            config['extra_template_paths'] += ',' + template_dir
-        else:
-            config['extra_template_paths'] = template_dir
-        if config.get('extra_public_paths'):
-            config['extra_public_paths'] += ',' + public_dir
-        else:
-            config['extra_public_paths'] = public_dir
+        # check if new templates
+        templates = 'templates'
+        if p.toolkit.check_ckan_version(min_version='2.0'):
+            if not p.toolkit.asbool(config.get('ckan.legacy_templates', False)):
+                templates = 'templates_new'
+        p.toolkit.add_template_directory(config, templates)
+        p.toolkit.add_public_directory(config, 'public')
 
     def get_actions(self):
         from ckanext.harvest.logic.action.get import (harvest_source_show,
