@@ -84,6 +84,32 @@ class ViewController(BaseController):
         vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': harvesters_info}
 
         c.groups = self._get_publishers()
+
+        states = [{'text': 'active', 'value': 'True'},
+                  {'text': 'withdrawn', 'value': 'False'},]
+
+        harvest_list = []
+        for harvester in harvesters_info:
+            harvest_list.append({'text':harvester['title'], 'value': harvester['name']})
+
+
+        items = [
+            {'name': 'url', 'control': 'input', 'label': _('URL for source of metadata'), 'placeholder': _('')},
+            {'name': 'type', 'control': 'select', 'options': harvest_list, 'label': _('Source type'), 'placeholder': _('')},
+            {'name': 'title', 'control': 'input', 'label': _('Title'), 'placeholder': _('')},
+            {'name': 'description', 'control': 'textarea', 'label': _('Description'), 'placeholder': _('About page text')},]
+
+        if c.groups:
+            pubs = []
+            for group in c.groups:
+                pubs.append({'text':group['title'], 'value': group['id']})
+            items.append({'name': 'publisher_id', 'control': 'select', 'options': pubs, 'label': _('Publisher'), 'placeholder': _('')})
+
+        items += [
+            {'name': 'config', 'control': 'textarea', 'label': _('Configuration'), 'placeholder': _('About page text')},
+            {'name': 'active', 'control': 'select', 'options': states, 'label': _('State'), 'placeholder': _('')},
+        ]
+        vars['form_items'] = items
         c.form = render('source/new_source_form.html', extra_vars=vars)
         return render('source/new.html')
 
@@ -139,7 +165,41 @@ class ViewController(BaseController):
         vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': harvesters_info}
 
         c.groups = self._get_publishers()
+
+
+
+
+
+        states = [{'text': 'active', 'value': 'True'},
+                  {'text': 'withdrawn', 'value': 'False'},]
+
+        harvest_list = []
+        for harvester in harvesters_info:
+            harvest_list.append({'text':harvester['title'], 'value': harvester['name']})
+
+
+        items = [
+            {'name': 'url', 'control': 'input', 'label': _('URL for source of metadata'), 'placeholder': _('')},
+            {'name': 'type', 'control': 'select', 'options': harvest_list, 'label': _('Source type'), 'placeholder': _('')},
+            {'name': 'title', 'control': 'input', 'label': _('Title'), 'placeholder': _('')},
+            {'name': 'description', 'control': 'textarea', 'label': _('Description'), 'placeholder': _('About page text')},]
+
+        if c.groups:
+            pubs = []
+            for group in c.groups:
+                pubs.append({'text':group['title'], 'value': group['id']})
+            items.append({'name': 'publisher_id', 'control': 'select', 'options': pubs, 'label': _('Publisher'), 'placeholder': _('')})
+
+        items += [
+            {'name': 'config', 'control': 'textarea', 'label': _('Configuration'), 'placeholder': _('About page text')},
+            {'name': 'active', 'control': 'select', 'options': states, 'label': _('State'), 'placeholder': _('')},
+        ]
+        vars['form_items'] = items
+
+
+
         c.form = render('source/new_source_form.html', extra_vars=vars)
+
         return render('source/edit.html')
 
     def _save_edit(self,id):
