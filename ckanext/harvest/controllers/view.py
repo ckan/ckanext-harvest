@@ -183,7 +183,6 @@ class ViewController(BaseController):
         try:
             context = {'model':model, 'user':c.user}
             c.source = get_action('harvest_source_show')(context, {'id':id})
-
             c.page = Page(
                 collection=c.source['status']['packages'],
                 page=request.params.get('page', 1),

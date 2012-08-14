@@ -108,7 +108,7 @@
                   <ul>
                     {% for error in c.source.status.last_harvest_errors.object %}
                       <li>
-                        <div>GUID <a href="${g.site_url}/harvest/object/${error.object_id}">${error.object_guid}</a></div>
+                        <div>GUID <a href="{{g.site_url}}/harvest/object/{{error.object_id}}">{{error.object_guid}}</a></div>
                         {% set lines = error['message'].split('\n') %}
                         {% for line in lines %}
                           <div>{{ line }}</div>
