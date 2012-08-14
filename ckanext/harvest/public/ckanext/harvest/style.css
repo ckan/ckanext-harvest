@@ -48,6 +48,10 @@ body.index.ViewController .content-outer {
     text-align: middle;
 }
 
+#harvest-sources th.url{
+    width: 200px;
+}
+
 #harvest-sources td.action{
     text-align: middle;
 }
