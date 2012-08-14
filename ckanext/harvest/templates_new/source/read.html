@@ -2,6 +2,12 @@
 
 {% block title %}{{ _('Harvest Source Details') }} - {{ super() }}{% endblock %}
 
+{% block styles %}
+  {{ super() }}
+  <link type="text/css" rel="stylesheet" media="all" href="/ckanext/harvest/style.css" />
+{% endblock %}
+
+
 {% block breadcrumb_content %}
 {% endblock %}
 
@@ -82,13 +88,13 @@
             <tr>
               <th>Status</th>
               <td>
-                <a name="errors"/>Last Harvest Errors: {{ c.source.status.last_harvest_statistics.errors }}<br/>
+                  <a name="errors"></a>Last Harvest Errors: {{ c.source.status.last_harvest_statistics.errors }}<br/>
                 {% if c.source.status.last_harvest_errors.gather | length > 0 %}
                   <i>Gathering errors</i>
                   <ul>
                     {% for error in c.source.status.last_harvest_errors.gather %}
                       <li>
-                        {% set lines = error['message'].split('\n') %}
+                        {% set lines = error.split('\n') %}
                         {% for line in lines %}
                           <div>{{ line }}</div>
                         {% endfor %}
@@ -129,7 +135,7 @@
             <tr>
               <th>Datasets</th>
               <td>
-                <a name="datasets"/>
+                <a name="datasets"></a>
                 <div>There could be a 10 minutes delay before these datasets (or changes to them) appear on
                   the site or on search results.</div>
 
@@ -152,9 +158,3 @@
 {% endblock %}
 
 {% block sidebar %}{% endblock %}
-
-{#
-  <py:def function="optional_head">
-    <link type="text/css" rel="stylesheet" media="all" href="/ckanext/harvest/style.css" />
-  </py:def>
-  #}

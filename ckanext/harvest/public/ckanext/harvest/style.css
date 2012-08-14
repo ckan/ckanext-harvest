@@ -74,7 +74,7 @@ body.index.ViewController .content-outer {
 }
 
 #harvest-source-actions {
-    margin-bottom: 10px;
+  margin: 20px 0;
 }
 
 #harvest-source-actions img{
@@ -88,3 +88,6 @@ body.index.ViewController .content-outer {
     font-weight: bold;
 }
 
+#harvest-source-details th {
+  width: 33%;
+}
