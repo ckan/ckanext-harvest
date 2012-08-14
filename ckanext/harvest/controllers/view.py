@@ -85,32 +85,12 @@ class ViewController(BaseController):
 
         c.groups = self._get_publishers()
 
-        states = [{'text': 'active', 'value': 'True'},
-                  {'text': 'withdrawn', 'value': 'False'},]
+        vars['form_items'] = self._make_autoform_items(harvesters_info)
 
-        harvest_list = []
-        for harvester in harvesters_info:
-            harvest_list.append({'text':harvester['title'], 'value': harvester['name']})
-
-        items = [
-            {'name': 'url', 'control': 'input', 'label': _('URL for source of metadata'), 'placeholder': _(''), 'extra_info': 'This should include the http:// part of the URL'},
-            {'name': 'type', 'control': 'select', 'options': harvest_list, 'label': _('Source type'), 'placeholder': _(''), 'extra_info': 'Which type of source does the URL above represent? '},
-            {'name': 'title', 'control': 'input', 'label': _('Title'), 'placeholder': _(''), 'extra_info': 'This will be shown as the datasets source.'},
-            {'name': 'description', 'control': 'textarea', 'label': _('Description'), 'placeholder': _(''), 'extra_info':'You can add your own notes here about what the URL above represents to remind you later.'},]
-
-        if c.groups:
-            pubs = []
-            for group in c.groups:
-                pubs.append({'text':group['title'], 'value': group['id']})
-            items.append({'name': 'publisher_id', 'control': 'select', 'options': pubs, 'label': _('Publisher'), 'placeholder': _('')})
-
-        items += [
-            {'name': 'config', 'control': 'textarea', 'label': _('Configuration'), 'placeholder': _('About page text'), 'extra_info': ''},
-            {'name': 'active', 'control': 'select', 'options': states, 'label': _('State'), 'placeholder': _(''), 'extra_info': ''},
-        ]
-        vars['form_items'] = items
         c.form = render('source/new_source_form.html', extra_vars=vars)
         return render('source/new.html')
+
+
 
     def _save_new(self):
         try:
@@ -165,37 +145,7 @@ class ViewController(BaseController):
 
         c.groups = self._get_publishers()
 
-
-
-
-
-        states = [{'text': 'active', 'value': 'True'},
-                  {'text': 'withdrawn', 'value': 'False'},]
-
-        harvest_list = []
-        for harvester in harvesters_info:
-            harvest_list.append({'text':harvester['title'], 'value': harvester['name']})
-
-
-        items = [
-            {'name': 'url', 'control': 'input', 'label': _('URL for source of metadata'), 'placeholder': _(''), 'extra_info': 'This should include the http:// part of the URL'},
-            {'name': 'type', 'control': 'select', 'options': harvest_list, 'label': _('Source type'), 'placeholder': _(''), 'extra_info': 'Which type of source does the URL above represent? '},
-            {'name': 'title', 'control': 'input', 'label': _('Title'), 'placeholder': _(''), 'extra_info': 'This will be shown as the datasets source.'},
-            {'name': 'description', 'control': 'textarea', 'label': _('Description'), 'placeholder': _(''), 'extra_info':'You can add your own notes here about what the URL above represents to remind you later.'},]
-
-        if c.groups:
-            pubs = []
-            for group in c.groups:
-                pubs.append({'text':group['title'], 'value': group['id']})
-            items.append({'name': 'publisher_id', 'control': 'select', 'options': pubs, 'label': _('Publisher'), 'placeholder': _('')})
-
-        items += [
-            {'name': 'config', 'control': 'textarea', 'label': _('Configuration'), 'placeholder': _('About page text'), 'extra_info': ''},
-            {'name': 'active', 'control': 'select', 'options': states, 'label': _('State'), 'placeholder': _(''), 'extra_info': ''},
-        ]
-        vars['form_items'] = items
-
-
+        vars['form_items'] = self._make_autoform_items(harvesters_info)
 
         c.form = render('source/new_source_form.html', extra_vars=vars)
 
@@ -312,3 +262,31 @@ class ViewController(BaseController):
         except Exception, e:
             msg = 'An error occurred: [%s]' % str(e)
             abort(500,msg)
+
+
+    def _make_autoform_items(self, harvesters_info):
+        states = [{'text': 'active', 'value': 'True'},
+                  {'text': 'withdrawn', 'value': 'False'},]
+
+        harvest_list = []
+        for harvester in harvesters_info:
+            harvest_list.append({'text':harvester['title'], 'value': harvester['name']})
+
+        items = [
+            {'name': 'url', 'control': 'input', 'label': _('URL for source of metadata'), 'placeholder': _(''), 'extra_info': 'This should include the http:// part of the URL'},
+            {'name': 'type', 'control': 'select', 'options': harvest_list, 'label': _('Source type'), 'placeholder': _(''), 'extra_info': 'Which type of source does the URL above represent? '},
+            {'name': 'title', 'control': 'input', 'label': _('Title'), 'placeholder': _(''), 'extra_info': 'This will be shown as the datasets source.'},
+            {'name': 'description', 'control': 'textarea', 'label': _('Description'), 'placeholder': _(''), 'extra_info':'You can add your own notes here about what the URL above represents to remind you later.'},]
+
+        if c.groups:
+            pubs = []
+            for group in c.groups:
+                pubs.append({'text':group['title'], 'value': group['id']})
+            items.append({'name': 'publisher_id', 'control': 'select', 'options': pubs, 'label': _('Publisher'), 'placeholder': _('')})
+
+        items += [
+            {'name': 'config', 'control': 'textarea', 'label': _('Configuration'), 'placeholder': _('About page text'), 'extra_info': ''},
+            {'name': 'active', 'control': 'select', 'options': states, 'label': _('State'), 'placeholder': _(''), 'extra_text': ''},
+        ]
+
+        return items
