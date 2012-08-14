@@ -5,6 +5,16 @@
 {% block breadcrumb_content %}
 {% endblock %}
 
+{% block styles %}
+  {{ super() }}
+  <link type="text/css" rel="stylesheet" media="all" href="/ckanext/harvest/style.css" />
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>$("#show-inactive-sources").click(function(){$("#harvest-sources .inactive").toggle()});</script>
+{% endblock %}
+
 {% block primary %}
   <article class="module">
     <div class="module-content">
@@ -20,8 +30,8 @@
 
       {% if c.sources %}
         <div id="show-inactive-sources-content">
+          <label for="show-inactive-sources">Show inactive sources</label>
           <input type="checkbox" id="show-inactive-sources" />
-          <label for="show-inactive-sources"> Show inactive sources</label>
         </div>
 
         <table id="harvest-sources" class="table table-bordered table-condensed ${'publishers' if c.publisher_auth else ''}" >
@@ -49,9 +59,9 @@
             {% endif %}
             {% set old_publisher =  source['publisher_id'] %}
             <tr class="{{ 'active' if source.active else 'inactive' }}">
-              <td><a href="harvest/{{ source.id }}"><img src="ckanext/harvest/images/icons/source_view.png" alt="View" title="View" /></a></td>
-              <td><a href="harvest/edit/{{ source.id }}"><img src="ckanext/harvest/images/icons/source_edit.png" alt="Edit" title="Edit" /></a></td>
-              <td><a href="harvest/refresh/{{ source.id }}"><img src="ckanext/harvest/images/icons/source_refresh.png" alt="Refresh" title="Refresh" /></a></td>
+              <td class="action"><a href="harvest/{{ source.id }}"><img src="ckanext/harvest/images/icons/source_view.png" alt="View" title="View" /></a></td>
+              <td class="action"><a href="harvest/edit/{{ source.id }}"><img src="ckanext/harvest/images/icons/source_edit.png" alt="Edit" title="Edit" /></a></td>
+              <td class="action"><a href="harvest/refresh/{{ source.id }}"><img src="ckanext/harvest/images/icons/source_refresh.png" alt="Refresh" title="Refresh" /></a></td>
               <td title="{{ source.url }}">{{ source.url | truncate(50) }}</td>
               <td>{{ source.type }}</td>
               <td class="state">{{ source.active }}</td>
