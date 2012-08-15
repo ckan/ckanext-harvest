@@ -273,7 +273,7 @@ class ViewController(BaseController):
             harvest_list.append({'text':harvester['title'], 'value': harvester['name']})
 
         items = [
-            {'name': 'url', 'control': 'input', 'label': _('URL for source of metadata'), 'placeholder': _(''), 'extra_info': 'This should include the http:// part of the URL'},
+            {'name': 'url', 'control': 'input', 'label': _('URL'), 'placeholder': _(''), 'extra_info': 'This should include the http:// part of the URL'},
             {'name': 'type', 'control': 'select', 'options': harvest_list, 'label': _('Source type'), 'placeholder': _(''), 'extra_info': 'Which type of source does the URL above represent? '},
             {'name': 'title', 'control': 'input', 'label': _('Title'), 'placeholder': _(''), 'extra_info': 'This will be shown as the datasets source.'},
             {'name': 'description', 'control': 'textarea', 'label': _('Description'), 'placeholder': _(''), 'extra_info':'You can add your own notes here about what the URL above represents to remind you later.'},]

@@ -95,3 +95,7 @@ body.index.ViewController .content-outer {
 #harvest-source-details th {
   width: 33%;
 }
+
+#source-new {
+  margin-top: 30px;
+}
