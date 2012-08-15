@@ -230,8 +230,14 @@ class ViewController(BaseController):
         except NotAuthorized,e:
             abort(401,self.not_auth_message)
         except Exception, e:
-            msg = 'An error occurred: [%s]' % e.message
-            h.flash_error(msg)
+            if 'Can not create jobs on inactive sources' in str(e):
+                h.flash_error('Cannot create new harvest jobs on inactive sources. '
+                + 'Please first change the status to \'active\'')
+            elif 'There already is an unrun job for this source' in str(e):
+                h.flash_error('A harvest job has already been scheduled for this source')
+            else:
+                msg = 'An error occurred: [%s]' % str(e)
+                h.flash_error(msg)
 
         redirect(h.url_for('harvest'))
 
