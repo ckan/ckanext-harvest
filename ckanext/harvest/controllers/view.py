@@ -285,7 +285,7 @@ class ViewController(BaseController):
             items.append({'name': 'publisher_id', 'control': 'select', 'options': pubs, 'label': _('Publisher'), 'placeholder': _('')})
 
         items += [
-            {'name': 'config', 'control': 'textarea', 'label': _('Configuration'), 'placeholder': _('About page text'), 'extra_info': ''},
+            {'name': 'config', 'control': 'textarea', 'label': _('Configuration'), 'placeholder': _(''), 'extra_info': ''},
             {'name': 'active', 'control': 'select', 'options': states, 'label': _('State'), 'placeholder': _(''), 'extra_text': ''},
         ]
 
