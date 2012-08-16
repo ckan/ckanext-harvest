@@ -233,7 +233,7 @@ class ViewController(BaseController):
         except Exception, e:
             if 'Can not create jobs on inactive sources' in str(e):
                 h.flash_error(_('Cannot create new harvest jobs on inactive sources.'
-                                 + 'First, please change the source status to \'active\'.'))
+                                 + ' First, please change the source status to \'active\'.'))
             elif 'There already is an unrun job for this source' in str(e):
                 h.flash_notice(_('A harvest job has already been scheduled for this source'))
             else:
