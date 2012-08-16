@@ -232,8 +232,8 @@ class ViewController(BaseController):
             abort(401,self.not_auth_message)
         except Exception, e:
             if 'Can not create jobs on inactive sources' in str(e):
-                h.flash_notice(_('Cannot create new harvest jobs on inactive sources. '
-                + 'Please first change the status to \'active\''))
+                h.flash_error(_('Cannot create new harvest jobs on inactive sources.'
+                                 + 'First, please change the source status to \'active\'.'))
             elif 'There already is an unrun job for this source' in str(e):
                 h.flash_notice(_('A harvest job has already been scheduled for this source'))
             else:
