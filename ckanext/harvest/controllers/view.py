@@ -16,6 +16,7 @@ from ckan.logic import NotFound, ValidationError, get_action, NotAuthorized
 from ckanext.harvest.logic.schema import harvest_source_form_schema
 
 from ckan.lib.helpers import Page,pager_url
+import ckan.plugins as p
 
 import logging
 log = logging.getLogger(__name__)
@@ -275,12 +276,20 @@ class ViewController(BaseController):
                   {'text': 'withdrawn', 'value': 'False'},]
 
         harvest_list = []
+        harvest_descriptions = p.toolkit.literal('<ul>')
         for harvester in harvesters_info:
             harvest_list.append({'text':harvester['title'], 'value': harvester['name']})
+            harvest_descriptions += p.toolkit.literal('<li><span class="harvester-title">')
+            harvest_descriptions += harvester['title']
+            harvest_descriptions += p.toolkit.literal('</span>: ')
+            harvest_descriptions += harvester['description']
+            harvest_descriptions += p.toolkit.literal('</li>')
+        harvest_descriptions += p.toolkit.literal('</ul>')
 
         items = [
             {'name': 'url', 'control': 'input', 'label': _('URL'), 'placeholder': _(''), 'extra_info': 'This should include the http:// part of the URL'},
             {'name': 'type', 'control': 'select', 'options': harvest_list, 'label': _('Source type'), 'placeholder': _(''), 'extra_info': 'Which type of source does the URL above represent? '},
+            {'control': 'html', 'html': harvest_descriptions},
             {'name': 'title', 'control': 'input', 'label': _('Title'), 'placeholder': _(''), 'extra_info': 'This will be shown as the datasets source.'},
             {'name': 'description', 'control': 'textarea', 'label': _('Description'), 'placeholder': _(''), 'extra_info':'You can add your own notes here about what the URL above represents to remind you later.'},]
 
