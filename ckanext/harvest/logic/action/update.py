@@ -47,6 +47,8 @@ def harvest_source_update(context,data_dict):
     fields = ['url','title','type','description','user_id','publisher_id']
     for f in fields:
         if f in data and data[f] is not None:
+            if f == 'url':
+                data[f] = data[f].strip()
             source.__setattr__(f,data[f])
 
     if 'active' in data_dict:

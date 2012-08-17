@@ -29,7 +29,7 @@ def harvest_source_create(context,data_dict):
         raise ValidationError(errors,_error_summary(errors))
 
     source = HarvestSource()
-    source.url = data['url']
+    source.url = data['url'].strip()
     source.type = data['type']
 
     opt = ['active','title','description','user_id','publisher_id','config']
