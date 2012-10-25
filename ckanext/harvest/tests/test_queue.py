@@ -1,5 +1,5 @@
 import ckanext.harvest.model as harvest_model
-from ckanext.harvest.model import HarvestObject
+from ckanext.harvest.model import HarvestObject, HarvestObjectExtra
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.queue as queue
 from ckan.plugins.core import SingletonPlugin, implements
@@ -17,6 +17,7 @@ class TestHarvester(SingletonPlugin):
 
         if harvest_job.source.url == 'basic_test':
             obj = HarvestObject(guid = 'test1', job = harvest_job)
+            obj.extras.append(HarvestObjectExtra(key='key', value='value'))
             obj2 = HarvestObject(guid = 'test2', job = harvest_job)
             obj.add()
             obj2.save() # this will commit both
@@ -25,11 +26,17 @@ class TestHarvester(SingletonPlugin):
         return []
 
     def fetch_stage(self, harvest_object):
+        assert harvest_object.state == "FETCH"
+        assert harvest_object.fetch_started != None
         harvest_object.content = json.dumps({'name': harvest_object.guid})
         harvest_object.save()
         return True
 
     def import_stage(self, harvest_object):
+        assert harvest_object.state == "IMPORT"
+        assert harvest_object.fetch_finished != None
+        assert harvest_object.import_started != None
+
         user = logic.get_action('get_site_user')(
             {'model': model, 'ignore_auth': True}, {}
         )['name']
@@ -91,7 +98,15 @@ class TestHarvestQueue(object):
         reply = consumer.basic_get(queue='ckan.harvest.gather')
         queue.gather_callback(consumer, *reply)
 
+        all_objects = model.Session.query(HarvestObject).all()
+
+        assert len(all_objects) == 2
+        assert all_objects[0].state == 'WAITING'
+        assert all_objects[1].state == 'WAITING'
+        
+
         assert len(model.Session.query(HarvestObject).all()) == 2
+        assert len(model.Session.query(HarvestObjectExtra).all()) == 1
         
         ## do twice as two harvest objects
         reply = consumer.basic_get(queue='ckan.harvest.fetch')
@@ -101,8 +116,8 @@ class TestHarvestQueue(object):
 
         assert len(model.Session.query(model.Package).all()) == 2
         
-
-
-
-
+        all_objects = model.Session.query(HarvestObject).all()
+        assert len(all_objects) == 2
+        assert all_objects[0].state == 'COMPLETE'
+        assert all_objects[1].state == 'COMPLETE'
 
