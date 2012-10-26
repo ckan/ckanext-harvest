@@ -176,6 +176,7 @@ def define_harvester_tables():
         Column('user_id', types.UnicodeText, default=u''),
         Column('publisher_id', types.UnicodeText, default=u''),
         Column('frequency', types.UnicodeText, default=u''),
+        Column('next_run', types.DateTime),
     )
     # Was harvesting_job
     harvest_job_table = Table('harvest_job', metadata,
@@ -365,6 +366,7 @@ ALTER TABLE harvest_object
 
 ALTER TABLE harvest_source
 	ADD COLUMN frequency text;
+	ADD COLUMN next_run timestamp without time zone,
 
 ALTER TABLE harvest_object_extra
 	ADD CONSTRAINT harvest_object_extra_pkey PRIMARY KEY (id);
