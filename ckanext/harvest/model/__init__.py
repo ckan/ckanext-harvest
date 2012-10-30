@@ -36,6 +36,7 @@ harvest_job_table = None
 harvest_object_table = None
 harvest_gather_error_table = None
 harvest_object_error_table = None
+harvest_object_extra_table = None
 
 def setup():
 
@@ -53,6 +54,7 @@ def setup():
             harvest_object_table.create()
             harvest_gather_error_table.create()
             harvest_object_error_table.create()
+            harvest_object_extra_table.create()
 
             log.debug('Harvest tables created')
         else:
@@ -64,6 +66,9 @@ def setup():
             if not 'title' in [column['name'] for column in columns]:
                 log.debug('Harvest tables need to be updated')
                 migrate_v2()
+            if not 'frequency' in [column['name'] for column in columns]:
+                log.debug('Harvest tables need to be updated')
+                migrate_v3()
 
     else:
         log.debug('Harvest table creation deferred')
@@ -123,6 +128,9 @@ class HarvestObject(HarvestDomainObject):
 
     '''
 
+class HarvestObjectExtra(HarvestDomainObject):
+    '''Extra key value data for Harvest objects'''
+
 class HarvestGatherError(HarvestDomainObject):
     '''Gather errors are raised during the **gather** stage of a harvesting
        job.
@@ -152,6 +160,7 @@ def define_harvester_tables():
     global harvest_source_table
     global harvest_job_table
     global harvest_object_table
+    global harvest_object_extra_table
     global harvest_gather_error_table
     global harvest_object_error_table
 
@@ -166,6 +175,8 @@ def define_harvester_tables():
         Column('active',types.Boolean,default=True),
         Column('user_id', types.UnicodeText, default=u''),
         Column('publisher_id', types.UnicodeText, default=u''),
+        Column('frequency', types.UnicodeText, default=u''),
+        Column('next_run', types.DateTime),
     )
     # Was harvesting_job
     harvest_job_table = Table('harvest_job', metadata,
@@ -185,12 +196,24 @@ def define_harvester_tables():
         Column('fetch_started', types.DateTime),
         Column('content', types.UnicodeText, nullable=True),
         Column('fetch_finished', types.DateTime),
+        Column('import_started', types.DateTime),
+        Column('import_finished', types.DateTime),
+        Column('state', types.UnicodeText, default=u'WAITING'),
         Column('metadata_modified_date', types.DateTime),
         Column('retry_times',types.Integer),
         Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
         Column('harvest_source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
         Column('package_id', types.UnicodeText, ForeignKey('package.id'), nullable=True),
     )
+
+    # New table
+    harvest_object_extra_table = Table('harvest_object_extra', metadata,
+        Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
+        Column('harvest_object_id', types.UnicodeText, ForeignKey('harvest_object.id')),
+        Column('key',types.UnicodeText),
+        Column('value', types.UnicodeText),
+    )
+
     # New table
     harvest_gather_error_table = Table('harvest_gather_error',metadata,
         Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
@@ -270,6 +293,17 @@ def define_harvester_tables():
         },
     )
 
+    mapper(
+        HarvestObjectExtra,
+        harvest_object_extra_table,
+        properties={
+            'object':relation(
+                HarvestObject,
+                backref='extras'
+            ),
+        },
+    )
+
     event.listen(HarvestObject, 'before_insert', harvest_object_before_insert_listener)
 
 def migrate_v2():
@@ -312,3 +346,38 @@ def migrate_v2():
 
     Session.commit()
     log.info('Harvest tables migrated to v2')
+
+
+def migrate_v3():
+    log.debug('Migrating harvest tables to v3. This may take a while...')
+    conn = Session.connection()
+
+    statement =  """CREATE TABLE harvest_object_extra (
+	id text NOT NULL,
+	harvest_object_id text,
+	"key" text,
+	"value" text
+);
+
+ALTER TABLE harvest_object
+	ADD COLUMN import_started timestamp without time zone,
+	ADD COLUMN import_finished timestamp without time zone,
+	ADD COLUMN "state" text;
+
+ALTER TABLE harvest_source
+	ADD COLUMN frequency text,
+    ADD COLUMN next_run timestamp without time zone;
+
+ALTER TABLE harvest_object_extra
+	ADD CONSTRAINT harvest_object_extra_pkey PRIMARY KEY (id);
+
+ALTER TABLE harvest_object_extra
+	ADD CONSTRAINT harvest_object_extra_harvest_object_id_fkey FOREIGN KEY (harvest_object_id) REFERENCES harvest_object(id);
+
+UPDATE harvest_object set state = 'COMPLETE';
+
+"""
+    conn.execute(statement)
+    Session.commit()
+    log.info('Harvest tables migrated to v3')
+

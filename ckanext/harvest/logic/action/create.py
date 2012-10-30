@@ -2,6 +2,7 @@ import re
 import logging
 
 from ckan.logic import NotFound, ValidationError, check_access
+from ckanext.harvest.logic import HarvestJobExists
 from ckan.lib.navl.dictization_functions import validate
 
 from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject)
@@ -32,7 +33,8 @@ def harvest_source_create(context,data_dict):
     source.url = data['url'].strip()
     source.type = data['type']
 
-    opt = ['active','title','description','user_id','publisher_id','config']
+    opt = ['active','title','description','user_id',
+           'publisher_id','config', 'frequency']
     for o in opt:
         if o in data and data[o] is not None:
             source.__setattr__(o,data[o])
@@ -44,6 +46,7 @@ def harvest_source_create(context,data_dict):
     log.info('Harvest source created: %s', source.id)
 
     return harvest_source_dictize(source,context)
+
 
 def harvest_job_create(context,data_dict):
     log.info('Harvest job create: %r', data_dict)
@@ -70,7 +73,7 @@ def harvest_job_create(context,data_dict):
     exists = harvest_job_list(context,data_dict)
     if len(exists):
         log.warn('There is already an unrun job %r for this source %s', exists, source_id)
-        raise Exception('There already is an unrun job for this source')
+        raise HarvestJobExists('There already is an unrun job for this source')
 
     job = HarvestJob()
     job.source = source

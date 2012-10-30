@@ -2,6 +2,7 @@ import logging
 from sqlalchemy import or_
 from ckan.authz import Authorizer
 from ckan.model import User
+import datetime
 
 from ckan.plugins import PluginImplementations
 from ckanext.harvest.interfaces import IHarvester
@@ -153,12 +154,21 @@ def _get_sources_for_user(context,data_dict):
     user = context.get('user','')
 
     only_active = data_dict.get('only_active',False)
+    only_to_run = data_dict.get('only_to_run',False)
 
     query = session.query(HarvestSource) \
                 .order_by(HarvestSource.created.desc())
 
     if only_active:
         query = query.filter(HarvestSource.active==True) \
+
+    if only_to_run:
+        query = query.filter(or_(HarvestSource.frequency!=None,
+                                 HarvestSource.frequency!='')
+                            )
+        query = query.filter(or_(HarvestSource.next_run<=datetime.datetime.utcnow(),
+                                 HarvestSource.next_run==None)
+                            )
 
     # Sysadmins will get all sources
     if not Authorizer().is_sysadmin(user):

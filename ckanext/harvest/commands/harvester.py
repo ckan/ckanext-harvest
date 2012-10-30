@@ -15,7 +15,7 @@ class Harvester(CkanCommand):
       harvester initdb
         - Creates the necessary tables in the database
 
-      harvester source {url} {type} [{active}] [{user-id}] [{publisher-id}]
+      harvester source {url} {type} [{config}] [{active}] [{user-id}] [{publisher-id}] [{frequency}]
         - create new harvest source
 
       harvester rmsource {id}
@@ -64,7 +64,7 @@ class Harvester(CkanCommand):
 
     summary = __doc__.split('\n')[0]
     usage = __doc__
-    max_args = 6
+    max_args = 8
     min_args = 0
 
     def __init__(self,name):
@@ -169,11 +169,18 @@ class Harvester(CkanCommand):
             publisher_id = unicode(self.args[6])
         else:
             publisher_id = u''
+        if len(self.args) >= 8:
+            frequency = unicode(self.args[7])
+            if not frequency:
+                frequency = None
+        else:
+            frequency = None
         try:
             data_dict = {
                     'url':url,
                     'type':type,
                     'config':config,
+                    'frequency':frequency,
                     'active':active,
                     'user_id':user_id,
                     'publisher_id':publisher_id}
@@ -186,9 +193,11 @@ class Harvester(CkanCommand):
             sources = get_action('harvest_source_list')(context,{})
             self.print_there_are('harvest source', sources)
 
-            # Create a harvest job for the new source
-            get_action('harvest_job_create')(context,{'source_id':source['id']})
-            print 'A new Harvest Job for this source has also been created'
+            # Create a harvest job for the new source if not regular job.
+            if not data_dict['frequency']:
+                get_action('harvest_job_create')(context,{'source_id':source['id']})
+                print 'A new Harvest Job for this source has also been created'
+
         except ValidationError,e:
            print 'An error occurred:'
            print str(e.error_dict)
@@ -278,6 +287,7 @@ class Harvester(CkanCommand):
         print '   active: %s' % source['active']
         print '     user: %s' % source['user_id']
         print 'publisher: %s' % source['publisher_id']
+        print 'frequency: %s' % source['frequency']
         print '     jobs: %s' % source['status']['job_count']
         print ''
 
