@@ -365,8 +365,8 @@ ALTER TABLE harvest_object
 	ADD COLUMN "state" text;
 
 ALTER TABLE harvest_source
-	ADD COLUMN frequency text;
-	ADD COLUMN next_run timestamp without time zone,
+	ADD COLUMN frequency text,
+    ADD COLUMN next_run timestamp without time zone;
 
 ALTER TABLE harvest_object_extra
 	ADD CONSTRAINT harvest_object_extra_pkey PRIMARY KEY (id);
@@ -374,7 +374,7 @@ ALTER TABLE harvest_object_extra
 ALTER TABLE harvest_object_extra
 	ADD CONSTRAINT harvest_object_extra_harvest_object_id_fkey FOREIGN KEY (harvest_object_id) REFERENCES harvest_object(id);
 
-UPDATE harvest_object set state = 'COMPLETE'
+UPDATE harvest_object set state = 'COMPLETE';
 
 """
     conn.execute(statement)
