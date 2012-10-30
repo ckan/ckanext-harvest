@@ -41,7 +41,7 @@ class TestHarvester(SingletonPlugin):
             {'model': model, 'ignore_auth': True}, {}
         )['name']
         logic.get_action('package_create')(
-            {'model': model, 'session': model.Session, 
+            {'model': model, 'session': model.Session,
              'user': user, 'api_version': 3},
             json.loads(harvest_object.content)
         )
@@ -57,7 +57,7 @@ class TestHarvestQueue(object):
     def teardown_class(cls):
         model.repo.rebuild_db()
 
-    
+
     def test_01_basic_harvester(cls):
 
         ### make sure queues/exchanges are created first and are empty
@@ -71,7 +71,7 @@ class TestHarvestQueue(object):
             {'model': model, 'ignore_auth': True}, {}
         )['name']
 
-        context = {'model': model, 'session': model.Session, 
+        context = {'model': model, 'session': model.Session,
                    'user': user, 'api_version': 3}
 
         harvest_source = logic.get_action('harvest_source_create')(
@@ -82,7 +82,7 @@ class TestHarvestQueue(object):
         assert harvest_source['type'] == 'test', harvest_source
         assert harvest_source['url'] == 'basic_test', harvest_source
 
-        
+
         harvest_job = logic.get_action('harvest_job_create')(
             context,
             {'source_id':harvest_source['id']}
@@ -103,11 +103,11 @@ class TestHarvestQueue(object):
         assert len(all_objects) == 2
         assert all_objects[0].state == 'WAITING'
         assert all_objects[1].state == 'WAITING'
-        
+
 
         assert len(model.Session.query(HarvestObject).all()) == 2
         assert len(model.Session.query(HarvestObjectExtra).all()) == 1
-        
+
         ## do twice as two harvest objects
         reply = consumer.basic_get(queue='ckan.harvest.fetch')
         queue.fetch_callback(consumer, *reply)
@@ -115,7 +115,7 @@ class TestHarvestQueue(object):
         queue.fetch_callback(consumer, *reply)
 
         assert len(model.Session.query(model.Package).all()) == 2
-        
+
         all_objects = model.Session.query(HarvestObject).all()
         assert len(all_objects) == 2
         assert all_objects[0].state == 'COMPLETE'
