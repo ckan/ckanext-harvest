@@ -26,7 +26,7 @@ VIRTUAL_HOST = '/'
 EXCHANGE_TYPE = 'direct'
 EXCHANGE_NAME = 'ckan.harvest'
 
-def get_carrot_connection():
+def get_connection():
 
     try:
         port = int(config.get('ckan.harvest.mq.port', PORT))
@@ -66,7 +66,7 @@ class Publisher(object):
         self.connection.close()
 
 def get_publisher(routing_key):
-    connection = get_carrot_connection()
+    connection = get_connection()
     channel = connection.channel()
     channel.exchange_declare(exchange=EXCHANGE_NAME, durable=True)
     return Publisher(connection,
@@ -77,7 +77,7 @@ def get_publisher(routing_key):
 
 def get_consumer(queue_name, routing_key):
 
-    connection = get_carrot_connection()
+    connection = get_connection()
     channel = connection.channel()
 
     channel.exchange_declare(exchange=EXCHANGE_NAME, durable=True)
