@@ -1,5 +1,5 @@
 import logging
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 from ckan.authz import Authorizer
 from ckan.model import User
 import datetime
@@ -163,7 +163,7 @@ def _get_sources_for_user(context,data_dict):
         query = query.filter(HarvestSource.active==True) \
 
     if only_to_run:
-        query = query.filter(or_(HarvestSource.frequency!=None,
+        query = query.filter(and_(HarvestSource.frequency!=None,
                                  HarvestSource.frequency!='')
                             )
         query = query.filter(or_(HarvestSource.next_run<=datetime.datetime.utcnow(),
