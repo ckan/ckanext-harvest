@@ -177,7 +177,9 @@ class ViewController(BaseController):
 
     def _check_data_dict(self, data_dict):
         '''Check if the return data is correct'''
-        surplus_keys_schema = ['id','publisher_id','user_id','config','save']
+
+        # TODO: remove frequency once it is added to the frontend!
+        surplus_keys_schema = ['id','publisher_id','user_id','config','save','frequency']
         schema_keys = harvest_source_form_schema().keys()
         keys_in_schema = set(schema_keys) - set(surplus_keys_schema)
 
