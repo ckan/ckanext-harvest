@@ -175,7 +175,7 @@ def define_harvester_tables():
         Column('active',types.Boolean,default=True),
         Column('user_id', types.UnicodeText, default=u''),
         Column('publisher_id', types.UnicodeText, default=u''),
-        Column('frequency', types.UnicodeText, default=u''),
+        Column('frequency', types.UnicodeText, default=u'MANUAL'),
         Column('next_run', types.DateTime),
     )
     # Was harvesting_job
@@ -375,6 +375,7 @@ ALTER TABLE harvest_object_extra
 	ADD CONSTRAINT harvest_object_extra_harvest_object_id_fkey FOREIGN KEY (harvest_object_id) REFERENCES harvest_object(id);
 
 UPDATE harvest_object set state = 'COMPLETE';
+UPDATE harvest_source set frequency = 'MANUAL';
 
 """
     conn.execute(statement)

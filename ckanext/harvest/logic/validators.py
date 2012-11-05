@@ -100,6 +100,8 @@ def harvest_source_active_validator(value,context):
     return bool(value)
 
 def harvest_source_frequency_exists(value):
-    if value.upper() not in ['MONTHLY','ALWAYS','WEEKLY','BIWEEKLY','DAILY']:
+    if value == '':
+        value = 'MANUAL'
+    if value.upper() not in ['MONTHLY','ALWAYS','WEEKLY','BIWEEKLY','DAILY','MANUAL']:
         raise Invalid('Frequency %s not recognised' % value)
     return value.upper()

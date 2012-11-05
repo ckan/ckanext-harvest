@@ -172,9 +172,9 @@ class Harvester(CkanCommand):
         if len(self.args) >= 8:
             frequency = unicode(self.args[7])
             if not frequency:
-                frequency = None
+                frequency = 'MANUAL'
         else:
-            frequency = None
+            frequency = 'MANUAL'
         try:
             data_dict = {
                     'url':url,

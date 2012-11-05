@@ -163,9 +163,7 @@ def _get_sources_for_user(context,data_dict):
         query = query.filter(HarvestSource.active==True) \
 
     if only_to_run:
-        query = query.filter(and_(HarvestSource.frequency!=None,
-                                 HarvestSource.frequency!='')
-                            )
+        query = query.filter(HarvestSource.frequency!='MANUAL')
         query = query.filter(or_(HarvestSource.next_run<=datetime.datetime.utcnow(),
                                  HarvestSource.next_run==None)
                             )

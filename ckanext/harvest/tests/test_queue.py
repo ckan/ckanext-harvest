@@ -15,7 +15,7 @@ class TestHarvester(SingletonPlugin):
 
     def gather_stage(self, harvest_job):
 
-        if harvest_job.source.url == 'basic_test':
+        if harvest_job.source.url.startswith('basic_test'):
             obj = HarvestObject(guid = 'test1', job = harvest_job)
             obj.extras.append(HarvestObjectExtra(key='key', value='value'))
             obj2 = HarvestObject(guid = 'test2', job = harvest_job)
