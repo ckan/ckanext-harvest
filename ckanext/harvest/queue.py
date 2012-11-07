@@ -47,6 +47,11 @@ def get_connection():
     
     return pika.BlockingConnection(parameters)
 
+def purge_queues():
+    connection = get_connection()
+    channel = connection.channel()
+    channel.queue_purge(queue='ckan.harvest.gather')
+    channel.queue_purge(queue='ckan.harvest.fetch')
 
 class Publisher(object):
     def __init__(self, connection, channel, exchange, routing_key):
