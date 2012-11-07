@@ -176,6 +176,10 @@ def fetch_callback(channel, method, header, body):
                         if obj.state != "ERROR":
                             obj.state = "COMPLETE"
                         obj.save()
+                    else:
+                        obj.state = "ERROR"
+                        obj.save()
+
 
 
 
