@@ -288,7 +288,7 @@ def define_harvester_tables():
         properties={
             'object':relation(
                 HarvestObject,
-                backref='errors'
+                backref=backref('errors', cascade='all,delete-orphan')
             ),
         },
     )
@@ -299,7 +299,7 @@ def define_harvester_tables():
         properties={
             'object':relation(
                 HarvestObject,
-                backref='extras'
+                backref=backref('extras', cascade='all,delete-orphan')
             ),
         },
     )
