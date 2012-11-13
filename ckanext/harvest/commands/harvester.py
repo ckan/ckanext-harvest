@@ -40,7 +40,7 @@ class Harvester(CkanCommand):
       harvester fetch_consumer
         - starts the consumer for the fetching queue
 
-      harvester perge_queues
+      harvester purge_queues
         - removes all jobs from fetch and gather queue
 
       harvester [-j] [--segments={segments}] import [{source-id}]
