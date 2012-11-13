@@ -252,7 +252,15 @@ class ViewController(BaseController):
 
             # Check content type. It will probably be either XML or JSON
             try:
-                content = re.sub('<\?xml(.*)\?>','', obj['content'])
+
+                if obj['content']:
+                    content = obj['content']
+                elif 'original_document' in obj['extras']:
+                    content = obj['extras']['original_document']
+                else:
+                    abort(404,_('No content found'))
+
+                content = re.sub('<\?xml(.*)\?>','',content)
                 etree.fromstring(content)
                 response.content_type = 'application/xml'
             except XMLSyntaxError:
@@ -262,8 +270,8 @@ class ViewController(BaseController):
                 except ValueError:
                     pass
 
-            response.headers['Content-Length'] = len(obj['content'])
-            return obj['content']
+            response.headers['Content-Length'] = len(content)
+            return content
         except NotFound:
             abort(404,_('Harvest object not found'))
         except NotAuthorized,e:

@@ -44,9 +44,12 @@ def harvest_object_dictize(obj, context):
         out['package'] = obj.package.id
 
     out['errors'] = []
-
     for error in obj.errors:
         out['errors'].append(error.as_dict())
+
+    out['extras'] = {}
+    for extra in obj.extras:
+        out['extras'][extra.key] = extra.value
 
     return out
 
