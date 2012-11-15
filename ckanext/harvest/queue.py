@@ -190,13 +190,11 @@ def fetch_callback(channel, method, header, body):
 
 def get_gather_consumer():
     consumer = get_consumer('ckan.harvest.gather','harvest_job_id')
-    consumer.basic_consume(gather_callback, queue='ckan.harvest.gather')
     log.debug('Gather queue consumer registered')
     return consumer
 
 def get_fetch_consumer():
     consumer = get_consumer('ckan.harvest.fetch','harvest_object_id')
-    consumer.basic_consume(fetch_callback, queue='ckan.harvest.fetch')
     log.debug('Fetch queue consumer registered')
     return consumer
 
