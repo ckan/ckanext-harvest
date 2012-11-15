@@ -158,6 +158,14 @@ def fetch_callback(channel, method, header, body):
         channel.basic_ack(method.delivery_tag)
         return False
 
+    obj.retry_times += 1
+    obj.save()
+
+    if obj.retry_times >= 5:
+        log.error('Too many consecutive retries for object {0}'.format(obj.id))
+        channel.basic_ack(method.delivery_tag)
+        return False
+
     # Send the harvest object to the plugins that implement
     # the Harvester interface, only if the source type
     # matches
@@ -171,7 +179,6 @@ def fetch_callback(channel, method, header, body):
             success = harvester.fetch_stage(obj)
             obj.fetch_finished = datetime.datetime.now()
             obj.save()
-            #TODO: retry times?
             if success:
                 # If no errors where found, call the import method
                 obj.import_started = datetime.datetime.now()

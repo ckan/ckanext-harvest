@@ -200,7 +200,7 @@ def define_harvester_tables():
         Column('import_finished', types.DateTime),
         Column('state', types.UnicodeText, default=u'WAITING'),
         Column('metadata_modified_date', types.DateTime),
-        Column('retry_times',types.Integer),
+        Column('retry_times',types.Integer, default=0),
         Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
         Column('harvest_source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
         Column('package_id', types.UnicodeText, ForeignKey('package.id'), nullable=True),
@@ -375,6 +375,7 @@ ALTER TABLE harvest_object_extra
 	ADD CONSTRAINT harvest_object_extra_harvest_object_id_fkey FOREIGN KEY (harvest_object_id) REFERENCES harvest_object(id);
 
 UPDATE harvest_object set state = 'COMPLETE';
+UPDATE harvest_object set retry_times = 0;
 UPDATE harvest_source set frequency = 'MANUAL';
 
 """
