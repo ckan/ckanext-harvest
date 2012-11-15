@@ -44,7 +44,7 @@ def get_connection():
                                            credentials=credentials,
                                            frame_max=10000)
     log.debug("pika connection using %s" % parameters.__dict__)
-    
+
     return pika.BlockingConnection(parameters)
 
 def purge_queues():
@@ -146,47 +146,47 @@ def fetch_callback(channel, method, header, body):
     try:
         id = json.loads(body)['harvest_object_id']
         log.info('Received harvest object id: %s' % id)
-
-        try:
-            obj = HarvestObject.get(id)
-        except:
-            log.error('Harvest object does not exist: %s' % id)
-        else:
-            # Send the harvest object to the plugins that implement
-            # the Harvester interface, only if the source type
-            # matches
-            for harvester in PluginImplementations(IHarvester):
-                if harvester.info()['name'] == obj.source.type:
-
-                    # See if the plugin can fetch the harvest object
-                    obj.fetch_started = datetime.datetime.now()
-                    obj.state = "FETCH"
-                    obj.save()
-                    success = harvester.fetch_stage(obj)
-                    obj.fetch_finished = datetime.datetime.now()
-                    obj.save()
-                    #TODO: retry times?
-                    if success:
-                        # If no errors where found, call the import method
-                        obj.import_started = datetime.datetime.now()
-                        obj.state = "IMPORT"
-                        obj.save()
-                        harvester.import_stage(obj)
-                        obj.import_finished = datetime.datetime.now()
-                        if obj.state != "ERROR":
-                            obj.state = "COMPLETE"
-                        obj.save()
-                    else:
-                        obj.state = "ERROR"
-                        obj.save()
-
-
-
-
     except KeyError:
         log.error('No harvest object id received')
-    finally:
         channel.basic_ack(method.delivery_tag)
+        return False
+
+
+    obj = HarvestObject.get(id)
+    if not obj:
+        log.error('Harvest object does not exist: %s' % id)
+        channel.basic_ack(method.delivery_tag)
+        return False
+
+    # Send the harvest object to the plugins that implement
+    # the Harvester interface, only if the source type
+    # matches
+    for harvester in PluginImplementations(IHarvester):
+        if harvester.info()['name'] == obj.source.type:
+
+            # See if the plugin can fetch the harvest object
+            obj.fetch_started = datetime.datetime.now()
+            obj.state = "FETCH"
+            obj.save()
+            success = harvester.fetch_stage(obj)
+            obj.fetch_finished = datetime.datetime.now()
+            obj.save()
+            #TODO: retry times?
+            if success:
+                # If no errors where found, call the import method
+                obj.import_started = datetime.datetime.now()
+                obj.state = "IMPORT"
+                obj.save()
+                harvester.import_stage(obj)
+                obj.import_finished = datetime.datetime.now()
+                if obj.state != "ERROR":
+                    obj.state = "COMPLETE"
+                obj.save()
+            else:
+                obj.state = "ERROR"
+                obj.save()
+
+    channel.basic_ack(method.delivery_tag)
 
 def get_gather_consumer():
     consumer = get_consumer('ckan.harvest.gather','harvest_job_id')
