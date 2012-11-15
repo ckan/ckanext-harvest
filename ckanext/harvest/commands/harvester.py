@@ -114,7 +114,7 @@ class Harvester(CkanCommand):
             from ckanext.harvest.queue import get_gather_consumer, gather_callback
             logging.getLogger('amqplib').setLevel(logging.INFO)
             consumer = get_gather_consumer()
-            for method, header, body in consumer.consume(queue='ckan.harvest.fetch'):
+            for method, header, body in consumer.consume(queue='ckan.harvest.gather'):
                gather_callback(consumer, method, header, body)
         elif cmd == 'fetch_consumer':
             import logging
