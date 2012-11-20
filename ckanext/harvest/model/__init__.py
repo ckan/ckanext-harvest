@@ -225,8 +225,9 @@ def define_harvester_tables():
     harvest_object_error_table = Table('harvest_object_error',metadata,
         Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
         Column('harvest_object_id', types.UnicodeText, ForeignKey('harvest_object.id')),
-        Column('message',types.UnicodeText),
+        Column('message', types.UnicodeText),
         Column('stage', types.UnicodeText),
+        Column('line', types.Integer),
         Column('created', types.DateTime, default=datetime.datetime.utcnow),
     )
 
