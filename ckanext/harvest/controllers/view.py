@@ -260,14 +260,14 @@ class ViewController(BaseController):
                 else:
                     abort(404,_('No content found'))
 
-                content = re.sub('<\?xml(.*)\?>','',content)
-                etree.fromstring(content)
-                response.content_type = 'application/xml'
+                etree.fromstring(re.sub('<\?xml(.*)\?>','',content))
+                response.content_type = 'application/xml; charset=utf-8'
             except XMLSyntaxError:
                 try:
                     json.loads(obj['content'])
-                    response.content_type = 'application/json'
+                    response.content_type = 'application/json; charset=utf-8'
                 except ValueError:
+                    # Just return whatever it is
                     pass
 
             response.headers['Content-Length'] = len(content)
