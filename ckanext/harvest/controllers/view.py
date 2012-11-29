@@ -88,7 +88,7 @@ class ViewController(BaseController):
 
         vars['form_items'] = self._make_autoform_items(harvesters_info)
 
-        c.form = render('source/new_source_form.html', extra_vars=vars)
+        c.form = render('source/old_new_source_form.html', extra_vars=vars)
         return render('source/new.html')
 
 
@@ -148,7 +148,7 @@ class ViewController(BaseController):
 
         vars['form_items'] = self._make_autoform_items(harvesters_info)
 
-        c.form = render('source/new_source_form.html', extra_vars=vars)
+        c.form = render('source/old_new_source_form.html', extra_vars=vars)
 
         return render('source/edit.html')
 

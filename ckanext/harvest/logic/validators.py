@@ -1,14 +1,14 @@
 import urlparse
 
-from ckan.lib.navl.dictization_functions import Invalid, missing
+from ckan.lib.navl.dictization_functions import Invalid
 from ckan.model import Session
 from ckan.plugins import PluginImplementations
 
-from ckanext.harvest.model import HarvestSource
+from ckanext.harvest.plugin import DATASET_TYPE_NAME
+from ckanext.harvest.model import HarvestSource, UPDATE_FREQUENCIES
 from ckanext.harvest.interfaces import IHarvester
- 
 
-#TODO: use context?
+
 
 def harvest_source_id_exists(value, context):
     
@@ -102,6 +102,12 @@ def harvest_source_active_validator(value,context):
 def harvest_source_frequency_exists(value):
     if value == '':
         value = 'MANUAL'
-    if value.upper() not in ['MONTHLY','ALWAYS','WEEKLY','BIWEEKLY','DAILY','MANUAL']:
+    if value.upper() not in UPDATE_FREQUENCIES:
         raise Invalid('Frequency %s not recognised' % value)
     return value.upper()
+
+
+def dataset_type_exists(value):
+    if value != DATASET_TYPE_NAME:
+        value = DATASET_TYPE_NAME
+    return value

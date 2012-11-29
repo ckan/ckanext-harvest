@@ -15,7 +15,7 @@ from ckan.lib.navl.dictization_functions import validate
 from ckanext.harvest.queue import get_gather_publisher
 
 from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject)
-from ckanext.harvest.logic.schema import default_harvest_source_schema
+from ckanext.harvest.logic.schema import old_default_harvest_source_schema as default_harvest_source_schema
 from ckanext.harvest.logic import HarvestJobExists
 from ckanext.harvest.logic.dictization import (harvest_source_dictize,harvest_object_dictize)
 

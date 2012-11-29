@@ -1,26 +1,82 @@
-import os
 from logging import getLogger
 
 from pylons import config
-from genshi.input import HTML
-from genshi.filters import Transformer
 
-import ckan.lib.helpers as h
-
+from ckan import logic
 import ckan.plugins as p
+from ckan.lib.plugins import DefaultDatasetForm
+from ckan.lib.navl import dictization_functions
 
 from ckanext.harvest.model import setup as model_setup
+from ckanext.harvest.model import UPDATE_FREQUENCIES
+
+
 
 log = getLogger(__name__)
 assert not log.disabled
 
-class Harvest(p.SingletonPlugin):
+DATASET_TYPE_NAME = 'harvest_source'
+
+class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
     p.implements(p.IConfigurable)
     p.implements(p.IRoutes, inherit=True)
     p.implements(p.IConfigurer, inherit=True)
     p.implements(p.IActions)
     p.implements(p.IAuthFunctions)
+    p.implements(p.IDatasetForm)
+
+    ## IDatasetForm
+
+    def is_fallback(self):
+        return False
+
+    def package_types(self):
+        return [DATASET_TYPE_NAME]
+
+    def package_form(self):
+        return 'source/new_source_form.html'
+
+    def setup_template_variables(self, context, data_dict):
+        harvesters_info = logic.get_action('harvesters_info_show')(context,{})
+
+        p.toolkit.c.frequencies = [
+                {'text': p.toolkit._(f.title()), 'value': f}
+                for f in UPDATE_FREQUENCIES
+                ]
+        p.toolkit.c.harvester_types = [
+                {'text': p.toolkit._(h['title']), 'value': h['name']}
+                for h in harvesters_info
+                ]
+        p.toolkit.c.harvesters_info = harvesters_info
+
+    def form_to_db_schema(self):
+        '''
+        Returns the schema for mapping package data from a form to a format
+        suitable for the database.
+        '''
+        from ckanext.harvest.logic.schema import harvest_source_form_schema
+
+        return harvest_source_form_schema()
+
+    def check_data_dict(self, data_dict, schema=None):
+        '''Check if the return data is correct, mostly for checking out
+        if spammers are submitting only part of the form'''
+
+        surplus_keys_schema = ['__extras', '__junk', 'extras_validation', 'save',
+                               'return_to', 'type', 'state']
+
+        #TODO: state and delete
+
+        if not schema:
+            schema = self.form_to_db_schema()
+        schema_keys = schema.keys()
+        keys_in_schema = set(schema_keys) - set(surplus_keys_schema)
+
+        missing_keys = keys_in_schema - set(data_dict.keys())
+        if missing_keys:
+            log.info('incorrect form fields posted, missing %s' % missing_keys)
+            raise dictization_functions.DataError(data_dict)
 
     def configure(self, config):
 

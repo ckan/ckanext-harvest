@@ -17,8 +17,7 @@ from ckan.model.domain_object import DomainObject
 from ckan.model.package import Package
 
 
-
-
+UPDATE_FREQUENCIES = ['MANUAL','MONTHLY','WEEKLY','BIWEEKLY','DAILY', 'ALWAYS']
 
 log = logging.getLogger(__name__)
 
