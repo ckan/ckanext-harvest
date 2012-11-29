@@ -1,7 +1,7 @@
 import urlparse
 
 from ckan.lib.navl.dictization_functions import Invalid
-from ckan.model import Session
+from ckan import model
 from ckan.plugins import PluginImplementations
 
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
@@ -11,7 +11,7 @@ from ckanext.harvest.interfaces import IHarvester
 
 
 def harvest_source_id_exists(value, context):
-    
+
     result = HarvestSource.get(value,None)
 
     if not result:
@@ -31,7 +31,7 @@ def _normalize_url(url):
             netloc = ':'.join(parts)
     else:
         netloc = o.netloc
-    
+
     # Remove trailing slash
     path = o.path.rstrip('/')
 
@@ -44,21 +44,31 @@ def _normalize_url(url):
     return check_url
 
 def harvest_source_url_validator(key,data,errors,context):
-    new_url = _normalize_url(data[key])
-    source_id = data.get(('id',),'')
-    if source_id:
-        # When editing a source we need to avoid its own URL
-        existing_sources = Session.query(HarvestSource.url,HarvestSource.active) \
-                       .filter(HarvestSource.id!=source_id).all()
-    else:
-        existing_sources = Session.query(HarvestSource.url,HarvestSource.active).all()
+    package = context.get("package")
 
-    for url,active in existing_sources:
+    if package:
+        package_id = package.id
+    else:
+        package_id = data.get(key[:-1] + ("id",))
+
+    new_url = _normalize_url(data[key])
+    #pkg_id = data.get(('id',),'')
+
+    q = model.Session.query(model.Package.url, model.Package.state) \
+               .filter(model.Package.type==DATASET_TYPE_NAME)
+
+    if package_id:
+        # When editing a source we need to avoid its own URL
+        q = q.filter(model.Package.id!=package_id)
+
+    existing_sources = q.all()
+
+    for url, state in existing_sources:
         url = _normalize_url(url)
         if url == new_url:
             raise Invalid('There already is a Harvest Source for this URL: %s' % data[key])
 
-    return data[key] 
+    return data[key]
 
 def harvest_source_type_exists(value,context):
     #TODO: use new description interface
@@ -75,7 +85,7 @@ def harvest_source_type_exists(value,context):
 
     if not value in available_types:
         raise Invalid('Unknown harvester type: %s. Have you registered a harvester for this type?' % value)
-    
+
     return value
 
 def harvest_source_config_validator(key,data,errors,context):

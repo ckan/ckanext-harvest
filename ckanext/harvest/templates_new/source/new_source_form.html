@@ -19,7 +19,7 @@
 
   {{ form.markdown('notes', id='field-notes', label=_('Description'), value=data.notes, error=errors.notes) }}
 
-  {{ form.select('source_type', id='field-source_type', label=_('Source type'), options=c.harvester_types, error=errors.source_type) }}
+  {{ form.select('source_type', id='field-source_type', label=_('Source type'), options=c.harvester_types, selected=data.source_type, error=errors.source_type) }}
     <div class="controls">
       <ul>
       {% for harvester in c.harvesters_info %}
@@ -28,7 +28,7 @@
       </ul>
     </div>
 
-  {{ form.select('frequency', id='field-frequency', label=_('Frequency of update'), options=c.frequencies, error=errors.frequency) }}
+  {{ form.select('frequency', id='field-frequency', label=_('Frequency of update'), options=c.frequencies, selected=data.frequency, error=errors.frequency) }}
 
   {{ form.textarea('config', id='field-config', label=_('Configuration'), value=data.config, error=errors.config) }} 
 

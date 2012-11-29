@@ -3,9 +3,11 @@ from logging import getLogger
 from pylons import config
 
 from ckan import logic
+from ckan.logic.converters import convert_from_extras
 import ckan.plugins as p
 from ckan.lib.plugins import DefaultDatasetForm
 from ckan.lib.navl import dictization_functions
+from ckan.lib.navl.validators import ignore_missing
 
 from ckanext.harvest.model import setup as model_setup
 from ckanext.harvest.model import HarvestSource, HarvestJob
@@ -72,12 +74,29 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
         return harvest_source_form_schema()
 
+    def db_to_form_schema(self):
+        '''
+        Returns the schema for mapping package data from the database into a
+        format suitable for the form
+        '''
+        from ckanext.harvest.logic.schema import harvest_source_schema
+
+        schema = harvest_source_schema()
+        schema.update({
+            'source_type': [convert_from_extras, ignore_missing],
+            'frequency': [convert_from_extras, ignore_missing],
+            'config': [convert_from_extras, ignore_missing],
+        })
+
+        return schema
+
     def check_data_dict(self, data_dict, schema=None):
         '''Check if the return data is correct, mostly for checking out
         if spammers are submitting only part of the form'''
 
-        surplus_keys_schema = ['__extras', '__junk', 'extras_validation', 'save',
-                               'return_to', 'type', 'state']
+        surplus_keys_schema = ['__extras', '__junk', 'extras',
+                               'extras_validation', 'save', 'return_to', 'type',
+                               'state']
 
         #TODO: state and delete
 
