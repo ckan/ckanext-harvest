@@ -8,8 +8,8 @@ from ckan.lib.plugins import DefaultDatasetForm
 from ckan.lib.navl import dictization_functions
 
 from ckanext.harvest.model import setup as model_setup
+from ckanext.harvest.model import HarvestSource, HarvestJob
 from ckanext.harvest.model import UPDATE_FREQUENCIES
-
 
 
 log = getLogger(__name__)
@@ -25,6 +25,19 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
     p.implements(p.IActions)
     p.implements(p.IAuthFunctions)
     p.implements(p.IDatasetForm)
+    p.implements(p.IPackageController, inherit=True)
+
+    ## IPackageController
+
+    def after_create(self, data_dict):
+        if data_dict['type'] == DATASET_TYPE_NAME:
+            # Create an actual HarvestSource object
+            _create_harvest_source_object(data_dict)
+
+    def after_update(self, data_dict):
+        if data_dict['type'] == DATASET_TYPE_NAME:
+            # Edit the actual HarvestSource object
+            _update_harvest_source_object(data_dict)
 
     ## IDatasetForm
 
@@ -197,3 +210,96 @@ def _get_auth_functions(module_root, auth_functions = {}):
 
     return auth_functions
 
+def _create_harvest_source_object(data_dict):
+    '''
+        Creates an actual HarvestSource object with the data dict
+        of the harvest_source dataset. All validation and authorization
+        checks should be used by now, so this function is not to be used
+        directly to create harvest sources. The created harvest source will
+        have the same id as the dataset.
+
+        :param data_dict: A standard package data_dict
+
+        :returns: The created HarvestSource object
+        :rtype: HarvestSource object
+    '''
+
+    log.info('Creating harvest source: %r', data_dict)
+
+    source = HarvestSource()
+
+    source.id = data_dict['id']
+    source.url = data_dict['url'].strip()
+
+    # Avoids clashes with the dataset type
+    source.type = data_dict['source_type']
+
+    opt = ['active', 'title', 'description', 'user_id',
+           'publisher_id', 'config', 'frequency']
+    for o in opt:
+        if o in data_dict and data_dict[o] is not None:
+            source.__setattr__(o,data_dict[o])
+
+    #TODO: state / deleted
+    if 'active' in data_dict:
+        source.active = data_dict['active']
+
+    # Don't commit yet, let package_create do it
+    source.add()
+    log.info('Harvest source created: %s', source.id)
+
+    return source
+
+def _update_harvest_source_object(data_dict):
+    '''
+        Updates an actual HarvestSource object with the data dict
+        of the harvest_source dataset. All validation and authorization
+        checks should be used by now, so this function is not to be used
+        directly to update harvest sources.
+
+        :param data_dict: A standard package data_dict
+
+        :returns: The created HarvestSource object
+        :rtype: HarvestSource object
+    '''
+
+    source_id = data_dict.get('id')
+
+    log.info('Harvest source %s update: %r', source_id, data_dict)
+    source = HarvestSource.get(source_id)
+    if not source:
+        log.error('Harvest source %s does not exist', source_id)
+        raise logic.NotFound('Harvest source %s does not exist' % source_id)
+
+
+    fields = ['url', 'title', 'description', 'user_id',
+              'publisher_id', 'frequency']
+    for f in fields:
+        if f in data_dict and data_dict[f] is not None:
+            if f == 'url':
+                data_dict[f] = data_dict[f].strip()
+            source.__setattr__(f,data_dict[f])
+
+    # Avoids clashes with the dataset type
+    if 'source_type' in data_dict:
+        source.type = data_dict['source_type']
+
+    if 'active' in data_dict:
+        source.active = data_dict['active']
+
+    if 'config' in data_dict:
+        source.config = data_dict['config']
+
+    # Don't commit yet, let package_create do it
+    source.add()
+
+    # Abort any pending jobs
+    if not source.active:
+        jobs = HarvestJob.filter(source=source,status=u'New')
+        log.info('Harvest source %s not active, so aborting %i outstanding jobs', source_id, jobs.count())
+        if jobs:
+            for job in jobs:
+                job.status = u'Aborted'
+                job.add()
+
+    return source
