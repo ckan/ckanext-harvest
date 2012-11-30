@@ -32,12 +32,12 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
     ## IPackageController
 
     def after_create(self, data_dict):
-        if data_dict['type'] == DATASET_TYPE_NAME:
+        if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
             # Create an actual HarvestSource object
             _create_harvest_source_object(data_dict)
 
     def after_update(self, data_dict):
-        if data_dict['type'] == DATASET_TYPE_NAME:
+        if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
             # Edit the actual HarvestSource object
             _update_harvest_source_object(data_dict)
 
