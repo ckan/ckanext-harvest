@@ -52,8 +52,16 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
     def package_form(self):
         return 'source/new_source_form.html'
 
+    def new_template(self):
+        return 'source/new.html'
+
+    def edit_template(self):
+        return 'source/edit.html'
+
     def setup_template_variables(self, context, data_dict):
         harvesters_info = logic.get_action('harvesters_info_show')(context,{})
+
+        p.toolkit.c.harvest_source = p.toolkit.c.pkg
 
         p.toolkit.c.frequencies = [
                 {'text': p.toolkit._(f.title()), 'value': f}
@@ -64,6 +72,8 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
                 for h in harvesters_info
                 ]
         p.toolkit.c.harvesters_info = harvesters_info
+
+        p.toolkit.c.dataset_type = DATASET_TYPE_NAME
 
     def form_to_db_schema_options(self, options):
         '''

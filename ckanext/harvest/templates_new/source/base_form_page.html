@@ -1,0 +1,27 @@
+{% extends "page.html" %}
+
+{% block primary_content %}
+  <section class="module">
+    <div class="module-content">
+      {% block form %}{{ c.form | safe }}{% endblock %}
+    </div>
+  </section>
+{% endblock %}
+
+{% block secondary_content %}
+  {% block info_module %}
+    <section class="module module-narrow">
+      <h2 class="module-heading"><i class="icon-large icon-info-sign"></i> {{ _('Harvest sources') }}</h2>
+      <div class="module-content">
+        <p>
+          {% trans %}
+          Harvest sources allow importing metadata from other catalogues
+          as CKAN datasets. These can be other CKAN instances or other
+          protocols and formats. (TODO: Review)
+          {% endtrans %}
+        </p>
+      </div>
+    </section>
+  {% endblock %}
+
+{% endblock %}

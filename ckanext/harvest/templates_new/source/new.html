@@ -1,26 +1,10 @@
-{% extends "page.html" %}
-
-{% block title %}{{ _('New - Harvest Source') }} - {{ super() }}{% endblock %}
+{% extends "source/base_form_page.html" %}
 
 {% block breadcrumb_content %}
+  <!-- TODO: link to list -->
+  <li>{% link_for _('Harvest Sources'), controller='package', action='search', highlight_actions = 'new index' %}</li>
+  <li class="active">{{ h.nav_named_link(_('Create Harvest Source'), '{0}_new'.format(c.dataset_type)) }}</li>
 {% endblock %}
 
-{% block styles %}
-  {{ super() }}
-  <link type="text/css" rel="stylesheet" media="all" href="/ckanext/harvest/style.css" />
-{% endblock %}
+{% block subtitle %}{{ _('Create harvest source') }}{% endblock %}
 
-{% block primary %}
-  <article class="module">
-    <div class="module-content">
-      <div class="harvest-content">
-        <h2>New harvest source </h2>
-
-        {{ h.literal(c.form) }}
-
-      </div>
-    </div>
-  </article>
-{% endblock %}
-
-{% block sidebar %}{% endblock %}
