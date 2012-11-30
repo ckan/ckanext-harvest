@@ -1,54 +1,23 @@
-from ckan.lib.base import config
 from ckan.logic.schema import default_extras_schema
 from ckan.logic.validators import (package_id_exists,
                                    name_validator,
                                    package_name_validator,
                                    ignore_not_package_admin,
                                    )
-from ckan.logic.converters import convert_to_extras
+from ckan.logic.converters import convert_to_extras, convert_from_extras
 
 from ckan.lib.navl.validators import (ignore_missing,
                                       not_empty,
                                       ignore,
                                       if_empty_same_as,
-                                     )
+                                      )
 
-from ckanext.harvest.logic.validators import (harvest_source_id_exists,
-                                            harvest_source_url_validator,
-                                            harvest_source_type_exists,
-                                            harvest_source_config_validator,
-                                            harvest_source_active_validator,
-                                            harvest_source_frequency_exists,
-                                            dataset_type_exists,)
-#TODO: remove
-def old_default_harvest_source_schema():
-
-    schema = {
-        'id': [ignore_missing, unicode, harvest_source_id_exists],
-        'url': [not_empty, unicode, harvest_source_url_validator],
-        'type': [not_empty, unicode, harvest_source_type_exists],
-        'title': [ignore_missing,unicode],
-        'description': [ignore_missing,unicode],
-        'frequency': [ignore_missing,unicode, harvest_source_frequency_exists],
-        'active': [ignore_missing,harvest_source_active_validator],
-        'user_id': [ignore_missing,unicode],
-        'config': [ignore_missing,harvest_source_config_validator]
-    }
-
-    if config.get('ckan.harvest.auth.profile',None) == 'publisher':
-        schema['publisher_id'] = [not_empty,unicode]
-    else:
-        schema['publisher_id'] = [ignore_missing,unicode]
-
-    return schema
-
-#TODO: remove
-def old_harvest_source_form_schema():
-
-    schema = old_default_harvest_source_schema()
-    schema['save'] = [ignore]
-
-    return schema
+from ckanext.harvest.logic.validators import (harvest_source_url_validator,
+                                              harvest_source_type_exists,
+                                              harvest_source_config_validator,
+                                              harvest_source_frequency_exists,
+                                              dataset_type_exists,
+                                              )
 
 def harvest_source_schema():
 
@@ -64,11 +33,17 @@ def harvest_source_schema():
         'state': [ignore_not_package_admin, ignore_missing],
         'config': [ignore_missing, harvest_source_config_validator, convert_to_extras],
         'extras': default_extras_schema(),
+        '__extras': [ignore],
     }
+
+    extras_schema = default_extras_schema()
+    extras_schema['__extras'] = [ignore]
+
+    schema['extras'] = extras_schema
 
     return schema
 
-def harvest_source_form_schema():
+def harvest_source_form_to_db_schema():
 
     schema = harvest_source_schema()
 
@@ -77,3 +52,13 @@ def harvest_source_form_schema():
 
     return schema
 
+def harvest_source_db_to_form_schema():
+
+    schema = harvest_source_schema()
+    schema.update({
+        'source_type': [convert_from_extras, ignore_missing],
+        'frequency': [convert_from_extras, ignore_missing],
+        'config': [convert_from_extras, ignore_missing],
+    })
+
+    return schema
