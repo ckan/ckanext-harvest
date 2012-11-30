@@ -13,6 +13,22 @@ class TestHarvester(SingletonPlugin):
     def info(self):
         return {'name': 'test', 'title': 'test', 'description': 'test'}
 
+    def validate_config(self,config):
+        if not config:
+            return config
+
+        try:
+            config_obj = json.loads(config)
+
+            if 'custom_option' in config_obj:
+                if not isinstance(config_obj['custom_option'],list):
+                    raise ValueError('custom_option must be a list')
+
+        except ValueError,e:
+            raise e
+
+        return config
+
     def gather_stage(self, harvest_job):
 
         if harvest_job.source.url.startswith('basic_test'):

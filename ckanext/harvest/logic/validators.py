@@ -89,7 +89,7 @@ def harvest_source_type_exists(value,context):
     return value
 
 def harvest_source_config_validator(key,data,errors,context):
-    harvester_type = data.get(('type',),'')
+    harvester_type = data.get(('source_type',),'')
     for harvester in PluginImplementations(IHarvester):
         info = harvester.info()
         if info['name'] == harvester_type:

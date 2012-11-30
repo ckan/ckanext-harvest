@@ -1,3 +1,4 @@
+import json
 import copy
 import ckan
 import paste
@@ -32,7 +33,7 @@ class HarvestSourceActionBase(object):
           "notes": "Test source action desc",
           "source_type": "test",
           "frequency": "MANUAL",
-          "config": "bb"
+          "config": json.dumps({"custom_option":["a","b"]})
         }
 
 
@@ -78,6 +79,25 @@ class HarvestSourceActionBase(object):
 
         assert 'frequency' in result
         assert u'Frequency {0} not recognised'.format(wrong_frequency) in result['frequency'][0]
+
+    def test_invalid_wrong_configuration(self):
+
+        source_dict = copy.deepcopy(self.default_source_dict)
+        source_dict['config'] = 'not_json'
+
+        result = tests.call_action_api(self.app, self.action,
+                                apikey=self.sysadmin['apikey'], status=409, **source_dict)
+
+        assert 'config' in result
+        assert u'Error parsing the configuration options: No JSON object could be decoded' in result['config'][0]
+
+        source_dict['config'] = json.dumps({'custom_option': 'not_a_list'})
+
+        result = tests.call_action_api(self.app, self.action,
+                                apikey=self.sysadmin['apikey'], status=409, **source_dict)
+
+        assert 'config' in result
+        assert u'Error parsing the configuration options: custom_option must be a list' in result['config'][0]
 
 
 class TestHarvestSourceActionCreate(HarvestSourceActionBase):
@@ -140,7 +160,7 @@ class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
           "notes": "Test source action desc updated",
           "source_type": "test",
           "frequency": "MONTHLY",
-          "config": "cc"
+          "config": json.dumps({"custom_option":["c","d"]})
           })
 
         result = tests.call_action_api(self.app, 'harvest_source_update',
