@@ -8,69 +8,76 @@ from ckan.logic import get_action
 from ckanext.harvest.interfaces import IHarvester
 
 from ckan.model import Package
+from ckan import logic
 
-from ckan.logic import NotFound, ValidationError, check_access
-from ckan.lib.navl.dictization_functions import validate
+from ckan.logic import NotFound, check_access
 
+from ckanext.harvest.plugin import DATASET_TYPE_NAME
 from ckanext.harvest.queue import get_gather_publisher
 
-from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject)
-from ckanext.harvest.logic.schema import old_default_harvest_source_schema as default_harvest_source_schema
+from ckanext.harvest.model import HarvestSource, HarvestObject
 from ckanext.harvest.logic import HarvestJobExists
-from ckanext.harvest.logic.dictization import (harvest_source_dictize,harvest_object_dictize)
+from ckanext.harvest.logic.schema import harvest_source_db_to_form_schema
 
-from ckanext.harvest.logic.action.create import _error_summary
+
 from ckanext.harvest.logic.action.get import harvest_source_show, harvest_job_list, _get_sources_for_user
 
 
 log = logging.getLogger(__name__)
 
 def harvest_source_update(context,data_dict):
+    '''
+    Updates an existing harvest source
 
-    check_access('harvest_source_update',context,data_dict)
+    This method just proxies the request to package_update,
+    which will create a harvest_source dataset type and the
+    HarvestSource object. All auth checks and validation will
+    be done there .We only make sure to set the dataset type
 
-    model = context['model']
-    session = context['session']
+    Note that the harvest source type (ckan, waf, csw, etc)
+    is now set via the source_type field.
 
-    source_id = data_dict.get('id')
-    schema = context.get('schema') or default_harvest_source_schema()
+    :param id: the name or id of the harvest source to update
+    :type id: string
+    :param url: the URL for the harvest source
+    :type url: string
+    :param name: the name of the new harvest source, must be between 2 and 100
+        characters long and contain only lowercase alphanumeric characters
+    :type name: string
+    :param title: the title of the dataset (optional, default: same as
+        ``name``)
+    :type title: string
+    :param notes: a description of the harvest source (optional)
+    :type notes: string
+    :param source_type: the harvester type for this source. This must be one
+        of the registerd harvesters, eg 'ckan', 'csw', etc.
+    :type source_type: string
+    :param frequency: the frequency in wich this harvester should run. See
+        ``ckanext.harvest.model`` source for possible values. Default is
+        'MANUAL'
+    :type frequency: string
+    :param config: extra configuration options for the particular harvester
+        type. Should be a serialized as JSON. (optional)
+    :type config: string
 
-    log.info('Harvest source %s update: %r', source_id, data_dict)
-    source = HarvestSource.get(source_id)
-    if not source:
-        log.error('Harvest source %s does not exist', source_id)
-        raise NotFound('Harvest source %s does not exist' % source_id)
 
-    data, errors = validate(data_dict, schema)
+    :returns: the newly created harvest source
+    :rtype: dictionary
 
-    if errors:
-        session.rollback()
-        raise ValidationError(errors,_error_summary(errors))
+    '''
+    log.info('Updating harvest source: %r', data_dict)
 
-    fields = ['url','title','type','description','user_id','publisher_id']
-    for f in fields:
-        if f in data and data[f] is not None:
-            if f == 'url':
-                data[f] = data[f].strip()
-            source.__setattr__(f,data[f])
+    data_dict['type'] = DATASET_TYPE_NAME
 
-    if 'active' in data_dict:
-        source.active = data['active']
+    context['extras_as_string'] = True
+    package_dict = logic.get_action('package_update')(context, data_dict)
 
-    if 'config' in data_dict:
-        source.config = data['config']
+    context['schema'] = harvest_source_db_to_form_schema()
+    source = logic.get_action('package_show')(context, package_dict)
 
-    source.save()
-    # Abort any pending jobs
-    if not source.active:
-        jobs = HarvestJob.filter(source=source,status=u'New')
-        log.info('Harvest source %s not active, so aborting %i outstanding jobs', source_id, jobs.count())
-        if jobs:
-            for job in jobs:
-                job.status = u'Aborted'
-                job.save()
+    return source
 
-    return harvest_source_dictize(source,context)
+
 
 def harvest_objects_import(context,data_dict):
     '''
