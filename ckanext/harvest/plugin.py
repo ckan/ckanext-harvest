@@ -3,11 +3,9 @@ from logging import getLogger
 from pylons import config
 
 from ckan import logic
-from ckan.logic.converters import convert_from_extras
 import ckan.plugins as p
 from ckan.lib.plugins import DefaultDatasetForm
 from ckan.lib.navl import dictization_functions
-from ckan.lib.navl.validators import ignore_missing
 
 from ckanext.harvest.model import setup as model_setup
 from ckanext.harvest.model import HarvestSource, HarvestJob
@@ -29,10 +27,12 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
     p.implements(p.IDatasetForm)
     p.implements(p.IPackageController, inherit=True)
 
+    startup = False
+
     ## IPackageController
 
     def after_create(self, data_dict):
-        if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
+        if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME and not self.startup:
             # Create an actual HarvestSource object
             _create_harvest_source_object(data_dict)
 
@@ -86,8 +86,13 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
             Similar to form_to_db_schema but with further options to allow
             slightly different schemas, eg for creation or deletion on the API.
         '''
+        schema = self.form_to_db_schema()
 
-        return self.form_to_db_schema()
+        # Tweak the default schema to allow using the same id as the harvest source
+        # if creating datasets for the harvest sources
+        if self.startup:
+            schema['id'] = [unicode]
+        return schema
 
     def form_to_db_schema(self):
         '''
@@ -129,6 +134,8 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
     def configure(self, config):
 
+        self.startup = True
+
         auth_profile = config.get('ckan.harvest.auth.profile',None)
 
         if auth_profile:
@@ -150,6 +157,8 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
         # Setup harvest model
         model_setup()
+
+        self.startup = False
 
     def before_map(self, map):
 
