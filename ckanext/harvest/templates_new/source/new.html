@@ -1,8 +1,7 @@
 {% extends "source/base_form_page.html" %}
 
 {% block breadcrumb_content %}
-  <!-- TODO: link to list -->
-  <li>{% link_for _('Harvest Sources'), controller='package', action='search', highlight_actions = 'new index' %}</li>
+  <li>{{ h.nav_named_link(_('Harvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
   <li class="active">{{ h.nav_named_link(_('Create Harvest Source'), '{0}_new'.format(c.dataset_type)) }}</li>
 {% endblock %}
 
