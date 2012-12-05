@@ -1,0 +1,39 @@
+{#
+Displays a single harvest source result.
+
+source         - A source to display.
+item_class     - The class name to use on the list item.
+hide_resources - If true hides the resources (default: false).
+banner         - If true displays a popular banner (default: false).
+truncate       - The length to trucate the description to (default: 180)
+truncate_title - The length to truncate the title to (default: 80).
+
+Example:
+
+  {% snippet 'snippets/source_item.html', source=c.sources[0] %}
+
+#}
+{% set truncate = truncate or 180 %}
+{% set truncate_title = truncate_title or 80 %}
+{% set title = source.title or source.name %}
+
+<li class="{{ item_class or "dataset-item" }}">
+  <div class="dataset-content">
+    <h3 class="dataset-heading">
+      {{ h.link_to(h.truncate(title, truncate_title), h.url_for('harvest_source_read', id=source.name)) }}
+      {% if source.get(state, '').startswith('draft') %}
+        <span class="label label-info">{{ _('Draft') }}</span>
+      {% elif source.get(state, '').startswith('deleted') %}
+        <span class="label label-important">{{ _('Deleted') }}</span>
+      {% endif %}
+      {{ h.popular('recent views', source.tracking_summary.recent, min=10) if source.tracking_summary }}
+    </h3>
+    {% if banner %}
+      <span class="banner">Popular</span>
+    {% endif %}
+
+    <!-- TODO: nicer, include type, frequency (last run, errors, packages? will need to get those from the source object) -->
+    <div>{{ source.url }}</div>
+
+  </div>
+</li>
