@@ -13,7 +13,7 @@ from ckan.lib.base import BaseController, c, g, request, \
 
 from ckan.lib.navl.dictization_functions import DataError
 from ckan.logic import NotFound, ValidationError, get_action, NotAuthorized
-from ckanext.harvest.logic.schema import harvest_source_form_schema
+from ckanext.harvest.logic.schema import harvest_source_form_to_db_schema
 
 from ckan.lib.helpers import Page,pager_url
 import ckan.plugins as p
@@ -180,7 +180,7 @@ class ViewController(BaseController):
 
         # TODO: remove frequency once it is added to the frontend!
         surplus_keys_schema = ['id','publisher_id','user_id','config','save','frequency']
-        schema_keys = harvest_source_form_schema().keys()
+        schema_keys = harvest_source_form_to_db_schema().keys()
         keys_in_schema = set(schema_keys) - set(surplus_keys_schema)
 
         # user_id is not yet used, we'll set the logged user one for the time being
