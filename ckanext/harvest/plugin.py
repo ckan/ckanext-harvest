@@ -55,6 +55,9 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
     def search_template(self):
         return 'source/search.html'
 
+    def read_template(self):
+        return 'source/read.html'
+
     def new_template(self):
         return 'source/new.html'
 
