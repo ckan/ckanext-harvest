@@ -4,6 +4,7 @@ from ckan.authz import Authorizer
 from ckan.model import User
 import datetime
 
+from ckan import logic
 from ckan.plugins import PluginImplementations
 from ckanext.harvest.interfaces import IHarvester
 
@@ -14,21 +15,27 @@ from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject)
 from ckanext.harvest.logic.dictization import (harvest_source_dictize,
                                                harvest_job_dictize,
                                                harvest_object_dictize)
-
+from ckanext.harvest.logic.schema import harvest_source_db_to_form_schema
 log = logging.getLogger(__name__)
 
 def harvest_source_show(context,data_dict):
-    check_access('harvest_source_show',context,data_dict)
+    '''
+    Returns the metadata of a harvest source
 
-    id = data_dict.get('id')
-    attr = data_dict.get('attr',None)
+    This method just proxies the request to package_show. All auth checks and
+    validation will be done there.
 
-    source = HarvestSource.get(id,attr=attr)
+    :param id: the id or name of the harvest source
+    :type id: string
 
-    if not source:
-        raise NotFound
+    :returns: harvest source metadata
+    :rtype: dictionary
+    '''
 
-    return harvest_source_dictize(source,context)
+    context['schema'] = harvest_source_db_to_form_schema()
+    source_dict = logic.get_action('package_show')(context, data_dict)
+
+    return source_dict
 
 def harvest_source_list(context, data_dict):
 
