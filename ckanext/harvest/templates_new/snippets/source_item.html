@@ -16,6 +16,7 @@ Example:
 {% set truncate = truncate or 180 %}
 {% set truncate_title = truncate_title or 80 %}
 {% set title = source.title or source.name %}
+{% set source_type = h.get_pkg_dict_extra(source, 'source_type') %}
 
 <li class="{{ item_class or "dataset-item" }}">
   <div class="dataset-content">
@@ -26,14 +27,15 @@ Example:
       {% elif source.get(state, '').startswith('deleted') %}
         <span class="label label-important">{{ _('Deleted') }}</span>
       {% endif %}
-      {{ h.popular('recent views', source.tracking_summary.recent, min=10) if source.tracking_summary }}
     </h3>
-    {% if banner %}
-      <span class="banner">Popular</span>
-    {% endif %}
 
-    <!-- TODO: nicer, include type, frequency (last run, errors, packages? will need to get those from the source object) -->
+    <!-- TODO: nicer -->
     <div>{{ source.url }}</div>
 
+    <div><span>Type: {{ source_type }}</span><span>Total datasets: {{ source.status.overall_statistics.added }}</span></div>
+    <div style="color:#EB7C91"><span>Last harvest: {{ source.status.last_harvest_request }}</span>    <span>Next harvest: {{ source.status.next_harvest }}</span></div>
+
+    <a style="color:#EB7C91" href="{{ h.url_for('harvesting_job_create', id=source.id) }}">Refresh</a>
+    <a style="color:#EB7C91" href="{{ h.url_for('{0}_edit'.format(source.type), id=source.name) }}">Edit</a>
   </div>
 </li>
