@@ -188,6 +188,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
     def get_actions(self):
         from ckanext.harvest.logic.action.get import (harvest_source_show,
+                                                      harvest_source_show_status,
                                                       harvest_source_list,
                                                       harvest_source_for_a_dataset,
                                                       harvest_job_show,
@@ -205,6 +206,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
         return {
             'harvest_source_show': harvest_source_show,
+            'harvest_source_show_status': harvest_source_show_status,
             'harvest_source_list': harvest_source_list,
             'harvest_source_for_a_dataset': harvest_source_for_a_dataset,
             'harvest_job_show': harvest_job_show,
