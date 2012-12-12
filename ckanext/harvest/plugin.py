@@ -3,12 +3,15 @@ from logging import getLogger
 from pylons import config
 
 from ckan import logic
+from ckan import model
 import ckan.plugins as p
 from ckan.lib.plugins import DefaultDatasetForm
 from ckan.lib.navl import dictization_functions
 
+from ckanext.harvest import logic as harvest_logic
+
 from ckanext.harvest.model import setup as model_setup
-from ckanext.harvest.model import HarvestSource, HarvestJob
+from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 from ckanext.harvest.model import UPDATE_FREQUENCIES
 
 
@@ -40,6 +43,45 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
         if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
             # Edit the actual HarvestSource object
             _update_harvest_source_object(data_dict)
+
+    def after_show(self, context, data_dict):
+
+        def add_extra(data_dict, key, value):
+            if not 'extras' in data_dict:
+                data_dict['extras'] = []
+
+            data_dict['extras'].append({
+                'key': key, 'value': '"{0}"'.format(value), 'state': u'active'
+            })
+
+        if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
+            # This is a harvest source dataset, add extra info from the
+            # HarvestSource object
+            source = HarvestSource.get(data_dict['id'])
+            if not source:
+                log.error('Harvest source not found for dataset {0}'.format(data_dict['id']))
+                return data_dict
+
+            data_dict['status'] = harvest_logic.action.get.harvest_source_show_status(context, {'id': source.id})
+
+        elif not 'type' in data_dict or data_dict['type'] != DATASET_TYPE_NAME:
+            # This is a normal dataset, check if it was harvested and if so, add
+            # info about the HarvestObject and HarvestSource
+
+            harvest_object = model.Session.query(HarvestObject) \
+                    .filter(HarvestObject.package_id==data_dict['id']) \
+                    .filter(HarvestObject.current==True) \
+                    .first()
+
+            if harvest_object:
+                for key, value in [
+                    ('harvest_object_id', harvest_object.id),
+                    ('harvest_source_id', harvest_object.source.id),
+                    ('harvest_source_title', harvest_object.source.title),
+                        ]:
+                    add_extra(data_dict, key, value)
+
+        return data_dict
 
     ## IDatasetForm
 
