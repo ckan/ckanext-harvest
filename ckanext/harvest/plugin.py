@@ -29,6 +29,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
     p.implements(p.IAuthFunctions)
     p.implements(p.IDatasetForm)
     p.implements(p.IPackageController, inherit=True)
+    p.implements(p.ITemplateHelpers)
 
     startup = False
 
@@ -278,6 +279,12 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
         log.debug('Using auth profile at %s' % module_root)
 
         return auth_functions
+
+    ## ITemplateHelpers
+    def get_helpers(self):
+        from ckanext.harvest import helpers as harvest_helpers
+        return {'package_list_for_source': harvest_helpers.package_list_for_source}
+
 
 def _get_auth_functions(module_root, auth_functions = {}):
 

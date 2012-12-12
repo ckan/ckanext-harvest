@@ -36,30 +36,19 @@
 
   <article class="module prose">
 
-    {% block package_header %}
-      <header class="module-content page-header">
-        <ul class="nav nav-tabs">
-          <li{% if c.action == 'read' %} class="active"{% endif %}>
-            {% link_for _('Dataset'), controller='package', action='read', id=pkg.name, icon='sitemap' %}
-          </li>
-          <li{% if c.action == 'activity' %} class="active"{% endif %}>
-            {% link_for _('Activity Stream'), controller='package', action='activity', id=pkg.name, icon='time' %}
-          </li>
-          <li{% if c.action == 'followers' %} class="active"{% endif %}>
-            {% link_for _('Followers'), controller='package', action='followers', id=pkg.name, icon='group' %}
-          </li>
-          <li{% if c.action == 'related' %} class="active"{% endif %}>
-            {% link_for _('Related'), controller='related', action='list', id=pkg.name, icon='picture' %}
-          </li>
-        </ul>
-      </header>
-    {% endblock %}
+
 
     {% block package_content %}
 
     {% block package_description %}
         <section class="module-content">
-        <div style="color:red; font-weight:bold">CUSTOM HARVEST SOURCE TEMPLATE for {{ c.dataset_type}}</div>
+        <div style="color:red; font-weight:bold">CUSTOM TEMPLATE for {{ c.dataset_type}}</div>
+        </section>
+        <section class="module-content">
+        <div style="color:red; font-weight:bold">Also available on c.pkg_dict['status']:<pre>
+
+        {{ c.pkg_dict['status']|pprint }}
+        </pre></div>
         </section>
 
         <section class="module-content">
@@ -77,10 +66,6 @@
         </section>
       {% endblock %}
 
-      {% block package_resources %}
-        {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources %}
-      {% endblock %}
-
       {% block package_tags %}
         {% snippet "package/snippets/tags.html", tags=pkg.tags %}
       {% endblock %}
@@ -89,8 +74,13 @@
         {% snippet "package/snippets/additional_info.html", pkg_dict=pkg %}
       {% endblock %}
 
+      <section class="module-content">
+        <h3>Datasets</h3>
+        {{ h.package_list_for_source(c.pkg_dict['id'])  }}
+      </section>
+
     {% endblock %}
-  </article>
+    </article>
 {% endblock %}
 
 {% block secondary_content %}
@@ -105,10 +95,6 @@
 
   {% block package_social %}
     {% snippet "snippets/social.html" %}
-  {% endblock %}
-
-  {% block package_related %}
-    {% snippet "snippets/related.html", item=c.pkg.related|last, pkg_name=pkg.name %}
   {% endblock %}
 
   {% block package_license %}
