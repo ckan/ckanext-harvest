@@ -27,8 +27,9 @@ def harvest_job_dictize(job, context):
     out['objects'] = []
     out['gather_errors'] = []
 
-    for obj in job.objects:
-        out['objects'].append(obj.as_dict())
+    if context.get('return_objects', True):
+        for obj in job.objects:
+            out['objects'].append(obj.as_dict())
 
     for error in job.gather_errors:
         out['gather_errors'].append(error.as_dict())

@@ -212,7 +212,7 @@ def define_harvester_tables():
         Column('retry_times',types.Integer, default=0),
         Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
         Column('harvest_source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
-        Column('package_id', types.UnicodeText, ForeignKey('package.id'), nullable=True),
+        Column('package_id', types.UnicodeText, ForeignKey('package.id', deferrable=True), nullable=True),
     )
 
     # New table
@@ -388,6 +388,9 @@ UPDATE harvest_object set state = 'COMPLETE';
 UPDATE harvest_object set retry_times = 0;
 UPDATE harvest_source set frequency = 'MANUAL';
 
+ALTER TABLE harvest_object DROP CONSTRAINT harvest_object_package_id_fkey;
+ALTER TABLE harvest_object
+    ADD CONSTRAINT harvest_object_package_id_fkey FOREIGN KEY (package_id) REFERENCES package(id) DEFERRABLE;
 """
     conn.execute(statement)
     Session.commit()
@@ -458,4 +461,3 @@ def migrate_v3_create_datasets():
             log.info('Created new package for source {0} ({1})'.format(source.id, source.url))
         except logic.ValidationError,e:
             log.error('Validation Error: %s' % str(e.error_summary))
-

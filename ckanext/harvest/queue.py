@@ -130,9 +130,6 @@ def gather_callback(channel, method, header, body):
                 err.save()
                 log.error(msg)
 
-            job.status = u'Finished'
-            job.save()
-
         finally:
             publisher.close()
 
@@ -176,18 +173,20 @@ def fetch_callback(channel, method, header, body):
             obj.fetch_started = datetime.datetime.now()
             obj.state = "FETCH"
             obj.save()
-            success = harvester.fetch_stage(obj)
+            success_fetch = harvester.fetch_stage(obj)
             obj.fetch_finished = datetime.datetime.now()
             obj.save()
-            if success:
+            if success_fetch:
                 # If no errors where found, call the import method
                 obj.import_started = datetime.datetime.now()
                 obj.state = "IMPORT"
                 obj.save()
-                harvester.import_stage(obj)
+                success_import = harvester.import_stage(obj)
                 obj.import_finished = datetime.datetime.now()
-                if obj.state != "ERROR":
+                if success_import:
                     obj.state = "COMPLETE"
+                else:
+                    obj.state = "ERROR"
                 obj.save()
             else:
                 obj.state = "ERROR"

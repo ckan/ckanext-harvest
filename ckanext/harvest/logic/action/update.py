@@ -3,6 +3,8 @@ import hashlib
 import logging
 import datetime
 
+from sqlalchemy import and_
+
 from ckan.plugins import PluginImplementations
 from ckan.logic import get_action
 from ckanext.harvest.interfaces import IHarvester
@@ -15,7 +17,7 @@ from ckan.logic import NotFound, check_access
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
 from ckanext.harvest.queue import get_gather_publisher
 
-from ckanext.harvest.model import HarvestSource, HarvestObject
+from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 from ckanext.harvest.logic import HarvestJobExists
 from ckanext.harvest.logic.schema import harvest_source_db_to_form_schema
 
@@ -187,10 +189,28 @@ def harvest_jobs_run(context,data_dict):
     log.info('Harvest job run: %r', data_dict)
     check_access('harvest_jobs_run',context,data_dict)
 
+    session = context['session']
+
     source_id = data_dict.get('source_id',None)
 
     if not source_id:
         _make_scheduled_jobs(context, data_dict)
+
+    context['return_objects'] = False
+
+    # Flag finished jobs as such
+    jobs = harvest_job_list(context,{'source_id':source_id,'status':u'Running'})
+    if len(jobs):
+        for job in jobs:
+            if job['gather_finished']:
+                objects = session.query(HarvestObject.id) \
+                          .filter(HarvestObject.harvest_job_id==job['id']) \
+                          .filter(and_((HarvestObject.state!=u'COMPLETE'),
+                                       (HarvestObject.state!=u'ERROR')))
+                if objects.count() == 0:
+                    job_obj = HarvestJob.get(job['id'])
+                    job_obj.status = u'Finished'
+                    job_obj.save()
 
     # Check if there are pending harvest jobs
     jobs = harvest_job_list(context,{'source_id':source_id,'status':u'New'})
@@ -205,6 +225,9 @@ def harvest_jobs_run(context,data_dict):
         context['detailed'] = False
         source = harvest_source_show(context,{'id':job['source']})
         if source['active']:
+            job_obj = HarvestJob.get(job['id'])
+            job_obj.status = job['status'] = u'Running'
+            job_obj.save()
             publisher.send({'harvest_job_id': job['id']})
             log.info('Sent job %s to the gather queue' % job['id'])
             sent_jobs.append(job)
