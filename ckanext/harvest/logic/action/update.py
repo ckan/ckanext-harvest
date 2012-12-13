@@ -189,6 +189,8 @@ def harvest_jobs_run(context,data_dict):
     if not source_id:
         _make_scheduled_jobs(context, data_dict)
 
+    context['return_objects'] = False
+
     # Flag finished jobs as such
     jobs = harvest_job_list(context,{'source_id':source_id,'status':u'Running'})
     if len(jobs):
