@@ -119,7 +119,7 @@ The two available profiles right now are:
 
 To know more about the CKAN publisher auth profile, visit:
 
- http://wiki.ckan.org/Working_with_the_publisher_auth_profile
+ http://oldwiki.ckan.org/Working_with_the_publisher_auth_profile
 
 
 The CKAN harvester
