@@ -87,12 +87,22 @@ class TestHarvestQueue(object):
             context,
             {'source_id':harvest_source['id']}
         )
+
+        job_id = harvest_job['id']
+
         assert harvest_job['source_id'] == harvest_source['id'], harvest_job
 
-        harvest_job = logic.get_action('harvest_jobs_run')(
+        assert harvest_job['status'] == u'New'
+
+        logic.get_action('harvest_jobs_run')(
             context,
             {'source_id':harvest_source['id']}
         )
+
+        assert logic.get_action('harvest_job_show')(
+            context,
+            {'id': job_id}
+        )['status'] == u'Running'
 
         ## pop on item off the queue and run the callback
         reply = consumer.basic_get(queue='ckan.harvest.gather')
@@ -121,3 +131,16 @@ class TestHarvestQueue(object):
         assert all_objects[0].state == 'COMPLETE'
         assert all_objects[1].state == 'COMPLETE'
 
+        ## fire run again to check if job is set to Finished
+        try:
+            logic.get_action('harvest_jobs_run')(
+                context,
+                {'source_id':harvest_source['id']}
+            )
+        except Exception, e:
+            assert 'There are no new harvesting jobs' in str(e)
+
+        assert logic.get_action('harvest_job_show')(
+            context,
+            {'id': job_id}
+        )['status'] == u'Finished'

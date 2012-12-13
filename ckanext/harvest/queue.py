@@ -130,9 +130,6 @@ def gather_callback(channel, method, header, body):
                 err.save()
                 log.error(msg)
 
-            job.status = u'Finished'
-            job.save()
-
         finally:
             publisher.close()
 
