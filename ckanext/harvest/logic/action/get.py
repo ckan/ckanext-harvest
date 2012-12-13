@@ -37,6 +37,10 @@ def harvest_source_show(context,data_dict):
     context['schema'] = harvest_source_db_to_form_schema()
     source_dict = logic.get_action('package_show')(context, data_dict)
 
+    # For compatibility with old code, add the active field
+    # based on the package state
+    source_dict['active'] = (source_dict['state'] == 'active')
+
     return source_dict
 
 
