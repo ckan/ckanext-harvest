@@ -211,6 +211,18 @@ def harvest_jobs_run(context,data_dict):
                     job_obj = HarvestJob.get(job['id'])
                     job_obj.status = u'Finished'
                     job_obj.save()
+                    # Reindex the harvest source dataset so it has the latest
+                    # status
+                    if 'extras_as_string'in context:
+                        del context['extras_as_string']
+                    context.update({'validate': False, 'ignore_auth': True})
+                    package_dict = logic.get_action('package_show')(context,
+                            {'id': job_obj.source.id})
+
+                    if package_dict:
+                        from ckan.lib.search.index import PackageSearchIndex
+                        PackageSearchIndex().index_package(package_dict)
+
 
     # Check if there are pending harvest jobs
     jobs = harvest_job_list(context,{'source_id':source_id,'status':u'New'})
