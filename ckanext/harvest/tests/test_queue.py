@@ -13,22 +13,6 @@ class TestHarvester(SingletonPlugin):
     def info(self):
         return {'name': 'test', 'title': 'test', 'description': 'test'}
 
-    def validate_config(self,config):
-        if not config:
-            return config
-
-        try:
-            config_obj = json.loads(config)
-
-            if 'custom_option' in config_obj:
-                if not isinstance(config_obj['custom_option'],list):
-                    raise ValueError('custom_option must be a list')
-
-        except ValueError,e:
-            raise e
-
-        return config
-
     def gather_stage(self, harvest_job):
 
         if harvest_job.source.url.startswith('basic_test'):
@@ -80,7 +64,7 @@ class TestHarvestQueue(object):
         consumer = queue.get_consumer('ckan.harvest.gather','harvest_job_id')
         consumer_fetch = queue.get_consumer('ckan.harvest.fetch','harvest_object_id')
         consumer.queue_purge(queue='ckan.harvest.gather')
-        consumer.queue_purge(queue='ckan.harvest.fetch')
+        consumer_fetch.queue_purge(queue='ckan.harvest.fetch')
 
 
         user = logic.get_action('get_site_user')(
@@ -90,12 +74,19 @@ class TestHarvestQueue(object):
         context = {'model': model, 'session': model.Session,
                    'user': user, 'api_version': 3}
 
+        source_dict = {
+            'title': 'Test Source',
+            'name': 'test-source',
+            'url': 'basic_test',
+            'source_type': 'test',
+        }
+
         harvest_source = logic.get_action('harvest_source_create')(
             context,
-            {'type':'test', 'url': 'basic_test'}
+            source_dict
         )
 
-        assert harvest_source['type'] == 'test', harvest_source
+        assert harvest_source['source_type'] == 'test', harvest_source
         assert harvest_source['url'] == 'basic_test', harvest_source
 
 
@@ -135,12 +126,15 @@ class TestHarvestQueue(object):
         assert len(model.Session.query(HarvestObjectExtra).all()) == 1
 
         ## do twice as two harvest objects
-        reply = consumer.basic_get(queue='ckan.harvest.fetch')
+        reply = consumer_fetch.basic_get(queue='ckan.harvest.fetch')
         queue.fetch_callback(consumer, *reply)
-        reply = consumer.basic_get(queue='ckan.harvest.fetch')
+        reply = consumer_fetch.basic_get(queue='ckan.harvest.fetch')
         queue.fetch_callback(consumer, *reply)
 
-        assert len(model.Session.query(model.Package).all()) == 2
+        count = model.Session.query(model.Package) \
+                .filter(model.Package.type==None) \
+                .count()
+        assert count == 2
 
         all_objects = model.Session.query(HarvestObject).all()
         assert len(all_objects) == 2

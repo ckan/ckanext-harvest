@@ -5,9 +5,39 @@ import paste
 import pylons.test
 
 from ckan import tests
+from ckan import plugins as p
+from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.model as harvest_model
 
-from ckanext.harvest.tests.test_queue import TestHarvester
+class MockHarvesterForActionTests(p.SingletonPlugin):
+    p.implements(IHarvester)
+    def info(self):
+        return {'name': 'test-for-action', 'title': 'Test for action', 'description': 'test'}
+
+    def validate_config(self,config):
+        if not config:
+            return config
+
+        try:
+            config_obj = json.loads(config)
+
+            if 'custom_option' in config_obj:
+                if not isinstance(config_obj['custom_option'],list):
+                    raise ValueError('custom_option must be a list')
+
+        except ValueError,e:
+            raise e
+
+        return config
+
+    def gather_stage(self, harvest_job):
+        return []
+
+    def fetch_stage(self, harvest_object):
+        return True
+
+    def import_stage(self, harvest_object):
+        return True
 
 class HarvestSourceActionBase(object):
 
@@ -31,7 +61,7 @@ class HarvestSourceActionBase(object):
           "name": "test-source-action",
           "title": "Test source action",
           "notes": "Test source action desc",
-          "source_type": "test",
+          "source_type": "test-for-action",
           "frequency": "MANUAL",
           "config": json.dumps({"custom_option":["a","b"]})
         }
@@ -44,7 +74,6 @@ class HarvestSourceActionBase(object):
 
     def teardown(self):
         pass
- #       ckan.model.Session.query(harvest_model.HarvestSource).delete()
 
     def test_invalid_missing_values(self):
 
@@ -54,7 +83,7 @@ class HarvestSourceActionBase(object):
 
         result = tests.call_action_api(self.app, self.action,
                                 apikey=self.sysadmin['apikey'], status=409, **source_dict)
-        
+
         for key in ('name','title','url','source_type'):
             assert result[key] == [u'Missing value']
 
@@ -130,7 +159,7 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
 
         result = tests.call_action_api(self.app, 'harvest_source_create',
                                 apikey=self.sysadmin['apikey'], status=409, **source_dict)
-        
+
         assert 'url' in result
         assert u'There already is a Harvest Source for this URL' in result['url'][0]
 
@@ -140,7 +169,7 @@ class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
     def setup_class(cls):
 
         cls.action = 'harvest_source_update'
-        
+
         super(TestHarvestSourceActionUpdate, cls).setup_class()
 
         # Create a source to udpate
