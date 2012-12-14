@@ -1,6 +1,5 @@
 import logging
 from sqlalchemy import or_
-from ckan.authz import Authorizer
 from ckan.model import User
 
 from ckan.plugins import PluginImplementations
@@ -161,26 +160,28 @@ def _get_sources_for_user(context,data_dict):
         query = query.filter(HarvestSource.active==True) \
 
     # Sysadmins will get all sources
-    if not Authorizer().is_sysadmin(user):
-        # This only applies to a non sysadmin user when using the
-        # publisher auth profile. When using the default profile,
-        # normal users will never arrive at this point, but even if they
-        # do, they will get an empty list.
+    if user:
         user_obj = User.get(user)
-
-        publisher_filters = []
-        publishers_for_the_user = user_obj.get_groups(u'publisher')
-        for publisher_id in [g.id for g in publishers_for_the_user]:
-            publisher_filters.append(HarvestSource.publisher_id==publisher_id)
-
-        if len(publisher_filters):
-            query = query.filter(or_(*publisher_filters))
-        else:
-            # This user does not belong to a publisher yet, no sources for him/her
-            return []
-
-        log.debug('User %s with publishers %r has Harvest Sources: %r',
-                  user, publishers_for_the_user, [(hs.id, hs.url) for hs in query])
+        if not user_obj.sysadmin:
+            # This only applies to a non sysadmin user when using the
+            # publisher auth profile. When using the default profile,
+            # normal users will never arrive at this point, but even if they
+            # do, they will get an empty list.
+            user_obj = User.get(user)
+    
+            publisher_filters = []
+            publishers_for_the_user = user_obj.get_groups(u'publisher')
+            for publisher_id in [g.id for g in publishers_for_the_user]:
+                publisher_filters.append(HarvestSource.publisher_id==publisher_id)
+    
+            if len(publisher_filters):
+                query = query.filter(or_(*publisher_filters))
+            else:
+                # This user does not belong to a publisher yet, no sources for him/her
+                return []
+    
+            log.debug('User %s with publishers %r has Harvest Sources: %r',
+                      user, publishers_for_the_user, [(hs.id, hs.url) for hs in query])
 
     sources = query.all()
 
