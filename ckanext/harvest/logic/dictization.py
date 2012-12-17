@@ -1,4 +1,4 @@
-from sqlalchemy import distinct
+from sqlalchemy import distinct, func
 
 from ckan.model import Package,Group
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject, \
@@ -30,6 +30,16 @@ def harvest_job_dictize(job, context):
     if context.get('return_objects', True):
         for obj in job.objects:
             out['objects'].append(obj.as_dict())
+
+    if context.get('return_stats', True):
+        stats = context['model'].Session.query(
+            HarvestObject.report_status,
+            func.count(HarvestObject.id).label('total_objects'))\
+                .filter_by(harvest_job_id=job.id)\
+                .group_by(HarvestObject.report_status).all()
+        out['stats'] = {}
+        for status, count in stats:
+            out['stats'][status] = count
 
     for error in job.gather_errors:
         out['gather_errors'].append(error.as_dict())
