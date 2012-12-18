@@ -63,6 +63,8 @@ class TestHarvester(SingletonPlugin):
         harvest_object.current = True
         if package_dict['name'] == 'test_to_delete' and package_object:
             harvest_object.current = False
+            package_object.state = 'deleted'
+            package_object.save()
 
         harvest_object.save()
         return True
@@ -175,6 +177,17 @@ class TestHarvestQueue(object):
         assert harvest_job['status'] == u'Finished'
         assert harvest_job['stats'] == {'new': 3}
 
+        context['detailed'] = True
+
+        harvest_source_dict = logic.get_action('harvest_source_show')(
+            context,
+            {'id': harvest_source['id']}
+        )
+
+        assert harvest_source_dict['status']['last_harvest_statistics'] == {'updated': 0, 'added': 3, 'deleted': 0, 'errors': 0L}
+        assert harvest_source_dict['status']['overall_statistics'] == {'added': 3L, 'errors': 0L}
+
+
         ########### Second run ########################
 
         harvest_job = logic.get_action('harvest_job_create')(
@@ -215,9 +228,26 @@ class TestHarvestQueue(object):
         all_objects = model.Session.query(HarvestObject).filter_by(report_status='deleted').all()
         assert len(all_objects) == 1, len(all_objects)
 
+        # run to make sure job is marked as finshed
+        try:
+            logic.get_action('harvest_jobs_run')(
+                context,
+                {'source_id':harvest_source['id']}
+            )
+        except Exception, e:
+            assert 'There are no new harvesting jobs' in str(e)
+
         harvest_job = logic.get_action('harvest_job_show')(
             context,
             {'id': job_id}
         )
         assert harvest_job['stats'] == {'updated': 2, 'deleted': 1}
 
+        context['detailed'] = True
+        harvest_source_dict = logic.get_action('harvest_source_show')(
+            context,
+            {'id': harvest_source['id']}
+        )
+
+        assert harvest_source_dict['status']['last_harvest_statistics'] == {'updated': 2, 'added': 0, 'deleted': 1, 'errors': 0L}
+        assert harvest_source_dict['status']['overall_statistics'] == {'added': 2L, 'errors': 0L}
