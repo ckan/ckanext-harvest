@@ -4,6 +4,8 @@ from ckan import logic
 from ckan import model
 import ckan.lib.helpers as h
 
+from ckanext.harvest.plugin import DATASET_TYPE_NAME
+
 def package_list_for_source(source_id):
     '''
     Creates a dataset list with the ones belonging to a particular harvest
@@ -24,10 +26,17 @@ def package_list_for_source(source_id):
     context = {'model': model, 'session': model.Session}
     query = logic.get_action('package_search')(context, search_dict)
 
+    base_url = h.url_for('{0}_read'.format(DATASET_TYPE_NAME), id=source_id)
+    def pager_url(q=None, page=None):
+        url = base_url
+        if page:
+            url += '?page={0}'.format(page)
+        return url
+
     pager = h.Page(
         collection=query['results'],
         page=page,
-        #        url=pager_url,
+        url=pager_url,
         item_count=query['count'],
         items_per_page=limit
     )
