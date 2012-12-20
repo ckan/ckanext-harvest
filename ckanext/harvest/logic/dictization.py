@@ -1,4 +1,5 @@
-from sqlalchemy import distinct
+from sqlalchemy import distinct, func
+import ckan.logic as logic
 
 from ckan.model import Package,Group
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject, \
@@ -30,6 +31,16 @@ def harvest_job_dictize(job, context):
     if context.get('return_objects', True):
         for obj in job.objects:
             out['objects'].append(obj.as_dict())
+
+    if context.get('return_stats', True):
+        stats = context['model'].Session.query(
+            HarvestObject.report_status,
+            func.count(HarvestObject.id).label('total_objects'))\
+                .filter_by(harvest_job_id=job.id)\
+                .group_by(HarvestObject.report_status).all()
+        out['stats'] = {}
+        for status, count in stats:
+            out['stats'][status] = count
 
     for error in job.gather_errors:
         out['gather_errors'].append(error.as_dict())
@@ -67,7 +78,7 @@ def _get_source_status(source, context):
            'job_count': 0,
            'next_harvest':'',
            'last_harvest_request':'',
-           'last_harvest_statistics':{'added':0,'updated':0,'errors':0},
+           'last_harvest_statistics':{'added':0,'updated':0,'errors':0,'deleted':0},
            'last_harvest_errors':{'gather':[],'object':[]},
            'overall_statistics':{'added':0, 'errors':0},
            'packages':[]}
@@ -93,38 +104,21 @@ def _get_source_status(source, context):
         #TODO: Should we encode the dates as strings?
         out['last_harvest_request'] = str(last_job.gather_finished)
 
-        #Get HarvestObjects from last job whit links to packages
         if detailed:
-            last_objects = [obj for obj in last_job.objects if obj.package is not None]
-
-            if len(last_objects) == 0:
+            harvest_job_dict = harvest_job_dictize(last_job, context)
                 # No packages added or updated
-                out['last_harvest_statistics']['added'] = 0
-                out['last_harvest_statistics']['updated'] = 0
-            else:
-                # Check wether packages were added or updated
-                for last_object in last_objects:
-                    # Check if the same package had been linked before
-                    previous_objects = model.Session.query(HarvestObject) \
-                                             .filter(HarvestObject.package==last_object.package) \
-                                             .count()
+            statistics = out['last_harvest_statistics']
+            statistics['added'] = harvest_job_dict['stats'].get('new',0)
+            statistics['updated'] = harvest_job_dict['stats'].get('updated',0)
+            statistics['deleted'] = harvest_job_dict['stats'].get('deleted',0)
+            statistics['errors'] = (harvest_job_dict['stats'].get('errored',0) +
+                                    len(last_job.gather_errors))
 
-                    if previous_objects == 1:
-                        # It didn't previously exist, it has been added
-                        out['last_harvest_statistics']['added'] += 1
-                    else:
-                        # Pacakge already existed, but it has been updated
-                        out['last_harvest_statistics']['updated'] += 1
-
-        # Last harvest errors
-        # We have the gathering errors in last_job.gather_errors, so let's also
-        # get also the object errors.
-        object_errors = model.Session.query(HarvestObjectError).join(HarvestObject) \
-                            .filter(HarvestObject.job==last_job)
-
-        out['last_harvest_statistics']['errors'] = len(last_job.gather_errors) \
-                                            + object_errors.count()
         if detailed:
+            # We have the gathering errors in last_job.gather_errors, so let's also
+            # get also the object errors.
+            object_errors = model.Session.query(HarvestObjectError).join(HarvestObject) \
+                                .filter(HarvestObject.job==last_job)
             for gather_error in last_job.gather_errors:
                 out['last_harvest_errors']['gather'].append(gather_error.message)
 

@@ -213,6 +213,7 @@ def define_harvester_tables():
         Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
         Column('harvest_source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
         Column('package_id', types.UnicodeText, ForeignKey('package.id', deferrable=True), nullable=True),
+        Column('report_status', types.UnicodeText, nullable=True),
     )
 
     # New table
@@ -373,6 +374,7 @@ ALTER TABLE harvest_object
 	ADD COLUMN import_started timestamp without time zone,
 	ADD COLUMN import_finished timestamp without time zone,
 	ADD COLUMN "state" text;
+	ADD COLUMN "report_status" text;
 
 ALTER TABLE harvest_source
 	ADD COLUMN frequency text,
@@ -386,6 +388,7 @@ ALTER TABLE harvest_object_extra
 
 UPDATE harvest_object set state = 'COMPLETE';
 UPDATE harvest_object set retry_times = 0;
+UPDATE harvest_object set report_status = 'new';
 UPDATE harvest_source set frequency = 'MANUAL';
 
 ALTER TABLE harvest_object DROP CONSTRAINT harvest_object_package_id_fkey;
