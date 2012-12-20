@@ -6,6 +6,7 @@ import pika
 
 from ckan.lib.base import config
 from ckan.plugins import PluginImplementations
+from ckan import model
 
 from ckanext.harvest.model import HarvestJob, HarvestObject,HarvestGatherError
 from ckanext.harvest.interfaces import IHarvester
@@ -191,6 +192,20 @@ def fetch_callback(channel, method, header, body):
             else:
                 obj.state = "ERROR"
                 obj.save()
+            if obj.report_status:
+                continue
+            if obj.state == 'ERROR':
+                obj.report_status = 'errored'
+            elif obj.current == False:
+                obj.report_status = 'deleted'
+            elif len(model.Session.query(HarvestObject)
+                   .filter_by(package_id = obj.package_id)
+                   .limit(2)
+                   .all()) == 2:
+                obj.report_status = 'updated'
+            else:
+                obj.report_status = 'new'
+            obj.save()
 
     channel.basic_ack(method.delivery_tag)
 

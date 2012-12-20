@@ -8,7 +8,6 @@ from ckan import logic
 from ckan.plugins import PluginImplementations
 from ckanext.harvest.interfaces import IHarvester
 
-
 from ckan.logic import NotFound, check_access
 
 from ckanext.harvest import model as harvest_model
@@ -283,13 +282,13 @@ def _get_sources_for_user(context,data_dict):
                                  HarvestSource.next_run==None)
                             )
 
+    user_obj = User.get(user)
     # Sysadmins will get all sources
-    if not Authorizer().is_sysadmin(user):
+    if user_obj and user_obj.sysadmin:
         # This only applies to a non sysadmin user when using the
         # publisher auth profile. When using the default profile,
         # normal users will never arrive at this point, but even if they
         # do, they will get an empty list.
-        user_obj = User.get(user)
 
         publisher_filters = []
         publishers_for_the_user = user_obj.get_groups(u'publisher')
