@@ -115,7 +115,13 @@ def gather_callback(channel, method, header, body):
                     harvester_found = True
                     # Get a list of harvest object ids from the plugin
                     job.gather_started = datetime.datetime.now()
-                    harvest_object_ids = harvester.gather_stage(job)
+                    try:
+                        harvest_object_ids = harvester.gather_stage(job)
+                    except:
+                        log.error('Gather stage failed unexpectedly')
+                        job.status = 'Errored'
+                        job.save()
+                        continue
                     job.gather_finished = datetime.datetime.now()
                     job.save()
                     log.debug('Received from plugin''s gather_stage: %r' % harvest_object_ids)
