@@ -283,7 +283,7 @@ def _get_sources_for_user(context,data_dict):
 
     user_obj = User.get(user)
     # Sysadmins will get all sources
-    if user_obj and user_obj.sysadmin:
+    if user_obj and not user_obj.sysadmin:
         # This only applies to a non sysadmin user when using the
         # publisher auth profile. When using the default profile,
         # normal users will never arrive at this point, but even if they
