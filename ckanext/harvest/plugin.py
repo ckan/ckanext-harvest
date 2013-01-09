@@ -12,7 +12,6 @@ from ckanext.harvest import logic as harvest_logic
 
 from ckanext.harvest.model import setup as model_setup
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
-from ckanext.harvest.model import UPDATE_FREQUENCIES
 
 
 log = getLogger(__name__)
@@ -108,19 +107,8 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
         return 'source/edit.html'
 
     def setup_template_variables(self, context, data_dict):
-        harvesters_info = logic.get_action('harvesters_info_show')(context,{})
 
         p.toolkit.c.harvest_source = p.toolkit.c.pkg
-
-        p.toolkit.c.frequencies = [
-                {'text': p.toolkit._(f.title()), 'value': f}
-                for f in UPDATE_FREQUENCIES
-                ]
-        p.toolkit.c.harvester_types = [
-                {'text': p.toolkit._(h['title']), 'value': h['name']}
-                for h in harvesters_info
-                ]
-        p.toolkit.c.harvesters_info = harvesters_info
 
         p.toolkit.c.dataset_type = DATASET_TYPE_NAME
 
@@ -283,7 +271,12 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
     ## ITemplateHelpers
     def get_helpers(self):
         from ckanext.harvest import helpers as harvest_helpers
-        return {'package_list_for_source': harvest_helpers.package_list_for_source}
+        return {
+                'package_list_for_source': harvest_helpers.package_list_for_source,
+                'harvesters_info': harvest_helpers.harvesters_info,
+                'harvester_types': harvest_helpers.harvester_types,
+                'harvest_frequencies': harvest_helpers.harvest_frequencies,
+                }
 
 
 def _get_auth_functions(module_root, auth_functions = {}):
