@@ -1,11 +1,6 @@
-import os
 from logging import getLogger
 
 from pylons import config
-from genshi.input import HTML
-from genshi.filters import Transformer
-
-import ckan.lib.helpers as h
 
 from ckan import plugins
 from ckan.plugins import implements, SingletonPlugin
@@ -15,6 +10,7 @@ from ckanext.harvest.model import setup as model_setup
 
 log = getLogger(__name__)
 assert not log.disabled
+
 
 class Harvest(SingletonPlugin):
 
@@ -26,24 +22,26 @@ class Harvest(SingletonPlugin):
 
     def configure(self, config):
 
-        auth_profile = config.get('ckan.harvest.auth.profile',None)
+        auth_profile = config.get('ckan.harvest.auth.profile', None)
 
         if auth_profile:
             # Check if auth profile exists
             module_root = 'ckanext.harvest.logic.auth'
             module_path = '%s.%s' % (module_root, auth_profile)
             try:
-                module = __import__(module_path)
-            except ImportError,e:
+                __import__(module_path)
+            except ImportError:
                 raise ImportError('Unknown auth profile: %s' % auth_profile)
 
             # If we are using the publisher auth profile, make sure CKAN core
             # also uses it.
-            if auth_profile == 'publisher' and \
-                not config.get('ckan.auth.profile','') == 'publisher':
-                raise Exception('You must enable the "publisher" auth profile'
-                      +' in CKAN in order to use it on the harvest extension'
-                      +' (adding "ckan.auth.profile=publisher" to your ini file)')
+            if (auth_profile == 'publisher' and
+                    not config.get('ckan.auth.profile', '') == 'publisher'):
+                raise Exception(
+                        '''You must enable the "publisher" auth profile
+                        in CKAN in order to use it on the harvest extension
+                        (adding "ckan.auth.profile=publisher" to your ini file)'''
+                )
 
         # Setup harvest model
         model_setup()
@@ -51,14 +49,14 @@ class Harvest(SingletonPlugin):
     def before_map(self, map):
 
         controller = 'ckanext.harvest.controllers.view:ViewController'
-        map.connect('harvest', '/harvest',controller=controller,action='index')
+        map.connect('harvest', '/harvest', controller=controller, action='index')
 
         map.connect('/harvest/new', controller=controller, action='new')
         map.connect('/harvest/edit/:id', controller=controller, action='edit')
-        map.connect('/harvest/delete/:id',controller=controller, action='delete')
+        map.connect('/harvest/delete/:id', controller=controller, action='delete')
         map.connect('/harvest/:id', controller=controller, action='read')
 
-        map.connect('harvesting_job_create', '/harvest/refresh/:id',controller=controller,
+        map.connect('harvesting_job_create', '/harvest/refresh/:id', controller=controller,
                 action='create_harvesting_job')
 
         map.connect('/harvest/object/:id', controller=controller, action='show_object')
@@ -101,7 +99,7 @@ class Harvest(SingletonPlugin):
             'harvest_source_update': harvest_source_update,
             'harvest_source_delete': harvest_source_delete,
             'harvest_objects_import': harvest_objects_import,
-            'harvest_jobs_run':harvest_jobs_run
+            'harvest_jobs_run': harvest_jobs_run
         }
 
     def get_auth_functions(self):
@@ -112,19 +110,19 @@ class Harvest(SingletonPlugin):
         auth_functions = _get_auth_functions(module_root)
         if auth_profile:
             module_root = '%s.%s' % (module_root, auth_profile)
-            auth_functions = _get_auth_functions(module_root,auth_functions)
+            auth_functions = _get_auth_functions(module_root, auth_functions)
 
         log.debug('Using auth profile at %s' % module_root)
 
         return auth_functions
 
-def _get_auth_functions(module_root, auth_functions = {}):
 
-    for auth_module_name in ['get', 'create', 'update','delete']:
+def _get_auth_functions(module_root, auth_functions={}):
+    for auth_module_name in ['get', 'create', 'update', 'delete']:
         module_path = '%s.%s' % (module_root, auth_module_name,)
         try:
             module = __import__(module_path)
-        except ImportError,e:
+        except ImportError:
             log.debug('No auth module for action "%s"' % auth_module_name)
             continue
 
@@ -135,6 +133,4 @@ def _get_auth_functions(module_root, auth_functions = {}):
             if not key.startswith('_'):
                 auth_functions[key] = value
 
-
     return auth_functions
-
