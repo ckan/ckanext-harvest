@@ -30,7 +30,7 @@ def harvest_source_schema():
         'title': [if_empty_same_as("name"), unicode],
         'notes': [ignore_missing, unicode],
         'frequency': [ignore_missing, unicode, harvest_source_frequency_exists, convert_to_extras],
-        'state': [ignore_not_package_admin, ignore_missing],
+        'state': [ignore_missing],
         'config': [ignore_missing, harvest_source_config_validator, convert_to_extras],
         'extras': default_extras_schema(),
         '__extras': [ignore],
