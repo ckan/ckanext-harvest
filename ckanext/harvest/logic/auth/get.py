@@ -1,69 +1,86 @@
-from ckan.lib.base import _
+from ckan.plugins import toolkit as pt
+from ckanext.harvest.logic.auth import get_job_object
 
-def harvest_source_show(context,data_dict):
-    model = context['model']
+
+def harvest_source_show(context, data_dict):
+    '''
+        Authorization check for getting the details of a harvest source
+
+        It forwards the checks to package_show, which will check for
+        organization membership, whether if sysadmin, etc according to the
+        instance configuration.
+    '''
+    model = context.get('model')
     user = context.get('user')
+    source_id = data_dict['id']
 
-    user_obj = model.User.get(user)
-    if not user_obj or not user_obj.sysadmin:
-        return {'success': False, 'msg': _('User %s not authorized to read this harvest source') % str(user)}
-    else:
+    pkg = model.Package.get(source_id)
+    if not pkg:
+        raise pt.ObjectNotFound(pt._('Harvest source not found'))
+
+    context['package'] = pkg
+
+    try:
+        pt.check_access('package_show', context, data_dict)
         return {'success': True}
-
-def harvest_source_list(context,data_dict):
-    model = context['model']
-    user = context.get('user')
-
-    user_obj = model.User.get(user)
-    if not user_obj or not user_obj.sysadmin:
-        return {'success': False, 'msg': _('User %s not authorized to see the harvest sources') % str(user)}
-    else:
-        return {'success': True}
+    except pt.Not_Authorized:
+        return {'success': False,
+                'msg': pt._('User {0} not authorized to read harvest source {1}').format(user, source_id)}
 
 
-def harvest_job_show(context,data_dict):
-    model = context['model']
-    user = context.get('user')
+def harvest_source_list(context, data_dict):
+    '''
+        Authorization check for getting a list of harveste sources
 
-    user_obj = model.User.get(user)
-    if not user_obj or not user_obj.sysadmin:
-        return {'success': False, 'msg': _('User %s not authorized to read this harvest job') % str(user)}
-    else:
-        return {'success': True}
-
-def harvest_job_list(context,data_dict):
-    model = context['model']
-    user = context.get('user')
-
-    user_obj = model.User.get(user)
-    if not user_obj or not user_obj.sysadmin:
-        return {'success': False, 'msg': _('User %s not authorized to see the harvest jobs') % str(user)}
-    else:
-        return {'success': True}
-
-def harvest_object_show(context,data_dict):
-    model = context['model']
-    user = context.get('user')
-
+        Everybody can do it
+    '''
     return {'success': True}
 
-def harvest_object_list(context,data_dict):
-    model = context['model']
-    user = context.get('user')
 
-    user_obj = model.User.get(user)
-    if not user_obj or not user_obj.sysadmin:
-        return {'success': False, 'msg': _('User %s not authorized to see the harvest objects') % str(user)}
-    else:
-        return {'success': True}
+def harvest_job_show(context, data_dict):
+    '''
+        Authorization check for getting the details of a harvest job
 
-def harvesters_info_show(context,data_dict):
-    model = context['model']
-    user = context.get('user')
+        It forwards the checks to harvest_source_show, ie if the user can get
+        the details for the parent source, she can get the details for the job
+    '''
+    job = get_job_object(context, data_dict)
 
-    user_obj = model.User.get(user)
-    if not user_obj or not user_obj.sysadmin:
-        return {'success': False, 'msg': _('User %s not authorized to see the harvesters information') % str(user)}
-    else:
-        return {'success': True}
+    return harvest_source_show(context, {'id': job.source.id})
 
+
+def harvest_job_list(context, data_dict):
+    '''
+        Authorization check for getting a list of jobs for a source
+
+        It forwards the checks to harvest_source_show, ie if the user can get
+        the details for the parent source, she can get the list of jobs
+    '''
+    source_id = data_dict['source_id']
+    return harvest_source_show(context, {'id': source_id})
+
+
+def harvest_object_show(context, data_dict):
+    '''
+        Authorization check for getting the contents of a harvest object
+
+        Everybody can do it
+    '''
+    return {'success': True}
+
+
+def harvest_object_list(context, data_dict):
+    '''
+    TODO: remove
+    '''
+    return {'success': True}
+
+
+def harvesters_info_show(context, data_dict):
+    '''
+        Authorization check for getting information about the available
+        harvesters
+
+        Everybody can do it
+    '''
+    return {'success': True}
