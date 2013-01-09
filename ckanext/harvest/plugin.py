@@ -7,6 +7,7 @@ from genshi.filters import Transformer
 
 import ckan.lib.helpers as h
 
+from ckan import plugins
 from ckan.plugins import implements, SingletonPlugin
 from ckan.plugins import IRoutes, IConfigurer
 from ckan.plugins import IConfigurable, IActions, IAuthFunctions
@@ -65,17 +66,8 @@ class Harvest(SingletonPlugin):
         return map
 
     def update_config(self, config):
-        here = os.path.dirname(__file__)
-        template_dir = os.path.join(here, 'templates')
-        public_dir = os.path.join(here, 'public')
-        if config.get('extra_template_paths'):
-            config['extra_template_paths'] += ',' + template_dir
-        else:
-            config['extra_template_paths'] = template_dir
-        if config.get('extra_public_paths'):
-            config['extra_public_paths'] += ',' + public_dir
-        else:
-            config['extra_public_paths'] = public_dir
+        plugins.toolkit.add_resource('public', 'ckanext-harvest')
+        plugins.toolkit.add_template_directory(config, 'templates')
 
     def get_actions(self):
         from ckanext.harvest.logic.action.get import (harvest_source_show,
