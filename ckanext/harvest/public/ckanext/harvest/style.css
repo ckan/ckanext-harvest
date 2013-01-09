@@ -26,6 +26,27 @@ body.index.ViewController .content-outer {
     font-weight: bold;
 }
 
+.harvest-button {
+    padding-left: 20px;
+    margin-top: 10px;
+    display: block;
+    background: transparent no-repeat 0px 0px;
+    width: 16px;
+    height: 16px;
+}
+
+.harvest-view-button {
+    background-image: url("images/icons/source_view.png");
+}
+
+.harvest-edit-button {
+    background-image: url("images/icons/source_edit.png");
+}
+
+.harvest-refresh-button {
+    background-image: url("images/icons/source_refresh.png");
+}
+
 #show-inactive-sources-content{
     float: right;
     width: 150px;
