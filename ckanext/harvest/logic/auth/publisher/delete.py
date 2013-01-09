@@ -1,5 +1,5 @@
 from ckan.lib.base import _
-from ckan.authz import Authorizer
+from ckan.new_authz import is_sysadmin
 from ckan.model import User
 
 from ckanext.harvest.logic.auth import get_source_object
@@ -15,7 +15,7 @@ def harvest_source_delete(context,data_dict):
         return {'success': False, 'msg': _('Non-logged in users are not authorized to delete harvest sources')} 
 
     # Sysadmins can delete the source
-    if Authorizer().is_sysadmin(user):
+    if is_sysadmin(user):
         return {'success': True}
         
     # Check if the source publisher id exists on the user's groups

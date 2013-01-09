@@ -1,8 +1,7 @@
 import logging
 from sqlalchemy import or_
-from ckan.authz import Authorizer
 from ckan.model import User
-
+from ckan.new_authz import is_sysadmin
 from ckan.plugins import PluginImplementations
 from ckanext.harvest.interfaces import IHarvester
 
@@ -161,7 +160,7 @@ def _get_sources_for_user(context,data_dict):
         query = query.filter(HarvestSource.active==True) \
 
     # Sysadmins will get all sources
-    if not Authorizer().is_sysadmin(user):
+    if not is_sysadmin(user):
         # This only applies to a non sysadmin user when using the
         # publisher auth profile. When using the default profile,
         # normal users will never arrive at this point, but even if they

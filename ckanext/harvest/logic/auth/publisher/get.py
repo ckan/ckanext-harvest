@@ -1,6 +1,6 @@
 from ckan.lib.base import _
 from ckan.logic import NotFound
-from ckan.authz import Authorizer
+from ckan.new_authz import is_sysadmin
 from ckan.model import User
 
 from ckanext.harvest.model import HarvestSource
@@ -17,7 +17,7 @@ def harvest_source_show(context,data_dict):
         return {'success': False, 'msg': _('Non-logged in users are not authorized to see harvest sources')}
 
     # Sysadmins can read the source
-    if Authorizer().is_sysadmin(user):
+    if is_sysadmin(user.name):
         return {'success': True}
 
     # Check if the source publisher id exists on the user's groups
@@ -43,7 +43,7 @@ def harvest_source_list(context,data_dict):
         
         # Only users belonging to a publisher can list sources,
         # unless they are sysadmins
-        if Authorizer().is_sysadmin(user_obj):
+        if is_sysadmin(user_obj.name):
             return {'success': True}
         if len(user_obj.get_groups(u'publisher')) > 0:
             return {'success': True}
@@ -59,7 +59,7 @@ def harvest_job_show(context,data_dict):
     if not user:
         return {'success': False, 'msg': _('Non-logged in users are not authorized to see harvest jobs')}
 
-    if Authorizer().is_sysadmin(user):
+    if is_sysadmin(user_obj.name):
         return {'success': True}
 
     user_obj = User.get(user)
@@ -79,7 +79,7 @@ def harvest_job_list(context,data_dict):
     user_obj = User.get(user)
 
     # Checks for non sysadmin users
-    if not Authorizer().is_sysadmin(user):
+    if not is_sysadmin(user.name):
         if not user_obj or len(user_obj.get_groups(u'publisher')) == 0:
             return {'success': False, 'msg': _('User %s must belong to a publisher to list harvest jobs') % str(user)}
 
@@ -108,7 +108,7 @@ def harvest_object_show(context,data_dict):
     if not user:
         return {'success': False, 'msg': _('Non-logged in users are not authorized to see harvest objects')}
 
-    if Authorizer().is_sysadmin(user):
+    if is_sysadmin(user):
         return {'success': True}
 
     user_obj = User.get(user)
@@ -128,7 +128,7 @@ def harvest_object_list(context,data_dict):
     user_obj = User.get(user)
 
     # Checks for non sysadmin users
-    if not Authorizer().is_sysadmin(user):
+    if not is_sysadmin(user):
         if not user_obj or len(user_obj.get_groups(u'publisher')) == 0:
             return {'success': False, 'msg': _('User %s must belong to a publisher to list harvest objects') % str(user)}
 
@@ -156,7 +156,7 @@ def harvesters_info_show(context,data_dict):
     # Sysadmins and the rest of logged users can see the harvesters info,
     # as long as they belong to a publisher
     user_obj = User.get(user)
-    if not user_obj or not Authorizer().is_sysadmin(user) and len(user_obj.get_groups(u'publisher')) == 0:
+    if not user_obj or not is_sysadmin(user) and len(user_obj.get_groups(u'publisher')) == 0:
         return {'success': False, 'msg': _('User %s must belong to a publisher to see the harvesters info') % str(user)}
     else:
         return {'success': True}
