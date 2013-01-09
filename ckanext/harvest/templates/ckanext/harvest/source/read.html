@@ -1,0 +1,145 @@
+{% extends "page.html" %}
+
+{%- block title -%}Harvest Source Details{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    {% resource 'ckanext-harvest/ckanext/harvest/style.css' %}
+{% endblock %}
+
+{% block primary_content %}
+  <div class="harvest-content">
+  {% if c.source %}
+  <h1>Harvest Source Details</h1>
+  <div id="harvest-source-actions">
+    <img src="/ckanext/harvest/images/icons/source_edit.png" alt="Edit" /><a href="/harvest/edit/{{ c.source.id }}">Edit source</a> |
+    <img src="/ckanext/harvest/images/icons/source_refresh.png" alt="Refresh" /><a href="/harvest/refresh/{{ c.source.id }}">Refresh source</a> |
+    <a href="/harvest">Sources list</a>
+
+    </div>
+    {% if not c.source.active %}
+        <div class="alert alert-block">NB: This Harvest Source is Withdrawn. Therefore the Gemini XML will not be harvested again. However, any metadata that was previously harvested, remains in the catalogue.</div>
+    {% endif %}
+    <table id="harvest-source-details" class="table table-bordered table-condensed">
+        <tr>
+            <th>ID</th>
+            <td>{{ c.source.id }}</td>
+        </tr>
+        <tr>
+            <th>URL</th>
+            <td>{{ c.source.url }}</td>
+        </tr>
+        <tr>
+            <th>Type</th>
+            <td>{{ c.source.type }}</td>
+        </tr>
+        <tr>
+            <th>Withdrawn</th>
+            <td>{{ not c.source.active }}</td>
+        </tr>
+        {% if c.source.title %}
+            <tr>
+                <th>Title</th>
+                <td>{{ c.source.title }}</td>
+            </tr>
+        {% endif %}
+
+        <tr>
+            <th>Description</th>
+            <td>{{ c.source.description }}</td>
+        </tr>
+        <tr>
+            <th>Configuration</th>
+            {% if c.source.config %}
+                <td>{{ c.source.config }}</td>
+            {% else %}
+            <td>-</td>
+            {% endif %}
+        </tr>
+        {% if c.publisher_auth %}
+            <tr>
+                <th>User</th>
+                <td>{{ c.source.user_id }}</td>
+            </tr>
+        {% endif %}
+        {% if c.publisher_auth %}
+            <tr>
+                <th>Publisher</th>
+                {% if c.source.publisher_title %}
+                    <td>{{ c.source.publisher_title }}</td>
+                {% else %}
+                <td>{{ c.source.publisher_id }}</td>
+                {% endif %}
+            </tr>
+        {% endif %}
+        <tr>
+            <th>Created</th>
+            <td>{{ c.source.created }}</td>
+        </tr>
+        <tr>
+            <th>Total jobs</th>
+            <td>{{ c.source.status.job_count }}</td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td>
+                <a name="errors"></a>Last Harvest Errors: {{ c.source.status.last_harvest_statistics.errors }}<br/>
+                {% if c.source.status.last_harvest_errors.gather|length > 0 %}
+                    <i>Gathering errors</i>
+                    <ul>
+                        {% for error in c.source.status.last_harvest_errors.gather %}
+                            <li>
+                                <pre>{{ error['message'] }}</pre>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if c.source.status.last_harvest_errors.object|length > 0%}
+                   <i>Object errors</i>
+                    <ul>
+                        {% for error in c.source.status.last_harvest_errors.object %}
+                        <li>
+                            <div>GUID <a href="{{ g.site_url }}/harvest/object/{{ error.object_id }}">{{ error.object_guid }}</a></div>
+                            <pre>{{ error['message'] }}</pre>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                Last Harvest Added: {{ c.source.status.last_harvest_statistics.added }}<br/>
+                Last Harvest Updated: {{ c.source.status.last_harvest_statistics.updated }}<br/>
+                Last Harvest: {{ c.source.status.last_harvest_request }} <br/>
+                Next Harvest: {{ c.source.status.next_harvest }}
+            </td>
+        </tr>
+        <tr>
+            <th>Total Errors</th>
+            <td>{{ c.source.status.overall_statistics.errors }}</td>
+        </tr>
+        <tr>
+            <th>Total Datasets</th>
+            <td>{{ c.source.status.overall_statistics.added }}</td>
+        </tr>
+        <tr>
+            <th>Datasets</th>
+            <td>
+                <a name="datasets"></a>
+                <div>There could be a 10 minutes delay before these datasets (or changes to them) appear on
+                the site or on search results.</div>
+
+                <p i18n:msg="item_count">There are <strong>{{ c.page.item_count }}</strong> datasets.</p>
+
+                {{ c.page.pager() }}
+                {% for item in c.page.items %}
+                    <div>
+                        <a href="/dataset/{{ item }}">{{ item }}</a>
+                    </div>
+                {% endfor %}
+                {{ c.page.pager() }}
+
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+  </div>
+{% endblock %}

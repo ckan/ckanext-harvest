@@ -1,0 +1,16 @@
+{% extends "page.html" %}
+
+{%- block title -%}Edit - Harvest Source{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    {% resource 'ckanext-harvest/ckanext/harvest/style.css' %}
+{% endblock %}
+
+{% block primary_content %}
+  <div class="harvest-content">
+    <h2>Edit harvest source </h2>
+    {% include "ckanext/harvest/source/new_source_form.html" %}
+
+  </div>
+{% endblock %}

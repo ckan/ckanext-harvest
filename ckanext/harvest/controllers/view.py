@@ -1,21 +1,22 @@
 import re
+import json
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 from pylons.i18n import _
 
-from ckan.authz import Authorizer
-from ckan import model
+from ckan.new_authz import is_sysadmin
+from ckan import model, plugins as p
 from ckan.model.group import Group
 
-import ckan.lib.helpers as h, json
-from ckan.lib.base import BaseController, c, g, request, \
-                          response, session, render, config, abort, redirect
+import ckan.lib.helpers as h
+from ckan.lib.base import (BaseController, c, request,
+                          response, config, abort, redirect)
 
 from ckan.lib.navl.dictization_functions import DataError
 from ckan.logic import NotFound, ValidationError, get_action, NotAuthorized
 from ckanext.harvest.logic.schema import harvest_source_form_schema
 
-from ckan.lib.helpers import Page,pager_url
+from ckan.lib.helpers import Page, pager_url
 
 import logging
 log = logging.getLogger(__name__)
@@ -26,27 +27,27 @@ class ViewController(BaseController):
 
     def __before__(self, action, **params):
 
-        super(ViewController,self).__before__(action, **params)
+        super(ViewController, self).__before__(action, **params)
 
-        c.publisher_auth = (config.get('ckan.harvest.auth.profile',None) == 'publisher')
+        c.publisher_auth = (config.get('ckan.harvest.auth.profile', None) == 'publisher')
 
     def _get_publishers(self):
-        groups = None
+        groups = []
 
         if c.publisher_auth:
-            if Authorizer().is_sysadmin(c.user):
+            if is_sysadmin(c.user):
                 groups = Group.all(group_type='publisher')
             elif c.userobj:
                 groups = c.userobj.get_groups('publisher')
-            else: # anonymous user shouldn't have access to this page anyway.
+            else:  # anonymous user shouldn't have access to this page anyway.
                 groups = []
 
             # Be explicit about which fields we make available in the template
-            groups = [ {
+            groups = [{
                 'name': g.name,
                 'id': g.id,
-                'title': g.title,
-            } for g in groups ]
+                'title': g.title
+            } for g in groups]
 
         return groups
 
@@ -64,7 +65,7 @@ class ViewController(BaseController):
 
         c.status = config.get('ckan.harvest.status')
 
-        return render('index.html')
+        return p.toolkit.render('ckanext/harvest/index.html')
 
     def new(self,data = None,errors = None, error_summary = None):
 
@@ -74,18 +75,22 @@ class ViewController(BaseController):
         data = data or {}
         errors = errors or {}
         error_summary = error_summary or {}
+        context = {'model': model, 'user': c.user}
 
         try:
-            context = {'model':model, 'user':c.user}
-            harvesters_info = get_action('harvesters_info_show')(context,{})
-        except NotAuthorized,e:
-            abort(401,self.not_auth_message)
+            harvesters_info = get_action('harvesters_info_show')(context, {})
+        except NotAuthorized:
+            abort(401, self.not_auth_message)
 
-        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': harvesters_info}
+        template_vars = {
+            'data': data,
+            'errors': errors,
+            'error_summary': error_summary,
+            'harvesters': harvesters_info
+        }
 
         c.groups = self._get_publishers()
-        c.form = render('source/new_source_form.html', extra_vars=vars)
-        return render('source/new.html')
+        return p.toolkit.render('ckanext/harvest/source/new.html', template_vars)
 
     def _save_new(self):
         try:
@@ -136,11 +141,10 @@ class ViewController(BaseController):
         except NotAuthorized,e:
             abort(401,self.not_auth_message)
 
-        vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': harvesters_info}
+        template_vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': harvesters_info}
 
         c.groups = self._get_publishers()
-        c.form = render('source/new_source_form.html', extra_vars=vars)
-        return render('source/edit.html')
+        return p.toolkit.render('ckanext/harvest/source/edit.html', template_vars)
 
     def _save_edit(self,id):
         try:
@@ -179,7 +183,7 @@ class ViewController(BaseController):
             log.info(_('Incorrect form fields posted'))
             raise DataError(data_dict)
 
-    def read(self,id):
+    def read(self, id):
         try:
             context = {'model':model, 'user':c.user}
             c.source = get_action('harvest_source_show')(context, {'id':id})
@@ -190,8 +194,7 @@ class ViewController(BaseController):
                 items_per_page=20,
                 url=pager_url
             )
-
-            return render('source/read.html')
+            return p.toolkit.render('ckanext/harvest/source/read.html')
         except NotFound:
             abort(404,_('Harvest source not found'))
         except NotAuthorized,e:

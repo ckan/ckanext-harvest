@@ -1,0 +1,99 @@
+<form id="source-new" class="ckan" method="post"{% if errors %} class="has-errors"{% endif %}>
+  {% if error_summary %}
+    <div class="error-explanation">
+      <h2>Errors in form</h2>
+      <p>The form contains invalid entries:</p>
+      <ul>
+        {% for key, error in error_summary.items() %}
+          <li>{{ key }}: {{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+  <fieldset>
+    <legend>Details</legend>
+      <dl>
+          <dt><label class="field_req" for="url">URL for source of metadata *</label></dt>
+          <dd><input id="url" name="url" size="80" type="text" value="{{ data.get('url', '') }}" /></dd>
+          {% if errors.get('url', '') %}
+            <dd class="field_error">{{ errors.get('url', '') }}</dd>
+          {% endif %}
+          <dd class="instructions basic">This should include the <tt>http://</tt> part of the URL</dd>
+          <dt><label class="field_req" for="type">Source Type *</label></dt>
+          <dd>
+              <select id="type" name="type">
+                  {% for harvester in harvesters %}
+                   <option value="{{ harvester.name }}" {% if data.get('type', '') == harvester.name %}selected="selected"{% endif %} data-config="{{ harvester.show_config}}">{{ harvester.title }}</option>
+                  {% endfor %}
+              </select>
+          </dd>
+          {% if errors.get('type', '') %}
+            <dd class="field_error">{{ errors.get('type', '') }}</dd>
+          {% endif %}
+          <dd class="instructions basic">Which type of source does the URL above represent?
+            <ul>
+              {% for harvester in harvesters %}
+                <li>
+                  <span class="harvester-title">
+                    {{ harvester.title }}</span>: {{ harvester.description }}
+                </li>
+              {% endfor %}
+            </ul>
+          </dd>
+
+          <dt class="harvest-source-title"><label class="field_req" for="title">Title</label></dt>
+          <dd class="harvest-source-title"><input id="title" name="title" size="80" type="text" value="{{ data.get('title', '') }}" /></dd>
+          {% if errors.get('title', '') %}
+            <dd class="harvest-source-title field_error">{{ errors.get('title', '') }}</dd>
+          {% endif %}
+          <dd class="harvest-source-title instructions basic">This will be shown as the datasets source.</dd>
+
+          <dt><label class="field_opt" for="description">Description</label></dt>
+          <dd><textarea id="description" name="description" cols="30" rows="2" style="height:75px">{{ data.get('description', '') }}</textarea></dd>
+          <dd class="instructions basic">You can add your own notes here about what the URL above represents to remind you later.</dd>
+          {% if c.publisher_auth %}
+            <dt><label class="field_opt" for="groups__{{ data.get('groups', [])|length }}__id">Publisher</label></dt>
+            {% if c.groups %}
+              <dd>
+                <select id="publisher_id" name="publisher_id">
+                  {% for group in c.groups %}
+                  <option value="{{ group['id'] }}" {% if group['id'] == data.get('publisher_id', None) %} selected="selected"{% endif %}>{{ group['title'] }}</option>
+                  {% endfor %}
+                </select>
+              </dd>
+              {% else %}
+                <dd><em>Cannot add any publishers.</em></dd>
+              {% endif %}
+          {% endif %}
+
+          <dt class="harvest-source-config"><label class="field_opt" for="config">Configuration</label></dt>
+          <dd class="harvest-source-config"><textarea id="config" name="config" cols="30" rows="2" style="height:75px">{{ data.get('config', '') }}</textarea></dd>
+
+          <dt><label class="field_opt" for="active">State</label></dt>
+          <dd>
+          <select id="active" name="active">
+              <option {% if data.get('active') or not 'active' in data %}selected="selected"{% endif %} value="True">active</option>
+              <option {% if 'active' in data and not data.get('active') %}selected="selected"{% endif %} value="False">withdrawn</option>
+          </select>
+          {% if data.get('active') or not 'active' in data %}
+              <div>This harvest source is <span class="source-state-active">Active</span></div>
+          {% endif %}
+          {% if 'active' in data and not data.get('active') %}
+               <div>This harvest source is <span class="source-state-inactive">Withdrawn</span></div>
+          {% endif %}
+
+          </dd>
+      </dl>
+    </fieldset>
+    <input id="save" name="save" value="Save" type="submit" class="btn"/> or <a href="/harvest">Return to the harvest sources list</a>
+    <script type="text/javascript">
+    $(document).ready(function() {
+       $("#type").change(function(){
+            var show_config = ($("#type option:selected").attr("data-config") == "True");
+            if (!show_config) $("#config").val("");
+            $("#config").attr("disabled", !show_config);
+        });
+       $("#type").trigger("change");
+    });
+    </script>
+</form>
