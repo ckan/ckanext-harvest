@@ -117,8 +117,8 @@ def gather_callback(channel, method, header, body):
                     job.gather_started = datetime.datetime.now()
                     try:
                         harvest_object_ids = harvester.gather_stage(job)
-                    except:
-                        log.error('Gather stage failed unexpectedly')
+                    except Exception, e:
+                        log.error('Gather stage failed unexpectedly: %s' % e)
                         job.status = 'Errored'
                         job.save()
                         continue
@@ -166,6 +166,8 @@ def fetch_callback(channel, method, header, body):
     obj.save()
 
     if obj.retry_times >= 5:
+        obj.state = "ERROR"
+        obj.save()
         log.error('Too many consecutive retries for object {0}'.format(obj.id))
         channel.basic_ack(method.delivery_tag)
         return False
