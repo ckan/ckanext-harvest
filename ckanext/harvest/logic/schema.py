@@ -1,6 +1,7 @@
 from ckan.logic.schema import default_extras_schema
 from ckan.logic.validators import (package_id_exists,
                                    name_validator,
+                                   owner_org_validator,
                                    package_name_validator,
                                    ignore_not_package_admin,
                                    )
@@ -29,6 +30,7 @@ def harvest_source_schema():
         'source_type': [not_empty, unicode, harvest_source_type_exists, convert_to_extras],
         'title': [if_empty_same_as("name"), unicode],
         'notes': [ignore_missing, unicode],
+        'owner_org': [owner_org_validator, unicode],
         'frequency': [ignore_missing, unicode, harvest_source_frequency_exists, convert_to_extras],
         'state': [ignore_missing],
         'config': [ignore_missing, harvest_source_config_validator, convert_to_extras],
