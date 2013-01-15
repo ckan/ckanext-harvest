@@ -1,6 +1,5 @@
+import types
 from logging import getLogger
-
-from pylons import config
 
 from ckan import logic
 from ckan import model
@@ -261,7 +260,7 @@ def _get_logic_functions(module_root, logic_functions = {}):
             module = getattr(module, part)
 
         for key, value in module.__dict__.items():
-            if not key.startswith('_'):
+            if not key.startswith('_') and isinstance(value, types.FunctionType):
                 logic_functions[key] = value
 
     return logic_functions
