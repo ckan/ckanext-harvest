@@ -14,7 +14,7 @@ def harvest_source_create(context, data_dict):
     try:
         pt.check_access('package_create', context, data_dict)
         return {'success': True}
-    except pt.Not_Authorized:
+    except pt.NotAuthorized:
         return {'success': False,
                 'msg': pt._('User {0} not authorized to create harvest sources').format(user)}
 
@@ -34,11 +34,10 @@ def harvest_job_create(context, data_dict):
         raise pt.ObjectNotFound(pt._('Harvest source not found'))
 
     context['package'] = pkg
-
     try:
         pt.check_access('package_update', context, data_dict)
         return {'success': True}
-    except pt.Not_Authorized:
+    except pt.NotAuthorized:
         return {'success': False,
                 'msg': pt._('User not authorized to create a job for source {0}').format(source_id)}
 
