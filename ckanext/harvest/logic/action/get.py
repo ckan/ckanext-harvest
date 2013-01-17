@@ -1,5 +1,5 @@
 import logging
-from sqlalchemy import or_, distinct
+from sqlalchemy import or_, func
 from ckan.model import User
 import datetime
 
@@ -7,6 +7,7 @@ from ckan import logic
 from ckan.plugins import PluginImplementations
 from ckanext.harvest.interfaces import IHarvester
 
+import ckan.plugins as p
 from ckan.logic import NotFound, check_access
 
 from ckanext.harvest import model as harvest_model
@@ -17,6 +18,7 @@ from ckanext.harvest.logic.dictization import (harvest_source_dictize,
                                                harvest_object_dictize)
 from ckanext.harvest.logic.schema import harvest_source_db_to_form_schema
 log = logging.getLogger(__name__)
+
 
 def harvest_source_show(context,data_dict):
     '''
@@ -41,8 +43,7 @@ def harvest_source_show(context,data_dict):
 
     return source_dict
 
-
-def harvest_source_show_status(context,data_dict):
+def harvest_source_show_status(context, data_dict):
     '''
     Returns a status report for a harvest source
 
@@ -58,87 +59,63 @@ def harvest_source_show_status(context,data_dict):
     '''
     model = context.get('model')
 
-    detailed = context.get('detailed',True)
-
     source = harvest_model.HarvestSource.get(data_dict['id'])
     if not source:
-        raise logic.NotFound('Harvest source {0} does not exist'.format(data_dict['id']))
-
-    out = {}
-
-    jobs = harvest_model.HarvestJob.filter(source=source).all()
+        raise p.toolkit.NotFound('Harvest source {0} does not exist'.format(data_dict['id']))
 
     out = {
            'job_count': 0,
-           'next_harvest':'',
-           'last_harvest_request':'',
-           'last_harvest_statistics':{'added':0,'updated':0,'errors':0},
-           'overall_statistics':{'added':0, 'errors':0},
+           'next_harvest': p.toolkit._('Not yet scheduled'),
+           'last_harvest_request': '',
+           'last_harvest_statistics': {'new': 0, 'updated': 0, 'deleted': 0,'errored': 0},
+           'total_datasets': 0,
            }
+
+    jobs = harvest_model.HarvestJob.filter(source=source).all()
 
     job_count = len(jobs)
     if job_count == 0:
-        out['msg'] = 'No jobs yet'
         return out
-    else:
-        out['job_count'] = job_count
+
+    out['job_count'] = job_count
 
     # Get next scheduled job
     next_job = harvest_model.HarvestJob.filter(source=source,status=u'New').first()
     if next_job:
-        out['next_harvest'] = 'Scheduled'
-    else:
-        out['next_harvest'] = 'Not yet scheduled'
+        out['next_harvest'] = p.toolkit._('Scheduled')
 
     # Get the last finished job
     last_job = harvest_model.HarvestJob.filter(source=source,status=u'Finished') \
                .order_by(harvest_model.HarvestJob.created.desc()).first()
 
-    if last_job:
-        out['last_job_id'] = last_job.id
-        out['last_harvest_request'] = str(last_job.gather_finished)
+    if not last_job:
+        out['last_harvest_request'] = p.toolkit._('Not yet harvested')
+        return out
 
-        #Get HarvestObjects from last job with links to packages
-        if detailed:
-            last_objects = [obj for obj in last_job.objects if obj.package is not None]
+    out['last_job_id'] = last_job.id
+    out['last_harvest_request'] = str(last_job.gather_finished)
 
-            if len(last_objects) == 0:
-                # No packages added or updated
-                out['last_harvest_statistics']['added'] = 0
-                out['last_harvest_statistics']['updated'] = 0
-            else:
-                # Check wether packages were added or updated
-                for last_object in last_objects:
-                    # Check if the same package had been linked before
-                    previous_objects = model.Session.query(harvest_model.HarvestObject) \
-                                             .filter(harvest_model.HarvestObject.package==last_object.package) \
-                                             .count()
+    last_job_report = model.Session.query(
+                harvest_model.HarvestObject.report_status,
+                func.count(harvest_model.HarvestObject.report_status)) \
+            .filter(harvest_model.HarvestObject.harvest_job_id==last_job.id) \
+            .group_by(harvest_model.HarvestObject.report_status)
 
-                    if previous_objects == 1:
-                        # It didn't previously exist, it has been added
-                        out['last_harvest_statistics']['added'] += 1
-                    else:
-                        # Pacakge already existed, but it has been updated
-                        out['last_harvest_statistics']['updated'] += 1
+    for row in last_job_report:
+        if row[0]:
+            out['last_harvest_statistics'][row[0]] = row[1]
 
-        # Last harvest errors
-        # We have the gathering errors in last_job.gather_errors, so let's also
-        # get also the object errors.
-        object_errors = model.Session.query(harvest_model.HarvestObjectError).join(harvest_model.HarvestObject) \
-                            .filter(harvest_model.HarvestObject.job==last_job)
+    # Add the gather stage errors
+    out['last_harvest_statistics']['errored'] += len(last_job.gather_errors)
 
-        out['last_harvest_statistics']['errors'] = len(last_job.gather_errors) \
-                                            + object_errors.count()
-        # Overall statistics
-        packages = model.Session.query(distinct(harvest_model.HarvestObject.package_id), model.Package.name) \
-                .join(model.Package).join(HarvestSource) \
-                .filter(HarvestObject.source==source) \
-                .filter(HarvestObject.current==True) \
-                .filter(model.Package.state==u'active')
+    # Overall statistics
+    packages = model.Session.query(model.Package) \
+            .join(harvest_model.HarvestObject) \
+            .filter(harvest_model.HarvestObject.harvest_source_id==source.id) \
+            .filter(harvest_model.HarvestObject.current==True) \
+            .filter(model.Package.state==u'active')
 
-        out['overall_statistics']['added'] = packages.count()
-    else:
-        out['last_harvest_request'] = 'Not yet harvested'
+    out['total_datasets'] = packages.count()
 
     return out
 
