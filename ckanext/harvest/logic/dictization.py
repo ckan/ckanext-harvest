@@ -24,16 +24,11 @@ def harvest_source_dictize(source, context):
 
 def harvest_job_dictize(job, context):
     out = job.as_dict()
-    out['source'] = job.source_id
-    out['objects'] = []
-    out['gather_errors'] = []
 
-    if context.get('return_objects', True):
-        for obj in job.objects:
-            out['objects'].append(obj.as_dict())
+    model = context['model']
 
     if context.get('return_stats', True):
-        stats = context['model'].Session.query(
+        stats = model.Session.query(
             HarvestObject.report_status,
             func.count(HarvestObject.id).label('total_objects'))\
                 .filter_by(harvest_job_id=job.id)\
@@ -42,8 +37,19 @@ def harvest_job_dictize(job, context):
         for status, count in stats:
             out['stats'][status] = count
 
+    out['gather_errors'] = []
     for error in job.gather_errors:
         out['gather_errors'].append(error.as_dict())
+
+    q = model.Session.query(HarvestObjectError.message, \
+                            func.count(HarvestObjectError.message).label('error_count')) \
+                      .join(HarvestObject) \
+                      .filter(HarvestObject.harvest_job_id==job.id) \
+                      .group_by(HarvestObjectError.message) \
+                      .order_by('error_count desc') \
+                      .limit(context.get('error_summmary_limit', 20))
+
+    out['error_summary'] = q.all()
 
     return out
 

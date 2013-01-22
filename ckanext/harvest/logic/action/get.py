@@ -65,9 +65,8 @@ def harvest_source_show_status(context, data_dict):
 
     out = {
            'job_count': 0,
-           'next_harvest': p.toolkit._('Not yet scheduled'),
-           'last_harvest_request': '',
-           'last_harvest_statistics': {'new': 0, 'updated': 0, 'deleted': 0,'errored': 0},
+           'next_job': p.toolkit._('Not yet scheduled'),
+           'last_job': None,
            'total_datasets': 0,
            }
 
@@ -82,31 +81,16 @@ def harvest_source_show_status(context, data_dict):
     # Get next scheduled job
     next_job = harvest_model.HarvestJob.filter(source=source,status=u'New').first()
     if next_job:
-        out['next_harvest'] = p.toolkit._('Scheduled')
+        out['next_job'] = p.toolkit._('Scheduled')
 
     # Get the last finished job
     last_job = harvest_model.HarvestJob.filter(source=source,status=u'Finished') \
                .order_by(harvest_model.HarvestJob.created.desc()).first()
 
     if not last_job:
-        out['last_harvest_request'] = p.toolkit._('Not yet harvested')
         return out
 
-    out['last_job_id'] = last_job.id
-    out['last_harvest_request'] = str(last_job.gather_finished)
-
-    last_job_report = model.Session.query(
-                harvest_model.HarvestObject.report_status,
-                func.count(harvest_model.HarvestObject.report_status)) \
-            .filter(harvest_model.HarvestObject.harvest_job_id==last_job.id) \
-            .group_by(harvest_model.HarvestObject.report_status)
-
-    for row in last_job_report:
-        if row[0]:
-            out['last_harvest_statistics'][row[0]] = row[1]
-
-    # Add the gather stage errors
-    out['last_harvest_statistics']['errored'] += len(last_job.gather_errors)
+    out['last_job'] = harvest_job_dictize(last_job, context)
 
     # Overall statistics
     packages = model.Session.query(model.Package) \
@@ -165,6 +149,7 @@ def harvest_job_show(context,data_dict):
         raise NotFound
 
     return harvest_job_dictize(job,context)
+
 
 def harvest_job_list(context,data_dict):
 
