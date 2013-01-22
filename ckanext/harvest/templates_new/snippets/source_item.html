@@ -32,8 +32,8 @@ Example:
     <!-- TODO: nicer -->
     <div>{{ source.url }}</div>
 
-    <div><span>Type: {{ source_type }}</span><span>Total datasets: {{ source.status.overall_statistics.added }}</span></div>
-    <div style="color:#EB7C91"><span>Last harvest: {{ source.status.last_harvest_request }}</span>    <span>Next harvest: {{ source.status.next_harvest }}</span></div>
+    <div><span>Type: {{ source_type }}</span><span>Total datasets: {{ source.status.total_datasets }}</span></div>
+    <div style="color:#EB7C91"><span>Last harvest: {{ source.status.last_job.gather_finished }}</span>    <span>Next harvest: {{ source.status.next_job }}</span></div>
 
     <a style="color:#EB7C91" href="{{ h.url_for('harvesting_job_create', id=source.id) }}">Refresh</a>
     <a style="color:#EB7C91" href="{{ h.url_for('{0}_edit'.format(source.type), id=source.name) }}">Edit</a>
