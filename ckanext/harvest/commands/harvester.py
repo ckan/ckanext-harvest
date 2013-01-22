@@ -57,6 +57,9 @@ class Harvester(CkanCommand):
       harvester job-all
         - create new harvest jobs for all active sources.
 
+      harvester reindex
+        - reindexes the harvest source datasets
+
     The commands should be run from the ckanext-harvest directory and expect
     a development.ini file to be present. Most of the time you will
     specify the config explicitly though::
@@ -136,6 +139,8 @@ class Harvester(CkanCommand):
         elif cmd == 'harvesters-info':
             harvesters_info = get_action('harvesters_info_show')()
             pprint(harvesters_info)
+        elif cmd == 'reindex':
+            self.reindex()
         else:
             print 'Command %s not recognized' % cmd
 
@@ -281,6 +286,11 @@ class Harvester(CkanCommand):
         context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
         jobs = get_action('harvest_job_create_all')(context,{})
         print 'Created %s new harvest jobs' % len(jobs)
+
+    def reindex(self):
+        context = {'model': model, 'user': self.admin_user['name']}
+        get_action('harvest_sources_reindex')(context,{})
+
 
     def print_harvest_sources(self, sources):
         if sources:
