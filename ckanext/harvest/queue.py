@@ -115,7 +115,13 @@ def gather_callback(channel, method, header, body):
                     harvester_found = True
                     # Get a list of harvest object ids from the plugin
                     job.gather_started = datetime.datetime.now()
-                    harvest_object_ids = harvester.gather_stage(job)
+                    try:
+                        harvest_object_ids = harvester.gather_stage(job)
+                    except Exception, e:
+                        log.error('Gather stage failed unexpectedly: %s' % e)
+                        job.status = 'Errored'
+                        job.save()
+                        continue
                     job.gather_finished = datetime.datetime.now()
                     job.save()
                     log.debug('Received from plugin''s gather_stage: %r' % harvest_object_ids)
@@ -160,6 +166,8 @@ def fetch_callback(channel, method, header, body):
     obj.save()
 
     if obj.retry_times >= 5:
+        obj.state = "ERROR"
+        obj.save()
         log.error('Too many consecutive retries for object {0}'.format(obj.id))
         channel.basic_ack(method.delivery_tag)
         return False

@@ -1,6 +1,5 @@
+import types
 from logging import getLogger
-
-from pylons import config
 
 from ckan import logic
 from ckan import model
@@ -134,6 +133,17 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
         return harvest_source_form_to_db_schema()
 
+    def db_to_form_schema_options(self, options):
+        '''
+            Similar to db_to_form_schema but with further options to allow
+            slightly different schemas, eg for creation or deletion on the API.
+        '''
+        if options.get('type') == 'show':
+            return None
+        else:
+            return self.db_to_form_schema()
+        
+
     def db_to_form_schema(self):
         '''
         Returns the schema for mapping package data from the database into a
@@ -217,58 +227,26 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
         p.toolkit.add_template_directory(config, templates)
         p.toolkit.add_public_directory(config, 'public')
 
-    def get_actions(self):
-        from ckanext.harvest.logic.action.get import (harvest_source_show,
-                                                      harvest_source_show_status,
-                                                      harvest_source_list,
-                                                      harvest_source_for_a_dataset,
-                                                      harvest_job_show,
-                                                      harvest_job_list,
-                                                      harvest_object_show,
-                                                      harvest_object_list,
-                                                      harvesters_info_show,)
-        from ckanext.harvest.logic.action.create import (harvest_source_create,
-                                                         harvest_job_create,
-                                                         harvest_job_create_all,)
-        from ckanext.harvest.logic.action.update import (harvest_source_update,
-                                                         harvest_objects_import,
-                                                         harvest_jobs_run)
-        from ckanext.harvest.logic.action.delete import (harvest_source_delete,)
+    ## IActions
 
-        return {
-            'harvest_source_show': harvest_source_show,
-            'harvest_source_show_status': harvest_source_show_status,
-            'harvest_source_list': harvest_source_list,
-            'harvest_source_for_a_dataset': harvest_source_for_a_dataset,
-            'harvest_job_show': harvest_job_show,
-            'harvest_job_list': harvest_job_list,
-            'harvest_object_show': harvest_object_show,
-            'harvest_object_list': harvest_object_list,
-            'harvesters_info_show': harvesters_info_show,
-            'harvest_source_create': harvest_source_create,
-            'harvest_job_create': harvest_job_create,
-            'harvest_job_create_all': harvest_job_create_all,
-            'harvest_source_update': harvest_source_update,
-            'harvest_source_delete': harvest_source_delete,
-            'harvest_objects_import': harvest_objects_import,
-            'harvest_jobs_run':harvest_jobs_run
-        }
+    def get_actions(self):
+
+        module_root = 'ckanext.harvest.logic.action'
+        action_functions = _get_logic_functions(module_root)
+
+        return action_functions
+
+    ## IAuthFunctions
 
     def get_auth_functions(self):
 
         module_root = 'ckanext.harvest.logic.auth'
-        auth_profile = config.get('ckan.harvest.auth.profile', '')
-
-        auth_functions = _get_auth_functions(module_root)
-        if auth_profile:
-            module_root = '%s.%s' % (module_root, auth_profile)
-            auth_functions = _get_auth_functions(module_root,auth_functions)
-
-        log.debug('Using auth profile at %s' % module_root)
+        auth_functions = _get_logic_functions(module_root)
 
         return auth_functions
 
     ## ITemplateHelpers
+
     def get_helpers(self):
         from ckanext.harvest import helpers as harvest_helpers
         return {
@@ -279,25 +257,24 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
                 }
 
 
-def _get_auth_functions(module_root, auth_functions = {}):
+def _get_logic_functions(module_root, logic_functions = {}):
 
-    for auth_module_name in ['get', 'create', 'update','delete']:
-        module_path = '%s.%s' % (module_root, auth_module_name,)
+    for module_name in ['get', 'create', 'update','delete']:
+        module_path = '%s.%s' % (module_root, module_name,)
         try:
             module = __import__(module_path)
-        except ImportError,e:
-            log.debug('No auth module for action "%s"' % auth_module_name)
+        except ImportError:
+            log.debug('No auth module for action "{0}"'.format(module_name))
             continue
 
         for part in module_path.split('.')[1:]:
             module = getattr(module, part)
 
         for key, value in module.__dict__.items():
-            if not key.startswith('_'):
-                auth_functions[key] = value
+            if not key.startswith('_') and isinstance(value, types.FunctionType):
+                logic_functions[key] = value
 
-
-    return auth_functions
+    return logic_functions
 
 def _create_harvest_source_object(data_dict):
     '''
