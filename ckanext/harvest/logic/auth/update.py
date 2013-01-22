@@ -50,3 +50,14 @@ def harvest_jobs_run(context, data_dict):
         return {'success': False, 'msg': pt._('Only sysadmins can run the pending harvest jobs')}
     else:
         return {'success': True}
+
+def harvest_sources_reindex(context, data_dict):
+    '''
+        Authorization check for reindexing all harvest sources
+
+        Only sysadmins can do it
+    '''
+    if not user_is_sysadmin(context):
+        return {'success': False, 'msg': pt._('Only sysadmins can reindex all harvest sources')}
+    else:
+        return {'success': True}
