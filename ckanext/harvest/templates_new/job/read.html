@@ -1,0 +1,83 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Harvest Job Summary')}}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li>{{ h.nav_named_link(_('Harvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
+  <li>{{ h.nav_named_link(c.harvest_source.title|truncate(30), '{0}_read'.format(c.dataset_type), id=c.harvest_source.name) }}</li>
+  <li>{{ _('Jobs') }}</li>
+  {% if c.is_last_job %}
+  <li class="active">{{ h.nav_link(_('Last'), controller='ckanext.harvest.controllers.view:ViewController', action='show_last_job', source=c.harvest_source.name)}}</li>
+  {% else %}
+  <li class="active">{{ h.nav_link(c.job.id|truncate(30), controller='ckanext.harvest.controllers.view:ViewController', action='show_job', id=c.job.id, source=c.harvest_source.name)}}</li>
+  {% endif %}
+
+{% endblock %}
+
+{% block primary %}
+
+<article class="module">
+    <div class="module-content">
+    <h1 class="page-heading">{{ _('Harvest Job Summary') }}</h1>
+
+    <div style='font-size: 1.5em; margin: 1em 0;'>
+        {% set stats = c.job.stats %}
+        {% for action in ['added', 'updated', 'deleted', 'errored'] %}
+            {% if action in stats and stats[action] > 0 %}
+            <span>{{ stats[action] }} {{ _(action) }}</span>
+            {% else %}
+            <span>0 {{ _(action) }}</span>
+            {% endif %}
+        {% endfor %}
+    </div>
+  <h3>{{ _('Details') }}</h3>
+  <table class="table table-striped table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th>{{ _('Field') }}</th>
+        <th>{{ _('Value') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>{{ _('Started') }}</th>
+            <td>{{ c.job.gather_started }}</td>
+        </tr>
+        <tr>
+            <th>{{ _('Finished') }}</th>
+            <td>?? (gather_finished, last object import_finished)</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h3>{{ _('Error Summary') }}</h3>
+    {% if c.job.error_summary|length == 0 %}
+    <p>{{ _('No errors for this job') }}</p>
+    {% else %}
+    <p>{{ _('Only the 20 most frequent errors are shown') }}</p>
+    <table class="table table-striped table-bordered table-condensed error-summary">
+        <thead>
+            <tr>
+                <th>{{ _('Message') }}</th>
+                <th>{{ _('Count') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for error in c.job.error_summary %}
+            <tr>
+                <td>{{ error[0] }}</td>
+                <td>{{ error[1] }}</td>
+            </tr>
+        {% endfor %}
+         </tbody>
+    </table>
+    {% endif %}
+    </div>
+ </article>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<!-- TODO: cleanup and resource -->
+<link type="text/css" rel="stylesheet" media="all" href="/ckanext/harvest/style.css" />
+{% endblock %}

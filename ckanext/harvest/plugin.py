@@ -216,6 +216,9 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
         map.connect('/harvest/object/:id', controller=controller, action='show_object')
 
+        map.connect('harvest_job_show_last', '/' + DATASET_TYPE_NAME + '/{source}/job/last', controller=controller, action='show_last_job')
+        map.connect('harvest_job_show', '/' + DATASET_TYPE_NAME + '/{source}/job/{id}', controller=controller, action='show_job')
+
         return map
 
     def update_config(self, config):
