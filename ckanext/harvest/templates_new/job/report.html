@@ -1,0 +1,56 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Harvest Job Report')}}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li>{{ h.nav_named_link(_('Harvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
+  <li>{{ h.nav_named_link(c.harvest_source.title|truncate(30), '{0}_read'.format(c.dataset_type), id=c.harvest_source.name) }}</li>
+  <li>{{ _('Jobs') }}</li>
+  {% if c.is_last_job %}
+  <li class="active">{{ h.nav_link(_('Last'), controller='ckanext.harvest.controllers.view:ViewController', action='show_last_job', source=c.harvest_source.name)}}</li>
+  {% else %}
+  <li class="active">{{ h.nav_link(c.job.id|truncate(30), controller='ckanext.harvest.controllers.view:ViewController', action='show_job', id=c.job.id, source=c.harvest_source.name)}}</li>
+  {% endif %}
+
+{% endblock %}
+
+{% block primary %}
+
+<article class="module">
+    <div class="module-content">
+    <h1 class="page-heading">{{ _('Report') }}</h1>
+
+    <div style='font-size: 1.5em; margin: 1em 0;'>
+        {% set stats = c.job.stats %}
+        {% for action in ['added', 'updated', 'deleted', 'errored'] %}
+            {% if action in stats and stats[action] > 0 %}
+            <span>{{ stats[action] }} {{ _(action) }}</span>
+            {% else %}
+            <span>0 {{ _(action) }}</span>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+
+    <div style='font-size: 1.5em; margin: 1em 0;'>
+      {{ c.job_report.errors.keys()|length}} documents with errors
+    </div>
+
+    {% for harvest_object_id in c.job_report.errors.keys() %}
+    <div>
+      <div>{{ harvest_object_id }}</div>
+      {% for error in c.job_report.errors[harvest_object_id] %}
+      <div style="margin-left: 2em">{{ error.message }}
+        {% if error.line %}
+        <span>(line {{error.line}})</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    {% endfor %}
+  
+  </div>
+ </article>
+{% endblock %}
+

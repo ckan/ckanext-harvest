@@ -150,6 +150,33 @@ def harvest_job_show(context,data_dict):
 
     return harvest_job_dictize(job,context)
 
+def harvest_job_report(context, data_dict):
+
+    check_access('harvest_job_show', context, data_dict)
+
+    model = context['model']
+    id = data_dict.get('id')
+
+    job = HarvestJob.get(id)
+    if not job:
+        raise NotFound
+
+    q = model.Session.query(harvest_model.HarvestObjectError) \
+                      .join(harvest_model.HarvestObject) \
+                      .filter(harvest_model.HarvestObject.harvest_job_id==job.id) \
+                      .order_by(harvest_model.HarvestObjectError.harvest_object_id)
+
+    errors= {}
+    for error in q.all():
+        if not error.harvest_object_id in errors:
+            errors[error.harvest_object_id] = []
+        errors[error.harvest_object_id].append({
+            'message': error.message,
+            'line': error.line,
+            'type': error.stage
+         })
+
+    return {'errors': errors}
 
 def harvest_job_list(context,data_dict):
 

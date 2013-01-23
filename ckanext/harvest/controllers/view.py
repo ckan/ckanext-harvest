@@ -323,6 +323,47 @@ class ViewController(BaseController):
             msg = 'An error occurred: [%s]' % str(e)
             abort(500,msg)
 
+    def show_job_report(self, id, source_dict=False, is_last=False):
+
+        try:
+            context = {'model':model, 'user':c.user}
+            c.job = get_action('harvest_job_show')(context, {'id': id})
+            c.job_report = get_action('harvest_job_report')(context, {'id': id})
+
+            if not source_dict:
+                source_dict = get_action('harvest_source_show')(context, {'id': c.job['source_id']})
+
+            c.harvest_source = source_dict
+            c.is_last_job = is_last
+
+            return render('job/report.html')
+
+        except NotFound:
+            abort(404,_('Harvest job not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+        except Exception, e:
+            msg = 'An error occurred: [%s]' % str(e)
+            abort(500,msg)
+
+    def show_last_job_report(self, source):
+
+        try:
+            context = {'model':model, 'user':c.user}
+            source_dict = get_action('harvest_source_show')(context, {'id': source})
+
+            return self.show_job_report(source_dict['status']['last_job']['id'],
+                                 source_dict=source_dict,
+                                 is_last=True)
+
+        except NotFound:
+            abort(404,_('Harvest source not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+        except Exception, e:
+            msg = 'An error occurred: [%s]' % str(e)
+            abort(500,msg)
+
     def _make_autoform_items(self, harvesters_info):
         states = [{'text': 'active', 'value': 'True'},
                   {'text': 'withdrawn', 'value': 'False'},]
