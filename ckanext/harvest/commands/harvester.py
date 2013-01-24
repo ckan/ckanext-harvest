@@ -318,7 +318,7 @@ class Harvester(CkanCommand):
     def print_harvest_job(self, job):
         print '       Job id: %s' % job['id']
         print '       status: %s' % job['status']
-        print '       source: %s' % job['source']
+        print '       source: %s' % job['source_id']
         print '      objects: %s' % len(job['objects'])
 
         print 'gather_errors: %s' % len(job['gather_errors'])

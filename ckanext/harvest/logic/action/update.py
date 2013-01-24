@@ -236,7 +236,7 @@ def harvest_jobs_run(context,data_dict):
     sent_jobs = []
     for job in jobs:
         context['detailed'] = False
-        source = harvest_source_show(context,{'id':job['source']})
+        source = harvest_source_show(context,{'id':job['source_id']})
         if source['active']:
             job_obj = HarvestJob.get(job['id'])
             job_obj.status = job['status'] = u'Running'
