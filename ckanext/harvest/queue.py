@@ -124,17 +124,18 @@ def fetch_callback(message_data,message):
             # the Harvester interface, only if the source type
             # matches
             for harvester in PluginImplementations(IHarvester):
-                if harvester.info()['name'] == obj.source.type:
-
-                    # See if the plugin can fetch the harvest object
-                    obj.fetch_started = datetime.datetime.now()
-                    success = harvester.fetch_stage(obj)
-                    obj.fetch_finished = datetime.datetime.now()
-                    obj.save()
-                    #TODO: retry times?
-                    if success:
-                        # If no errors where found, call the import method
-                        harvester.import_stage(obj)
+                if obj:
+                    if harvester.info()['name'] == obj.source.type:
+        
+                        # See if the plugin can fetch the harvest object
+                        obj.fetch_started = datetime.datetime.now()
+                        success = harvester.fetch_stage(obj)
+                        obj.fetch_finished = datetime.datetime.now()
+                        obj.save()
+                        #TODO: retry times?
+                        if success:
+                            # If no errors where found, call the import method
+                            harvester.import_stage(obj)
 
 
 
