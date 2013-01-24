@@ -33,13 +33,23 @@
 
 
     <div style='font-size: 1.5em; margin: 1em 0;'>
-      {{ c.job_report.errors.keys()|length}} documents with errors
+      {{ c.job_report.keys()|length}} documents with errors
     </div>
 
-    {% for harvest_object_id in c.job_report.errors.keys() %}
+    {% for harvest_object_id in c.job_report.keys() %}
     <div>
-      <div>{{ harvest_object_id }}</div>
-      {% for error in c.job_report.errors[harvest_object_id] %}
+        <div>
+            {{ c.job_report[harvest_object_id].guid }}
+
+            {% if 'original_url' in c.job_report[harvest_object_id] %}
+            (<a href="{{ c.job_report[harvest_object_id].original_url }}">{{ _('Remote content') }}</a>)
+            {% endif %}
+
+            ({{ h.link_for_harvest_object(harvest_object_id,text=_('Local content')) }})
+
+
+        </div>
+      {% for error in c.job_report[harvest_object_id].errors %}
       <div style="margin-left: 2em">{{ error.message }}
         {% if error.line %}
         <span>(line {{error.line}})</span>
@@ -49,7 +59,7 @@
     </div>
 
     {% endfor %}
-  
+
   </div>
  </article>
 {% endblock %}

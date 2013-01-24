@@ -161,22 +161,38 @@ def harvest_job_report(context, data_dict):
     if not job:
         raise NotFound
 
-    q = model.Session.query(harvest_model.HarvestObjectError) \
+    # Check if the harvester for this job's source has a method for returning
+    # the URL to the original document
+    original_url_builder = None
+    for harvester in PluginImplementations(IHarvester):
+        if harvester.info()['name'] == job.source.type:
+             if hasattr(harvester, 'get_original_url'):
+                original_url_builder = harvester.get_original_url
+
+    q = model.Session.query(harvest_model.HarvestObjectError, harvest_model.HarvestObject.guid) \
                       .join(harvest_model.HarvestObject) \
                       .filter(harvest_model.HarvestObject.harvest_job_id==job.id) \
                       .order_by(harvest_model.HarvestObjectError.harvest_object_id)
 
-    errors= {}
-    for error in q.all():
-        if not error.harvest_object_id in errors:
-            errors[error.harvest_object_id] = []
-        errors[error.harvest_object_id].append({
+    report = {}
+    for error, guid in q.all():
+        if not error.harvest_object_id in report:
+            report[error.harvest_object_id] = {
+                'guid': guid,
+                'errors': []
+            }
+            if original_url_builder:
+                url = original_url_builder(error.harvest_object_id)
+                if url:
+                    report[error.harvest_object_id]['original_url'] = url
+
+        report[error.harvest_object_id]['errors'].append({
             'message': error.message,
             'line': error.line,
             'type': error.stage
          })
 
-    return {'errors': errors}
+    return report
 
 def harvest_job_list(context,data_dict):
 
