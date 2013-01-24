@@ -63,3 +63,19 @@ def harvest_frequencies():
 
     return [{'text': p.toolkit._(f.title()), 'value': f}
             for f in UPDATE_FREQUENCIES]
+
+def link_for_harvest_object(id=None, guid=None, text=None):
+
+    if not id and not guid:
+        return None
+
+    if guid:
+        context = {'model': model, 'user': p.toolkit.c.user or p.toolkit.c.author}
+        obj =logic.get_action('harvest_object_show')(context, {'id': guid, 'attr': 'guid'})
+        id = obj.id
+
+    url = h.url_for('harvest_object_show', id=id)
+    text = text or guid or id
+    link = '<a href="{url}">{text}</a>'.format(url=url, text=text)
+
+    return p.toolkit.literal(link)

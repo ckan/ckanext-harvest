@@ -214,7 +214,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
         map.connect('harvesting_job_create', '/harvest/refresh/:id',controller=controller,
                 action='create_harvesting_job')
 
-        map.connect('/harvest/object/:id', controller=controller, action='show_object')
+        map.connect('harvest_object_show', '/harvest/object/:id', controller=controller, action='show_object')
 
         map.connect('harvest_job_show_last', '/' + DATASET_TYPE_NAME + '/{source}/job/last', controller=controller, action='show_last_job')
         map.connect('harvest_job_show', '/' + DATASET_TYPE_NAME + '/{source}/job/{id}', controller=controller, action='show_job')
@@ -260,6 +260,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
                 'harvesters_info': harvest_helpers.harvesters_info,
                 'harvester_types': harvest_helpers.harvester_types,
                 'harvest_frequencies': harvest_helpers.harvest_frequencies,
+                'link_for_harvest_object': harvest_helpers.link_for_harvest_object,
                 }
 
 
