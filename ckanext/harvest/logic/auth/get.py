@@ -1,4 +1,5 @@
 from ckan.plugins import toolkit as pt
+
 from ckanext.harvest.logic.auth import get_job_object
 
 
@@ -25,7 +26,8 @@ def harvest_source_show(context, data_dict):
         return {'success': True}
     except pt.NotAuthorized:
         return {'success': False,
-                'msg': pt._('User {0} not authorized to read harvest source {1}').format(user, source_id)}
+                'msg': pt._('User {0} not authorized to read harvest source {1}')
+                .format(user, source_id)}
 
 
 def harvest_source_list(context, data_dict):
@@ -41,23 +43,33 @@ def harvest_job_show(context, data_dict):
     '''
         Authorization check for getting the details of a harvest job
 
-        It forwards the checks to harvest_source_show, ie if the user can get
-        the details for the parent source, she can get the details for the job
+        It forwards the checks to harvest_source_update, ie if the user can
+        update the parent source (eg create new jobs), she can get the details
+        for the job, including the reports
     '''
+    user = context.get('user')
     job = get_job_object(context, data_dict)
 
-    return harvest_source_show(context, {'id': job.source.id})
+    try:
+        pt.check_access('harvest_source_update',
+                        context,
+                        {'id': job.source.id})
+        return {'success': True}
+    except pt.NotAuthorized:
+        return {'success': False,
+                'msg': pt._('User {0} not authorized to see jobs from source {1}')
+                .format(user, job.source.id)}
 
 
 def harvest_job_list(context, data_dict):
     '''
         Authorization check for getting a list of jobs for a source
 
-        It forwards the checks to harvest_source_show, ie if the user can get
-        the details for the parent source, she can get the list of jobs
+        It forwards the checks to harvest_job_show, ie if the user can
+        update the parent source, she can get the list of jobs
     '''
     source_id = data_dict['source_id']
-    return harvest_source_show(context, {'id': source_id})
+    return harvest_job_show(context, {'id': source_id})
 
 
 def harvest_object_show(context, data_dict):
