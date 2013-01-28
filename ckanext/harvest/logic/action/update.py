@@ -208,10 +208,19 @@ def harvest_jobs_run(context,data_dict):
                 objects = session.query(HarvestObject.id) \
                           .filter(HarvestObject.harvest_job_id==job['id']) \
                           .filter(and_((HarvestObject.state!=u'COMPLETE'),
-                                       (HarvestObject.state!=u'ERROR')))
+                                       (HarvestObject.state!=u'ERROR'))) \
+                          .order_by(HarvestObject.import_finished.desc())
+
                 if objects.count() == 0:
                     job_obj = HarvestJob.get(job['id'])
                     job_obj.status = u'Finished'
+
+                    last_object = session.query(HarvestObject) \
+                          .filter(HarvestObject.harvest_job_id==job['id']) \
+                          .order_by(HarvestObject.import_finished.desc()) \
+                          .first()
+                    if last_object:
+                        job_obj.finished = last_object.import_finished
                     job_obj.save()
                     # Reindex the harvest source dataset so it has the latest
                     # status

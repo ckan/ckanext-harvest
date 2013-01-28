@@ -193,6 +193,7 @@ def define_harvester_tables():
         Column('created', types.DateTime, default=datetime.datetime.utcnow),
         Column('gather_started', types.DateTime),
         Column('gather_finished', types.DateTime),
+        Column('finished', types.DateTime),
         Column('source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
         Column('status', types.UnicodeText, default=u'New', nullable=False),
     )
@@ -379,6 +380,9 @@ ALTER TABLE harvest_object
 ALTER TABLE harvest_source
 	ADD COLUMN frequency text,
     ADD COLUMN next_run timestamp without time zone;
+
+ALTER TABLE harvest_job
+    ADD COLUMN finished timestamp without time zone;
 
 ALTER TABLE harvest_object_extra
 	ADD CONSTRAINT harvest_object_extra_pkey PRIMARY KEY (id);
