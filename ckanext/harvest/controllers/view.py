@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 class ViewController(BaseController):
 
-    not_auth_message = _('Not authorized to see this page')
+    not_auth_message = p.toolkit._('Not authorized to see this page')
 
     def __before__(self, action, **params):
 
@@ -283,6 +283,24 @@ class ViewController(BaseController):
             msg = 'An error occurred: [%s]' % str(e)
             abort(500,msg)
 
+
+    def _get_source_for_job(self, source_id):
+
+        try:
+            context = {'model': model, 'user': c.user}
+            source_dict = p.toolkit.get_action('harvest_source_show')(context,
+                    {'id': source_id})
+        except NotFound:
+            abort(404, p.toolkit._('Harvest source not found'))
+        except NotAuthorized,e:
+
+            abort(401,self.not_auth_message)
+        except Exception, e:
+            msg = 'An error occurred: [%s]' % str(e)
+            abort(500,msg)
+
+        return source_dict
+
     def show_job(self, id, source_dict=False, is_last=False):
 
         try:
@@ -305,23 +323,15 @@ class ViewController(BaseController):
             msg = 'An error occurred: [%s]' % str(e)
             abort(500,msg)
 
+
     def show_last_job(self, source):
 
-        try:
-            context = {'model':model, 'user':c.user}
-            source_dict = get_action('harvest_source_show')(context, {'id': source})
+        source_dict = self._get_source_for_job(source)
 
-            return self.show_job(source_dict['status']['last_job']['id'],
-                                 source_dict=source_dict,
-                                 is_last=True)
+        return self.show_job(source_dict['status']['last_job']['id'],
+                             source_dict=source_dict,
+                             is_last=True)
 
-        except NotFound:
-            abort(404,_('Harvest source not found'))
-        except NotAuthorized,e:
-            abort(401,self.not_auth_message)
-        except Exception, e:
-            msg = 'An error occurred: [%s]' % str(e)
-            abort(500,msg)
 
     def show_job_report(self, id, source_dict=False, is_last=False):
 
@@ -341,28 +351,21 @@ class ViewController(BaseController):
         except NotFound:
             abort(404,_('Harvest job not found'))
         except NotAuthorized,e:
+            import pdb; pdb.set_trace()
             abort(401,self.not_auth_message)
         except Exception, e:
             msg = 'An error occurred: [%s]' % str(e)
             abort(500,msg)
+
 
     def show_last_job_report(self, source):
 
-        try:
-            context = {'model':model, 'user':c.user}
-            source_dict = get_action('harvest_source_show')(context, {'id': source})
+        source_dict = self._get_source_for_job(source)
 
-            return self.show_job_report(source_dict['status']['last_job']['id'],
-                                 source_dict=source_dict,
-                                 is_last=True)
+        return self.show_job_report(source_dict['status']['last_job']['id'],
+                             source_dict=source_dict,
+                             is_last=True)
 
-        except NotFound:
-            abort(404,_('Harvest source not found'))
-        except NotAuthorized,e:
-            abort(401,self.not_auth_message)
-        except Exception, e:
-            msg = 'An error occurred: [%s]' % str(e)
-            abort(500,msg)
 
     def _make_autoform_items(self, harvesters_info):
         states = [{'text': 'active', 'value': 'True'},
