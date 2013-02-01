@@ -1,0 +1,64 @@
+{#
+Displays information for a particular harvest job, including:
+
+  * counts for added, updated, deleted or errored datasets
+  * table with general details
+  * table with a summary of the most common errors on this job
+
+job        - dictized harvest job object
+
+Example:
+
+  {% snippet 'snippets/job_details.html', job=job %}
+
+#}
+
+<div style='margin: 1em 0;'>
+  {% set stats = job.stats %}
+  {% for action in ['added', 'updated', 'deleted', 'errored'] %}
+    {% if action in stats and stats[action] > 0 %}
+    <span>{{ stats[action] }} {{ _(action) }}</span>
+    {% else %}
+    <span>0 {{ _(action) }}</span>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<h3>{{ _('Details') }}</h3>
+<table class="table table-striped table-bordered table-condensed">
+  <tr>
+    <th>{{ _('Started') }}</th>
+    <td>{{ h.render_datetime(job.gather_started, with_hours=True) }}</td>
+  </tr>
+  <tr>
+    <th>{{ _('Finished') }}</th>
+    <td>{{ h.render_datetime(job.finished, with_hours=True) }}</td>
+  </tr>
+  <tr>
+    <th>{{ _('Status') }}</th>
+    <td>{{ _(job.status) }}</td>
+  </tr>
+</table>
+
+<h3>{{ _('Error Summary') }}</h3>
+{% if job.error_summary|length == 0 %}
+<p>{{ _('No errors for this job') }}</p>
+{% else %}
+<p>{{ _('Only the 20 most frequent errors are shown') }}</p>
+<table class="table table-striped table-bordered table-condensed error-summary">
+  <thead>
+    <tr>
+      <th>{{ _('Message') }}</th>
+      <th>{{ _('Count') }}</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for error in job.error_summary %}
+    <tr>
+      <td>{{ error[0] }}</td>
+      <td>{{ error[1] }}</td>
+    </tr>
+  {% endfor %}
+   </tbody>
+</table>
+{% endif %}

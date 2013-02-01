@@ -2,6 +2,9 @@
 
 {% set pkg = c.pkg_dict %}
 
+{% set authorized_user = h.check_access('harvest_source_update', {'id':pkg.id }) %}
+
+
 {% block subtitle %}{{ pkg.title or pkg.name }}{% endblock %}
 
 {% block breadcrumb_content %}
@@ -10,7 +13,7 @@
 {% endblock %}
 
 {% block actions_content %}
-  {% if h.check_access('package_update', {'id':pkg.id }) %}
+  {% if  authorized_user %}
     <li>{{ h.nav_named_link(_('Edit'), '{0}_edit'.format(c.dataset_type), id=c.harvest_source.name, class_='btn btn-primary', icon='wrench')}}</li>
   {% endif %}
   <li>{{ h.follow_button('dataset', pkg.id) }}</li>
@@ -36,20 +39,9 @@
 
   <article class="module prose">
 
-
-
     {% block package_content %}
 
     {% block package_description %}
-        <section class="module-content">
-        <div style="color:red; font-weight:bold">CUSTOM TEMPLATE for {{ c.dataset_type}}</div>
-        </section>
-        <section class="module-content">
-        <div style="color:red; font-weight:bold">Also available on c.pkg_dict['status']:<pre>
-
-        {{ c.pkg_dict['status']|pprint }}
-        </pre></div>
-        </section>
 
         <section class="module-content">
           <h1>{{ pkg.title or pkg.name }}
@@ -66,13 +58,19 @@
         </section>
       {% endblock %}
 
-      {% block package_tags %}
-        {% snippet "package/snippets/tags.html", tags=pkg.tags %}
-      {% endblock %}
-
       {% block package_additional_info %}
         {% snippet "package/snippets/additional_info.html", pkg_dict=pkg %}
       {% endblock %}
+
+      {% if  authorized_user %}
+      <section class="module-content additional-info">
+        <h2>Last Harvest Job</h2>
+
+        <a href="{{ h.url_for(controller='ckanext.harvest.controllers.view:ViewController', action='show_last_job', source=pkg.name) }}">{{ _('View full job report')  }}</a>
+
+        {% snippet "snippets/job_details.html", job=pkg.status.last_job %}
+      </section>
+      {% endif %}
 
       <section class="module-content">
         <h3>Datasets</h3>
