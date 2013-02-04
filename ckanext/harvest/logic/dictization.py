@@ -41,15 +41,16 @@ def harvest_job_dictize(job, context):
     for error in job.gather_errors:
         out['gather_errors'].append(error.as_dict())
 
-    q = model.Session.query(HarvestObjectError.message, \
-                            func.count(HarvestObjectError.message).label('error_count')) \
-                      .join(HarvestObject) \
-                      .filter(HarvestObject.harvest_job_id==job.id) \
-                      .group_by(HarvestObjectError.message) \
-                      .order_by('error_count desc') \
-                      .limit(context.get('error_summmary_limit', 20))
+    if context.get('return_error_summary', True):
+        q = model.Session.query(HarvestObjectError.message, \
+                                func.count(HarvestObjectError.message).label('error_count')) \
+                          .join(HarvestObject) \
+                          .filter(HarvestObject.harvest_job_id==job.id) \
+                          .group_by(HarvestObjectError.message) \
+                          .order_by('error_count desc') \
+                          .limit(context.get('error_summmary_limit', 20))
 
-    out['error_summary'] = q.all()
+        out['error_summary'] = q.all()
 
     return out
 
