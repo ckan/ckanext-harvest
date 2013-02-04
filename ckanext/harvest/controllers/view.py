@@ -334,6 +334,24 @@ class ViewController(BaseController):
                              is_last=True)
 
 
+    def list_jobs(self, source):
+
+        try:
+            context = {'model':model, 'user':c.user}
+            c.harvest_source =  get_action('harvest_source_show')(context, {'id': source})
+            c.jobs = get_action('harvest_job_list')(context, {'source_id': c.harvest_source['id']})
+
+            return render('job/list.html')
+
+        except NotFound:
+            abort(404,_('Harvest source not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+        except Exception, e:
+            msg = 'An error occurred: [%s]' % str(e)
+            abort(500,msg)
+
+
     def _make_autoform_items(self, harvesters_info):
         states = [{'text': 'active', 'value': 'True'},
                   {'text': 'withdrawn', 'value': 'False'},]

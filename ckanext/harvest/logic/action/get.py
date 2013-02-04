@@ -212,6 +212,8 @@ def harvest_job_list(context,data_dict):
     if status:
         query = query.filter(HarvestJob.status==status)
 
+    query = query.order_by(HarvestJob.created.desc())
+
     jobs = query.all()
 
     return [harvest_job_dictize(job,context) for job in jobs]

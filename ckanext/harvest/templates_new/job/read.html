@@ -1,11 +1,11 @@
 {% extends "page.html" %}
 
-{% block subtitle %}{{ _('Harvest Job Summary')}}{% endblock %}
+{% block subtitle %}{{ _('Harvest Job Report')}}{% endblock %}
 
 {% block breadcrumb_content %}
   <li>{{ h.nav_named_link(_('Harvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
   <li>{{ h.nav_named_link(c.harvest_source.title|truncate(30), '{0}_read'.format(c.dataset_type), id=c.harvest_source.name) }}</li>
-  <li>{{ _('Jobs') }}</li>
+  <li>{{ h.nav_link(_('Jobs'), controller='ckanext.harvest.controllers.view:ViewController', action='list_jobs', source=c.harvest_source.name)}}</li>
   {% if c.is_last_job %}
   <li class="active">{{ h.nav_link(_('Last'), controller='ckanext.harvest.controllers.view:ViewController', action='show_last_job', source=c.harvest_source.name)}}</li>
   {% else %}

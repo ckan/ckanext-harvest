@@ -1,0 +1,56 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Harvest Jobs')}}{% endblock %}
+
+{% block breadcrumb_content %}
+  <li>{{ h.nav_named_link(_('Harvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
+  <li>{{ h.nav_named_link(c.harvest_source.title|truncate(30), '{0}_read'.format(c.dataset_type), id=c.harvest_source.name) }}</li>
+  <li class="active">{{ h.nav_link(_('Jobs'), controller='ckanext.harvest.controllers.view:ViewController', action='list_jobs', source=c.harvest_source.name)}}</li>
+{% endblock %}
+
+{% block primary %}
+
+<article class="module">
+  <div class="module-content">
+  <h1 class="page-heading">{{ _('Harvest Jobs') }}</h1>
+
+  {% if c.jobs|length == 0 %}
+  <p>{{ _('No jobs yet for this source') }}</p>
+  {% else %}
+  <table class="table table-striped table-bordered table-condensed error-summary">
+    <thead>
+      <tr>
+        <th>{{ _('Created') }}</th>
+        <th>{{ _('Finished') }}</th>
+        <th>{{ _('Status') }}</th>
+        <th>{{ _('Added') }}</th>
+        <th>{{ _('Updated') }}</th>
+        <th>{{ _('Deleted') }}</th>
+        <th>{{ _('Errors') }}</th>
+        <th>{{ _('Full report') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for job in c.jobs %}
+      <tr>
+        <td>{{ h.render_datetime(job.gather_started, with_hours=True) }}</td>
+        <td>{{ h.render_datetime(job.finished, with_hours=True) }}</td>
+        <td>{{ _(job.status) }}</td>
+        {% for action in ['added', 'updated', 'deleted', 'errored'] %}
+          {% if action in stats and stats[action] > 0 %}
+          <td>{{ stats[action] }}</td>
+          {% else %}
+          <td>0</td>
+          {% endif %}
+        {% endfor %}
+        <td><a href="{{ h.url_for(controller='ckanext.harvest.controllers.view:ViewController', action='show_job', source=c.harvest_source.name, id=job.id) }}">{{ _('view')  }}</a></td>
+      </tr>
+    {% endfor %}
+     </tbody>
+  </table>
+  {% endif %}
+  </div>
+
+ </article>
+{% endblock %}
+
