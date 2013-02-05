@@ -364,7 +364,7 @@ def migrate_v3():
 ALTER TABLE harvest_object
 	ADD COLUMN import_started timestamp without time zone,
 	ADD COLUMN import_finished timestamp without time zone,
-	ADD COLUMN "state" text;
+	ADD COLUMN "state" text,
 	ADD COLUMN "report_status" text;
 
 ALTER TABLE harvest_source
@@ -385,6 +385,10 @@ UPDATE harvest_source set frequency = 'MANUAL';
 ALTER TABLE harvest_object DROP CONSTRAINT harvest_object_package_id_fkey;
 ALTER TABLE harvest_object
     ADD CONSTRAINT harvest_object_package_id_fkey FOREIGN KEY (package_id) REFERENCES package(id) DEFERRABLE;
+
+ALTER TABLE harvest_object_error
+	ADD COLUMN line integer;
+
 """
     conn.execute(statement)
     Session.commit()
