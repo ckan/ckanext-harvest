@@ -65,11 +65,23 @@ def harvest_job_list(context, data_dict):
     '''
         Authorization check for getting a list of jobs for a source
 
-        It forwards the checks to harvest_job_show, ie if the user can
-        update the parent source, she can get the list of jobs
+        It forwards the checks to harvest_source_update, ie if the user can
+        update the parent source (eg create new jobs), she can get the list of
+        jobs
     '''
+    user = context.get('user')
     source_id = data_dict['source_id']
-    return harvest_job_show(context, {'id': source_id})
+
+    try:
+        pt.check_access('harvest_source_update',
+                        context,
+                        {'id': source_id})
+        return {'success': True}
+    except pt.NotAuthorized:
+        return {'success': False,
+                'msg': pt._('User {0} not authorized to list jobs for source {1}')
+                .format(user, source_id)}
+
 
 
 def harvest_object_show(context, data_dict):
