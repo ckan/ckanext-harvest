@@ -5,6 +5,7 @@ import datetime
 
 from sqlalchemy import and_
 
+from ckan.lib.search.index import PackageSearchIndex
 from ckan.plugins import PluginImplementations
 from ckan.logic import get_action
 from ckanext.harvest.interfaces import IHarvester
@@ -201,6 +202,7 @@ def harvest_jobs_run(context,data_dict):
     # Flag finished jobs as such
     jobs = harvest_job_list(context,{'source_id':source_id,'status':u'Running'})
     if len(jobs):
+        package_index = PackageSearchIndex()
         for job in jobs:
             if job['gather_finished']:
                 objects = session.query(HarvestObject.id) \
@@ -220,8 +222,7 @@ def harvest_jobs_run(context,data_dict):
                             {'id': job_obj.source.id})
 
                     if package_dict:
-                        from ckan.lib.search.index import PackageSearchIndex
-                        PackageSearchIndex().index_package(package_dict)
+                        package_index.index_package(package_dict)
 
 
     # Check if there are pending harvest jobs
@@ -247,3 +248,29 @@ def harvest_jobs_run(context,data_dict):
     publisher.close()
     return sent_jobs
 
+def harvest_sources_reindex(context, data_dict):
+    '''
+        Reindexes all harvest source datasets with the latest status
+    '''
+    log.info('Reindexing all harvest sources')
+    check_access('harvest_sources_reindex', context, data_dict)
+
+    model = context['model']
+
+    packages = model.Session.query(model.Package) \
+                            .filter(model.Package.type==DATASET_TYPE_NAME) \
+                            .filter(model.Package.state==u'active') \
+                            .all()
+
+    package_index = PackageSearchIndex()
+    for package in packages:
+        if 'extras_as_string'in context:
+            del context['extras_as_string']
+        context.update({'validate': False, 'ignore_auth': True})
+        package_dict = logic.get_action('package_show')(context,
+            {'id': package.id})
+        log.debug('Updating search index for harvest source {0}'.format(package.id))
+        package_index.index_package(package_dict, defer_commit=True)
+
+    package_index.commit()
+    log.info('Updated search index for {0} harvest sources'.format(len(packages)))
