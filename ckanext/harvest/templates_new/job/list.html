@@ -37,8 +37,8 @@
         <td>{{ h.render_datetime(job.finished, with_hours=True) }}</td>
         <td>{{ _(job.status) }}</td>
         {% for action in ['added', 'updated', 'deleted', 'errored'] %}
-          {% if action in stats and stats[action] > 0 %}
-          <td>{{ stats[action] }}</td>
+          {% if action in job.stats and job.stats[action] > 0 %}
+          <td>{{ job.stats[action] }}</td>
           {% else %}
           <td>0</td>
           {% endif %}
