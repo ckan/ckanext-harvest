@@ -12,6 +12,7 @@ from ckan.lib.base import BaseController, c, g, request, \
 
 from ckan.lib.navl.dictization_functions import DataError
 from ckan.logic import NotFound, ValidationError, get_action, NotAuthorized
+from ckanext.harvest.plugin import DATASET_TYPE_NAME
 from ckanext.harvest.logic.schema import harvest_source_form_to_db_schema
 
 from ckan.lib.helpers import Page,pager_url
@@ -22,13 +23,16 @@ log = logging.getLogger(__name__)
 
 class ViewController(BaseController):
 
-    not_auth_message = _('Not authorized to see this page')
+    not_auth_message = p.toolkit._('Not authorized to see this page')
 
     def __before__(self, action, **params):
 
         super(ViewController,self).__before__(action, **params)
 
+        #TODO: remove
         c.publisher_auth = (config.get('ckan.harvest.auth.profile',None) == 'publisher')
+
+        c.dataset_type = DATASET_TYPE_NAME
 
     def _get_publishers(self):
         groups = None
@@ -273,6 +277,74 @@ class ViewController(BaseController):
             return content
         except NotFound:
             abort(404,_('Harvest object not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+        except Exception, e:
+            msg = 'An error occurred: [%s]' % str(e)
+            abort(500,msg)
+
+
+    def _get_source_for_job(self, source_id):
+
+        try:
+            context = {'model': model, 'user': c.user}
+            source_dict = p.toolkit.get_action('harvest_source_show')(context,
+                    {'id': source_id})
+        except NotFound:
+            abort(404, p.toolkit._('Harvest source not found'))
+        except NotAuthorized,e:
+
+            abort(401,self.not_auth_message)
+        except Exception, e:
+            msg = 'An error occurred: [%s]' % str(e)
+            abort(500,msg)
+
+        return source_dict
+
+    def show_job(self, id, source_dict=False, is_last=False):
+
+        try:
+            context = {'model':model, 'user':c.user}
+            c.job = get_action('harvest_job_show')(context, {'id': id})
+            c.job_report = get_action('harvest_job_report')(context, {'id': id})
+
+            if not source_dict:
+                source_dict = get_action('harvest_source_show')(context, {'id': c.job['source_id']})
+
+            c.harvest_source = source_dict
+            c.is_last_job = is_last
+
+            return render('job/read.html')
+
+        except NotFound:
+            abort(404,_('Harvest job not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+        except Exception, e:
+            msg = 'An error occurred: [%s]' % str(e)
+            abort(500,msg)
+
+
+    def show_last_job(self, source):
+
+        source_dict = self._get_source_for_job(source)
+
+        return self.show_job(source_dict['status']['last_job']['id'],
+                             source_dict=source_dict,
+                             is_last=True)
+
+
+    def list_jobs(self, source):
+
+        try:
+            context = {'model':model, 'user':c.user}
+            c.harvest_source =  get_action('harvest_source_show')(context, {'id': source})
+            c.jobs = get_action('harvest_job_list')(context, {'source_id': c.harvest_source['id']})
+
+            return render('job/list.html')
+
+        except NotFound:
+            abort(404,_('Harvest source not found'))
         except NotAuthorized,e:
             abort(401,self.not_auth_message)
         except Exception, e:

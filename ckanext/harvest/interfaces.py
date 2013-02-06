@@ -29,7 +29,43 @@ class IHarvester(Interface):
                                 for the Web (CSW) standard'
             }
 
-        returns: A dictionary with the harvester descriptors
+        :returns: A dictionary with the harvester descriptors
+        '''
+
+    def validate_config(self, config):
+        '''
+
+        [optional]
+
+        Harvesters can provide this method to validate the configuration entered in the
+        form. It should return a single string, which will be stored in the database.
+        Exceptions raised will be shown in the form's error messages.
+
+        :param harvest_object_id: Config string coming from the form
+        :returns: A string with the validated configuration options
+        '''
+
+    def get_original_url(self, harvest_object_id):
+        '''
+
+        [optional]
+
+        This optional but very recommended method allows harvesters to return
+        the URL to the original remote document, given a Harvest Object id.
+        Note that getting the harvest object you have access to its guid as
+        well as the object source, which has the URL.
+        This URL will be used on error reports to help publishers link to the
+        original document that has the errors. If this method is not provided
+        or no URL is returned, only a link to the local copy of the remote
+        document will be shown.
+
+        Examples:
+            * For a CKAN record: http://{ckan-instance}/api/rest/{guid}
+            * For a WAF record: http://{waf-root}/{file-name}
+            * For a CSW record: http://{csw-server}/?Request=GetElementById&Id={guid}&...
+
+        :param harvest_object_id: HarvestObject id
+        :returns: A string with the URL to the original document
         '''
 
     def gather_stage(self, harvest_job):
@@ -82,4 +118,3 @@ class IHarvester(Interface):
         :param harvest_object: HarvestObject object
         :returns: True if everything went right, False if errors were found
         '''
-

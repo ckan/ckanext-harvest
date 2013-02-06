@@ -65,9 +65,8 @@ def harvest_source_show_status(context, data_dict):
 
     out = {
            'job_count': 0,
-           'next_harvest': p.toolkit._('Not yet scheduled'),
-           'last_harvest_request': '',
-           'last_harvest_statistics': {'new': 0, 'updated': 0, 'deleted': 0,'errored': 0},
+           'next_job': p.toolkit._('Not yet scheduled'),
+           'last_job': None,
            'total_datasets': 0,
            }
 
@@ -82,31 +81,16 @@ def harvest_source_show_status(context, data_dict):
     # Get next scheduled job
     next_job = harvest_model.HarvestJob.filter(source=source,status=u'New').first()
     if next_job:
-        out['next_harvest'] = p.toolkit._('Scheduled')
+        out['next_job'] = p.toolkit._('Scheduled')
 
     # Get the last finished job
     last_job = harvest_model.HarvestJob.filter(source=source,status=u'Finished') \
                .order_by(harvest_model.HarvestJob.created.desc()).first()
 
     if not last_job:
-        out['last_harvest_request'] = p.toolkit._('Not yet harvested')
         return out
 
-    out['last_job_id'] = last_job.id
-    out['last_harvest_request'] = str(last_job.gather_finished)
-
-    last_job_report = model.Session.query(
-                harvest_model.HarvestObject.report_status,
-                func.count(harvest_model.HarvestObject.report_status)) \
-            .filter(harvest_model.HarvestObject.harvest_job_id==last_job.id) \
-            .group_by(harvest_model.HarvestObject.report_status)
-
-    for row in last_job_report:
-        if row[0]:
-            out['last_harvest_statistics'][row[0]] = row[1]
-
-    # Add the gather stage errors
-    out['last_harvest_statistics']['errored'] += len(last_job.gather_errors)
+    out['last_job'] = harvest_job_dictize(last_job, context)
 
     # Overall statistics
     packages = model.Session.query(model.Package) \
@@ -166,6 +150,50 @@ def harvest_job_show(context,data_dict):
 
     return harvest_job_dictize(job,context)
 
+def harvest_job_report(context, data_dict):
+
+    check_access('harvest_job_show', context, data_dict)
+
+    model = context['model']
+    id = data_dict.get('id')
+
+    job = HarvestJob.get(id)
+    if not job:
+        raise NotFound
+
+    # Check if the harvester for this job's source has a method for returning
+    # the URL to the original document
+    original_url_builder = None
+    for harvester in PluginImplementations(IHarvester):
+        if harvester.info()['name'] == job.source.type:
+             if hasattr(harvester, 'get_original_url'):
+                original_url_builder = harvester.get_original_url
+
+    q = model.Session.query(harvest_model.HarvestObjectError, harvest_model.HarvestObject.guid) \
+                      .join(harvest_model.HarvestObject) \
+                      .filter(harvest_model.HarvestObject.harvest_job_id==job.id) \
+                      .order_by(harvest_model.HarvestObjectError.harvest_object_id)
+
+    report = {}
+    for error, guid in q.all():
+        if not error.harvest_object_id in report:
+            report[error.harvest_object_id] = {
+                'guid': guid,
+                'errors': []
+            }
+            if original_url_builder:
+                url = original_url_builder(error.harvest_object_id)
+                if url:
+                    report[error.harvest_object_id]['original_url'] = url
+
+        report[error.harvest_object_id]['errors'].append({
+            'message': error.message,
+            'line': error.line,
+            'type': error.stage
+         })
+
+    return report
+
 def harvest_job_list(context,data_dict):
 
     check_access('harvest_job_list',context,data_dict)
@@ -184,9 +212,12 @@ def harvest_job_list(context,data_dict):
     if status:
         query = query.filter(HarvestJob.status==status)
 
+    query = query.order_by(HarvestJob.created.desc())
+
     jobs = query.all()
 
-    return [harvest_job_dictize(job,context) for job in jobs]
+    context['return_error_summary'] = False
+    return [harvest_job_dictize(job, context) for job in jobs]
 
 def harvest_object_show(context,data_dict):
 
