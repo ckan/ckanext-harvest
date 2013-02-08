@@ -358,7 +358,9 @@ class ViewController(BaseController):
         try:
             context = {'model':model, 'user':c.user}
             c.harvest_source =  get_action('harvest_source_show')(context, {'id': source})
-            c.jobs = get_action('harvest_job_list')(context, {'source_id': c.harvest_source['id']})
+            status = request.params.get('status', 'Finished')
+            c.filter_nav = status
+            c.jobs = get_action('harvest_job_list')(context, {'source_id': c.harvest_source['id'], 'status': status})
 
             return render('source/job/list.html')
 

@@ -13,19 +13,37 @@ Example:
 
 #}
 
-<div style='margin: 1em 0;'>
-  {% set stats = job.stats %}
-  {% for action in ['added', 'updated', 'deleted', 'errored'] %}
-    {% if action in stats and stats[action] > 0 %}
-    <span>{{ stats[action] }} {{ _(action) }}</span>
-    {% else %}
-    <span>0 {{ _(action) }}</span>
-    {% endif %}
+<p>GUID: <code>{{ job.id }}</code></p>
+
+{% set stats = job.stats %}
+
+<p class="pull-right">
+  {% if 'errored' in stats and stats['errored'] > 0 %}
+    <span class="badge badge-important">{{ stats['errored'] }}</span> {{ _('errors') }}
+  {% else %}
+    <span class="badge">0</span> {{ _('errors') }}
+  {% endif %}
+</p>
+
+<p class="harvest-diff">
+  {% for action in ['added', 'updated', 'deleted'] %}
+    <span class="diff-{{ action }}">
+      {% if action in stats and stats[action] > 0 %}
+        {{ stats[action] }}
+      {% else %}
+        0
+      {% endif %}
+      {{ _(action) }}
+    </span>
   {% endfor %}
-</div>
+</p>
 
 <h3>{{ _('Details') }}</h3>
 <table class="table table-striped table-bordered table-condensed">
+  <colgroup>
+    <col width="15">
+    <col width="85">
+  </colgroup>
   <tr>
     <th>{{ _('Started') }}</th>
     <td>{{ h.render_datetime(job.gather_started, with_hours=True) }}</td>
@@ -42,23 +60,27 @@ Example:
 
 <h3>{{ _('Error Summary') }}</h3>
 {% if job.error_summary|length == 0 %}
-<p>{{ _('No errors for this job') }}</p>
+  <p class="empty">{{ _('No errors for this job') }}</p>
 {% else %}
-<p>{{ _('Only the 20 most frequent errors are shown') }}</p>
-<table class="table table-striped table-bordered table-condensed error-summary">
-  <thead>
-    <tr>
-      <th>{{ _('Message') }}</th>
-      <th>{{ _('Count') }}</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for error in job.error_summary %}
-    <tr>
-      <td>{{ error[0] }}</td>
-      <td>{{ error[1] }}</td>
-    </tr>
-  {% endfor %}
-   </tbody>
-</table>
+  <p class="empty">{{ _('Only the 20 most frequent errors are shown') }}</p>
+  <table class="table table-striped table-bordered table-condensed harvest-error-summary">
+    <colgroup>
+      <col width="8">
+      <col width="92">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="count">{{ _('Count') }}</th>
+        <th>{{ _('Message') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for error in job.error_summary %}
+      <tr>
+        <td class="count">{{ error[1] }}</td>
+        <td>{{ error[0] }}</td>
+      </tr>
+    {% endfor %}
+     </tbody>
+  </table>
 {% endif %}

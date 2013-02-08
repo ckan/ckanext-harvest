@@ -1,0 +1,83 @@
+header.with-filter {
+  clear: both;
+  overflow: hidden;
+}
+header.with-filter h1 {
+  margin-top: 0;
+}
+.harvest-jobs {
+  border: 1px solid #dddddd;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+}
+.harvest-jobs a {
+  display: block;
+  padding: 8px 15px;
+  color: #666;
+  border-bottom: 1px dotted #dddddd;
+}
+.harvest-jobs a h4 {
+  font-size: 16px;
+  line-height: 1.3;
+  color: #000;
+}
+.harvest-jobs a .errors {
+  float: right;
+  font-size: 16px;
+  line-height: 1.3;
+  margin-top: 5px;
+  -webkit-border-radius: 100px;
+  -moz-border-radius: 100px;
+  border-radius: 100px;
+}
+.harvest-jobs a p {
+  clear: both;
+  overflow: hidden;
+}
+.harvest-jobs a:hover {
+  background-color: #f6f6f6;
+  text-decoration: none;
+}
+.harvest-jobs a:hover h4 {
+  text-decoration: underline;
+}
+.harvest-jobs a:hover .harvest-diff .diff-added {
+  background-color: #79db69;
+}
+.harvest-jobs a:hover .harvest-diff .diff-updated {
+  background-color: #a277ff;
+}
+.harvest-jobs a:hover .harvest-diff .diff-deleted {
+  background-color: #dc7c7f;
+}
+.harvest-jobs a:last-child {
+  border-bottom-width: 0;
+}
+.harvest-diff span {
+  color: #000;
+  padding: 5px 10px;
+  margin-right: 5px;
+  font-size: 12px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+.harvest-diff .diff-added {
+  background-color: #9ee592;
+}
+.harvest-diff .diff-updated {
+  background-color: #c5aaff;
+}
+.harvest-diff .diff-deleted {
+  background-color: #e7a4a6;
+}
+.harvest-error-summary .count {
+  text-align: right;
+}
+.harvest-error-list h5 {
+  margin-top: 0;
+}
+.harvest-error-list .error {
+  padding-left: 20px;
+}
