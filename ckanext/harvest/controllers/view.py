@@ -324,6 +324,15 @@ class ViewController(BaseController):
             msg = 'An error occurred: [%s]' % str(e)
             abort(500,msg)
 
+    def about(self, id):
+        try:
+            context = {'model':model, 'user':c.user}
+            c.harvest_source = get_action('harvest_source_show')(context, {'id':id})
+            return render('source/about.html')
+        except NotFound:
+            abort(404,_('Harvest source not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
 
     def show_last_job(self, source):
 

@@ -45,8 +45,11 @@ def package_list_for_source(source_id):
     )
     pager.items = query['results']
 
-    out = h.snippet('snippets/package_list.html', packages=query['results'])
-    out += pager.pager()
+    if query['results']:
+        out = h.snippet('snippets/package_list.html', packages=query['results'])
+        out += pager.pager()
+    else:
+        out = h.snippet('snippets/package_list_empty.html')
 
     return out
 
