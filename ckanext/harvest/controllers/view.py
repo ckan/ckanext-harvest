@@ -314,7 +314,7 @@ class ViewController(BaseController):
             c.harvest_source = source_dict
             c.is_last_job = is_last
 
-            return render('job/read.html')
+            return render('source/job/read.html')
 
         except NotFound:
             abort(404,_('Harvest job not found'))
@@ -329,6 +329,16 @@ class ViewController(BaseController):
             context = {'model':model, 'user':c.user}
             c.harvest_source = get_action('harvest_source_show')(context, {'id':id})
             return render('source/about.html')
+        except NotFound:
+            abort(404,_('Harvest source not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+
+    def admin(self, id):
+        try:
+            context = {'model':model, 'user':c.user}
+            c.harvest_source = get_action('harvest_source_show')(context, {'id':id})
+            return render('source/admin.html')
         except NotFound:
             abort(404,_('Harvest source not found'))
         except NotAuthorized,e:
@@ -350,7 +360,7 @@ class ViewController(BaseController):
             c.harvest_source =  get_action('harvest_source_show')(context, {'id': source})
             c.jobs = get_action('harvest_job_list')(context, {'source_id': c.harvest_source['id']})
 
-            return render('job/list.html')
+            return render('source/job/list.html')
 
         except NotFound:
             abort(404,_('Harvest source not found'))

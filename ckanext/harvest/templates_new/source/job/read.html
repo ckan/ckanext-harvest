@@ -1,24 +1,15 @@
-{% extends "page.html" %}
+{% extends "source/admin_base.html" %}
 
 {% block subtitle %}{{ _('Harvest Job Report')}}{% endblock %}
 
-{% block breadcrumb_content %}
-  <li>{{ h.nav_named_link(_('Harvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
-  <li>{{ h.nav_named_link(c.harvest_source.title|truncate(30), '{0}_read'.format(c.dataset_type), id=c.harvest_source.name) }}</li>
-  <li>{{ h.nav_link(_('Jobs'), controller='ckanext.harvest.controllers.view:ViewController', action='list_jobs', source=c.harvest_source.name)}}</li>
-  {% if c.is_last_job %}
-  <li class="active">{{ h.nav_link(_('Last'), controller='ckanext.harvest.controllers.view:ViewController', action='show_last_job', source=c.harvest_source.name)}}</li>
-  {% else %}
-  <li class="active">{{ h.nav_link(c.job.id|truncate(30), controller='ckanext.harvest.controllers.view:ViewController', action='show_job', id=c.job.id, source=c.harvest_source.name)}}</li>
-  {% endif %}
+{% block primary_content_inner %}
+<div class="module-content">
 
-{% endblock %}
+  <p class="pull-right">
+    {{ h.nav_named_link(_('Back to job list'), 'harvest_job_list', source=source.name, class_='btn', icon='arrow-left')}}
+  </p>
 
-{% block primary %}
-
-<article class="module">
-  <div class="module-content">
-  <h1 class="page-heading">{{ _('Harvest Job Report') }}</h1>
+  <h1>{{ _('Job Report') }}</h1>
 
   {% snippet 'snippets/job_details.html', job=c.job %}
 
@@ -48,11 +39,8 @@
       </div>
       {% endfor %}
     </div>
-
     {% endfor %}
-
   </div>
- </article>
 {% endblock %}
 
 {% block styles %}

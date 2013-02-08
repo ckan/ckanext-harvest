@@ -1,18 +1,10 @@
-{% extends "page.html" %}
+{% extends "source/admin_base.html" %}
 
 {% block subtitle %}{{ _('Harvest Jobs')}}{% endblock %}
 
-{% block breadcrumb_content %}
-  <li>{{ h.nav_named_link(_('Harvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
-  <li>{{ h.nav_named_link(c.harvest_source.title|truncate(30), '{0}_read'.format(c.dataset_type), id=c.harvest_source.name) }}</li>
-  <li class="active">{{ h.nav_link(_('Jobs'), controller='ckanext.harvest.controllers.view:ViewController', action='list_jobs', source=c.harvest_source.name)}}</li>
-{% endblock %}
-
-{% block primary %}
-
-<article class="module">
-  <div class="module-content">
-  <h1 class="page-heading">{{ _('Harvest Jobs') }}</h1>
+{% block primary_content_inner %}
+<div class="module-content">
+  <h1 class="hide-heading">{{ _('Harvest Jobs') }}</h1>
 
   {% if c.jobs|length == 0 %}
   <p>{{ _('No jobs yet for this source') }}</p>
@@ -49,8 +41,6 @@
      </tbody>
   </table>
   {% endif %}
-  </div>
-
- </article>
+</div>
 {% endblock %}
 
