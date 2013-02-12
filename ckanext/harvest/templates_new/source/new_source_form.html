@@ -5,7 +5,7 @@
   {% block errors %}{{ form.errors(error_summary) }}{% endblock %}
 
   {% call form.input('url', id='field-url', label=_('URL'), value=data.url, error=errors.url, classes=['control-full', 'control-large']) %}
-      <span class="info-block icon-large icon-info-sign">
+      <span class="info-block">
         {{ _('This should include the http:// part of the URL') }}
       </span>
   {% endcall %}
@@ -21,14 +21,19 @@
 
   {{ form.markdown('notes', id='field-notes', label=_('Description'), value=data.notes, error=errors.notes) }}
 
-  {{ form.select('source_type', id='field-source_type', label=_('Source type'), options=h.harvester_types(), selected=data.source_type, error=errors.source_type) }}
+  <div class="harvest-types control-group">
+    <label class="control-label">Source type</label>
     <div class="controls">
-      <ul>
       {% for harvester in h.harvesters_info() %}
-        <li><b>{{ harvester['title']}}</b>: {{harvester['description'] }}</li>
+        {% set checked = harvester['name'] == ( data.source_type or 'ckan' ) %}
+        <label class="radio">
+          <input type="radio" name="source_type" value="{{ harvester['name'] }}" {{ "checked " if checked }}>
+          {{ harvester['title'] }}
+          <i class="icon-question-sign" title="{{ harvester['description'] }}" data-toggle="tooltip"></i>
+        </label>
       {% endfor %}
-      </ul>
     </div>
+  </div>
 
   {{ form.select('frequency', id='field-frequency', label=_('Frequency of update'), options=h.harvest_frequencies(), selected=data.frequency, error=errors.frequency) }}
 
@@ -58,6 +63,8 @@
     {% endif %}
   {% endif %}
 
-  <input id="save" name="save" value="Save" type="submit" class="btn"/>
+  <p class="form-actions">
+    <input id="save" name="save" value="Save" type="submit" class="btn btn-primary">
+  </p>
 
 </form>

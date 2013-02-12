@@ -95,3 +95,10 @@ header.with-filter h1 {
 .harvest-error-list .error {
   padding-left: 20px;
 }
+.harvest-types label.radio {
+  font-weight: normal;
+  margin-bottom: 0;
+}
+.harvest-types label.radio i {
+  color: #999;
+}
