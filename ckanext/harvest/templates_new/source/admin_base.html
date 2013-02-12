@@ -14,8 +14,8 @@
 
 {% block page_header %}
   {% snippet 'snippets/page_header.html', items=[
-      h.build_nav_icon('{0}_admin'.format(c.dataset_type), _('Dashboard'), id=source.name),
-      h.build_nav_icon('harvest_job_list'.format(c.dataset_type), _('Jobs'), source=source.name),
-      h.build_nav_icon('{0}_edit'.format(c.dataset_type), _('Edit'), id=source.name),
+      h.build_nav_icon('{0}_admin'.format(c.dataset_type), _('Dashboard'), id=source.name, icon='dashboard'),
+      h.build_nav_icon('harvest_job_list'.format(c.dataset_type), _('Jobs'), source=source.name, icon='reorder'),
+      h.build_nav_icon('{0}_edit'.format(c.dataset_type), _('Edit'), id=source.name, icon='edit'),
     ] %}
 {% endblock %}

@@ -33,8 +33,8 @@
   <article class="module prose">
     {% block page_header %}
       {% snippet 'snippets/page_header.html', items=[
-          h.build_nav_icon('{0}_read'.format(c.dataset_type), _('Datasets'), id=source.name),
-          h.build_nav_icon('{0}_about'.format(c.dataset_type), _('About'), id=source.name),
+          h.build_nav_icon('{0}_read'.format(c.dataset_type), _('Datasets'), id=source.name, icon='sitemap'),
+          h.build_nav_icon('{0}_about'.format(c.dataset_type), _('About'), id=source.name, icon='info-sign'),
         ] %}
     {% endblock %}
     {% block primary_content_inner %}{% endblock %}

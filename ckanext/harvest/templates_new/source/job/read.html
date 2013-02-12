@@ -12,6 +12,33 @@
   <h1>{{ _('Job Report') }}</h1>
   {% snippet 'snippets/job_details.html', job=c.job %}
 
+  <h2>{{ _('Error Summary') }}</h2>
+  {% if c.job.error_summary|length == 0 %}
+    <p class="empty">{{ _('No errors for this job') }}</p>
+  {% else %}
+    <p class="empty">{{ _('Only the 20 most frequent errors are shown') }}</p>
+    <table class="table table-striped table-bordered table-condensed harvest-error-summary">
+      <colgroup>
+        <col width="8">
+        <col width="92">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="count">{{ _('Count') }}</th>
+          <th>{{ _('Message') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for error in c.job.error_summary %}
+        <tr>
+          <td class="count">{{ error[1] }}</td>
+          <td>{{ error[0] }}</td>
+        </tr>
+      {% endfor %}
+       </tbody>
+    </table>
+  {% endif %}
+
   <h2>{{ _('Error Report') }}</h2>
   <p class="lead">{{ c.job_report.keys()|length}} documents with errors</p>
 
