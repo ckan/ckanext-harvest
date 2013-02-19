@@ -50,7 +50,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
                 data_dict['extras'] = []
 
             data_dict['extras'].append({
-                'key': key, 'value': '"{0}"'.format(value), 'state': u'active'
+                'key': key, 'value': value, 'state': u'active'
             })
 
         if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
