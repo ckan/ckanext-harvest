@@ -34,7 +34,6 @@ def harvest_source_show(context,data_dict):
     :rtype: dictionary
     '''
 
-    context['schema'] = harvest_source_db_to_form_schema()
     source_dict = logic.get_action('package_show')(context, data_dict)
 
     # For compatibility with old code, add the active field

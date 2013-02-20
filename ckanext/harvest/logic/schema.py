@@ -61,6 +61,7 @@ def harvest_source_db_to_form_schema():
         'source_type': [convert_from_extras, ignore_missing],
         'frequency': [convert_from_extras, ignore_missing],
         'config': [convert_from_extras, ignore_missing],
+        'owner_org': [ignore_missing]
     })
 
     return schema

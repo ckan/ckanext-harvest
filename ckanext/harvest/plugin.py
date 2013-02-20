@@ -50,7 +50,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
                 data_dict['extras'] = []
 
             data_dict['extras'].append({
-                'key': key, 'value': '"{0}"'.format(value), 'state': u'active'
+                'key': key, 'value': value, 'state': u'active'
             })
 
         if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
@@ -138,11 +138,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
             Similar to db_to_form_schema but with further options to allow
             slightly different schemas, eg for creation or deletion on the API.
         '''
-        if options.get('type') == 'show':
-            return None
-        else:
-            return self.db_to_form_schema()
-
+        return self.db_to_form_schema()
 
     def db_to_form_schema(self):
         '''
@@ -157,12 +153,11 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
         '''Check if the return data is correct, mostly for checking out
         if spammers are submitting only part of the form'''
 
-        surplus_keys_schema = ['__extras', '__junk', 'extras',
+        surplus_keys_schema = ['__extras', '__junk', 'extras', 'notes',
                                'extras_validation', 'save', 'return_to', 'type',
-                               'state']
+                               'state', 'owner_org', 'frequency', 'config']
 
         #TODO: state and delete
-
         if not schema:
             schema = self.form_to_db_schema()
         schema_keys = schema.keys()
@@ -170,8 +165,9 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
         missing_keys = keys_in_schema - set(data_dict.keys())
         if missing_keys:
-            log.info('incorrect form fields posted, missing %s' % missing_keys)
-            raise dictization_functions.DataError(data_dict)
+            msg = 'Incorrect form fields posted, missing %s' % missing_keys
+            log.info(msg)
+            raise dictization_functions.DataError(msg)
 
     def configure(self, config):
 
