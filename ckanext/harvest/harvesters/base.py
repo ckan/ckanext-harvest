@@ -1,7 +1,9 @@
 import logging
 import re
+import uuid
 
 from sqlalchemy.sql import update,and_, bindparam
+from sqlalchemy.exc import InvalidRequestError
 
 from ckan import model
 from ckan.model import Session, Package
@@ -19,10 +21,12 @@ from ckanext.harvest.interfaces import IHarvester
 
 log = logging.getLogger(__name__)
 
+
 def munge_tag(tag):
     tag = substitute_ascii_equivalents(tag)
     tag = tag.lower().strip()
     return re.sub(r'[^a-zA-Z0-9 -]', '', tag).replace(' ', '-')
+
 
 class HarvesterBase(SingletonPlugin):
     '''
@@ -32,53 +36,55 @@ class HarvesterBase(SingletonPlugin):
 
     config = None
 
-    def _gen_new_name(self,title):
+    def _gen_new_name(self, title):
         '''
         Creates a URL friendly name from a title
+
+        If the name already exists, it will add some random characters at the end
         '''
+
         name = munge_title_to_name(title).replace('_', '-')
         while '--' in name:
             name = name.replace('--', '-')
-        return name
-
-    def _check_name(self,name):
-        '''
-        Checks if a package name already exists in the database, and adds
-        a counter at the end if it does exist.
-        '''
-        like_q = u'%s%%' % name
-        pkg_query = Session.query(Package).filter(Package.name.ilike(like_q)).limit(100)
-        taken = [pkg.name for pkg in pkg_query]
-        if name not in taken:
-            return name
+        pkg_obj = Session.query(Package).filter(Package.name == name).first()
+        if pkg_obj:
+            return name + str(uuid.uuid4())[:5]
         else:
-            counter = 1
-            while counter < 101:
-                if name+str(counter) not in taken:
-                    return name+str(counter)
-                counter = counter + 1
-            return None
+            return name
 
-    def _save_gather_error(self,message,job):
-        '''
-        Helper function to create an error during the gather stage.
-        '''
-        err = HarvestGatherError(message=message,job=job)
-        err.save()
-        log.error(message)
 
-    def _save_object_error(self,message,obj,stage=u'Fetch'):
-        '''
-        Helper function to create an error during the fetch or import stage.
-        '''
-        err = HarvestObjectError(message=message,object=obj,stage=stage)
-        err.save()
-        log.error(message)
+    def _save_gather_error(self, message, job):
+        err = HarvestGatherError(message=message, job=job)
+        try:
+            err.save()
+        except InvalidRequestError:
+            Session.rollback()
+            err.save()
+        finally:
+            log.error(message)
+
+
+    def _save_object_error(self, message, obj, stage=u'Fetch', line=None):
+        err = HarvestObjectError(message=message,
+                                 object=obj,
+                                 stage=stage,
+                                 line=line)
+        try:
+            err.save()
+        except InvalidRequestError, e:
+            Session.rollback()
+            err.save()
+        finally:
+            log_message = '{0}, line {1}'.format(message,line) if line else message
+            log.debug(log_message)
+
 
     def _create_harvest_objects(self, remote_ids, harvest_job):
         '''
         Given a list of remote ids and a Harvest Job, create as many Harvest Objects and
-        return a list of its ids to be returned to the fetch stage.
+        return a list of their ids to be passed to the fetch stage.
+
+        TODO: Not sure it is worth keeping this function
         '''
         try:
             object_ids = []
@@ -93,6 +99,7 @@ class HarvesterBase(SingletonPlugin):
                self._save_gather_error('No remote datasets could be identified', harvest_job)
         except Exception, e:
             self._save_gather_error('%r' % e.message, harvest_job)
+
 
     def _create_or_update_package(self, package_dict, harvest_object):
         '''
@@ -109,6 +116,10 @@ class HarvesterBase(SingletonPlugin):
         If the remote server provides the modification date of the remote
         package, add it to package_dict['metadata_modified'].
 
+
+        TODO: Not sure it is worth keeping this function. If useful it should
+        use the output of package_show logic function (maybe keeping support
+        for rest api based dicts
         '''
         try:
             # Change default schema
@@ -159,7 +170,7 @@ class HarvesterBase(SingletonPlugin):
                 # Package needs to be created
 
                 # Check if name has not already been used
-                package_dict['name'] = self._check_name(package_dict['name'])
+                package_dict['name'] = self._gen_new_name(package_dict['title'])
 
                 log.info('Package with GUID %s does not exist, let\'s create it' % harvest_object.guid)
                 new_package = get_action('package_create_rest')(context, package_dict)
