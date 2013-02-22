@@ -293,6 +293,7 @@ class CKANHarvester(HarvesterBase):
                     pkg_role = model.PackageRole(package=package, user=user, role=model.Role.READER)
 
 
+            return True
         except ValidationError,e:
             self._save_object_error('Invalid package with GUID %s: %r' % (harvest_object.guid, e.error_dict),
                     harvest_object, 'Import')
