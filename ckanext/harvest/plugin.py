@@ -107,7 +107,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
     def setup_template_variables(self, context, data_dict):
 
-        p.toolkit.c.harvest_source = p.toolkit.c.pkg
+        p.toolkit.c.harvest_source = p.toolkit.c.pkg_dict
 
         p.toolkit.c.dataset_type = DATASET_TYPE_NAME
 
