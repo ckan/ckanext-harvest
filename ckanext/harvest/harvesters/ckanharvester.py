@@ -249,12 +249,15 @@ class CKANHarvester(HarvesterBase):
 
             # Check if remote groups exist, otherwise remove
             validated_groups = []
-            context = {'model': model}
+            context = {'model': model, 'user': 'harvest'}
             for group_name in package_dict['groups']:
                 try:
                     data_dict = {'id': group_name}
                     group = get_action('group_show')(context, data_dict)
-                    validated_groups.append(group)
+                    if self.api_version == '1':
+                        validated_groups.append(group['name'])
+                    else:
+                        validated_groups.append(group['id'])
                 except NotFound, e:
                     log.info('Group %s is not available' % group_name)
 
