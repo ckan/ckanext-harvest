@@ -160,6 +160,24 @@ def harvest_job_report(context, data_dict):
     if not job:
         raise NotFound
 
+    report = {
+        'gather_errors': [],
+        'object_errors': []
+    }
+
+    # Gather errors
+    q = model.Session.query(harvest_model.HarvestGatherError) \
+                      .join(harvest_model.HarvestJob) \
+                      .filter(harvest_model.HarvestGatherError.harvest_job_id==job.id) \
+                      .order_by(harvest_model.HarvestGatherError.created.desc())
+
+    for error in q.all():
+        report['gather_errors'].append({
+            'message': error.message
+        })
+
+    # Object errors
+
     # Check if the harvester for this job's source has a method for returning
     # the URL to the original document
     original_url_builder = None
@@ -173,19 +191,18 @@ def harvest_job_report(context, data_dict):
                       .filter(harvest_model.HarvestObject.harvest_job_id==job.id) \
                       .order_by(harvest_model.HarvestObjectError.harvest_object_id)
 
-    report = {}
     for error, guid in q.all():
-        if not error.harvest_object_id in report:
-            report[error.harvest_object_id] = {
+        if not error.harvest_object_id in report['object_errors']:
+            report['object_errors'][error.harvest_object_id] = {
                 'guid': guid,
                 'errors': []
             }
             if original_url_builder:
                 url = original_url_builder(error.harvest_object_id)
                 if url:
-                    report[error.harvest_object_id]['original_url'] = url
+                    report['object_errors'][error.harvest_object_id]['original_url'] = url
 
-        report[error.harvest_object_id]['errors'].append({
+        report['object_errors'][error.harvest_object_id]['errors'].append({
             'message': error.message,
             'line': error.line,
             'type': error.stage
