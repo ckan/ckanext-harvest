@@ -348,6 +348,9 @@ class ViewController(BaseController):
 
         source_dict = self._get_source_for_job(source)
 
+        if not source_dict['status']['last_job']:
+            abort(404, _('No jobs yet for this source'))
+
         return self.show_job(source_dict['status']['last_job']['id'],
                              source_dict=source_dict,
                              is_last=True)
