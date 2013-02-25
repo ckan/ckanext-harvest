@@ -1,33 +1,107 @@
 import logging
-from sqlalchemy import or_
-from ckan.authz import Authorizer
+from sqlalchemy import or_, func
 from ckan.model import User
+import datetime
 
+from ckan import logic
 from ckan.plugins import PluginImplementations
 from ckanext.harvest.interfaces import IHarvester
 
-
+import ckan.plugins as p
 from ckan.logic import NotFound, check_access
+
+from ckanext.harvest import model as harvest_model
 
 from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject)
 from ckanext.harvest.logic.dictization import (harvest_source_dictize,
                                                harvest_job_dictize,
                                                harvest_object_dictize)
-
+from ckanext.harvest.logic.schema import harvest_source_db_to_form_schema
 log = logging.getLogger(__name__)
 
+
 def harvest_source_show(context,data_dict):
-    check_access('harvest_source_show',context,data_dict)
+    '''
+    Returns the metadata of a harvest source
 
-    id = data_dict.get('id')
-    attr = data_dict.get('attr',None)
+    This method just proxies the request to package_show. All auth checks and
+    validation will be done there.
 
-    source = HarvestSource.get(id,attr=attr)
+    :param id: the id or name of the harvest source
+    :type id: string
 
+    :returns: harvest source metadata
+    :rtype: dictionary
+    '''
+
+    source_dict = logic.get_action('package_show')(context, data_dict)
+
+    # For compatibility with old code, add the active field
+    # based on the package state
+    source_dict['active'] = (source_dict['state'] == 'active')
+
+    return source_dict
+
+def harvest_source_show_status(context, data_dict):
+    '''
+    Returns a status report for a harvest source
+
+    Given a particular source, returns a dictionary containing information
+    about the source jobs, datasets created, errors, etc.
+    Note that this information is already included on the output of
+    harvest_source_show, under the 'status' field.
+
+    :param id: the id or name of the harvest source
+    :type id: string
+
+    :rtype: dictionary
+    '''
+    model = context.get('model')
+
+    source = harvest_model.HarvestSource.get(data_dict['id'])
     if not source:
-        raise NotFound
+        raise p.toolkit.NotFound('Harvest source {0} does not exist'.format(data_dict['id']))
 
-    return harvest_source_dictize(source,context)
+    out = {
+           'job_count': 0,
+           'next_job': p.toolkit._('Not yet scheduled'),
+           'last_job': None,
+           'total_datasets': 0,
+           }
+
+    jobs = harvest_model.HarvestJob.filter(source=source).all()
+
+    job_count = len(jobs)
+    if job_count == 0:
+        return out
+
+    out['job_count'] = job_count
+
+    # Get next scheduled job
+    next_job = harvest_model.HarvestJob.filter(source=source,status=u'New').first()
+    if next_job:
+        out['next_job'] = p.toolkit._('Scheduled')
+
+    # Get the last finished job
+    last_job = harvest_model.HarvestJob.filter(source=source,status=u'Finished') \
+               .order_by(harvest_model.HarvestJob.created.desc()).first()
+
+    if not last_job:
+        return out
+
+    out['last_job'] = harvest_job_dictize(last_job, context)
+
+    # Overall statistics
+    packages = model.Session.query(model.Package) \
+            .join(harvest_model.HarvestObject) \
+            .filter(harvest_model.HarvestObject.harvest_source_id==source.id) \
+            .filter(harvest_model.HarvestObject.current==True) \
+            .filter(model.Package.state==u'active')
+
+    out['total_datasets'] = packages.count()
+
+    return out
+
 
 def harvest_source_list(context, data_dict):
 
@@ -75,6 +149,50 @@ def harvest_job_show(context,data_dict):
 
     return harvest_job_dictize(job,context)
 
+def harvest_job_report(context, data_dict):
+
+    check_access('harvest_job_show', context, data_dict)
+
+    model = context['model']
+    id = data_dict.get('id')
+
+    job = HarvestJob.get(id)
+    if not job:
+        raise NotFound
+
+    # Check if the harvester for this job's source has a method for returning
+    # the URL to the original document
+    original_url_builder = None
+    for harvester in PluginImplementations(IHarvester):
+        if harvester.info()['name'] == job.source.type:
+             if hasattr(harvester, 'get_original_url'):
+                original_url_builder = harvester.get_original_url
+
+    q = model.Session.query(harvest_model.HarvestObjectError, harvest_model.HarvestObject.guid) \
+                      .join(harvest_model.HarvestObject) \
+                      .filter(harvest_model.HarvestObject.harvest_job_id==job.id) \
+                      .order_by(harvest_model.HarvestObjectError.harvest_object_id)
+
+    report = {}
+    for error, guid in q.all():
+        if not error.harvest_object_id in report:
+            report[error.harvest_object_id] = {
+                'guid': guid,
+                'errors': []
+            }
+            if original_url_builder:
+                url = original_url_builder(error.harvest_object_id)
+                if url:
+                    report[error.harvest_object_id]['original_url'] = url
+
+        report[error.harvest_object_id]['errors'].append({
+            'message': error.message,
+            'line': error.line,
+            'type': error.stage
+         })
+
+    return report
+
 def harvest_job_list(context,data_dict):
 
     check_access('harvest_job_list',context,data_dict)
@@ -93,9 +211,12 @@ def harvest_job_list(context,data_dict):
     if status:
         query = query.filter(HarvestJob.status==status)
 
+    query = query.order_by(HarvestJob.created.desc())
+
     jobs = query.all()
 
-    return [harvest_job_dictize(job,context) for job in jobs]
+    context['return_error_summary'] = False
+    return [harvest_job_dictize(job, context) for job in jobs]
 
 def harvest_object_show(context,data_dict):
 
@@ -153,6 +274,7 @@ def _get_sources_for_user(context,data_dict):
     user = context.get('user','')
 
     only_active = data_dict.get('only_active',False)
+    only_to_run = data_dict.get('only_to_run',False)
 
     query = session.query(HarvestSource) \
                 .order_by(HarvestSource.created.desc())
@@ -160,13 +282,19 @@ def _get_sources_for_user(context,data_dict):
     if only_active:
         query = query.filter(HarvestSource.active==True) \
 
+    if only_to_run:
+        query = query.filter(HarvestSource.frequency!='MANUAL')
+        query = query.filter(or_(HarvestSource.next_run<=datetime.datetime.utcnow(),
+                                 HarvestSource.next_run==None)
+                            )
+
+    user_obj = User.get(user)
     # Sysadmins will get all sources
-    if not Authorizer().is_sysadmin(user):
+    if user_obj and not user_obj.sysadmin:
         # This only applies to a non sysadmin user when using the
         # publisher auth profile. When using the default profile,
         # normal users will never arrive at this point, but even if they
         # do, they will get an empty list.
-        user_obj = User.get(user)
 
         publisher_filters = []
         publishers_for_the_user = user_obj.get_groups(u'publisher')

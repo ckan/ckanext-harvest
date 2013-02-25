@@ -15,7 +15,7 @@ class Harvester(CkanCommand):
       harvester initdb
         - Creates the necessary tables in the database
 
-      harvester source {url} {type} [{active}] [{user-id}] [{publisher-id}]
+      harvester source {url} {type} [{config}] [{active}] [{user-id}] [{publisher-id}] [{frequency}]
         - create new harvest source
 
       harvester rmsource {id}
@@ -40,6 +40,9 @@ class Harvester(CkanCommand):
       harvester fetch_consumer
         - starts the consumer for the fetching queue
 
+      harvester purge_queues
+        - removes all jobs from fetch and gather queue
+
       harvester [-j] [--segments={segments}] import [{source-id}]
         - perform the import stage with the last fetched objects, optionally belonging to a certain source.
           Please note that no objects will be fetched from the remote server. It will only affect
@@ -54,6 +57,9 @@ class Harvester(CkanCommand):
       harvester job-all
         - create new harvest jobs for all active sources.
 
+      harvester reindex
+        - reindexes the harvest source datasets
+
     The commands should be run from the ckanext-harvest directory and expect
     a development.ini file to be present. Most of the time you will
     specify the config explicitly though::
@@ -64,7 +70,7 @@ class Harvester(CkanCommand):
 
     summary = __doc__.split('\n')[0]
     usage = __doc__
-    max_args = 6
+    max_args = 8
     min_args = 0
 
     def __init__(self,name):
@@ -108,16 +114,21 @@ class Harvester(CkanCommand):
             self.run_harvester()
         elif cmd == 'gather_consumer':
             import logging
-            from ckanext.harvest.queue import get_gather_consumer
+            from ckanext.harvest.queue import get_gather_consumer, gather_callback
             logging.getLogger('amqplib').setLevel(logging.INFO)
             consumer = get_gather_consumer()
-            consumer.wait()
+            for method, header, body in consumer.consume(queue='ckan.harvest.gather'):
+               gather_callback(consumer, method, header, body)
         elif cmd == 'fetch_consumer':
             import logging
             logging.getLogger('amqplib').setLevel(logging.INFO)
-            from ckanext.harvest.queue import get_fetch_consumer
+            from ckanext.harvest.queue import get_fetch_consumer, fetch_callback
             consumer = get_fetch_consumer()
-            consumer.wait()
+            for method, header, body in consumer.consume(queue='ckan.harvest.fetch'):
+               fetch_callback(consumer, method, header, body)
+        elif cmd == 'purge_queues':
+            from ckanext.harvest.queue import purge_queues
+            purge_queues()
         elif cmd == 'initdb':
             self.initdb()
         elif cmd == 'import':
@@ -128,6 +139,8 @@ class Harvester(CkanCommand):
         elif cmd == 'harvesters-info':
             harvesters_info = get_action('harvesters_info_show')()
             pprint(harvesters_info)
+        elif cmd == 'reindex':
+            self.reindex()
         else:
             print 'Command %s not recognized' % cmd
 
@@ -169,11 +182,18 @@ class Harvester(CkanCommand):
             publisher_id = unicode(self.args[6])
         else:
             publisher_id = u''
+        if len(self.args) >= 8:
+            frequency = unicode(self.args[7])
+            if not frequency:
+                frequency = 'MANUAL'
+        else:
+            frequency = 'MANUAL'
         try:
             data_dict = {
                     'url':url,
                     'type':type,
                     'config':config,
+                    'frequency':frequency,
                     'active':active,
                     'user_id':user_id,
                     'publisher_id':publisher_id}
@@ -186,9 +206,11 @@ class Harvester(CkanCommand):
             sources = get_action('harvest_source_list')(context,{})
             self.print_there_are('harvest source', sources)
 
-            # Create a harvest job for the new source
-            get_action('harvest_job_create')(context,{'source_id':source['id']})
-            print 'A new Harvest Job for this source has also been created'
+            # Create a harvest job for the new source if not regular job.
+            if not data_dict['frequency']:
+                get_action('harvest_job_create')(context,{'source_id':source['id']})
+                print 'A new Harvest Job for this source has also been created'
+
         except ValidationError,e:
            print 'An error occurred:'
            print str(e.error_dict)
@@ -265,6 +287,11 @@ class Harvester(CkanCommand):
         jobs = get_action('harvest_job_create_all')(context,{})
         print 'Created %s new harvest jobs' % len(jobs)
 
+    def reindex(self):
+        context = {'model': model, 'user': self.admin_user['name']}
+        get_action('harvest_sources_reindex')(context,{})
+
+
     def print_harvest_sources(self, sources):
         if sources:
             print ''
@@ -278,6 +305,7 @@ class Harvester(CkanCommand):
         print '   active: %s' % source['active']
         print '     user: %s' % source['user_id']
         print 'publisher: %s' % source['publisher_id']
+        print 'frequency: %s' % source['frequency']
         print '     jobs: %s' % source['status']['job_count']
         print ''
 
@@ -290,7 +318,7 @@ class Harvester(CkanCommand):
     def print_harvest_job(self, job):
         print '       Job id: %s' % job['id']
         print '       status: %s' % job['status']
-        print '       source: %s' % job['source']
+        print '       source: %s' % job['source_id']
         print '      objects: %s' % len(job['objects'])
 
         print 'gather_errors: %s' % len(job['gather_errors'])

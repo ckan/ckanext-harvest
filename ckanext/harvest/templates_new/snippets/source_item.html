@@ -1,0 +1,41 @@
+{#
+Displays a single harvest source result.
+
+source         - A source to display.
+item_class     - The class name to use on the list item.
+hide_resources - If true hides the resources (default: false).
+banner         - If true displays a popular banner (default: false).
+truncate       - The length to trucate the description to (default: 180)
+truncate_title - The length to truncate the title to (default: 80).
+
+Example:
+
+  {% snippet 'snippets/source_item.html', source=c.sources[0] %}
+
+#}
+{% set truncate = truncate or 180 %}
+{% set truncate_title = truncate_title or 80 %}
+{% set title = source.title or source.name %}
+{% set source_type = h.get_pkg_dict_extra(source, 'source_type') %}
+
+<li class="{{ item_class or "dataset-item" }}">
+  <div class="dataset-content">
+    <h3 class="dataset-heading">
+      {{ h.link_to(h.truncate(title, truncate_title), h.url_for('harvest_source_read', id=source.name)) }}
+      {% if source.get(state, '').startswith('draft') %}
+        <span class="label label-info">{{ _('Draft') }}</span>
+      {% elif source.get(state, '').startswith('deleted') %}
+        <span class="label label-important">{{ _('Deleted') }}</span>
+      {% endif %}
+    </h3>
+
+    <!-- TODO: nicer -->
+    <div>{{ source.url }}</div>
+
+    <div><span>Type: {{ source_type }}</span><span>Total datasets: {{ source.status.total_datasets }}</span></div>
+    <div style="color:#EB7C91"><span>Last harvest: {{ source.status.last_job.gather_finished }}</span>    <span>Next harvest: {{ source.status.next_job }}</span></div>
+
+    <a style="color:#EB7C91" href="{{ h.url_for('harvesting_job_create', id=source.id) }}">Refresh</a>
+    <a style="color:#EB7C91" href="{{ h.url_for('{0}_edit'.format(source.type), id=source.name) }}">Edit</a>
+  </div>
+</li>

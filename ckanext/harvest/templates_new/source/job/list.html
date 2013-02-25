@@ -1,0 +1,58 @@
+{% extends "source/admin_base.html" %}
+
+{% set controller = 'ckanext.harvest.controllers.view:ViewController' %}
+
+{% block subtitle %}{{ _('Harvest Jobs')}} - {{ super() }}{% endblock %}
+
+{% block primary_content_inner %}
+<div class="module-content">
+
+  <header class="with-filter">
+    <ul class="nav nav-pills pull-right">
+      <li class="disabled"><a>{{ _('Show me:') }}</a></li>
+      <li{% if c.filter_nav == 'Finished' %} class="active"{% endif %}>{{ h.nav_named_link(_('Finished jobs'), 'harvest_job_list', source=source.name) }}</li>
+      <li{% if c.filter_nav == 'New' %} class="active"{% endif %}>{{ h.nav_named_link(_('New jobs'), 'harvest_job_list', source=source.name, status='New') }}</li>
+    </ul>
+    <h1>{{ _('Harvest Jobs') }}</h1>
+  </header>
+
+  {% if c.jobs|length == 0 %}
+    <p class="empty">{{ _('No jobs yet for this source') }}</p>
+  {% else %}
+    <ul class="harvest-jobs unstyled">
+      {% for job in c.jobs %}
+        <li>
+          <a href="{{ h.url_for(controller=controller, action='show_job', source=source.name, id=job.id) }}">
+            {% if 'errored' in job.stats and job.stats['errored'] > 0 %}
+              <span class="harvest-errors">
+                <span class="badge badge-important">{{ job.stats['errored'] }}</span>
+                <span class="badge">{{ _('errors') }}</span>
+              </span>
+            {% endif %}
+            <h4>{{ _('Job: ') }} {{ job.id }}</h4>
+            <p>
+              {{ _('Created:') }} {{ h.render_datetime(job.gather_started, with_hours=True) or _('Not yet') }}
+              &mdash;
+              {{ _('Finished:') }} {{ h.render_datetime(job.gather_finished, with_hours=True) or _('Not yet') }}
+            </p>
+            <p class="harvest-diff">
+              {% for action in ['added', 'updated', 'deleted'] %}
+                <span class="diff-{{ action }}" title="{{ _(action) }}">
+                  {% if action in job.stats and job.stats[action] > 0 %}
+                    {{ job.stats[action] }}
+                  {% else %}
+                    0
+                  {% endif %}
+                  {{ _(action) }}
+                </span>
+              {% endfor %}
+            </p>
+          </a>
+        </li>
+       {% endfor %}
+    </ul>
+  {% endif %}
+
+</div>
+{% endblock %}
+  

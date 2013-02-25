@@ -3,7 +3,6 @@ from lxml import etree
 from lxml.etree import XMLSyntaxError
 from pylons.i18n import _
 
-from ckan.authz import Authorizer
 from ckan import model
 from ckan.model.group import Group
 
@@ -13,28 +12,33 @@ from ckan.lib.base import BaseController, c, g, request, \
 
 from ckan.lib.navl.dictization_functions import DataError
 from ckan.logic import NotFound, ValidationError, get_action, NotAuthorized
-from ckanext.harvest.logic.schema import harvest_source_form_schema
+from ckanext.harvest.plugin import DATASET_TYPE_NAME
+from ckanext.harvest.logic.schema import harvest_source_form_to_db_schema
 
 from ckan.lib.helpers import Page,pager_url
+import ckan.plugins as p
 
 import logging
 log = logging.getLogger(__name__)
 
 class ViewController(BaseController):
 
-    not_auth_message = _('Not authorized to see this page')
+    not_auth_message = p.toolkit._('Not authorized to see this page')
 
     def __before__(self, action, **params):
 
         super(ViewController,self).__before__(action, **params)
 
+        #TODO: remove
         c.publisher_auth = (config.get('ckan.harvest.auth.profile',None) == 'publisher')
+
+        c.dataset_type = DATASET_TYPE_NAME
 
     def _get_publishers(self):
         groups = None
-
+        user = model.User.get(c.user)
         if c.publisher_auth:
-            if Authorizer().is_sysadmin(c.user):
+            if user.sysadmin:
                 groups = Group.all(group_type='publisher')
             elif c.userobj:
                 groups = c.userobj.get_groups('publisher')
@@ -84,8 +88,13 @@ class ViewController(BaseController):
         vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': harvesters_info}
 
         c.groups = self._get_publishers()
-        c.form = render('source/new_source_form.html', extra_vars=vars)
+
+        vars['form_items'] = self._make_autoform_items(harvesters_info)
+
+        c.form = render('source/old_new_source_form.html', extra_vars=vars)
         return render('source/new.html')
+
+
 
     def _save_new(self):
         try:
@@ -139,7 +148,11 @@ class ViewController(BaseController):
         vars = {'data': data, 'errors': errors, 'error_summary': error_summary, 'harvesters': harvesters_info}
 
         c.groups = self._get_publishers()
-        c.form = render('source/new_source_form.html', extra_vars=vars)
+
+        vars['form_items'] = self._make_autoform_items(harvesters_info)
+
+        c.form = render('source/old_new_source_form.html', extra_vars=vars)
+
         return render('source/edit.html')
 
     def _save_edit(self,id):
@@ -167,8 +180,10 @@ class ViewController(BaseController):
 
     def _check_data_dict(self, data_dict):
         '''Check if the return data is correct'''
-        surplus_keys_schema = ['id','publisher_id','user_id','config','save']
-        schema_keys = harvest_source_form_schema().keys()
+
+        # TODO: remove frequency once it is added to the frontend!
+        surplus_keys_schema = ['id','publisher_id','user_id','config','save','frequency']
+        schema_keys = harvest_source_form_to_db_schema().keys()
         keys_in_schema = set(schema_keys) - set(surplus_keys_schema)
 
         # user_id is not yet used, we'll set the logged user one for the time being
@@ -183,7 +198,6 @@ class ViewController(BaseController):
         try:
             context = {'model':model, 'user':c.user}
             c.source = get_action('harvest_source_show')(context, {'id':id})
-
             c.page = Page(
                 collection=c.source['status']['packages'],
                 page=request.params.get('page', 1),
@@ -222,8 +236,14 @@ class ViewController(BaseController):
         except NotAuthorized,e:
             abort(401,self.not_auth_message)
         except Exception, e:
-            msg = 'An error occurred: [%s]' % e.message
-            h.flash_error(msg)
+            if 'Can not create jobs on inactive sources' in str(e):
+                h.flash_error(_('Cannot create new harvest jobs on inactive sources.'
+                                 + ' First, please change the source status to \'active\'.'))
+            elif 'There already is an unrun job for this source' in str(e):
+                h.flash_notice(_('A harvest job has already been scheduled for this source'))
+            else:
+                msg = 'An error occurred: [%s]' % str(e)
+                h.flash_error(msg)
 
         redirect(h.url_for('harvest'))
 
@@ -235,18 +255,26 @@ class ViewController(BaseController):
 
             # Check content type. It will probably be either XML or JSON
             try:
-                content = re.sub('<\?xml(.*)\?>','', obj['content'])
-                etree.fromstring(content)
-                response.content_type = 'application/xml'
+
+                if obj['content']:
+                    content = obj['content']
+                elif 'original_document' in obj['extras']:
+                    content = obj['extras']['original_document']
+                else:
+                    abort(404,_('No content found'))
+
+                etree.fromstring(re.sub('<\?xml(.*)\?>','',content))
+                response.content_type = 'application/xml; charset=utf-8'
             except XMLSyntaxError:
                 try:
                     json.loads(obj['content'])
-                    response.content_type = 'application/json'
+                    response.content_type = 'application/json; charset=utf-8'
                 except ValueError:
+                    # Just return whatever it is
                     pass
 
-            response.headers['Content-Length'] = len(obj['content'])
-            return obj['content']
+            response.headers['Content-Length'] = len(content)
+            return content
         except NotFound:
             abort(404,_('Harvest object not found'))
         except NotAuthorized,e:
@@ -254,3 +282,128 @@ class ViewController(BaseController):
         except Exception, e:
             msg = 'An error occurred: [%s]' % str(e)
             abort(500,msg)
+
+
+    def _get_source_for_job(self, source_id):
+
+        try:
+            context = {'model': model, 'user': c.user}
+            source_dict = p.toolkit.get_action('harvest_source_show')(context,
+                    {'id': source_id})
+        except NotFound:
+            abort(404, p.toolkit._('Harvest source not found'))
+        except NotAuthorized,e:
+
+            abort(401,self.not_auth_message)
+        except Exception, e:
+            msg = 'An error occurred: [%s]' % str(e)
+            abort(500,msg)
+
+        return source_dict
+
+    def show_job(self, id, source_dict=False, is_last=False):
+
+        try:
+            context = {'model':model, 'user':c.user}
+            c.job = get_action('harvest_job_show')(context, {'id': id})
+            c.job_report = get_action('harvest_job_report')(context, {'id': id})
+
+            if not source_dict:
+                source_dict = get_action('harvest_source_show')(context, {'id': c.job['source_id']})
+
+            c.harvest_source = source_dict
+            c.is_last_job = is_last
+
+            return render('source/job/read.html')
+
+        except NotFound:
+            abort(404,_('Harvest job not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+        except Exception, e:
+            msg = 'An error occurred: [%s]' % str(e)
+            abort(500,msg)
+
+    def about(self, id):
+        try:
+            context = {'model':model, 'user':c.user}
+            c.harvest_source = get_action('harvest_source_show')(context, {'id':id})
+            return render('source/about.html')
+        except NotFound:
+            abort(404,_('Harvest source not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+
+    def admin(self, id):
+        try:
+            context = {'model':model, 'user':c.user}
+            c.harvest_source = get_action('harvest_source_show')(context, {'id':id})
+            return render('source/admin.html')
+        except NotFound:
+            abort(404,_('Harvest source not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+
+    def show_last_job(self, source):
+
+        source_dict = self._get_source_for_job(source)
+
+        return self.show_job(source_dict['status']['last_job']['id'],
+                             source_dict=source_dict,
+                             is_last=True)
+
+
+    def list_jobs(self, source):
+
+        try:
+            context = {'model':model, 'user':c.user}
+            c.harvest_source =  get_action('harvest_source_show')(context, {'id': source})
+            status = request.params.get('status', 'Finished')
+            c.filter_nav = status
+            c.jobs = get_action('harvest_job_list')(context, {'source_id': c.harvest_source['id'], 'status': status})
+
+            return render('source/job/list.html')
+
+        except NotFound:
+            abort(404,_('Harvest source not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+        except Exception, e:
+            msg = 'An error occurred: [%s]' % str(e)
+            abort(500,msg)
+
+
+    def _make_autoform_items(self, harvesters_info):
+        states = [{'text': 'active', 'value': 'True'},
+                  {'text': 'withdrawn', 'value': 'False'},]
+
+        harvest_list = []
+        harvest_descriptions = p.toolkit.literal('<ul>')
+        for harvester in harvesters_info:
+            harvest_list.append({'text':harvester['title'], 'value': harvester['name']})
+            harvest_descriptions += p.toolkit.literal('<li><span class="harvester-title">')
+            harvest_descriptions += harvester['title']
+            harvest_descriptions += p.toolkit.literal('</span>: ')
+            harvest_descriptions += harvester['description']
+            harvest_descriptions += p.toolkit.literal('</li>')
+        harvest_descriptions += p.toolkit.literal('</ul>')
+
+        items = [
+            {'name': 'url', 'control': 'input', 'label': _('URL'), 'placeholder': _(''), 'extra_info': 'This should include the http:// part of the URL'},
+            {'name': 'type', 'control': 'select', 'options': harvest_list, 'label': _('Source type'), 'placeholder': _(''), 'extra_info': 'Which type of source does the URL above represent? '},
+            {'control': 'html', 'html': harvest_descriptions},
+            {'name': 'title', 'control': 'input', 'label': _('Title'), 'placeholder': _(''), 'extra_info': 'This will be shown as the datasets source.'},
+            {'name': 'description', 'control': 'textarea', 'label': _('Description'), 'placeholder': _(''), 'extra_info':'You can add your own notes here about what the URL above represents to remind you later.'},]
+
+        if c.groups:
+            pubs = []
+            for group in c.groups:
+                pubs.append({'text':group['title'], 'value': group['id']})
+            items.append({'name': 'publisher_id', 'control': 'select', 'options': pubs, 'label': _('Publisher'), 'placeholder': _('')})
+
+        items += [
+            {'name': 'config', 'control': 'textarea', 'label': _('Configuration'), 'placeholder': _(''), 'extra_info': ''},
+            {'name': 'active', 'control': 'select', 'options': states, 'label': _('State'), 'placeholder': _(''), 'extra_text': ''},
+        ]
+
+        return items

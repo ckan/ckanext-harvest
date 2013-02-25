@@ -1,0 +1,60 @@
+{#
+Displays information for a particular harvest job, including:
+
+  * counts for added, updated, deleted or errored datasets
+  * table with general details
+  * table with a summary of the most common errors on this job
+
+job        - dictized harvest job object
+
+Example:
+
+  {% snippet 'snippets/job_details.html', job=job %}
+
+#}
+
+<p>GUID: <code>{{ job.id }}</code></p>
+
+{% set stats = job.stats %}
+
+<p class="harvest-errors">
+  {% if 'errored' in stats and stats['errored'] > 0 %}
+    <span class="badge badge-important">{{ stats['errored'] }}</span>
+  {% else %}
+    <span class="badge">0</span>
+  {% endif %}
+  <span class="badge">{{ _('errors') }}</span>
+</p>
+
+<p class="harvest-diff">
+  {% for action in ['added', 'updated', 'deleted'] %}
+    <span class="diff-{{ action }}">
+      {% if action in stats and stats[action] > 0 %}
+        {{ stats[action] }}
+      {% else %}
+        0
+      {% endif %}
+      {{ _(action) }}
+    </span>
+  {% endfor %}
+</p>
+
+<h3>{{ _('Details') }}</h3>
+<table class="table table-striped table-bordered table-condensed">
+  <colgroup>
+    <col width="15">
+    <col width="85">
+  </colgroup>
+  <tr>
+    <th>{{ _('Started') }}</th>
+    <td>{{ h.render_datetime(job.gather_started, with_hours=True) }}</td>
+  </tr>
+  <tr>
+    <th>{{ _('Finished') }}</th>
+    <td>{{ h.render_datetime(job.finished, with_hours=True) }}</td>
+  </tr>
+  <tr>
+    <th>{{ _('Status') }}</th>
+    <td>{{ _(job.status) }}</td>
+  </tr>
+</table>

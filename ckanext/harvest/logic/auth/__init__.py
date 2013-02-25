@@ -1,39 +1,39 @@
-from ckan.logic import NotFound
-from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
+from ckan.plugins import toolkit as pt
+from ckanext.harvest import model as harvest_model
 
+def user_is_sysadmin(context):
+    '''
+        Checks if the user defined in the context is a sysadmin
+
+        rtype: boolean
+    '''
+    model = context['model']
+    user = context['user']
+    user_obj = model.User.get(user)
+    if not user_obj:
+        raise pt.Objectpt.ObjectNotFound('User {0} not found').format(user)
+
+    return user_obj.sysadmin
+
+def _get_object(context, data_dict, name, class_name):
+    '''
+        return the named item if in the data_dict, or get it from
+        model.class_name
+    '''
+    if not name in context:
+        id = data_dict.get('id', None)
+        obj = getattr(harvest_model, class_name).get(id)
+        if not obj:
+            raise pt.ObjectNotFound
+    else:
+        obj = context[name]
+    return obj
 
 def get_source_object(context, data_dict = {}):
-    if not 'source' in context:
-        model = context['model']
-        id = data_dict.get('id',None)
-        source = HarvestSource.get(id)
-        if not source:
-            raise NotFound
-    else:
-        source = context['source']
-
-    return source
+    return _get_object(context, data_dict, 'source', 'HarvestSource')
 
 def get_job_object(context, data_dict = {}):
-    if not 'job' in context:
-        model = context['model']
-        id = data_dict.get('id',None)
-        job = HarvestJob.get(id)
-        if not job:
-            raise NotFound
-    else:
-        job = context['job']
-
-    return job
+    return _get_object(context, data_dict, 'job', 'HarvestJob')
 
 def get_obj_object(context, data_dict = {}):
-    if not 'obj' in context:
-        model = context['model']
-        id = data_dict.get('id',None)
-        obj = HarvestObject.get(id)
-        if not obj:
-            raise NotFound
-    else:
-        obj = context['obj']
-
-    return obj
+    return _get_object(context, data_dict, 'obj', 'HarvestObject')
