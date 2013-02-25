@@ -337,6 +337,7 @@ class ViewController(BaseController):
     def admin(self, id):
         try:
             context = {'model':model, 'user':c.user}
+            p.toolkit.check_access('harvest_source_update', context, {'id': id})
             c.harvest_source = get_action('harvest_source_show')(context, {'id':id})
             return render('source/admin.html')
         except NotFound:
