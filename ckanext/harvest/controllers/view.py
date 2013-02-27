@@ -337,6 +337,7 @@ class ViewController(BaseController):
     def admin(self, id):
         try:
             context = {'model':model, 'user':c.user}
+            p.toolkit.check_access('harvest_source_update', context, {'id': id})
             c.harvest_source = get_action('harvest_source_show')(context, {'id':id})
             return render('source/admin.html')
         except NotFound:
@@ -347,6 +348,9 @@ class ViewController(BaseController):
     def show_last_job(self, source):
 
         source_dict = self._get_source_for_job(source)
+
+        if not source_dict['status']['last_job']:
+            abort(404, _('No jobs yet for this source'))
 
         return self.show_job(source_dict['status']['last_job']['id'],
                              source_dict=source_dict,

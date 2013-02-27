@@ -12,6 +12,7 @@
       <li class="disabled"><a>{{ _('Show me:') }}</a></li>
       <li{% if c.filter_nav == 'Finished' %} class="active"{% endif %}>{{ h.nav_named_link(_('Finished jobs'), 'harvest_job_list', source=source.name) }}</li>
       <li{% if c.filter_nav == 'New' %} class="active"{% endif %}>{{ h.nav_named_link(_('New jobs'), 'harvest_job_list', source=source.name, status='New') }}</li>
+      <li{% if c.filter_nav == 'Running' %} class="active"{% endif %}>{{ h.nav_named_link(_('Running jobs'), 'harvest_job_list', source=source.name, status='Running') }}</li>
     </ul>
     <h1>{{ _('Harvest Jobs') }}</h1>
   </header>
@@ -31,7 +32,7 @@
             {% endif %}
             <h4>{{ _('Job: ') }} {{ job.id }}</h4>
             <p>
-              {{ _('Created:') }} {{ h.render_datetime(job.gather_started, with_hours=True) or _('Not yet') }}
+              {{ _('Started:') }} {{ h.render_datetime(job.gather_started, with_hours=True) or _('Not yet') }}
               &mdash;
               {{ _('Finished:') }} {{ h.render_datetime(job.gather_finished, with_hours=True) or _('Not yet') }}
             </p>

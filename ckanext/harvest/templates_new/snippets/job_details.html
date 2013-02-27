@@ -13,8 +13,6 @@ Example:
 
 #}
 
-<p>GUID: <code>{{ job.id }}</code></p>
-
 {% set stats = job.stats %}
 
 <p class="harvest-errors">
@@ -45,6 +43,14 @@ Example:
     <col width="15">
     <col width="85">
   </colgroup>
+  <tr>
+    <th>{{ _('Id') }}</th>
+    <td>{{ job.id }}</td>
+  </tr>
+  <tr>
+    <th>{{ _('Created') }}</th>
+    <td>{{ h.render_datetime(job.created, with_hours=True) }}</td>
+  </tr>
   <tr>
     <th>{{ _('Started') }}</th>
     <td>{{ h.render_datetime(job.gather_started, with_hours=True) }}</td>

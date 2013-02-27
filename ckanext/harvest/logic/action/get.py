@@ -64,7 +64,6 @@ def harvest_source_show_status(context, data_dict):
 
     out = {
            'job_count': 0,
-           'next_job': p.toolkit._('Not yet scheduled'),
            'last_job': None,
            'total_datasets': 0,
            }
@@ -77,13 +76,8 @@ def harvest_source_show_status(context, data_dict):
 
     out['job_count'] = job_count
 
-    # Get next scheduled job
-    next_job = harvest_model.HarvestJob.filter(source=source,status=u'New').first()
-    if next_job:
-        out['next_job'] = p.toolkit._('Scheduled')
-
-    # Get the last finished job
-    last_job = harvest_model.HarvestJob.filter(source=source,status=u'Finished') \
+    # Get the most recent job
+    last_job = harvest_model.HarvestJob.filter(source=source) \
                .order_by(harvest_model.HarvestJob.created.desc()).first()
 
     if not last_job:
