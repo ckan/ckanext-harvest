@@ -247,21 +247,25 @@ class CKANHarvester(HarvesterBase):
             if not 'groups' in package_dict:
                 package_dict['groups'] = []
 
-            # Check if remote groups exist, otherwise remove
-            validated_groups = []
-            context = {'model': model, 'user': 'harvest'}
-            for group_name in package_dict['groups']:
-                try:
-                    data_dict = {'id': group_name}
-                    group = get_action('group_show')(context, data_dict)
-                    if self.api_version == '1':
-                        validated_groups.append(group['name'])
-                    else:
-                        validated_groups.append(group['id'])
-                except NotFound, e:
-                    log.info('Group %s is not available' % group_name)
+            remote_groups = self.config.get('remote_groups', None)
+            if not remote_groups:  # ignore remote groups
+                del package_dict['groups']
+            elif remote_groups == 'only_local':
+                # check if remote groups exist locally, otherwise remove
+                validated_groups = []
+                context = {'model': model, 'user': 'harvest'}
+                for group_name in package_dict['groups']:
+                    try:
+                        data_dict = {'id': group_name}
+                        group = get_action('group_show')(context, data_dict)
+                        if self.api_version == '1':
+                            validated_groups.append(group['name'])
+                        else:
+                            validated_groups.append(group['id'])
+                    except NotFound, e:
+                        log.info('Group %s is not available' % group_name)
 
-            package_dict['groups'] = validated_groups
+                package_dict['groups'] = validated_groups
 
             # Set default groups if needed
             default_groups = self.config.get('default_groups', [])
