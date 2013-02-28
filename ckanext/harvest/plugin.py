@@ -107,7 +107,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
     def setup_template_variables(self, context, data_dict):
 
-        p.toolkit.c.harvest_source = p.toolkit.c.pkg
+        p.toolkit.c.harvest_source = p.toolkit.c.pkg_dict
 
         p.toolkit.c.dataset_type = DATASET_TYPE_NAME
 
@@ -212,8 +212,8 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
         map.connect('harvest_object_show', '/harvest/object/:id', controller=controller, action='show_object')
 
-        map.connect('harvest_source_admin', '/' + DATASET_TYPE_NAME + '/admin/:id', controller=controller, action='admin')
-        map.connect('harvest_source_about', '/' + DATASET_TYPE_NAME + '/about/:id', controller=controller, action='about')
+        map.connect('{0}_admin'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/admin/:id', controller=controller, action='admin')
+        map.connect('{0}_about'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/about/:id', controller=controller, action='about')
 
         map.connect('harvest_job_list', '/' + DATASET_TYPE_NAME + '/{source}/job', controller=controller, action='list_jobs')
         map.connect('harvest_job_show_last', '/' + DATASET_TYPE_NAME + '/{source}/job/last', controller=controller, action='show_last_job')

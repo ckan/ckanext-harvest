@@ -1,7 +1,11 @@
 {% extends "page.html" %}
 
 {% set source = c.pkg_dict or c.harvest_source %}
-{% set authorized_user = h.check_access('harvest_source_update', {'id':source.id }) %}
+{% if source %}
+    {% set authorized_user = h.check_access('harvest_source_update', {'id':source.id }) %}
+{% else %}
+    {% set authorized_user = h.check_access('harvest_source_create') %}
+{% endif %}
 
 {% block subtitle %}{{ source.title or source.name }}{% endblock %}
 

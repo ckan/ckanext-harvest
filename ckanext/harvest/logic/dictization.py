@@ -37,10 +37,6 @@ def harvest_job_dictize(job, context):
         for status, count in stats:
             out['stats'][status] = count
 
-    out['gather_errors'] = []
-    for error in job.gather_errors:
-        out['gather_errors'].append(error.as_dict())
-
     if context.get('return_error_summary', True):
         q = model.Session.query(HarvestObjectError.message, \
                                 func.count(HarvestObjectError.message).label('error_count')) \
@@ -49,9 +45,14 @@ def harvest_job_dictize(job, context):
                           .group_by(HarvestObjectError.message) \
                           .order_by('error_count desc') \
                           .limit(context.get('error_summmary_limit', 20))
-
-        out['error_summary'] = q.all()
-
+        out['object_error_summary'] = q.all()
+        q = model.Session.query(HarvestGatherError.message, \
+                                func.count(HarvestGatherError.message).label('error_count')) \
+                          .filter(HarvestGatherError.harvest_job_id==job.id) \
+                          .group_by(HarvestGatherError.message) \
+                          .order_by('error_count desc') \
+                          .limit(context.get('error_summmary_limit', 20))
+        out['gather_error_summary'] = q.all()
     return out
 
 def harvest_object_dictize(obj, context):
