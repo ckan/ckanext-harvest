@@ -35,15 +35,12 @@ class CKANHarvester(HarvesterBase):
             url = url,
         )
 
-        try:
-            api_key = self.config.get('api_key',None)
-            if api_key:
-                http_request.add_header('Authorization',api_key)
-            http_response = urllib2.urlopen(http_request)
+        api_key = self.config.get('api_key',None)
+        if api_key:
+            http_request.add_header('Authorization',api_key)
+        http_response = urllib2.urlopen(http_request)
 
-            return http_response.read()
-        except Exception, e:
-            raise e
+        return http_response.read()
 
     def _set_config(self,config_str):
         if config_str:
@@ -135,7 +132,7 @@ class CKANHarvester(HarvesterBase):
                 get_all_packages = False
 
                 # Request only the packages modified since last harvest job
-                last_time = harvest_job.gather_started.isoformat()
+                last_time = previous_job.gather_finished.isoformat()
                 url = base_search_url + '/revision?since_time=%s' % last_time
 
                 try:
@@ -152,7 +149,7 @@ class CKANHarvester(HarvesterBase):
                                 continue
 
                             revision = json.loads(content)
-                            for package_id in revision.packages:
+                            for package_id in revision['packages']:
                                 if not package_id in package_ids:
                                     package_ids.append(package_id)
                     else:
