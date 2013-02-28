@@ -8,7 +8,7 @@ from ckan.plugins import PluginImplementations
 from ckanext.harvest.interfaces import IHarvester
 
 import ckan.plugins as p
-from ckan.logic import NotFound, check_access
+from ckan.logic import NotFound, check_access, side_effect_free
 
 from ckanext.harvest import model as harvest_model
 
@@ -19,7 +19,7 @@ from ckanext.harvest.logic.dictization import (harvest_source_dictize,
 from ckanext.harvest.logic.schema import harvest_source_db_to_form_schema
 log = logging.getLogger(__name__)
 
-
+@side_effect_free
 def harvest_source_show(context,data_dict):
     '''
     Returns the metadata of a harvest source
@@ -42,6 +42,7 @@ def harvest_source_show(context,data_dict):
 
     return source_dict
 
+@side_effect_free
 def harvest_source_show_status(context, data_dict):
     '''
     Returns a status report for a harvest source
@@ -60,7 +61,7 @@ def harvest_source_show_status(context, data_dict):
 
     source = harvest_model.HarvestSource.get(data_dict['id'])
     if not source:
-        raise p.toolkit.NotFound('Harvest source {0} does not exist'.format(data_dict['id']))
+        raise p.toolkit.ObjectNotFound('Harvest source {0} does not exist'.format(data_dict['id']))
 
     out = {
            'job_count': 0,
@@ -102,7 +103,7 @@ def harvest_source_show_status(context, data_dict):
 
     return out
 
-
+@side_effect_free
 def harvest_source_list(context, data_dict):
 
     check_access('harvest_source_list',context,data_dict)
@@ -116,6 +117,7 @@ def harvest_source_list(context, data_dict):
     context.update({'detailed':False})
     return [harvest_source_dictize(source, context) for source in sources]
 
+@side_effect_free
 def harvest_source_for_a_dataset(context, data_dict):
     '''For a given dataset, return the harvest source that
     created or last updated it, otherwise NotFound.'''
@@ -136,6 +138,7 @@ def harvest_source_for_a_dataset(context, data_dict):
 
     return harvest_source_dictize(source,context)
 
+@side_effect_free
 def harvest_job_show(context,data_dict):
 
     check_access('harvest_job_show',context,data_dict)
@@ -149,6 +152,7 @@ def harvest_job_show(context,data_dict):
 
     return harvest_job_dictize(job,context)
 
+@side_effect_free
 def harvest_job_report(context, data_dict):
 
     check_access('harvest_job_show', context, data_dict)
@@ -210,6 +214,7 @@ def harvest_job_report(context, data_dict):
 
     return report
 
+@side_effect_free
 def harvest_job_list(context,data_dict):
 
     check_access('harvest_job_list',context,data_dict)
@@ -235,6 +240,7 @@ def harvest_job_list(context,data_dict):
     context['return_error_summary'] = False
     return [harvest_job_dictize(job, context) for job in jobs]
 
+@side_effect_free
 def harvest_object_show(context,data_dict):
 
     check_access('harvest_object_show',context,data_dict)
@@ -247,6 +253,7 @@ def harvest_object_show(context,data_dict):
 
     return harvest_object_dictize(obj,context)
 
+@side_effect_free
 def harvest_object_list(context,data_dict):
 
     check_access('harvest_object_list',context,data_dict)
@@ -269,6 +276,7 @@ def harvest_object_list(context,data_dict):
 
     return [getattr(obj,'id') for obj in objects]
 
+@side_effect_free
 def harvesters_info_show(context,data_dict):
 
     check_access('harvesters_info_show',context,data_dict)
