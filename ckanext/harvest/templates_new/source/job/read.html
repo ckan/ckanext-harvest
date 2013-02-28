@@ -12,64 +12,76 @@
   <h1>{{ _('Job Report') }}</h1>
   {% snippet 'snippets/job_details.html', job=c.job %}
 
-  <h2>{{ _('Error Summary') }}</h2>
-  {% if c.job.error_summary|length == 0 %}
-    <p class="empty">{{ _('No errors for this job') }}</p>
-  {% else %}
-    <p class="empty">{{ _('Only the 20 most frequent errors are shown') }}</p>
-    <table class="table table-striped table-bordered table-condensed harvest-error-summary">
-      <colgroup>
-        <col width="8">
-        <col width="92">
-      </colgroup>
-      <thead>
-        <tr>
-          <th class="count">{{ _('Count') }}</th>
-          <th>{{ _('Message') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-      {% for error in c.job.error_summary %}
-        <tr>
-          <td class="count">{{ error[1] }}</td>
-          <td>{{ error[0] }}</td>
-        </tr>
-      {% endfor %}
-       </tbody>
-    </table>
+  {% if c.job.status == 'Finished' %}
+
+    {% if c.job.error_summary|length == 0 %}
+      <h2>{{ _('Error Summary') }}</h2>
+      <p class="empty">{{ _('No errors for this job') }}</p>
+    {% else %}
+      <h2>
+        {{ _('Error Summary') }}
+        <small>{{ _('Only the 20 most frequent errors are shown') }}</small>
+      </h2>
+      <table class="table table-striped table-bordered table-condensed harvest-error-summary">
+        <colgroup>
+          <col width="8">
+          <col width="92">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="count">{{ _('Count') }}</th>
+            <th>{{ _('Message') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for error in c.job.error_summary %}
+          <tr>
+            <td class="count">{{ error[1] }}</td>
+            <td>{{ error[0] }}</td>
+          </tr>
+        {% endfor %}
+         </tbody>
+      </table>
+    {% endif %}
+
+    {% if c.job.error_summary|length %}
+      <h2>
+        {{ _('Error Report') }}
+        <small>{{ c.job_report.keys()|length}} {{ _('documents with errors') }}</small>
+      </h2>
+
+      <table class="table table-bordered table-hover harvest-error-list">
+        <tbody>
+          {% for harvest_object_id in c.job_report.keys() %}
+          <tr>
+            <td>
+              <span class="btn-group pull-right">
+                {% if 'original_url' in c.job_report[harvest_object_id] %}
+                  <a href="{{ c.job_report[harvest_object_id].original_url }}" class="btn btn-small">
+                    {{ _('Remote content') }}
+                  </a>
+                {% endif %}
+                <a href="{{ h.url_for('harvest_object_show', id=harvest_object_id) }}" class="btn btn-small">
+                  {{ _('Local content') }}
+                </a>
+
+              </span>
+              <h5>{{ c.job_report[harvest_object_id].guid }}</h5>
+              {% for error in c.job_report[harvest_object_id].errors %}
+                <div class="error">
+                  {{ error.message }}
+                  {% if error.line %}
+                    <span class="line">(line {{ error.line }})</span>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+
   {% endif %}
 
-  <h2>{{ _('Error Report') }}</h2>
-  <p class="lead">{{ c.job_report.keys()|length}} documents with errors</p>
-
-  <table class="table table-bordered table-hover harvest-error-list">
-    <tbody>
-      {% for harvest_object_id in c.job_report.keys() %}
-      <tr>
-        <td>
-          <span class="btn-group pull-right">
-            {% if 'original_url' in c.job_report[harvest_object_id] %}
-              <a href="{{ c.job_report[harvest_object_id].original_url }}" class="btn btn-small">
-                {{ _('Remote content') }}
-              </a>
-            {% endif %}
-            <a href="{{ h.url_for('harvest_object_show', id=harvest_object_id) }}" class="btn btn-small">
-              {{ _('Local content') }}
-            </a>
-
-          </span>
-          <h5>{{ c.job_report[harvest_object_id].guid }}</h5>
-          {% for error in c.job_report[harvest_object_id].errors %}
-            <div class="error">
-              {{ error.message }}
-              {% if error.line %}
-                <span class="line">(line {{ error.line }})</span>
-              {% endif %}
-            </div>
-          {% endfor %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 {% endblock %}
