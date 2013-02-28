@@ -160,7 +160,7 @@ def harvest_job_report(context, data_dict):
 
     report = {
         'gather_errors': [],
-        'object_errors': []
+        'object_errors': {}
     }
 
     # Gather errors
