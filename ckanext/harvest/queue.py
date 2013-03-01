@@ -143,6 +143,7 @@ def gather_callback(channel, method, header, body):
     except KeyError:
         log.error('No harvest job id received')
     finally:
+        model.Session.remove()
         channel.basic_ack(method.delivery_tag)
 
 
@@ -214,7 +215,7 @@ def fetch_callback(channel, method, header, body):
             else:
                 obj.report_status = 'new'
             obj.save()
-
+    model.Session.remove()
     channel.basic_ack(method.delivery_tag)
 
 def get_gather_consumer():
