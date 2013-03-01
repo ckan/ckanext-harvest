@@ -5,6 +5,7 @@ import uuid
 from sqlalchemy.sql import update,and_, bindparam
 from sqlalchemy.exc import InvalidRequestError
 
+from ckan import plugins as p
 from ckan import model
 from ckan.model import Session, Package
 from ckan.logic import ValidationError, NotFound, get_action
@@ -173,8 +174,17 @@ class HarvesterBase(SingletonPlugin):
                 package_dict['name'] = self._gen_new_name(package_dict['title'])
 
                 log.info('Package with GUID %s does not exist, let\'s create it' % harvest_object.guid)
+                harvest_object.current = True
+                harvest_object.package_id = package_dict['id']
+                # Defer constraints and flush so the dataset can be indexed with
+                # the harvest object id (on the after_show hook from the harvester
+                # plugin)
+                harvest_object.add()
+
+                model.Session.execute('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
+                model.Session.flush()
+
                 new_package = get_action('package_create_rest')(context, package_dict)
-                harvest_object.package_id = new_package['id']
 
             # Flag the other objects linking to this package as not current anymore
             from ckanext.harvest.model import harvest_object_table

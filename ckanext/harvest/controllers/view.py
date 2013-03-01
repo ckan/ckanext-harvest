@@ -265,6 +265,9 @@ class ViewController(BaseController):
 
                 etree.fromstring(re.sub('<\?xml(.*)\?>','',content))
                 response.content_type = 'application/xml; charset=utf-8'
+                if not '<?xml' in content.split('\n')[0]:
+                    content = u'<?xml version="1.0" encoding="UTF-8"?>\n' + content
+
             except XMLSyntaxError:
                 try:
                     json.loads(obj['content'])
@@ -274,7 +277,7 @@ class ViewController(BaseController):
                     pass
 
             response.headers['Content-Length'] = len(content)
-            return content
+            return content.encode('utf-8')
         except NotFound:
             abort(404,_('Harvest object not found'))
         except NotAuthorized,e:
