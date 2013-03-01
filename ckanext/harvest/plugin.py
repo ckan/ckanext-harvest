@@ -231,6 +231,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
         p.toolkit.add_template_directory(config, templates)
         p.toolkit.add_public_directory(config, 'public')
         p.toolkit.add_resource('fanstatic_library', 'ckanext-harvest')
+        p.toolkit.add_resource('public/ckanext/harvest/javascript', 'harvest-extra-field')
 
     ## IActions
 
@@ -260,6 +261,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
                 'harvester_types': harvest_helpers.harvester_types,
                 'harvest_frequencies': harvest_helpers.harvest_frequencies,
                 'link_for_harvest_object': harvest_helpers.link_for_harvest_object,
+                'harvest_source_extra_fields': harvest_helpers.harvest_source_extra_fields,
                 }
 
 

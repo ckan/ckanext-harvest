@@ -1,4 +1,5 @@
 {% import 'macros/form.html' as form %}
+{% resource 'harvest-extra-field/main' %}
 
 <form id="source-new" class="form-horizontal" method="post" >
 
@@ -25,9 +26,13 @@
     <label class="control-label">Source type</label>
     <div class="controls">
       {% for harvester in h.harvesters_info() %}
-        {% set checked = harvester['name'] == ( data.source_type or 'ckan' ) %}
+        {% set checked = False %}
+        {# select first option if nothing in data #}
+        {% if data.source_type == harvester['name'] or (not data.source_type and loop.first) %}
+           {% set checked = True %}
+        {% endif %}
         <label class="radio">
-          <input type="radio" name="source_type" value="{{ harvester['name'] }}" {{ "checked " if checked }}>
+          <input type="radio" name="source_type" value="{{ harvester['name'] }}" {{ "checked " if checked }} data-module="harvest-type-change">
           {{ harvester['title'] }}
           <i class="icon-question-sign" title="{{ harvester['description'] }}" data-toggle="tooltip"></i>
         </label>
@@ -37,7 +42,9 @@
 
   {{ form.select('frequency', id='field-frequency', label=_('Frequency of update'), options=h.harvest_frequencies(), selected=data.frequency, error=errors.frequency) }}
 
+  {% block extra_config %}
   {{ form.textarea('config', id='field-config', label=_('Configuration'), value=data.config, error=errors.config) }}
+  {% endblock extra_config %}
 
   {# if we have a default group then this wants remembering #}
   {% if data.group_id %}
