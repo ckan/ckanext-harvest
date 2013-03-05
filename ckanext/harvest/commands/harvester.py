@@ -322,9 +322,8 @@ class Harvester(CkanCommand):
         print '      objects: %s' % len(job.get('objects', []))
 
         print 'gather_errors: %s' % len(job.get('gather_errors', []))
-        if (len(job['gather_errors']) > 0):
-            for error in job.get('gather_errors', []):
-                print '               %s' % error['message']
+        for error in job.get('gather_errors', []):
+            print '               %s' % error['message']
 
         print ''
 
