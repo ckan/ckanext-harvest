@@ -7,15 +7,7 @@
 {% block primary_content_inner %}
 <div class="module-content">
 
-  <header class="with-filter">
-    <ul class="nav nav-pills pull-right">
-      <li class="disabled"><a>{{ _('Show me:') }}</a></li>
-      <li{% if c.filter_nav == 'Finished' %} class="active"{% endif %}>{{ h.nav_named_link(_('Finished'), 'harvest_job_list', source=source.name) }}</li>
-      <li{% if c.filter_nav == 'New' %} class="active"{% endif %}>{{ h.nav_named_link(_('New'), 'harvest_job_list', source=source.name, status='New') }}</li>
-      <li{% if c.filter_nav == 'Running' %} class="active"{% endif %}>{{ h.nav_named_link(_('Running'), 'harvest_job_list', source=source.name, status='Running') }}</li>
-    </ul>
-    <h1>{{ _('Harvest Jobs') }}</h1>
-  </header>
+  <h1 class="results">{{ _('Harvest Jobs') }}</h1>
 
   {% if c.jobs|length == 0 %}
     <p class="empty">{{ _('No jobs yet for this source') }}</p>
@@ -28,8 +20,11 @@
               <a href="{{ h.url_for(controller=controller, action='show_job', source=source.name, id=job.id) }}">
                 {{ _('Job: ') }} {{ job.id }}
               </a>
+              {% if job.status != 'Finished' %}
+                <span class="label">{{ job.status }}</span>
+              {% endif %}
             </h3>
-              <p>
+            <p>
               {{ _('Started:') }} {{ h.render_datetime(job.gather_started, with_hours=True) or _('Not yet') }}
               &mdash;
               {{ _('Finished:') }} {{ h.render_datetime(job.gather_finished, with_hours=True) or _('Not yet') }}

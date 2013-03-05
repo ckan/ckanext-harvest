@@ -217,15 +217,11 @@ def harvest_job_list(context,data_dict):
     session = context['session']
 
     source_id = data_dict.get('source_id',False)
-    status = data_dict.get('status',False)
 
     query = session.query(HarvestJob)
 
     if source_id:
         query = query.filter(HarvestJob.source_id==source_id)
-
-    if status:
-        query = query.filter(HarvestJob.status==status)
 
     query = query.order_by(HarvestJob.created.desc())
 
