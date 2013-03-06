@@ -13,19 +13,45 @@ Example:
 
 #}
 
-<div style='margin: 1em 0;'>
-  {% set stats = job.stats %}
-  {% for action in ['added', 'updated', 'deleted', 'errored'] %}
-    {% if action in stats and stats[action] > 0 %}
-    <span>{{ stats[action] }} {{ _(action) }}</span>
-    {% else %}
-    <span>0 {{ _(action) }}</span>
-    {% endif %}
-  {% endfor %}
-</div>
+{% set stats = job.stats %}
 
-<h3>{{ _('Details') }}</h3>
+{% if job.status == 'Finished' %}
+  <p>
+    <span class="label label-important">
+      {% if 'errored' in stats and stats['errored'] > 0 %}
+        {{ stats['errored'] }}
+      {% else %}
+        0
+      {% endif %}
+      {{ _('errors') }}
+    </span>
+    {% for action in ['added', 'updated', 'deleted'] %}
+      <span class="label" data-diff="{{ action }}">
+        {% if action in stats and stats[action] > 0 %}
+          {{ stats[action] }}
+        {% else %}
+          0
+        {% endif %}
+        {{ _(action) }}
+      </span>
+    {% endfor %}
+  </p>
+{% endif %}
+
+<h3 class="hide-heading">{{ _('Details') }}</h3>
 <table class="table table-striped table-bordered table-condensed">
+  <colgroup>
+    <col width="15">
+    <col width="85">
+  </colgroup>
+  <tr>
+    <th>{{ _('Id') }}</th>
+    <td>{{ job.id }}</td>
+  </tr>
+  <tr>
+    <th>{{ _('Created') }}</th>
+    <td>{{ h.render_datetime(job.created, with_hours=True) }}</td>
+  </tr>
   <tr>
     <th>{{ _('Started') }}</th>
     <td>{{ h.render_datetime(job.gather_started, with_hours=True) }}</td>
@@ -39,26 +65,3 @@ Example:
     <td>{{ _(job.status) }}</td>
   </tr>
 </table>
-
-<h3>{{ _('Error Summary') }}</h3>
-{% if job.error_summary|length == 0 %}
-<p>{{ _('No errors for this job') }}</p>
-{% else %}
-<p>{{ _('Only the 20 most frequent errors are shown') }}</p>
-<table class="table table-striped table-bordered table-condensed error-summary">
-  <thead>
-    <tr>
-      <th>{{ _('Message') }}</th>
-      <th>{{ _('Count') }}</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for error in job.error_summary %}
-    <tr>
-      <td>{{ error[0] }}</td>
-      <td>{{ error[1] }}</td>
-    </tr>
-  {% endfor %}
-   </tbody>
-</table>
-{% endif %}

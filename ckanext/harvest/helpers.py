@@ -7,7 +7,7 @@ import ckan.plugins as p
 
 from ckanext.harvest.model import UPDATE_FREQUENCIES
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
-
+from ckanext.harvest.interfaces import IHarvester
 
 def package_list_for_source(source_id):
     '''
@@ -45,8 +45,11 @@ def package_list_for_source(source_id):
     )
     pager.items = query['results']
 
-    out = h.snippet('snippets/package_list.html', packages=query['results'])
-    out += pager.pager()
+    if query['results']:
+        out = h.snippet('snippets/package_list.html', packages=query['results'])
+        out += pager.pager()
+    else:
+        out = h.snippet('snippets/package_list_empty.html')
 
     return out
 
@@ -79,3 +82,12 @@ def link_for_harvest_object(id=None, guid=None, text=None):
     link = '<a href="{url}">{text}</a>'.format(url=url, text=text)
 
     return p.toolkit.literal(link)
+
+def harvest_source_extra_fields():
+    fields = {}
+    for harvester in p.PluginImplementations(IHarvester):
+        if not hasattr(harvester, 'extra_schema'):
+            continue
+        fields[harvester.info()['name']] = harvester.extra_schema().keys()
+    return fields
+

@@ -1,0 +1,16 @@
+.clearfix() {
+	
+}
+
+.border-radius(@radius) {
+	-webkit-border-radius: @radius;
+	-moz-border-radius: @radius;
+	border-radius: @radius;
+}
+
+.box-shadow(@shadowA, @shadowB:X, ...){
+	@props: ~`"@{arguments}".replace(/[\[\]]|\,\sX/g, '')`;
+	-webkit-box-shadow: @props;
+	-moz-box-shadow: @props;
+	box-shadow: @props;
+}

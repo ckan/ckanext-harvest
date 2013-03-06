@@ -317,7 +317,7 @@ class ViewController(BaseController):
             c.harvest_source = source_dict
             c.is_last_job = is_last
 
-            return render('job/read.html')
+            return render('source/job/read.html')
 
         except NotFound:
             abort(404,_('Harvest job not found'))
@@ -327,10 +327,33 @@ class ViewController(BaseController):
             msg = 'An error occurred: [%s]' % str(e)
             abort(500,msg)
 
+    def about(self, id):
+        try:
+            context = {'model':model, 'user':c.user}
+            c.harvest_source = get_action('harvest_source_show')(context, {'id':id})
+            return render('source/about.html')
+        except NotFound:
+            abort(404,_('Harvest source not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
+
+    def admin(self, id):
+        try:
+            context = {'model':model, 'user':c.user}
+            p.toolkit.check_access('harvest_source_update', context, {'id': id})
+            c.harvest_source = get_action('harvest_source_show')(context, {'id':id})
+            return render('source/admin.html')
+        except NotFound:
+            abort(404,_('Harvest source not found'))
+        except NotAuthorized,e:
+            abort(401,self.not_auth_message)
 
     def show_last_job(self, source):
 
         source_dict = self._get_source_for_job(source)
+
+        if not source_dict['status']['last_job']:
+            abort(404, _('No jobs yet for this source'))
 
         return self.show_job(source_dict['status']['last_job']['id'],
                              source_dict=source_dict,
@@ -344,7 +367,7 @@ class ViewController(BaseController):
             c.harvest_source =  get_action('harvest_source_show')(context, {'id': source})
             c.jobs = get_action('harvest_job_list')(context, {'source_id': c.harvest_source['id']})
 
-            return render('job/list.html')
+            return render('source/job/list.html')
 
         except NotFound:
             abort(404,_('Harvest source not found'))
