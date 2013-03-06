@@ -1,2 +1,33 @@
+{% extends 'organization/edit_base.html' %}
 
-{% extends 'organization/read.html' %}
+{% block subtitle %}{{ _('Harvest Sources') }} - {{ super() }}{% endblock %}
+
+{% block primary_content_inner %}
+  <div class="clearfix">
+    <h1 class="hide-heading">{{ _('Harvest Sources') }}</h1>
+    <div class="primary">
+      <h3 class="results">
+        {%- if c.page.item_count -%}
+          {{ c.page.item_count }} harvest sources{{ _(" found for \"{query}\"").format(query=c.q) if c.q }}
+        {%- elif request.params -%}
+          {{ _('Sorry no harvest sources found for "{query}"').format(query=c.q) }}
+        {%- else -%}
+          {{ _('Harvest Sources') }}
+        {%- endif -%}
+      </h3>
+      {% snippet 'snippets/source_list.html', sources=c.page.items %}
+    </div>
+    <aside class="tertiary">
+      <form method="GET">
+        <span class="control-group search-normal">
+          <input type="text" class="search" name="q" value="{{ c.q }}" autocomplete="off" placeholder="{{ _('Search sources...') }}" />
+          <button type="submit"><i class="icon-search"></i> <span>{{ _('Search') }}</span></button>
+        </span>
+      </form>
+      {{ h.snippet('snippets/facet_list.html', title='Tags', name='tags', within_tertiary=true, extras={'id':c.group_dict.name}) }}
+      {{ h.snippet('snippets/facet_list.html', title='Formats', name='res_format', within_tertiary=true, extras={'id':c.group_dict.name}) }}
+    </aside>
+  </div>
+  {{ c.page.pager() }}
+{% endblock %}
+

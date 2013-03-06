@@ -7,6 +7,7 @@ hide_resources - If true hides the resources (default: false).
 banner         - If true displays a popular banner (default: false).
 truncate       - The length to trucate the description to (default: 180)
 truncate_title - The length to truncate the title to (default: 80).
+show_organization - Boolean on whether to show the related organization
 
 Example:
 
@@ -37,7 +38,7 @@ Example:
 
     <p class="muted">
       {{ _('Datasets') }}: {{ source.status.total_datasets }}
-      {% if source.organization %}
+      {% if show_organization and source.organization %}
       &mdash; {{ _('Organization') }}: {{ h.link_to(source.organization.title or source.organization.name, h.url_for('organization_read', id=source.organization.name)) }}</a>
       {% endif %}
     </p>
