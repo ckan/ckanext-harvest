@@ -219,7 +219,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
         map.connect('harvest_job_show_last', '/' + DATASET_TYPE_NAME + '/{source}/job/last', controller=controller, action='show_last_job')
         map.connect('harvest_job_show', '/' + DATASET_TYPE_NAME + '/{source}/job/{id}', controller=controller, action='show_job')
 
-        org_controller = 'ckanext.harvest.controllers.org:OrgController'
+        org_controller = 'ckanext.harvest.controllers.organization:OrganizationController'
         map.connect('harvest_source_org_list', '/organization/' + DATASET_TYPE_NAME + '/' + '{id}', controller=org_controller, action='source_list')
 
         return map

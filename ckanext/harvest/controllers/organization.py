@@ -1,26 +1,15 @@
-import re
 import logging
 import genshi
-import datetime
 from urllib import urlencode
 
-from ckan.lib.base import BaseController, c, model, request, render, h, g
-from ckan.lib.base import ValidationException, abort, gettext
-import ckan.lib.base as base
-from pylons.i18n import get_lang, _
-from ckan.lib.helpers import Page
+from ckan import plugins as p
+from ckan.lib.base import c, model, request, render, h, g
+from ckan.lib.base import abort
 import ckan.lib.maintain as maintain
-from ckan.lib.navl.dictization_functions import DataError, unflatten, validate
-from ckan.logic import NotFound, NotAuthorized, ValidationError
-from ckan.logic import check_access, get_action
-from ckan.logic import tuplize_dict, clean_dict, parse_params
-import ckan.logic.action.get
 import ckan.lib.search as search
 import ckan.new_authz
 
-from ckan.lib.plugins import lookup_group_plugin
 from ckan.controllers.group import GroupController
-import ckan.plugins as plugins
 
 try:
     from collections import OrderedDict # 2.7
@@ -29,7 +18,7 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-class OrgController(GroupController):
+class OrganizationController(GroupController):
 
     def source_list(self, id, limit=20):
         group_type = self._get_group_type(id.split('@')[0])
@@ -45,10 +34,10 @@ class OrgController(GroupController):
         try:
             c.group_dict = self._action('group_show')(context, data_dict)
             c.group = context['group']
-        except NotFound:
-            abort(404, _('Group not found'))
-        except NotAuthorized:
-            abort(401, _('Unauthorized to read group %s') % id)
+        except p.toolkit.NotFound:
+            abort(404, p.toolkit._('Group not found'))
+        except p.toolkit.NotAuthorized:
+            abort(401, p.toolkit._('Unauthorized to read group %s') % id)
 
         self._read(id, limit, dataset_type='harvest_source')
         return render('source/org_source_list.html')
@@ -71,7 +60,7 @@ class OrgController(GroupController):
             c.description_formatted = genshi.HTML(description_formatted)
         except Exception, e:
             error_msg = "<span class='inline-warning'>%s</span>" %\
-                        _("Cannot render description")
+                        p.toolkit._("Cannot render description")
             c.description_formatted = genshi.HTML(error_msg)
 
         context['return_query'] = True
@@ -150,10 +139,10 @@ class OrgController(GroupController):
 
             facets = OrderedDict()
 
-            default_facet_titles = {'groups': _('Groups'),
-                              'tags': _('Tags'),
-                              'res_format': _('Formats'),
-                              'license': _('Licence'), }
+            default_facet_titles = {'groups': p.toolkit._('Groups'),
+                              'tags': p.toolkit._('Tags'),
+                              'res_format': p.toolkit._('Formats'),
+                              'license': p.toolkit._('Licence'), }
 
             for facet in g.facets:
                 if facet in default_facet_titles:
@@ -165,7 +154,7 @@ class OrgController(GroupController):
                 fq = fq + 'dataset_type:"{dataset_type}"'.format(dataset_type=dataset_type)
 
             # Facet titles
-            for plugin in plugins.PluginImplementations(plugins.IFacets):
+            for plugin in p.PluginImplementations(p.IFacets):
                 if self.group_type == 'organization':
                     facets = plugin.organization_facets(
                         facets, self.group_type, dataset_type)
@@ -188,7 +177,7 @@ class OrgController(GroupController):
                 'extras': search_extras
             }
 
-            query = get_action('package_search')(context, data_dict)
+            query = p.toolkit.get_action('package_search')(context, data_dict)
 
             c.page = h.Page(
                 collection=query['results'],
@@ -217,5 +206,3 @@ class OrgController(GroupController):
             c.query_error = True
             c.facets = {}
             c.page = h.Page(collection=[])
-
-
