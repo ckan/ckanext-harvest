@@ -37,6 +37,22 @@ def harvest_job_dictize(job, context):
         for status, count in stats:
             out['stats'][status] = count
 
+        # We actually want to check which objects had errors, because they
+        # could have been added/updated anyway (eg bbox errors)
+        count = model.Session.query(func.distinct(HarvestObjectError.harvest_object_id)) \
+                          .join(HarvestObject) \
+                          .filter(HarvestObject.harvest_job_id==job.id) \
+                          .count()
+        if count > 0:
+          out['stats']['errored'] = count
+
+        # Add gather errors to the error count
+        count = model.Session.query(HarvestGatherError) \
+                          .filter(HarvestGatherError.harvest_job_id==job.id) \
+                          .count()
+        if count > 0:
+          out['stats']['errored'] = out['stats'].get('errored', 0) + count
+
     if context.get('return_error_summary', True):
         q = model.Session.query(HarvestObjectError.message, \
                                 func.count(HarvestObjectError.message).label('error_count')) \
