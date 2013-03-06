@@ -251,7 +251,7 @@ class Harvester(CkanCommand):
 
         self.print_harvest_job(job)
         jobs = get_action('harvest_job_list')(context,{'status':u'New'})
-        self.print_there_are('harvest jobs', jobs, condition=u'New')
+        self.print_there_are('harvest job', jobs, condition=u'New')
 
     def list_harvest_jobs(self):
         context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
@@ -319,12 +319,11 @@ class Harvester(CkanCommand):
         print '       Job id: %s' % job['id']
         print '       status: %s' % job['status']
         print '       source: %s' % job['source_id']
-        print '      objects: %s' % len(job['objects'])
+        print '      objects: %s' % len(job.get('objects', []))
 
-        print 'gather_errors: %s' % len(job['gather_errors'])
-        if (len(job['gather_errors']) > 0):
-            for error in job['gather_errors']:
-                print '               %s' % error['message']
+        print 'gather_errors: %s' % len(job.get('gather_errors', []))
+        for error in job.get('gather_errors', []):
+            print '               %s' % error['message']
 
         print ''
 
