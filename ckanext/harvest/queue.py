@@ -213,7 +213,7 @@ def fetch_callback(channel, method, header, body):
                    .all()) == 2:
                 obj.report_status = 'updated'
             else:
-                obj.report_status = 'new'
+                obj.report_status = 'added'
             obj.save()
     model.Session.remove()
     channel.basic_ack(method.delivery_tag)

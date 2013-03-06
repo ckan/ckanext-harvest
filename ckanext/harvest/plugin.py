@@ -107,7 +107,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
     def setup_template_variables(self, context, data_dict):
 
-        p.toolkit.c.harvest_source = p.toolkit.c.pkg
+        p.toolkit.c.harvest_source = p.toolkit.c.pkg_dict
 
         p.toolkit.c.dataset_type = DATASET_TYPE_NAME
 
@@ -212,6 +212,9 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
         map.connect('harvest_object_show', '/harvest/object/:id', controller=controller, action='show_object')
 
+        map.connect('{0}_admin'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/admin/:id', controller=controller, action='admin')
+        map.connect('{0}_about'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/about/:id', controller=controller, action='about')
+
         map.connect('harvest_job_list', '/' + DATASET_TYPE_NAME + '/{source}/job', controller=controller, action='list_jobs')
         map.connect('harvest_job_show_last', '/' + DATASET_TYPE_NAME + '/{source}/job/last', controller=controller, action='show_last_job')
         map.connect('harvest_job_show', '/' + DATASET_TYPE_NAME + '/{source}/job/{id}', controller=controller, action='show_job')
@@ -227,6 +230,8 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
                 templates = 'templates_new'
         p.toolkit.add_template_directory(config, templates)
         p.toolkit.add_public_directory(config, 'public')
+        p.toolkit.add_resource('fanstatic_library', 'ckanext-harvest')
+        p.toolkit.add_resource('public/ckanext/harvest/javascript', 'harvest-extra-field')
 
     ## IActions
 
@@ -256,6 +261,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
                 'harvester_types': harvest_helpers.harvester_types,
                 'harvest_frequencies': harvest_helpers.harvest_frequencies,
                 'link_for_harvest_object': harvest_helpers.link_for_harvest_object,
+                'harvest_source_extra_fields': harvest_helpers.harvest_source_extra_fields,
                 }
 
 

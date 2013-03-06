@@ -16,8 +16,10 @@ from ckan.lib.navl.validators import (ignore_missing,
 from ckanext.harvest.logic.validators import (harvest_source_url_validator,
                                               harvest_source_type_exists,
                                               harvest_source_config_validator,
+                                              harvest_source_extra_validator,
                                               harvest_source_frequency_exists,
                                               dataset_type_exists,
+                                              harvest_source_convert_from_config,
                                               )
 
 def harvest_source_schema():
@@ -35,7 +37,6 @@ def harvest_source_schema():
         'state': [ignore_missing],
         'config': [ignore_missing, harvest_source_config_validator, convert_to_extras],
         'extras': default_extras_schema(),
-        '__extras': [ignore],
     }
 
     extras_schema = default_extras_schema()
@@ -48,7 +49,7 @@ def harvest_source_schema():
 def harvest_source_form_to_db_schema():
 
     schema = harvest_source_schema()
-
+    schema['__extras'] = [harvest_source_extra_validator]
     schema['save'] = [ignore]
     schema.pop("id")
 
@@ -60,7 +61,7 @@ def harvest_source_db_to_form_schema():
     schema.update({
         'source_type': [convert_from_extras, ignore_missing],
         'frequency': [convert_from_extras, ignore_missing],
-        'config': [convert_from_extras, ignore_missing],
+        'config': [convert_from_extras, harvest_source_convert_from_config, ignore_missing],
         'owner_org': [ignore_missing]
     })
 
