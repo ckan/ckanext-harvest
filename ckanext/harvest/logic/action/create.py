@@ -1,4 +1,3 @@
-import re
 import logging
 
 from ckan import logic
@@ -137,15 +136,3 @@ def _check_for_existing_jobs(context, source_id):
     exist = len(exist_new + exist_running) > 0
 
     return exist
-
-
-def _error_summary(error_dict):
-    error_summary = {}
-    for key, error in error_dict.iteritems():
-        error_summary[_prettify(key)] = error[0]
-    return error_summary
-
-def _prettify(field_name):
-    field_name = re.sub('(?<!\w)[Uu]rl(?!\w)', 'URL', field_name.replace('_', ' ').capitalize())
-    return field_name.replace('_', ' ')
-

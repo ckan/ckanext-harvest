@@ -94,32 +94,10 @@ The commands should be run with the pyenv activated and refer to your sites conf
 
         paster --plugin=ckanext-harvest harvester sources --config=mysite.ini
 
-Authorization Profiles
-======================
+Authorization
+=============
 
-Starting from CKAN 1.6.1, the harvester extension offers the ability to use
-different authorization profiles. These can be defined in your ini file as::
-
-    ckan.harvest.auth.profile = <profile_name>
-
-The two available profiles right now are:
-
-* `default`: This is the default profile, the same one that this extension has
-  used historically. Basically, only sysadmins can manage anything related to
-  harvesting, including creating and editing harvest sources or running harvest
-  jobs.
-
-* `publisher`: When using this profile, sysadmins can still perform any
-  harvesting related action, but in addition, users belonging to a publisher
-  (with role `admin`) can manage and run their own harvest sources and jobs.
-  Note that this requires CKAN core to also use the `publisher` authorization
-  profile, i.e you will also need to add::
-
-    ckan.auth.profile = publisher
-
-To know more about the CKAN publisher auth profile, visit:
-
- http://oldwiki.ckan.org/Working_with_the_publisher_auth_profile
+TODO
 
 
 The CKAN harvester

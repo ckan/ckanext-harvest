@@ -1,5 +1,5 @@
 import logging
-from sqlalchemy import or_, func
+from sqlalchemy import or_
 from ckan.model import User
 import datetime
 
@@ -16,7 +16,7 @@ from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject)
 from ckanext.harvest.logic.dictization import (harvest_source_dictize,
                                                harvest_job_dictize,
                                                harvest_object_dictize)
-from ckanext.harvest.logic.schema import harvest_source_db_to_form_schema
+
 log = logging.getLogger(__name__)
 
 @side_effect_free
@@ -99,6 +99,9 @@ def harvest_source_show_status(context, data_dict):
 
 @side_effect_free
 def harvest_source_list(context, data_dict):
+    '''
+    TODO: Use package search
+    '''
 
     check_access('harvest_source_list',context,data_dict)
 
@@ -113,6 +116,10 @@ def harvest_source_list(context, data_dict):
 
 @side_effect_free
 def harvest_source_for_a_dataset(context, data_dict):
+    '''
+    TODO: Deprecated, harvest source id is added as an extra to each dataset
+    automatically
+    '''
     '''For a given dataset, return the harvest source that
     created or last updated it, otherwise NotFound.'''
 

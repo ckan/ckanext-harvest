@@ -7,6 +7,10 @@ from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject, \
 
 
 def harvest_source_dictize(source, context):
+    '''
+    TODO: Deprecated
+    '''
+
     out = source.as_dict()
 
     out['publisher_title'] = u''
@@ -90,6 +94,9 @@ def harvest_object_dictize(obj, context):
     return out
 
 def _get_source_status(source, context):
+    '''
+    TODO: Deprecated, use harvest_source_show_status instead
+    '''
 
     model = context.get('model')
     detailed = context.get('detailed',True)
