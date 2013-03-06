@@ -15,7 +15,7 @@
           {{ _('Harvest Sources') }}
         {%- endif -%}
       </h3>
-      {% snippet 'snippets/source_list.html', sources=c.page.items %}
+      {% snippet 'snippets/source_list.html', sources=c.page.items, within_organization=true %}
     </div>
     <aside class="tertiary">
       <form method="GET">
