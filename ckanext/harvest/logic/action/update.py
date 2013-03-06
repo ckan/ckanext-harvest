@@ -217,6 +217,7 @@ def harvest_jobs_run(context,data_dict):
 
                     last_object = session.query(HarvestObject) \
                           .filter(HarvestObject.harvest_job_id==job['id']) \
+                          .filter(HarvestObject.import_finished!=None) \
                           .order_by(HarvestObject.import_finished.desc()) \
                           .first()
                     if last_object:
