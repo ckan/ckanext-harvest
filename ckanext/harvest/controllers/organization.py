@@ -11,6 +11,9 @@ import ckan.new_authz
 
 from ckan.controllers.group import GroupController
 
+from ckanext.harvest.plugin import DATASET_TYPE_NAME
+
+
 try:
     from collections import OrderedDict # 2.7
 except ImportError:
@@ -39,7 +42,7 @@ class OrganizationController(GroupController):
         except p.toolkit.NotAuthorized:
             abort(401, p.toolkit._('Unauthorized to read group %s') % id)
 
-        self._read(id, limit, dataset_type='harvest_source')
+        self._read(id, limit, dataset_type=DATASET_TYPE_NAME)
         return render('source/org_source_list.html')
 
     def _read(self, id, limit, dataset_type=None):

@@ -226,7 +226,7 @@ class ViewController(BaseController):
             abort(401,self.not_auth_message)
 
 
-    def create_harvesting_job(self,id):
+    def refresh(self, id):
         try:
             context = {'model':model, 'user':c.user, 'session':model.Session}
             get_action('harvest_job_create')(context,{'source_id':id})
@@ -245,7 +245,7 @@ class ViewController(BaseController):
                 msg = 'An error occurred: [%s]' % str(e)
                 h.flash_error(msg)
 
-        redirect(h.url_for('harvest'))
+        redirect(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
 
     def show_object(self,id):
 

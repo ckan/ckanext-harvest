@@ -16,7 +16,7 @@ from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 log = getLogger(__name__)
 assert not log.disabled
 
-DATASET_TYPE_NAME = 'harvest_source'
+DATASET_TYPE_NAME = 'harvest'
 
 class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
@@ -199,19 +199,13 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
     def before_map(self, map):
 
+        # Most of the routes are defined via the IDatasetForm interface
+        # (ie they are the ones for a package type)
         controller = 'ckanext.harvest.controllers.view:ViewController'
-        map.connect('harvest', '/harvest',controller=controller,action='index')
 
-        map.connect('/harvest/new', controller=controller, action='new')
-        map.connect('/harvest/edit/:id', controller=controller, action='edit')
-        map.connect('/harvest/delete/:id',controller=controller, action='delete')
-        map.connect('/harvest/:id', controller=controller, action='read')
-
-        map.connect('harvesting_job_create', '/harvest/refresh/:id',controller=controller,
-                action='create_harvesting_job')
-
-        map.connect('harvest_object_show', '/harvest/object/:id', controller=controller, action='show_object')
-
+        map.connect('{0}_delete'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/delete/:id',controller=controller, action='delete')
+        map.connect('{0}_refresh'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/refresh/:id',controller=controller,
+                action='refresh')
         map.connect('{0}_admin'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/admin/:id', controller=controller, action='admin')
         map.connect('{0}_about'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/about/:id', controller=controller, action='about')
 
@@ -219,8 +213,10 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
         map.connect('harvest_job_show_last', '/' + DATASET_TYPE_NAME + '/{source}/job/last', controller=controller, action='show_last_job')
         map.connect('harvest_job_show', '/' + DATASET_TYPE_NAME + '/{source}/job/{id}', controller=controller, action='show_job')
 
+        map.connect('harvest_object_show', '/' + DATASET_TYPE_NAME + '/object/:id', controller=controller, action='show_object')
+
         org_controller = 'ckanext.harvest.controllers.organization:OrganizationController'
-        map.connect('harvest_source_org_list', '/organization/' + DATASET_TYPE_NAME + '/' + '{id}', controller=org_controller, action='source_list')
+        map.connect('{0}_org_list'.format(DATASET_TYPE_NAME), '/organization/' + DATASET_TYPE_NAME + '/' + '{id}', controller=org_controller, action='source_list')
 
         return map
 
