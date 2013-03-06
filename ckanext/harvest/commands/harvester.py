@@ -57,6 +57,9 @@ class Harvester(CkanCommand):
       harvester job-all
         - create new harvest jobs for all active sources.
 
+      harvester reindex
+        - reindexes the harvest source datasets
+
     The commands should be run from the ckanext-harvest directory and expect
     a development.ini file to be present. Most of the time you will
     specify the config explicitly though::
@@ -136,6 +139,8 @@ class Harvester(CkanCommand):
         elif cmd == 'harvesters-info':
             harvesters_info = get_action('harvesters_info_show')()
             pprint(harvesters_info)
+        elif cmd == 'reindex':
+            self.reindex()
         else:
             print 'Command %s not recognized' % cmd
 
@@ -246,7 +251,7 @@ class Harvester(CkanCommand):
 
         self.print_harvest_job(job)
         jobs = get_action('harvest_job_list')(context,{'status':u'New'})
-        self.print_there_are('harvest jobs', jobs, condition=u'New')
+        self.print_there_are('harvest job', jobs, condition=u'New')
 
     def list_harvest_jobs(self):
         context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
@@ -282,6 +287,11 @@ class Harvester(CkanCommand):
         jobs = get_action('harvest_job_create_all')(context,{})
         print 'Created %s new harvest jobs' % len(jobs)
 
+    def reindex(self):
+        context = {'model': model, 'user': self.admin_user['name']}
+        get_action('harvest_sources_reindex')(context,{})
+
+
     def print_harvest_sources(self, sources):
         if sources:
             print ''
@@ -308,13 +318,12 @@ class Harvester(CkanCommand):
     def print_harvest_job(self, job):
         print '       Job id: %s' % job['id']
         print '       status: %s' % job['status']
-        print '       source: %s' % job['source']
-        print '      objects: %s' % len(job['objects'])
+        print '       source: %s' % job['source_id']
+        print '      objects: %s' % len(job.get('objects', []))
 
-        print 'gather_errors: %s' % len(job['gather_errors'])
-        if (len(job['gather_errors']) > 0):
-            for error in job['gather_errors']:
-                print '               %s' % error['message']
+        print 'gather_errors: %s' % len(job.get('gather_errors', []))
+        for error in job.get('gather_errors', []):
+            print '               %s' % error['message']
 
         print ''
 

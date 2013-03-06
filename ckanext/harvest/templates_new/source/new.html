@@ -1,26 +1,34 @@
-{% extends "page.html" %}
-
-{% block title %}{{ _('New - Harvest Source') }} - {{ super() }}{% endblock %}
+{% extends "source/admin_base.html" %}
 
 {% block breadcrumb_content %}
+  <li>{{ h.nav_named_link(_('Harvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
+  <li class="active">{{ h.nav_named_link(_('Create Harvest Source'), '{0}_new'.format(c.dataset_type)) }}</li>
 {% endblock %}
 
-{% block styles %}
-  {{ super() }}
-  <link type="text/css" rel="stylesheet" media="all" href="/ckanext/harvest/style.css" />
+{% block actions_content %}
 {% endblock %}
 
-{% block primary %}
-  <article class="module">
+{% block subtitle %}{{ _('Create harvest source') }}{% endblock %}
+
+{% block primary_content %}
+  <section class="module">
     <div class="module-content">
-      <div class="harvest-content">
-        <h2>New harvest source </h2>
-
-        {{ h.literal(c.form) }}
-
-      </div>
+      {% block form %}{{ c.form | safe }}{% endblock %}
     </div>
-  </article>
+  </section>
 {% endblock %}
 
-{% block sidebar %}{% endblock %}
+{% block secondary_content %}
+  <section class="module module-narrow">
+    <h2 class="module-heading"><i class="icon-large icon-info-sign"></i> {{ _('Harvest sources') }}</h2>
+    <div class="module-content">
+      <p>
+        {% trans %}
+        Harvest sources allow importing metadata from other catalogues
+        as CKAN datasets. These can be other CKAN instances or other
+        protocols and formats. (TODO: Review)
+        {% endtrans %}
+      </p>
+    </div>
+  </section>
+{% endblock %}

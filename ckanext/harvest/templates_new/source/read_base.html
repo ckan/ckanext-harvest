@@ -1,0 +1,42 @@
+{% extends "source/base.html" %}
+
+{% block actions_content %}
+  {% if authorized_user %}
+    <li>{{ h.nav_named_link(_('Admin'), '{0}_admin'.format(c.dataset_type), id=c.harvest_source.name, class_='btn btn-primary', icon='wrench')}}</li>
+  {% endif %}
+{% endblock %}
+
+{# TODO: once #354 is merged in CKAN core .profile-info doesn't exist #}
+{% block secondary_content %}
+  <div class="module context-info profile-info">
+    <section class="module-content">
+      <h1 class="heading">{{ c.harvest_source.title }}</h1>
+      {% if c.harvest_source.notes %}
+        <p>
+          {{ h.markdown_extract(c.harvest_source.notes, 180) }}
+          {{ h.nav_named_link(_('read more'), '{0}_about'.format(c.dataset_type), id=c.harvest_source.name) }}
+        </p>
+      {% else %}
+        <p class="empty">{{ _('There is no description for this harvest source') }}</p>
+      {% endif %}
+      <div class="nums">
+        <dl>
+          <dt>{{ _('Datasets') }}</dt>
+          <dd>{{ c.harvest_source.status.total_datasets }}</dd>
+        </dl>
+      </div>
+    </section>
+  </div>
+{% endblock %}
+
+{% block primary_content %}
+  <article class="module prose">
+    {% block page_header %}
+      {% snippet 'snippets/page_header.html', items=[
+          h.build_nav_icon('{0}_read'.format(c.dataset_type), _('Datasets'), id=source.name, icon='sitemap'),
+          h.build_nav_icon('{0}_about'.format(c.dataset_type), _('About'), id=source.name, icon='info-sign'),
+        ] %}
+    {% endblock %}
+    {% block primary_content_inner %}{% endblock %}
+  </article>
+{% endblock %}

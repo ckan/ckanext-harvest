@@ -94,32 +94,10 @@ The commands should be run with the pyenv activated and refer to your sites conf
 
         paster --plugin=ckanext-harvest harvester sources --config=mysite.ini
 
-Authorization Profiles
-======================
+Authorization
+=============
 
-Starting from CKAN 1.6.1, the harvester extension offers the ability to use
-different authorization profiles. These can be defined in your ini file as::
-
-    ckan.harvest.auth.profile = <profile_name>
-
-The two available profiles right now are:
-
-* `default`: This is the default profile, the same one that this extension has
-  used historically. Basically, only sysadmins can manage anything related to
-  harvesting, including creating and editing harvest sources or running harvest
-  jobs.
-
-* `publisher`: When using this profile, sysadmins can still perform any
-  harvesting related action, but in addition, users belonging to a publisher
-  (with role `admin`) can manage and run their own harvest sources and jobs.
-  Note that this requires CKAN core to also use the `publisher` authorization
-  profile, i.e you will also need to add::
-
-    ckan.auth.profile = publisher
-
-To know more about the CKAN publisher auth profile, visit:
-
- http://wiki.ckan.org/Working_with_the_publisher_auth_profile
+TODO
 
 
 The CKAN harvester
@@ -224,6 +202,7 @@ following methods::
     '''
     implements(IHarvester)
 
+
     def info(self):
         '''
         Harvesting implementations must provide this method, which will return a
@@ -237,30 +216,53 @@ following methods::
           in the WUI.
         * description: a small description of what the harvester does. This will
           appear on the form as a guidance to the user.
-        * form_config_interface [optional]: Harvesters willing to store configuration
-          values in the database must provide this key. The only supported value is
-          'Text'. This will enable the configuration text box in the form. See also
-          the ``validate_config`` method.
 
         A complete example may be::
 
             {
                 'name': 'csw',
                 'title': 'CSW Server',
-                'description': 'A server that implements OGC\'s Catalog Service
+                'description': 'A server that implements OGC's Catalog Service
                                 for the Web (CSW) standard'
             }
 
-        returns: A dictionary with the harvester descriptors
+        :returns: A dictionary with the harvester descriptors
         '''
 
     def validate_config(self, config):
         '''
+
+        [optional]
+
         Harvesters can provide this method to validate the configuration entered in the
         form. It should return a single string, which will be stored in the database.
         Exceptions raised will be shown in the form's error messages.
 
-        returns A string with the validated configuration options
+        :param harvest_object_id: Config string coming from the form
+        :returns: A string with the validated configuration options
+        '''
+
+    def get_original_url(self, harvest_object_id):
+        '''
+
+        [optional]
+
+        This optional but very recommended method allows harvesters to return
+        the URL to the original remote document, given a Harvest Object id.
+        Note that getting the harvest object you have access to its guid as
+        well as the object source, which has the URL.
+        This URL will be used on error reports to help publishers link to the
+        original document that has the errors. If this method is not provided
+        or no URL is returned, only a link to the local copy of the remote
+        document will be shown.
+
+        Examples:
+            * For a CKAN record: http://{ckan-instance}/api/rest/{guid}
+            * For a WAF record: http://{waf-root}/{file-name}
+            * For a CSW record: http://{csw-server}/?Request=GetElementById&Id={guid}&...
+
+        :param harvest_object_id: HarvestObject id
+        :returns: A string with the URL to the original document
         '''
 
     def gather_stage(self, harvest_job):
@@ -270,7 +272,10 @@ following methods::
             - gathering all the necessary objects to fetch on a later.
               stage (e.g. for a CSW server, perform a GetRecords request)
             - creating the necessary HarvestObjects in the database, specifying
-              the guid and a reference to its source and job.
+              the guid and a reference to its job. The HarvestObjects need a
+              reference date with the last modified date for the resource, this
+              may need to be set in a different stage depending on the type of
+              source.
             - creating and storing any suitable HarvestGatherErrors that may
               occur.
             - returning a list with all the ids of the created HarvestObjects.
@@ -301,8 +306,7 @@ following methods::
             - performing any necessary action with the fetched object (e.g
               create a CKAN package).
               Note: if this stage creates or updates a package, a reference
-              to the package must be added to the HarvestObject.
-              Additionally, the HarvestObject must be flagged as current.
+              to the package should be added to the HarvestObject.
             - creating the HarvestObject - Package relation (if necessary)
             - creating and storing any suitable HarvestObjectErrors that may
               occur.
@@ -311,6 +315,7 @@ following methods::
         :param harvest_object: HarvestObject object
         :returns: True if everything went right, False if errors were found
         '''
+
 
 See the CKAN harvester for an example of how to implement the harvesting
 interface:
@@ -466,8 +471,8 @@ following steps with the one you are using.
       you defined in the `stdout_logfile` section to see what happened. Common errors include::
 
           `socket.error: [Errno 111] Connection refused`
-          RabbitMQ is not running:: 
-          
+          RabbitMQ is not running::
+
             sudo service rabbitmq-server start
 
 4. Once we have the two consumers running and monitored, we just need to create a cron job

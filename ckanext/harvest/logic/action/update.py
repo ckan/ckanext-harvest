@@ -5,74 +5,82 @@ import datetime
 
 from sqlalchemy import and_
 
+from ckan.lib.search.index import PackageSearchIndex
 from ckan.plugins import PluginImplementations
 from ckan.logic import get_action
 from ckanext.harvest.interfaces import IHarvester
 
 from ckan.model import Package
+from ckan import logic
 
-from ckan.logic import NotFound, ValidationError, check_access
-from ckan.lib.navl.dictization_functions import validate
+from ckan.logic import NotFound, check_access
 
+from ckanext.harvest.plugin import DATASET_TYPE_NAME
 from ckanext.harvest.queue import get_gather_publisher
 
-from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject)
-from ckanext.harvest.logic.schema import default_harvest_source_schema
+from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 from ckanext.harvest.logic import HarvestJobExists
-from ckanext.harvest.logic.dictization import (harvest_source_dictize,harvest_object_dictize)
+from ckanext.harvest.logic.schema import harvest_source_db_to_form_schema
 
-from ckanext.harvest.logic.action.create import _error_summary
+
 from ckanext.harvest.logic.action.get import harvest_source_show, harvest_job_list, _get_sources_for_user
 
 
 log = logging.getLogger(__name__)
 
 def harvest_source_update(context,data_dict):
+    '''
+    Updates an existing harvest source
 
-    check_access('harvest_source_update',context,data_dict)
+    This method just proxies the request to package_update,
+    which will create a harvest_source dataset type and the
+    HarvestSource object. All auth checks and validation will
+    be done there .We only make sure to set the dataset type
 
-    model = context['model']
-    session = context['session']
+    Note that the harvest source type (ckan, waf, csw, etc)
+    is now set via the source_type field.
 
-    source_id = data_dict.get('id')
-    schema = context.get('schema') or default_harvest_source_schema()
+    :param id: the name or id of the harvest source to update
+    :type id: string
+    :param url: the URL for the harvest source
+    :type url: string
+    :param name: the name of the new harvest source, must be between 2 and 100
+        characters long and contain only lowercase alphanumeric characters
+    :type name: string
+    :param title: the title of the dataset (optional, default: same as
+        ``name``)
+    :type title: string
+    :param notes: a description of the harvest source (optional)
+    :type notes: string
+    :param source_type: the harvester type for this source. This must be one
+        of the registerd harvesters, eg 'ckan', 'csw', etc.
+    :type source_type: string
+    :param frequency: the frequency in wich this harvester should run. See
+        ``ckanext.harvest.model`` source for possible values. Default is
+        'MANUAL'
+    :type frequency: string
+    :param config: extra configuration options for the particular harvester
+        type. Should be a serialized as JSON. (optional)
+    :type config: string
 
-    log.info('Harvest source %s update: %r', source_id, data_dict)
-    source = HarvestSource.get(source_id)
-    if not source:
-        log.error('Harvest source %s does not exist', source_id)
-        raise NotFound('Harvest source %s does not exist' % source_id)
 
-    data, errors = validate(data_dict, schema)
+    :returns: the newly created harvest source
+    :rtype: dictionary
 
-    if errors:
-        session.rollback()
-        raise ValidationError(errors,_error_summary(errors))
+    '''
+    log.info('Updating harvest source: %r', data_dict)
 
-    fields = ['url','title','type','description','user_id','publisher_id']
-    for f in fields:
-        if f in data and data[f] is not None:
-            if f == 'url':
-                data[f] = data[f].strip()
-            source.__setattr__(f,data[f])
+    data_dict['type'] = DATASET_TYPE_NAME
 
-    if 'active' in data_dict:
-        source.active = data['active']
+    context['extras_as_string'] = True
+    package_dict = logic.get_action('package_update')(context, data_dict)
 
-    if 'config' in data_dict:
-        source.config = data['config']
+    context['schema'] = harvest_source_db_to_form_schema()
+    source = logic.get_action('package_show')(context, package_dict)
 
-    source.save()
-    # Abort any pending jobs
-    if not source.active:
-        jobs = HarvestJob.filter(source=source,status=u'New')
-        log.info('Harvest source %s not active, so aborting %i outstanding jobs', source_id, jobs.count())
-        if jobs:
-            for job in jobs:
-                job.status = u'Aborted'
-                job.save()
+    return source
 
-    return harvest_source_dictize(source,context)
+
 
 def harvest_objects_import(context,data_dict):
     '''
@@ -194,16 +202,38 @@ def harvest_jobs_run(context,data_dict):
     # Flag finished jobs as such
     jobs = harvest_job_list(context,{'source_id':source_id,'status':u'Running'})
     if len(jobs):
+        package_index = PackageSearchIndex()
         for job in jobs:
             if job['gather_finished']:
                 objects = session.query(HarvestObject.id) \
                           .filter(HarvestObject.harvest_job_id==job['id']) \
                           .filter(and_((HarvestObject.state!=u'COMPLETE'),
-                                       (HarvestObject.state!=u'ERROR')))
+                                       (HarvestObject.state!=u'ERROR'))) \
+                          .order_by(HarvestObject.import_finished.desc())
+
                 if objects.count() == 0:
                     job_obj = HarvestJob.get(job['id'])
                     job_obj.status = u'Finished'
+
+                    last_object = session.query(HarvestObject) \
+                          .filter(HarvestObject.harvest_job_id==job['id']) \
+                          .filter(HarvestObject.import_finished!=None) \
+                          .order_by(HarvestObject.import_finished.desc()) \
+                          .first()
+                    if last_object:
+                        job_obj.finished = last_object.import_finished
                     job_obj.save()
+                    # Reindex the harvest source dataset so it has the latest
+                    # status
+                    if 'extras_as_string'in context:
+                        del context['extras_as_string']
+                    context.update({'validate': False, 'ignore_auth': True})
+                    package_dict = logic.get_action('package_show')(context,
+                            {'id': job_obj.source.id})
+
+                    if package_dict:
+                        package_index.index_package(package_dict)
+
 
     # Check if there are pending harvest jobs
     jobs = harvest_job_list(context,{'source_id':source_id,'status':u'New'})
@@ -216,7 +246,7 @@ def harvest_jobs_run(context,data_dict):
     sent_jobs = []
     for job in jobs:
         context['detailed'] = False
-        source = harvest_source_show(context,{'id':job['source']})
+        source = harvest_source_show(context,{'id':job['source_id']})
         if source['active']:
             job_obj = HarvestJob.get(job['id'])
             job_obj.status = job['status'] = u'Running'
@@ -228,3 +258,29 @@ def harvest_jobs_run(context,data_dict):
     publisher.close()
     return sent_jobs
 
+def harvest_sources_reindex(context, data_dict):
+    '''
+        Reindexes all harvest source datasets with the latest status
+    '''
+    log.info('Reindexing all harvest sources')
+    check_access('harvest_sources_reindex', context, data_dict)
+
+    model = context['model']
+
+    packages = model.Session.query(model.Package) \
+                            .filter(model.Package.type==DATASET_TYPE_NAME) \
+                            .filter(model.Package.state==u'active') \
+                            .all()
+
+    package_index = PackageSearchIndex()
+    for package in packages:
+        if 'extras_as_string'in context:
+            del context['extras_as_string']
+        context.update({'validate': False, 'ignore_auth': True})
+        package_dict = logic.get_action('package_show')(context,
+            {'id': package.id})
+        log.debug('Updating search index for harvest source {0}'.format(package.id))
+        package_index.index_package(package_dict, defer_commit=True)
+
+    package_index.commit()
+    log.info('Updated search index for {0} harvest sources'.format(len(packages)))

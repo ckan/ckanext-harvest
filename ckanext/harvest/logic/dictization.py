@@ -7,6 +7,10 @@ from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject, \
 
 
 def harvest_source_dictize(source, context):
+    '''
+    TODO: Deprecated
+    '''
+
     out = source.as_dict()
 
     out['publisher_title'] = u''
@@ -24,16 +28,11 @@ def harvest_source_dictize(source, context):
 
 def harvest_job_dictize(job, context):
     out = job.as_dict()
-    out['source'] = job.source_id
-    out['objects'] = []
-    out['gather_errors'] = []
 
-    if context.get('return_objects', True):
-        for obj in job.objects:
-            out['objects'].append(obj.as_dict())
+    model = context['model']
 
     if context.get('return_stats', True):
-        stats = context['model'].Session.query(
+        stats = model.Session.query(
             HarvestObject.report_status,
             func.count(HarvestObject.id).label('total_objects'))\
                 .filter_by(harvest_job_id=job.id)\
@@ -42,9 +41,38 @@ def harvest_job_dictize(job, context):
         for status, count in stats:
             out['stats'][status] = count
 
-    for error in job.gather_errors:
-        out['gather_errors'].append(error.as_dict())
+        # We actually want to check which objects had errors, because they
+        # could have been added/updated anyway (eg bbox errors)
+        count = model.Session.query(func.distinct(HarvestObjectError.harvest_object_id)) \
+                          .join(HarvestObject) \
+                          .filter(HarvestObject.harvest_job_id==job.id) \
+                          .count()
+        if count > 0:
+          out['stats']['errored'] = count
 
+        # Add gather errors to the error count
+        count = model.Session.query(HarvestGatherError) \
+                          .filter(HarvestGatherError.harvest_job_id==job.id) \
+                          .count()
+        if count > 0:
+          out['stats']['errored'] = out['stats'].get('errored', 0) + count
+
+    if context.get('return_error_summary', True):
+        q = model.Session.query(HarvestObjectError.message, \
+                                func.count(HarvestObjectError.message).label('error_count')) \
+                          .join(HarvestObject) \
+                          .filter(HarvestObject.harvest_job_id==job.id) \
+                          .group_by(HarvestObjectError.message) \
+                          .order_by('error_count desc') \
+                          .limit(context.get('error_summmary_limit', 20))
+        out['object_error_summary'] = q.all()
+        q = model.Session.query(HarvestGatherError.message, \
+                                func.count(HarvestGatherError.message).label('error_count')) \
+                          .filter(HarvestGatherError.harvest_job_id==job.id) \
+                          .group_by(HarvestGatherError.message) \
+                          .order_by('error_count desc') \
+                          .limit(context.get('error_summmary_limit', 20))
+        out['gather_error_summary'] = q.all()
     return out
 
 def harvest_object_dictize(obj, context):
@@ -66,6 +94,9 @@ def harvest_object_dictize(obj, context):
     return out
 
 def _get_source_status(source, context):
+    '''
+    TODO: Deprecated, use harvest_source_show_status instead
+    '''
 
     model = context.get('model')
     detailed = context.get('detailed',True)

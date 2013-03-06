@@ -1,0 +1,23 @@
+{#
+Displays a list of harvest sources.
+
+sources        - A list of harvest sources to display.
+list_class     - The class name for the list item.
+item_class     - The class name to use on each item.
+hide_resources - If true hides the resources (default: false).
+banner         - If true displays a popular banner (default: false).
+truncate       - The length to trucate the description to (default: 180)
+truncate_title - The length to truncate the title to (default: 80).
+
+Example:
+
+  {% snippet 'snippets/sources_list.html', sources=c.sources %}
+
+#}
+{% if sources %}
+  <ul class="{{ list_class or 'dataset-list unstyled' }}">
+    {% for source in sources %}
+      {% snippet 'snippets/source_item.html', source=source, item_class=item_class, hide_resources=hide_resources, banner=banner, truncate=truncate, truncate_title=truncate_title, within_organization=within_organization %}
+    {% endfor %}
+  </ul>
+{% endif %}

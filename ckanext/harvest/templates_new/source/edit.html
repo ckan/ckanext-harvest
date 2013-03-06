@@ -1,24 +1,9 @@
-{% extends "page.html" %}
+{% extends "source/admin_base.html" %}
 
-{% block title %}{{ _('Edit - Harvest Source') }} - {{ super() }}{% endblock %}
+{% block subtitle %}{{ _('Edit harvest source') }}{% endblock %}
 
-{% block breadcrumb_content %}
+{% block primary_content_inner %}
+  <div class="module-content">
+    {% block form %}{{ c.form | safe }}{% endblock %}
+  </div>
 {% endblock %}
-
-{% block styles %}
-  {{ super() }}
-  <link type="text/css" rel="stylesheet" media="all" href="/ckanext/harvest/style.css" />
-{% endblock %}
-
-{% block primary %}
-  <article class="module">
-    <div class="module-content">
-      <div class="harvest-content">
-        <h2>Edit harvest source </h2>
-        {{ h.literal(c.form) }}
-      </div>
-    </div>
-  </article>
-{% endblock %}
-
-{% block sidebar %}{% endblock %}

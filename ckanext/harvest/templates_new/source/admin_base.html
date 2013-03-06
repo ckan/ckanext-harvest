@@ -1,0 +1,25 @@
+{% extends "source/read_base.html" %}
+
+{% block breadcrumb_content_root_selected %}{% endblock %}
+
+{% block breadcrumb_content %}
+  {{ super() }}
+  <li class="active"><a href="">{{ _('Admin') }}</a></li>
+{% endblock %}
+
+{% block actions_content %}
+  {% if source.status.last_job and (source.status.last_job.status == 'New' or source.status.last_job.status == 'Running') %}
+    <li><a class="btn disabled" rel="tooltip" title="There already is an unrun job for this source"><i class="icon-refresh icon-large"></i> Refresh</a></li>
+  {% else %}
+    <li>{{ h.nav_named_link(_('Refresh'), '{0}_refresh'.format(c.dataset_type), id=source.id, class_='btn', icon='refresh')}}</li>
+  {% endif %}
+  <li>{{ h.nav_named_link(_('View harvest source'), '{0}_read'.format(c.dataset_type), id=source.name, class_='btn', icon='eye-open')}}</li>
+{% endblock %}
+
+{% block page_header %}
+  {% snippet 'snippets/page_header.html', items=[
+      h.build_nav_icon('{0}_admin'.format(c.dataset_type), _('Dashboard'), id=source.name, icon='dashboard'),
+      h.build_nav_icon('harvest_job_list'.format(c.dataset_type), _('Jobs'), source=source.name, icon='reorder'),
+      h.build_nav_icon('{0}_edit'.format(c.dataset_type), _('Edit'), id=source.name, icon='edit'),
+    ] %}
+{% endblock %}
