@@ -13,10 +13,10 @@
 
   {{ form.input('title', id='field-title', label=_('Title'), placeholder=_('eg. A descriptive title'), value=data.title, error=errors.title, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
 
-  {% set prefix = 'harvest_source' %}
-  {% set domain = h.url_for(controller='package', action='read', id='', qualified=true) %}
+  {% set prefix = 'harvest' %}
+  {% set domain = h.url_for('{0}_read'.format(c.dataset_type), id='', qualified=true) %}
   {% set domain = domain|replace("http://", "")|replace("https://", "") %}
-  {% set attrs = {'data-module': 'slug-preview-slug', 'data-module-prefix': domain, 'data-module-placeholder': '<dataset>'} %}
+  {% set attrs = {'data-module': 'slug-preview-slug', 'data-module-prefix': domain, 'data-module-placeholder': '<harvest-source>'} %}
 
   {{ form.prepend('name', id='field-name', label=_('Name'), prepend=prefix, placeholder=_('eg. my-dataset'), value=data.name, error=errors.name, attrs=attrs) }}
 
