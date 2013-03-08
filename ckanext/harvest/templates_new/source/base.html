@@ -11,14 +11,11 @@
 
 {% block breadcrumb_content_root_selected %} class="active"{% endblock %}
 
-{#
-  TODO: once #354 is merged in CKAN core we can re-adjust the truncation
-  lengths here (as the breadcrumbs are a little different in #354)
-#}
 {% block breadcrumb_content %}
-  {% if source.organization %}
+  {% if source.__extras.organization %}
+    {% set org = source.__extras.organization %}
     <li>{{ h.nav_named_link(_('Organizations'), 'organizations_index') }}</li>
-    <li>{{ h.nav_named_link(source.organization.title or source.organization.name|truncate(10), 'organization_read', id=source.organization.name) }}</li>
+    <li>{{ h.nav_named_link(org.title or org.name|truncate(10), 'organization_read', id=org.name) }}</li>
     <li>{{ h.nav_named_link(_('Harvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
     <li{{ self.breadcrumb_content_root_selected() }}>{{ h.nav_named_link(c.harvest_source.title|truncate(10), '{0}_read'.format(c.dataset_type), id=c.harvest_source.name) }}</li>
   {% else %}
