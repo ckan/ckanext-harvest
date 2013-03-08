@@ -6,6 +6,12 @@
   <div class="clearfix">
     <h1 class="hide-heading">{{ _('Harvest Sources') }}</h1>
     <div class="primary">
+      <div class="m-bottom">
+        <a href="{{ h.url_for('harvest_new', group=c.group_dict.id) }}" class="btn btn-primary">
+          <i class="icon-plus-sign-alt"></i>
+          {{ _('Add Harvest Source') }}
+        </a>
+      </div>
       <h3 class="results">
         {%- if c.page.item_count -%}
           {{ c.page.item_count }} harvest sources{{ _(" found for \"{query}\"").format(query=c.q) if c.q }}
@@ -15,7 +21,11 @@
           {{ _('Harvest Sources') }}
         {%- endif -%}
       </h3>
-      {% snippet 'snippets/source_list.html', sources=c.page.items, within_organization=true %}
+      {% if c.page.item_count %}
+        {% snippet 'snippets/source_list.html', sources=c.page.items, within_organization=true %}
+      {% else %}
+        <p class="empty">{{ _('Sorry no harvest sources found') }}</p>
+      {% endif %}
     </div>
     <aside class="tertiary">
       <form method="GET">
@@ -30,4 +40,3 @@
   </div>
   {{ c.page.pager() }}
 {% endblock %}
-
