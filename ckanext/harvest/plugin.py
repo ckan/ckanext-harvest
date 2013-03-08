@@ -155,7 +155,8 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
         surplus_keys_schema = ['__extras', '__junk', 'extras', 'notes',
                                'extras_validation', 'save', 'return_to', 'type',
-                               'state', 'owner_org', 'frequency', 'config']
+                               'state', 'owner_org', 'frequency', 'config',
+                               'organization']
 
         #TODO: state and delete
         if not schema:

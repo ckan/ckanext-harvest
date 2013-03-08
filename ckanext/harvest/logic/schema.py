@@ -33,6 +33,7 @@ def harvest_source_schema():
         'title': [if_empty_same_as("name"), unicode],
         'notes': [ignore_missing, unicode],
         'owner_org': [owner_org_validator, unicode],
+        'organization': [ignore_missing],
         'frequency': [ignore_missing, unicode, harvest_source_frequency_exists, convert_to_extras],
         'state': [ignore_missing],
         'config': [ignore_missing, harvest_source_config_validator, convert_to_extras],
