@@ -18,7 +18,7 @@ Example:
 {% set truncate_title = truncate_title or 80 %}
 {% set title = source.title or source.name %}
 {% set source_type = h.get_pkg_dict_extra(source, 'source_type') %}
-{% set url = h.url_for('harvest_edit', id=source.name) if within_organization else h.url_for('harvest_read', id=source.name) %}
+{% set url = h.url_for('harvest_admin', id=source.name) if within_organization else h.url_for('harvest_read', id=source.name) %}
 
 <li class="{{ item_class or "dataset-item" }}">
   <div class="dataset-content">
