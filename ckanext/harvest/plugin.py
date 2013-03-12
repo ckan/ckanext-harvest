@@ -36,17 +36,17 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
     def after_create(self, context, data_dict):
         if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME and not self.startup:
             # Create an actual HarvestSource object
-            _create_harvest_source_object(data_dict)
+            _create_harvest_source_object(context, data_dict)
 
     def after_update(self, context, data_dict):
         if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
             # Edit the actual HarvestSource object
-            _update_harvest_source_object(data_dict)
+            _update_harvest_source_object(context, data_dict)
 
     def after_delete(self, context, data_dict):
         if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
             # Delete the actual HarvestSource object
-            _delete_harvest_source_object(data_dict)
+            _delete_harvest_source_object(context, data_dict)
 
     def after_show(self, context, data_dict):
 
@@ -268,7 +268,7 @@ def _get_logic_functions(module_root, logic_functions = {}):
 
     return logic_functions
 
-def _create_harvest_source_object(data_dict):
+def _create_harvest_source_object(context, data_dict):
     '''
         Creates an actual HarvestSource object with the data dict
         of the harvest_source dataset. All validation and authorization
@@ -306,7 +306,7 @@ def _create_harvest_source_object(data_dict):
 
     return source
 
-def _update_harvest_source_object(data_dict):
+def _update_harvest_source_object(context, data_dict):
     '''
         Updates an actual HarvestSource object with the data dict
         of the harvest_source dataset. All validation and authorization
@@ -359,7 +359,7 @@ def _update_harvest_source_object(data_dict):
 
     return source
 
-def _delete_harvest_source_object(data_dict):
+def _delete_harvest_source_object(context, data_dict):
     '''
         Deletes an actual HarvestSource object with the id provided on the
         data dict of the harvest_source dataset. Similarly to the datasets,
