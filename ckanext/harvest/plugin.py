@@ -163,7 +163,6 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
                                'state', 'owner_org', 'frequency', 'config',
                                'organization']
 
-        #TODO: state and delete
         if not schema:
             schema = self.form_to_db_schema()
         schema_keys = schema.keys()
@@ -299,9 +298,7 @@ def _create_harvest_source_object(data_dict):
         if o in data_dict and data_dict[o] is not None:
             source.__setattr__(o,data_dict[o])
 
-    #TODO: state / deleted
-    if 'active' in data_dict:
-        source.active = data_dict['active']
+    source.active = data_dict.get('state', None) == 'active'
 
     # Don't commit yet, let package_create do it
     source.add()
@@ -343,11 +340,10 @@ def _update_harvest_source_object(data_dict):
     if 'source_type' in data_dict:
         source.type = data_dict['source_type']
 
-    if 'active' in data_dict:
-        source.active = data_dict['active']
-
     if 'config' in data_dict:
         source.config = data_dict['config']
+
+    source.active = data_dict.get('state', None) == 'active'
 
     # Don't commit yet, let package_create do it
     source.add()
