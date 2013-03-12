@@ -396,4 +396,23 @@ def _delete_harvest_source_object(context, data_dict):
 
     log.debug('Harvest source %s deleted', source_id)
 
+    # Check if we need to delete all source's datasets
+    if context.get('delete_datasets', True): #todo; false
+
+        #Get ids
+        # Option 1: search
+        # Option 2: db
+        from ckanext.harvest import model as harvest_model
+        package_ids = model.Session.query(model.Package.id) \
+            .join(harvest_model.HarvestObject) \
+            .filter(harvest_model.HarvestObject.harvest_source_id==source_id) \
+            .filter(harvest_model.HarvestObject.current==True) \
+            .filter(model.Package.state==u'active') \
+            .all()
+        if len(package_ids) > 0:
+            package_ids = zip(*package_ids)[0]
+            p.toolkit.get_action('bulk_update_delete')(context,
+                    {'datasets': package_ids})
+
+
     return source
