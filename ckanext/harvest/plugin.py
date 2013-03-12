@@ -43,6 +43,11 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
             # Edit the actual HarvestSource object
             _update_harvest_source_object(data_dict)
 
+    def after_delete(self, context, data_dict):
+        if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
+            # Delete the actual HarvestSource object
+            _delete_harvest_source_object(data_dict)
+
     def after_show(self, context, data_dict):
 
         def add_extra(data_dict, key, value):
@@ -355,5 +360,44 @@ def _update_harvest_source_object(data_dict):
             for job in jobs:
                 job.status = u'Aborted'
                 job.add()
+
+    return source
+
+def _delete_harvest_source_object(data_dict):
+    '''
+        Deletes an actual HarvestSource object with the id provided on the
+        data dict of the harvest_source dataset. Similarly to the datasets,
+        the source object is not actually deleted, just flagged as inactive.
+        All validation and authorization checks should be used by now, so
+        this function is not to be used directly to delete harvest sources.
+
+        :param data_dict: A standard package data_dict
+
+        :returns: The deleted HarvestSource object
+        :rtype: HarvestSource object
+    '''
+
+    source_id = data_dict.get('id')
+
+    log.info('Deleting harvest source: %s', source_id)
+
+    source = HarvestSource.get(source_id)
+    if not source:
+        log.warn('Harvest source %s does not exist', source_id)
+        raise p.toolkit.ObjectNotFound('Harvest source %s does not exist' % source_id)
+
+    # Don't actually delete the record, just flag it as inactive
+    source.active = False
+    source.save()
+
+    # Abort any pending jobs
+    jobs = HarvestJob.filter(source=source, status=u'New')
+    if jobs:
+        log.info('Aborting %i jobs due to deleted harvest source', jobs.count())
+        for job in jobs:
+            job.status = u'Aborted'
+            job.save()
+
+    log.debug('Harvest source %s deleted', source_id)
 
     return source
