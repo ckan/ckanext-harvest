@@ -70,7 +70,26 @@
     {% endif %}
   {% endif %}
 
+  {% if data.get('id', None) and h.check_access('harvest_source_delete', {'id': data.id}) and data.get('state', 'none') == 'deleted' %}
+    <div class="control-group">
+      <label for="field-state" class="control-label">{{ _('State') }}</label>
+      <div class="controls">
+        <select id="field-state" name="state">
+          <option value="active" {% if data.get('state', 'none') == 'active' %} selected="selected" {% endif %}>{{ _('Active') }}</option>
+          <option value="deleted" {% if data.get('state', 'none') == 'deleted' %} selected="selected" {% endif %}>{{ _('Deleted') }}</option>
+        </select>
+      </div>
+    </div>
+  {% endif %}
+
   <p class="form-actions">
+    {% block delete_button %}
+      {% if data.get('id', None) and h.check_access('harvest_source_delete', {'id': data.id}) and not data.get('state', 'none') == 'deleted' %}
+        {% set locale = h.dump_json({'content': _('Are you sure you want to delete this harvest source?')}) %}
+        <a class="btn btn-danger pull-left" href="{% url_for 'harvest_delete', id=data.name %}" data-module="confirm-action" data-module-i18n="{{ locale }}">{% block delete_button_text %}{{ _('Delete') }}{% endblock %}</a>
+      {% endif %}
+    {% endblock %}
+
     <input id="save" name="save" value="Save" type="submit" class="btn btn-primary">
   </p>
 

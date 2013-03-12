@@ -1,32 +1,27 @@
 import logging
 
-from ckan.logic import NotFound, check_access
+from ckan import plugins as p
 
-from ckanext.harvest.model import (HarvestSource, HarvestJob)
 
 log = logging.getLogger(__name__)
 
-def harvest_source_delete(context,data_dict):
+def harvest_source_delete(context, data_dict):
+    '''
+    Deletes an existing harvest source
+
+    This method just proxies the request to package_delete,
+    which will delete the actual harvest type dataset and the
+    HarvestSource object (via the after_delete extension point).
+
+    :param id: the name or id of the harvest source to delete
+    :type id: string
+
+    :returns: the newly created harvest source
+    :rtype: dictionary
+
+    '''
     log.info('Deleting harvest source: %r', data_dict)
-    check_access('harvest_source_delete',context,data_dict)
 
-    source_id = data_dict.get('id')
-    source = HarvestSource.get(source_id)
-    if not source:
-        log.warn('Harvest source %s does not exist', source_id)
-        raise NotFound('Harvest source %s does not exist' % source_id)
+    p.toolkit.check_access('harvest_source_delete', context, data_dict)
 
-    # Don't actually delete the record, just flag it as inactive
-    source.active = False
-    source.save()
-
-    # Abort any pending jobs
-    jobs = HarvestJob.filter(source=source,status=u'New')
-    if jobs:
-        log.info('Aborting %i jobs due to deleted harvest source', jobs.count())
-        for job in jobs:
-            job.status = u'Aborted'
-            job.save()
-
-    log.info('Harvest source %s deleted', source_id)
-    return True
+    p.toolkit.get_action('package_delete')(context, data_dict)
