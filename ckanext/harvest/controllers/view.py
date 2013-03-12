@@ -31,7 +31,8 @@ class ViewController(BaseController):
             p.toolkit.get_action('harvest_source_delete')(context, {'id':id})
 
             h.flash_success(_('Harvesting source successfully inactivated'))
-            redirect(h.url_for('harvest'))
+
+            redirect(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
         except p.toolkit.ObjectNotFound:
             abort(404,_('Harvest source not found'))
         except p.toolkit.NotAuthorized:

@@ -39,12 +39,17 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
     def after_create(self, context, data_dict):
         if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME and not self.startup:
             # Create an actual HarvestSource object
-            _create_harvest_source_object(data_dict)
+            _create_harvest_source_object(context, data_dict)
 
     def after_update(self, context, data_dict):
         if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
             # Edit the actual HarvestSource object
-            _update_harvest_source_object(data_dict)
+            _update_harvest_source_object(context, data_dict)
+
+    def after_delete(self, context, data_dict):
+        if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
+            # Delete the actual HarvestSource object
+            _delete_harvest_source_object(context, data_dict)
 
     def after_show(self, context, data_dict):
 
@@ -161,7 +166,6 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
                                'state', 'owner_org', 'frequency', 'config',
                                'organization']
 
-        #TODO: state and delete
         if not schema:
             schema = self.form_to_db_schema()
         schema_keys = schema.keys()
@@ -284,7 +288,7 @@ def _get_logic_functions(module_root, logic_functions = {}):
 
     return logic_functions
 
-def _create_harvest_source_object(data_dict):
+def _create_harvest_source_object(context, data_dict):
     '''
         Creates an actual HarvestSource object with the data dict
         of the harvest_source dataset. All validation and authorization
@@ -314,9 +318,7 @@ def _create_harvest_source_object(data_dict):
         if o in data_dict and data_dict[o] is not None:
             source.__setattr__(o,data_dict[o])
 
-    #TODO: state / deleted
-    if 'active' in data_dict:
-        source.active = data_dict['active']
+    source.active = data_dict.get('state', None) == 'active'
 
     # Don't commit yet, let package_create do it
     source.add()
@@ -324,7 +326,7 @@ def _create_harvest_source_object(data_dict):
 
     return source
 
-def _update_harvest_source_object(data_dict):
+def _update_harvest_source_object(context, data_dict):
     '''
         Updates an actual HarvestSource object with the data dict
         of the harvest_source dataset. All validation and authorization
@@ -358,11 +360,10 @@ def _update_harvest_source_object(data_dict):
     if 'source_type' in data_dict:
         source.type = data_dict['source_type']
 
-    if 'active' in data_dict:
-        source.active = data_dict['active']
-
     if 'config' in data_dict:
         source.config = data_dict['config']
+
+    source.active = data_dict.get('state', None) == 'active'
 
     # Don't commit yet, let package_create do it
     source.add()
@@ -375,5 +376,44 @@ def _update_harvest_source_object(data_dict):
             for job in jobs:
                 job.status = u'Aborted'
                 job.add()
+
+    return source
+
+def _delete_harvest_source_object(context, data_dict):
+    '''
+        Deletes an actual HarvestSource object with the id provided on the
+        data dict of the harvest_source dataset. Similarly to the datasets,
+        the source object is not actually deleted, just flagged as inactive.
+        All validation and authorization checks should be used by now, so
+        this function is not to be used directly to delete harvest sources.
+
+        :param data_dict: A standard package data_dict
+
+        :returns: The deleted HarvestSource object
+        :rtype: HarvestSource object
+    '''
+
+    source_id = data_dict.get('id')
+
+    log.info('Deleting harvest source: %s', source_id)
+
+    source = HarvestSource.get(source_id)
+    if not source:
+        log.warn('Harvest source %s does not exist', source_id)
+        raise p.toolkit.ObjectNotFound('Harvest source %s does not exist' % source_id)
+
+    # Don't actually delete the record, just flag it as inactive
+    source.active = False
+    source.save()
+
+    # Abort any pending jobs
+    jobs = HarvestJob.filter(source=source, status=u'New')
+    if jobs:
+        log.info('Aborting %i jobs due to deleted harvest source', jobs.count())
+        for job in jobs:
+            job.status = u'Aborted'
+            job.save()
+
+    log.debug('Harvest source %s deleted', source_id)
 
     return source
