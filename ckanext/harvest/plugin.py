@@ -1,6 +1,8 @@
 import types
 from logging import getLogger
 
+from sqlalchemy.util import OrderedDict
+
 from ckan import logic
 from ckan import model
 import ckan.plugins as p
@@ -28,6 +30,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
     p.implements(p.IDatasetForm)
     p.implements(p.IPackageController, inherit=True)
     p.implements(p.ITemplateHelpers)
+    p.implements(p.IFacets, inherit=True)
 
     startup = False
 
@@ -244,6 +247,23 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
                 'harvest_source_extra_fields': harvest_helpers.harvest_source_extra_fields,
                 }
 
+    def dataset_facets(self, facets_dict, package_type):
+
+        if package_type <> 'harvest':
+            return facets_dict
+
+        return OrderedDict([('frequency', 'Frequency'),
+                            ('source_type','Type'),
+                           ])
+
+    def organization_facets(self, facets_dict, organization_type, package_type):
+
+        if package_type <> 'harvest':
+            return facets_dict
+
+        return OrderedDict([('frequency', 'Frequency'),
+                            ('source_type','Type'),
+                           ])
 
 def _get_logic_functions(module_root, logic_functions = {}):
 

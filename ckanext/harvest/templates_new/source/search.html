@@ -81,6 +81,7 @@
 {% endblock %}
 
 {% block secondary_content %}
-  {{ h.snippet('snippets/facet_list.html', title='Frequency', name='frequency', alternative_url=h.url_for('{0}_search'.format(c.dataset_type))) }}
-  {{ h.snippet('snippets/facet_list.html', title='Type', name='source_type', alternative_url=h.url_for('{0}_search'.format(c.dataset_type))) }}
+  {% for facet in c.facet_titles %}
+      {{ h.snippet('snippets/facet_list.html', title=c.facet_titles[facet], name=facet, alternative_url=h.url_for('{0}_search'.format(c.dataset_type))) }}
+  {% endfor %}
 {% endblock %}

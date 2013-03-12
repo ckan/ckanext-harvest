@@ -24,10 +24,10 @@ log = logging.getLogger(__name__)
 class OrganizationController(GroupController):
 
     def source_list(self, id, limit=20):
-        group_type = self._get_group_type(id.split('@')[0])
+        self.group_type = 'organization'
         context = {'model': model, 'session': model.Session,
                    'user': c.user or c.author,
-                   'schema': self._db_to_form_schema(group_type=group_type),
+                   'schema': self._db_to_form_schema(group_type=self.group_type),
                    'for_view': True}
         data_dict = {'id': id}
 
@@ -47,10 +47,10 @@ class OrganizationController(GroupController):
 
     def _read(self, id, limit, dataset_type=None):
         ''' This is common code used by both read and bulk_process'''
-        group_type = self._get_group_type(id.split('@')[0])
+        self.group_type = 'organization'
         context = {'model': model, 'session': model.Session,
                    'user': c.user or c.author,
-                   'schema': self._db_to_form_schema(group_type=group_type),
+                   'schema': self._db_to_form_schema(group_type=self.group_type),
                    'for_view': True, 'extras_as_string': True}
 
         q = c.q = request.params.get('q', '')
@@ -84,7 +84,7 @@ class OrganizationController(GroupController):
         sort_by = request.params.get('sort', None)
 
         def search_url(params):
-            if group_type == 'organization':
+            if self.group_type == 'organization':
                 if c.action == 'bulk_process':
                     url = self._url_for(controller='organization',
                                         action='bulk_process',

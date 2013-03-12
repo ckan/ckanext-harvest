@@ -34,8 +34,9 @@
           <button type="submit"><i class="icon-search"></i> <span>{{ _('Search') }}</span></button>
         </span>
       </form>
-      {{ h.snippet('snippets/facet_list.html', title=_('Frequency'), name='frequency', within_tertiary=true, extras={'id':c.group_dict.name}) }}
-      {{ h.snippet('snippets/facet_list.html', title=_('Type'), name='type', within_tertiary=true, extras={'id':c.group_dict.name}) }}
+      {% for facet in c.facet_titles %}
+          {{ h.snippet('snippets/facet_list.html', title=c.facet_titles[facet], name=facet, within_tertiary=true, extras={'id':c.group_dict.name}) }}
+      {% endfor %}
     </aside>
   </div>
   {{ c.page.pager() }}
