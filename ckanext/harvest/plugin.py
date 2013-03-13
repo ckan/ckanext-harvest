@@ -47,9 +47,12 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
             _update_harvest_source_object(context, data_dict)
 
     def after_delete(self, context, data_dict):
-        if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
+
+        package_dict = p.toolkit.get_action('package_show')(context, {'id': data_dict['id']})
+
+        if 'type' in package_dict and package_dict['type'] == DATASET_TYPE_NAME:
             # Delete the actual HarvestSource object
-            _delete_harvest_source_object(context, data_dict)
+            _delete_harvest_source_object(context, package_dict)
 
     def after_show(self, context, data_dict):
 
