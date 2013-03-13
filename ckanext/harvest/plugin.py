@@ -318,7 +318,7 @@ def _create_harvest_source_object(context, data_dict):
         if o in data_dict and data_dict[o] is not None:
             source.__setattr__(o,data_dict[o])
 
-    source.active = data_dict.get('state', None) == 'active'
+    source.active = not data_dict.get('state', None) == 'deleted'
 
     # Don't commit yet, let package_create do it
     source.add()
@@ -363,7 +363,9 @@ def _update_harvest_source_object(context, data_dict):
     if 'config' in data_dict:
         source.config = data_dict['config']
 
-    source.active = data_dict.get('state', None) == 'active'
+    # Don't change state unless explicitly set in the dict
+    if 'state' in data_dict:
+      source.active = data_dict.get('state') == 'active'
 
     # Don't commit yet, let package_create do it
     source.add()
