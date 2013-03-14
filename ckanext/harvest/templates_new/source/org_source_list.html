@@ -6,13 +6,11 @@
   <div class="clearfix">
     <h1 class="hide-heading">{{ _('Harvest Sources') }}</h1>
     <div class="primary">
-      <div class="m-bottom">
-        <a href="{{ h.url_for('harvest_new', group=c.group_dict.id) }}" class="btn btn-primary">
-          <i class="icon-plus-sign-alt"></i>
-          {{ _('Add Harvest Source') }}
-        </a>
-      </div>
-      <h3 class="results">
+      <a href="{{ h.url_for('harvest_new', group=c.group_dict.id) }}" class="btn pull-right">
+        <i class="icon-plus-sign-alt"></i>
+        {{ _('Add Harvest Source') }}
+      </a>
+      <h3 class="results page-heading">
         {%- if c.page.item_count -%}
           {{ c.page.item_count }} harvest sources{{ _(" found for \"{query}\"").format(query=c.q) if c.q }}
         {%- elif request.params -%}
