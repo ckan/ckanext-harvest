@@ -89,6 +89,9 @@ class OrganizationController(GroupController):
                     url = self._url_for(controller='organization',
                                         action='bulk_process',
                                         id=id)
+                elif c.action == 'source_list':
+                    url = self._url_for('harvest_org_list',
+                                        id=id)
                 else:
                     url = self._url_for(controller='organization',
                                         action='read',
