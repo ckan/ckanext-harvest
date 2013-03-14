@@ -37,7 +37,7 @@ class OrganizationController(GroupController):
         try:
             c.group_dict = self._action('group_show')(context, data_dict)
             c.group = context['group']
-        except p.toolkit.NotFound:
+        except p.toolkit.ObjectNotFound:
             abort(404, p.toolkit._('Group not found'))
         except p.toolkit.NotAuthorized:
             abort(401, p.toolkit._('Unauthorized to read group %s') % id)
