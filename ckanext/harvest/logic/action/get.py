@@ -34,6 +34,7 @@ def harvest_source_show(context,data_dict):
     :rtype: dictionary
     '''
 
+
     source_dict = logic.get_action('package_show')(context, data_dict)
 
     # For compatibility with old code, add the active field
@@ -57,6 +58,10 @@ def harvest_source_show_status(context, data_dict):
 
     :rtype: dictionary
     '''
+
+    p.toolkit.check_access('harvest_source_show_status', context, data_dict)
+
+
     model = context.get('model')
 
     source = harvest_model.HarvestSource.get(data_dict['id'])

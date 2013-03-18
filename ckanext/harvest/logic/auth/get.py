@@ -29,6 +29,13 @@ def harvest_source_show(context, data_dict):
                 'msg': pt._('User {0} not authorized to read harvest source {1}')
                 .format(user, source_id)}
 
+def harvest_source_show_status(context, data_dict):
+    '''
+        Authorization check for getting the status of a harvest source
+
+        It forwards the checks to harvest_source_show.
+    '''
+    return harvest_source_show(context, data_dict)
 
 def harvest_source_list(context, data_dict):
     '''
