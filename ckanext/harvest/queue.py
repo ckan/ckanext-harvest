@@ -216,7 +216,7 @@ def fetch_and_import_stages(harvester, obj):
         obj.state = "ERROR"
         obj.save()
     if obj.report_status:
-        continue
+        return
     if obj.state == 'ERROR':
         obj.report_status = 'errored'
     elif obj.current == False:
