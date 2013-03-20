@@ -31,8 +31,14 @@ header.with-filter h1 {
 }
 .harvest-types label.radio {
   font-weight: normal;
-  margin-bottom: 0;
+  margin-bottom: 10px;
 }
-.harvest-types label.radio i {
-  color: #999;
+.harvest-types label.radio input {
+  top: 3px;
+}
+#source-new .controls {
+  margin-left: 135px;
+}
+#source-new .control-label {
+  width: 125px;
 }
