@@ -11,7 +11,7 @@
   {% if source.status.last_job and (source.status.last_job.status == 'New' or source.status.last_job.status == 'Running') %}
     <li><a class="btn disabled" rel="tooltip" title="There already is an unrun job for this source"><i class="icon-refresh icon-large"></i> Reharvest</a></li>
   {% else %}
-    {% set locale = h.dump_json({'content': _('This will re-run the harvesting for this source. Any updates at the source will overwrite the local datasets. Please confirm you would like to start reharvesting.')}) %}
+    {% set locale = h.dump_json({'content': _('This will re-run the harvesting for this source. Any updates at the source will overwrite the local datasets. Sources with a large number of datasets may take a significant amount of time to finish harvesting. Please confirm you would like us to start reharvesting.')}) %}
     <li>
       <a href="{{ h.url_for('harvest_refresh', id=source.id) }}" class="btn" data-module="confirm-action" data-module-i18n="{{ locale }}">
         <i class="icon-refresh"></i>
