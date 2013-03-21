@@ -9,9 +9,15 @@
 
 {% block actions_content %}
   {% if source.status.last_job and (source.status.last_job.status == 'New' or source.status.last_job.status == 'Running') %}
-    <li><a class="btn disabled" rel="tooltip" title="There already is an unrun job for this source"><i class="icon-refresh icon-large"></i> Refresh</a></li>
+    <li><a class="btn disabled" rel="tooltip" title="There already is an unrun job for this source"><i class="icon-refresh icon-large"></i> Reharvest</a></li>
   {% else %}
-    <li>{{ h.nav_named_link(_('Refresh'), '{0}_refresh'.format(c.dataset_type), id=source.id, class_='btn', icon='refresh')}}</li>
+    {% set locale = h.dump_json({'content': _('This will re-run the harvesting for this source. Any updates at the source will overwrite the local datasets. Please confirm you would like to start reharvesting.')}) %}
+    <li>
+      <a href="{{ h.url_for('harvest_refresh', id=source.id) }}" class="btn" data-module="confirm-action" data-module-i18n="{{ locale }}">
+        <i class="icon-refresh"></i>
+        {{ _('Reharvest') }}
+      </a>
+    </li>
   {% endif %}
   <li>{{ h.nav_named_link(_('View harvest source'), '{0}_read'.format(c.dataset_type), id=source.name, class_='btn', icon='eye-open')}}</li>
 {% endblock %}
