@@ -28,10 +28,12 @@ def package_list_for_source(source_id):
 
     context = {'model': model, 'session': model.Session}
 
-    user_member_of_orgs = [org['id'] for org
+    owner_org =  p.toolkit.c.harvest_source.get('owner_org', '')
+    if owner_org:
+        user_member_of_orgs = [org['id'] for org
                    in h.organizations_available('read')]
-    if (p.toolkit.c.harvest_source and p.toolkit.c.harvest_source['owner_org'] in user_member_of_orgs):
-        context['ignore_capacity_check'] = True
+        if (p.toolkit.c.harvest_source and owner_org in user_member_of_orgs):
+            context['ignore_capacity_check'] = True
 
     query = logic.get_action('package_search')(context, search_dict)
 
