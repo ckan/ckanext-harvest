@@ -122,7 +122,11 @@ def gather_callback(channel, method, header, body):
             # Get a list of harvest object ids from the plugin
             job.gather_started = datetime.datetime.now()
 
-            harvest_object_ids = harvester.gather_stage(job)
+            try:
+                harvest_object_ids = harvester.gather_stage(job)
+            except Exception, e:
+                channel.basic_ack(method.delivery_tag)
+                raise
 
             job.gather_finished = datetime.datetime.now()
             job.save()
