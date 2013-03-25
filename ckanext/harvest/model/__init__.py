@@ -465,6 +465,11 @@ def migrate_v3_create_datasets():
             'source_type': source.type,
             'config': source.config,
             'frequency': source.frequency,
+            'author_email': '',
+            'license_id': '',
+            'maintainer_email': '',
+            'maintainer': '',
+            'author': ''
             }
         context['message'] = 'Created package for harvest source {0}'.format(source.id)
         try:
