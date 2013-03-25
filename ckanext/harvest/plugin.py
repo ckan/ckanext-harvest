@@ -135,43 +135,35 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
         p.toolkit.c.dataset_type = DATASET_TYPE_NAME
 
-    def form_to_db_schema_options(self, options):
-        '''
-            Similar to form_to_db_schema but with further options to allow
-            slightly different schemas, eg for creation or deletion on the API.
-        '''
-        schema = self.form_to_db_schema()
 
-        # Tweak the default schema to allow using the same id as the harvest source
-        # if creating datasets for the harvest sources
-        if self.startup:
-            schema['id'] = [unicode]
-        return schema
-
-    def form_to_db_schema(self):
+    def create_package_schema(self):
         '''
         Returns the schema for mapping package data from a form to a format
         suitable for the database.
         '''
-        from ckanext.harvest.logic.schema import harvest_source_form_to_db_schema
+        from ckanext.harvest.logic.schema import harvest_source_create_package_schema
+        schema = harvest_source_create_package_schema()
+        if self.startup:
+            schema['id'] = [unicode]
 
-        return harvest_source_form_to_db_schema()
+        return schema
 
-    def db_to_form_schema_options(self, options):
+    def update_package_schema(self):
         '''
-            Similar to db_to_form_schema but with further options to allow
-            slightly different schemas, eg for creation or deletion on the API.
+        Returns the schema for mapping package data from a form to a format
+        suitable for the database.
         '''
-        return self.db_to_form_schema()
+        return self.create_package_schema()
 
-    def db_to_form_schema(self):
+
+    def show_package_schema(self):
         '''
         Returns the schema for mapping package data from the database into a
         format suitable for the form
         '''
-        from ckanext.harvest.logic.schema import harvest_source_db_to_form_schema
+        from ckanext.harvest.logic.schema import harvest_source_show_package_schema
 
-        return harvest_source_db_to_form_schema()
+        return harvest_source_show_package_schema()
 
     def check_data_dict(self, data_dict, schema=None):
         '''Check if the return data is correct, mostly for checking out

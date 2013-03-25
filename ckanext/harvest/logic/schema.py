@@ -47,7 +47,7 @@ def harvest_source_schema():
 
     return schema
 
-def harvest_source_form_to_db_schema():
+def harvest_source_create_package_schema():
 
     schema = harvest_source_schema()
     schema['__extras'] = [harvest_source_extra_validator]
@@ -56,7 +56,7 @@ def harvest_source_form_to_db_schema():
 
     return schema
 
-def harvest_source_db_to_form_schema():
+def harvest_source_show_package_schema():
 
     schema = harvest_source_schema()
     schema.update({
