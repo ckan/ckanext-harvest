@@ -1,3 +1,4 @@
+import logging
 import urlparse
 import json
 
@@ -10,6 +11,8 @@ from ckanext.harvest.model import HarvestSource, UPDATE_FREQUENCIES
 from ckanext.harvest.interfaces import IHarvester
 
 from ckan.lib.navl.validators import keep_extras
+
+log = logging.getLogger(__name__)
 
 def harvest_source_id_exists(value, context):
 
@@ -149,7 +152,11 @@ def harvest_source_extra_validator(key,data,errors,context):
         if extra['key'] == 'config':
             # remove config extra so we can add back cleanly later
             package_extras.pop(num)
-            config_dict = json.loads(extra.get('value') or '{}')
+            try:
+                config_dict = json.loads(extra.get('value') or '{}')
+            except ValueError:
+                log.error('Wrong JSON provided in config, skipping')
+                config_dict = {}
             break
     else:
         config_dict = {}
