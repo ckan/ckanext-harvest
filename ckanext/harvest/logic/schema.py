@@ -56,6 +56,12 @@ def harvest_source_create_package_schema():
 
     return schema
 
+def harvest_source_update_package_schema():
+
+    schema = harvest_source_create_package_schema()
+
+    return schema
+
 def harvest_source_show_package_schema():
 
     schema = harvest_source_schema()

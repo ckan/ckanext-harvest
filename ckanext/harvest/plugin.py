@@ -153,8 +153,10 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
         Returns the schema for mapping package data from a form to a format
         suitable for the database.
         '''
-        return self.create_package_schema()
+        from ckanext.harvest.logic.schema import harvest_source_update_package_schema
+        schema = harvest_source_update_package_schema()
 
+        return schema
 
     def show_package_schema(self):
         '''

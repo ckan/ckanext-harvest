@@ -8,7 +8,7 @@ from ckanext.harvest.logic import HarvestJobExists
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
 from ckanext.harvest.model import (HarvestSource, HarvestJob)
 from ckanext.harvest.logic.dictization import harvest_job_dictize
-from ckanext.harvest.logic.schema import harvest_source_db_to_form_schema
+from ckanext.harvest.logic.schema import harvest_source_show_package_schema
 from ckanext.harvest.logic.action.get import harvest_source_list,harvest_job_list
 
 log = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ def harvest_source_create(context,data_dict):
     context['extras_as_string'] = True
     package_dict = logic.get_action('package_create')(context, data_dict)
 
-    context['schema'] = harvest_source_db_to_form_schema()
+    context['schema'] = harvest_source_show_package_schema()
     source = logic.get_action('package_show')(context, package_dict)
 
     return source
