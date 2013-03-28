@@ -167,26 +167,6 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
         return harvest_source_show_package_schema()
 
-    def check_data_dict(self, data_dict, schema=None):
-        '''Check if the return data is correct, mostly for checking out
-        if spammers are submitting only part of the form'''
-
-        surplus_keys_schema = ['__extras', '__junk', 'extras', 'notes',
-                               'extras_validation', 'save', 'return_to', 'type',
-                               'state', 'owner_org', 'frequency', 'config',
-                               'organization']
-
-        if not schema:
-            schema = self.form_to_db_schema()
-        schema_keys = schema.keys()
-        keys_in_schema = set(schema_keys) - set(surplus_keys_schema)
-
-        missing_keys = keys_in_schema - set(data_dict.keys())
-        if missing_keys:
-            msg = 'Incorrect form fields posted, missing %s' % missing_keys
-            log.info(msg)
-            raise dictization_functions.DataError(msg)
-
     def configure(self, config):
 
         self.startup = True
