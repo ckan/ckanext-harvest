@@ -10,7 +10,7 @@ from ckan import model
 from ckan.model import Session, Package
 from ckan.logic import ValidationError, NotFound, get_action
 
-from ckan.logic.schema import default_package_schema
+from ckan.logic.schema import default_create_package_schema
 from ckan.lib.navl.validators import ignore_missing,ignore
 from ckan.lib.munge import munge_title_to_name,substitute_ascii_equivalents
 
