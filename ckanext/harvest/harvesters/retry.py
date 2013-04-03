@@ -54,12 +54,11 @@ class HarvesterRetry(object):
         Finds all retries related to previous harvest_job and clears the marks.
         Only do this once you have successfully built a list of harvest_objects.
         '''
-        # Calling find_all_retries before this is mandatory. In fact, not
-        # calling it is totally pointless and certainly a bug.
+        # Not calling find_all_retries before this is really a bug.
         assert hasattr(self, '_objs')
         for obj in self._objs:
+            obj.harvest_object.retry_times = obj.harvest_object.retry_times + 1
+            obj.harvest_object.save()
             obj.delete()
-            # Should the retry count in the referenced harvest_object be
-            # increased? That would remain as an indicator of one-time failure.
         del self._objs
 
