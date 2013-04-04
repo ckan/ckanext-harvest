@@ -32,7 +32,8 @@ class HarvesterRetry(object):
         '''
         Marks a harvest object for retry later.
         '''
-        msg = HarvesterRetry._retry_message(harvest_object.harvest_job)
+        job = HarvestJob.get(harvest_object.harvest_job_id)
+        msg = HarvesterRetry._retry_message(job)
         err = HarvestObjectError(message=msg, object=harvest_object, stage=u'')
         err.save()
 
@@ -46,7 +47,7 @@ class HarvesterRetry(object):
             HarvestObjectError.message==msg).all()
         harvest_objects = []
         for obj in self._objs:
-            harvest_objects.append(obj.harvest_object)
+            harvest_objects.append(HarvestObject.get(obj.harvest_object_id))
         return harvest_objects
 
     def clear_retry_marks(self):
@@ -57,8 +58,12 @@ class HarvesterRetry(object):
         # Not calling find_all_retries before this is really a bug.
         assert hasattr(self, '_objs')
         for obj in self._objs:
-            obj.harvest_object.retry_times = obj.harvest_object.retry_times + 1
-            obj.harvest_object.save()
+            h = HarvestObject.get(obj.harvest_object_id)
+            if h.retry_times:
+                h.retry_times = h.retry_times + 1
+            else:
+                h.retry_times = 1
+            h.save()
             obj.delete()
         del self._objs
 
