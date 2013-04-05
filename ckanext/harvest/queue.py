@@ -11,6 +11,8 @@ from ckan.plugins import PluginImplementations
 from ckanext.harvest.model import HarvestJob, HarvestObject,HarvestGatherError
 from ckanext.harvest.interfaces import IHarvester
 
+import traceback
+
 log = logging.getLogger(__name__)
 assert not log.disabled
 
@@ -85,12 +87,12 @@ def gather_callback(message_data,message):
                     harvest_object_ids = harvester.gather_stage(job)
                     job.gather_finished = datetime.datetime.now()
                     job.save()
-                    log.debug('Received from plugin''s gather_stage: %r' % harvest_object_ids)
+                    #log.debug('Received from plugin''s gather_stage: %r' % harvest_object_ids)
                     if harvest_object_ids and len(harvest_object_ids) > 0:
                         for id in harvest_object_ids:
                             # Send the id to the fetch queue
                             publisher.send({'harvest_object_id':id})
-                            log.debug('Sent object %s to the fetch queue' % id)
+                            #log.debug('Sent object %s to the fetch queue' % id)
 
             if not harvester_found:
                 msg = 'No harvester could be found for source type %s' % job.source.type
@@ -104,8 +106,11 @@ def gather_callback(message_data,message):
         finally:
             publisher.close()
 
-    except KeyError:
+    except KeyError as e:
+        log.debug(traceback.format_exc(e))
         log.error('No harvest job id received')
+    except Exception as e:
+        log.debug(traceback.format_exc(e))
     finally:
         message.ack()
 
@@ -113,7 +118,7 @@ def gather_callback(message_data,message):
 def fetch_callback(message_data,message):
     try:
         id = message_data['harvest_object_id']
-        log.info('Received harvest object id: %s' % id)
+        #log.info('Received harvest object id: %s' % id)
 
         try:
             obj = HarvestObject.get(id)
@@ -124,17 +129,18 @@ def fetch_callback(message_data,message):
             # the Harvester interface, only if the source type
             # matches
             for harvester in PluginImplementations(IHarvester):
-                if harvester.info()['name'] == obj.source.type:
-
-                    # See if the plugin can fetch the harvest object
-                    obj.fetch_started = datetime.datetime.now()
-                    success = harvester.fetch_stage(obj)
-                    obj.fetch_finished = datetime.datetime.now()
-                    obj.save()
-                    #TODO: retry times?
-                    if success:
-                        # If no errors where found, call the import method
-                        harvester.import_stage(obj)
+                if obj:
+                    if harvester.info()['name'] == obj.source.type:
+        
+                        # See if the plugin can fetch the harvest object
+                        obj.fetch_started = datetime.datetime.now()
+                        success = harvester.fetch_stage(obj)
+                        obj.fetch_finished = datetime.datetime.now()
+                        obj.save()
+                        #TODO: retry times?
+                        if success:
+                            # If no errors where found, call the import method
+                            harvester.import_stage(obj)
 
 
 
