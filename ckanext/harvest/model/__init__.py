@@ -407,6 +407,13 @@ ALTER TABLE harvest_object_error
     Session.commit()
     log.info('Harvest tables migrated to v3')
 
+class PackageIdHarvestSourceIdMismatch(Exception):
+    """
+    The package created for the harvest source must match the id of the
+    harvest source
+    """
+    pass
+
 def migrate_v3_create_datasets():
     import pylons
     from paste.registry import Registry
@@ -465,15 +472,15 @@ def migrate_v3_create_datasets():
             'source_type': source.type,
             'config': source.config,
             'frequency': source.frequency,
-            'author_email': '',
-            'license_id': '',
-            'maintainer_email': '',
-            'maintainer': '',
-            'author': ''
             }
         context['message'] = 'Created package for harvest source {0}'.format(source.id)
         try:
-            logic.get_action('package_create')(context, package_dict)
+            new_package_id = logic.get_action('package_create')(context, package_dict)
+            if new_package_id != source.id or not context['return_id_only']:
+                # this check only makes sense if we are sure we are returning
+                # the package id not the package object
+                raise PackageIdHarvestSourceIdMismatch
+
             log.info('Created new package for source {0} ({1})'.format(source.id, source.url))
         except logic.ValidationError,e:
             log.error('Validation Error: %s' % str(e.error_summary))
