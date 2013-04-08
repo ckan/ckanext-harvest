@@ -161,7 +161,7 @@ def harvest_source_extra_validator(key,data,errors,context):
     else:
         config_dict = {}
     config_dict.update(extra_data)
-    if config_dict:
+    if config_dict and not extra_errors:
         config = json.dumps(config_dict)
         package_extras.append(dict(key='config',
                                    value=config))
