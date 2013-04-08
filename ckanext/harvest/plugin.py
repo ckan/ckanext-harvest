@@ -135,63 +135,37 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
         p.toolkit.c.dataset_type = DATASET_TYPE_NAME
 
-    def form_to_db_schema_options(self, options):
-        '''
-            Similar to form_to_db_schema but with further options to allow
-            slightly different schemas, eg for creation or deletion on the API.
-        '''
-        schema = self.form_to_db_schema()
 
-        # Tweak the default schema to allow using the same id as the harvest source
-        # if creating datasets for the harvest sources
-        if self.startup:
-            schema['id'] = [unicode]
-        return schema
-
-    def form_to_db_schema(self):
+    def create_package_schema(self):
         '''
         Returns the schema for mapping package data from a form to a format
         suitable for the database.
         '''
-        from ckanext.harvest.logic.schema import harvest_source_form_to_db_schema
+        from ckanext.harvest.logic.schema import harvest_source_create_package_schema
+        schema = harvest_source_create_package_schema()
+        if self.startup:
+            schema['id'] = [unicode]
 
-        return harvest_source_form_to_db_schema()
+        return schema
 
-    def db_to_form_schema_options(self, options):
+    def update_package_schema(self):
         '''
-            Similar to db_to_form_schema but with further options to allow
-            slightly different schemas, eg for creation or deletion on the API.
+        Returns the schema for mapping package data from a form to a format
+        suitable for the database.
         '''
-        return self.db_to_form_schema()
+        from ckanext.harvest.logic.schema import harvest_source_update_package_schema
+        schema = harvest_source_update_package_schema()
 
-    def db_to_form_schema(self):
+        return schema
+
+    def show_package_schema(self):
         '''
         Returns the schema for mapping package data from the database into a
         format suitable for the form
         '''
-        from ckanext.harvest.logic.schema import harvest_source_db_to_form_schema
+        from ckanext.harvest.logic.schema import harvest_source_show_package_schema
 
-        return harvest_source_db_to_form_schema()
-
-    def check_data_dict(self, data_dict, schema=None):
-        '''Check if the return data is correct, mostly for checking out
-        if spammers are submitting only part of the form'''
-
-        surplus_keys_schema = ['__extras', '__junk', 'extras', 'notes',
-                               'extras_validation', 'save', 'return_to', 'type',
-                               'state', 'owner_org', 'frequency', 'config',
-                               'organization']
-
-        if not schema:
-            schema = self.form_to_db_schema()
-        schema_keys = schema.keys()
-        keys_in_schema = set(schema_keys) - set(surplus_keys_schema)
-
-        missing_keys = keys_in_schema - set(data_dict.keys())
-        if missing_keys:
-            msg = 'Incorrect form fields posted, missing %s' % missing_keys
-            log.info(msg)
-            raise dictization_functions.DataError(msg)
+        return harvest_source_show_package_schema()
 
     def configure(self, config):
 
