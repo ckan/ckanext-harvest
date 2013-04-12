@@ -124,12 +124,15 @@ def gather_callback(channel, method, header, body):
 
             try:
                 harvest_object_ids = harvester.gather_stage(job)
-            except Exception, e:
+            except (Exception, KeyboardInterrupt):
                 channel.basic_ack(method.delivery_tag)
+                model.Session.query(HarvestObject).filter_by(
+                    harvest_job_id=job.id
+                ).update(dict(state='ERROR', current=False))
                 raise
-
-            job.gather_finished = datetime.datetime.now()
-            job.save()
+            finally:
+                job.gather_finished = datetime.datetime.now()
+                job.save()
 
             if not isinstance(harvest_object_ids, list):
                 log.error('Gather stage failed')
