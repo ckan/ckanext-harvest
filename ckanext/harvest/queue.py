@@ -128,7 +128,7 @@ def gather_callback(channel, method, header, body):
                 channel.basic_ack(method.delivery_tag)
                 model.Session.query(HarvestObject).filter_by(
                     harvest_job_id=job.id
-                ).update(dict(state='ERROR', current=False))
+                ).delete()
                 raise
             finally:
                 job.gather_finished = datetime.datetime.now()
