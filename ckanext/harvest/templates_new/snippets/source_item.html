@@ -22,6 +22,17 @@ Example:
 
 <li class="{{ item_class or "dataset-item" }}">
   <div class="dataset-content">
+
+    {% if within_organization and is_edit %}
+      {% set last_job = source.status.last_job %}
+      {% set error_count = last_job.stats['errored'] if last_job.stats else false %}
+      {% if error_count %}
+        <a href="{{ h.url_for(controller='ckanext.harvest.controllers.view:ViewController', action='show_last_job', source=source.name) }}" class="label label-important pull-right">
+          {{ error_count }} {{ _('errors') }}
+        </a>
+      {% endif %}
+    {% endif %}
+
     <h3 class="dataset-heading">
       {{ h.link_to(h.truncate(title, truncate_title), url) }}
       {% if source.get(state, '').startswith('draft') %}

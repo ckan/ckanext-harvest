@@ -2,7 +2,15 @@
 
 {% block primary_content_inner %}
   <section class="module-content">
-    <h1>Last Harvest Job</h1>
+    {% if source.organization %}
+      <p class="pull-right">
+        <a href="{{ h.url_for(controller='ckanext.harvest.controllers.organization:OrganizationController', action='source_list_edit', id=source.organization.name) }}" class="btn">
+          <i class="icon-arrow-left"></i>
+          {{ _('Back to harvest sources') }}
+        </a>
+      </p>
+    {% endif %}
+    <h1>{{ _('Last Harvest Job') }}</h1>
     {% if source.status.last_job %}
       {% snippet "snippets/job_details.html", job=source.status.last_job %}
       <div class="form-actions">
