@@ -23,6 +23,28 @@ log = logging.getLogger(__name__)
 
 class OrganizationController(GroupController):
 
+    def source_list_edit(self, id, limit=20):
+        self.group_type = 'organization'
+        context = {'model': model, 'session': model.Session,
+                   'user': c.user or c.author,
+                   'schema': self._db_to_form_schema(group_type=self.group_type),
+                   'for_view': True}
+        data_dict = {'id': id}
+
+        # unicode format (decoded from utf8)
+        q = c.q = request.params.get('q', '')
+
+        try:
+            c.group_dict = self._action('group_show')(context, data_dict)
+            c.group = context['group']
+        except p.toolkit.ObjectNotFound:
+            abort(404, p.toolkit._('Group not found'))
+        except p.toolkit.NotAuthorized:
+            abort(401, p.toolkit._('Unauthorized to read group %s') % id)
+
+        self._read(id, limit, dataset_type=DATASET_TYPE_NAME)
+        return render('source/org_source_list_edit.html')
+
     def source_list(self, id, limit=20):
         self.group_type = 'organization'
         context = {'model': model, 'session': model.Session,

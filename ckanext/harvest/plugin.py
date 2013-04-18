@@ -196,6 +196,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
         org_controller = 'ckanext.harvest.controllers.organization:OrganizationController'
         map.connect('{0}_org_list'.format(DATASET_TYPE_NAME), '/organization/' + DATASET_TYPE_NAME + '/' + '{id}', controller=org_controller, action='source_list')
+        map.connect('{0}_org_list_edit'.format(DATASET_TYPE_NAME), '/organization/' + DATASET_TYPE_NAME + '/edit/' + '{id}', controller=org_controller, action='source_list_edit')
 
         return map
 
