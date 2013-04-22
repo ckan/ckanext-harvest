@@ -125,6 +125,7 @@ class RedisPublisher(object):
         if self.routing_key == 'harvest_job_id':
             self.redis.lrem(self.routing_key, 0, value)
         self.redis.rpush(self.routing_key, value)
+
     def close(self):
         return
 
@@ -162,7 +163,11 @@ class RedisConsumer(object):
         return self.routing_key + ':' + message[self.routing_key]
     def basic_ack(self, message):
         self.redis.delete(self.persistance_key(message))
-
+    def queue_purge(self, queue):
+        self.redis.flushall()
+    def basic_get(self, queue):
+        body = self.redis.lpop(self.routing_key)
+        return (FakeMethod(body), self, body)
 
 def get_consumer(queue_name, routing_key):
 
