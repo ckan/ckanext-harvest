@@ -22,13 +22,23 @@ USERID = 'guest'
 PASSWORD = 'guest'
 HOSTNAME = 'localhost'
 VIRTUAL_HOST = '/'
+MQ_TYPE = 'ampq'
+REDIS_PORT = 6379
+REDIS_DB = 0
 
 # settings for AMQP
 EXCHANGE_TYPE = 'direct'
 EXCHANGE_NAME = 'ckan.harvest'
 
 def get_connection():
+    backend = config.get('ckan.harvest.mq.type', MQ_TYPE)
+    if backend == 'ampq':
+        return get_connection_ampq()
+    if backend == 'redis':
+        return get_connection_redis()
+    raise Exception('not a valid queue type %s' % backend)
 
+def get_connection_ampq():
     try:
         port = int(config.get('ckan.harvest.mq.port', PORT))
     except ValueError:
@@ -48,11 +58,45 @@ def get_connection():
 
     return pika.BlockingConnection(parameters)
 
+def get_connection_redis():
+    import redis
+    return redis.StrictRedis(host=config.get('ckan.harvest.mq.hostname', HOSTNAME),
+                          port=int(config.get('ckan.harvest.mq.port', REDIS_PORT)),
+                          db=int(config.get('ckan.harvest.mq.redis_db', REDIS_DB)))
+
 def purge_queues():
     connection = get_connection()
-    channel = connection.channel()
-    channel.queue_purge(queue='ckan.harvest.gather')
-    channel.queue_purge(queue='ckan.harvest.fetch')
+    if config.get('ckan.harvest.mq.type') == 'ampq':
+        channel = connection.channel()
+        channel.queue_purge(queue='ckan.harvest.gather')
+        channel.queue_purge(queue='ckan.harvest.fetch')
+        return
+    if config.get('ckan.harvest.mq.type') == 'redis':
+        connection.flushall()
+
+def resubmit_jobs():
+    if config.get('ckan.harvest.mq.type') != 'redis':
+        return
+    redis = get_connection()
+    harvest_object_pending = redis.keys('harvest_object_id:*')
+    for key in harvest_object_pending:
+        date_of_key = datetime.datetime.strptime(redis.get(key),
+                                                 "%Y-%m-%d %H:%M:%S.%f")
+        if (datetime.datetime.now() - date_of_key).seconds > 180: # 3 minuites for fetch and import max
+            redis.rpush('harvest_object_id',
+                json.dumps({'harvest_object_id': key.split(':')[-1]})
+            )
+            redis.delete(key)
+
+    harvest_jobs_pending = redis.keys('harvest_job_id:*')
+    for key in harvest_jobs_pending:
+        date_of_key = datetime.datetime.strptime(redis.get(key),
+                                                 "%Y-%m-%d %H:%M:%S.%f")
+        if (datetime.datetime.now() - date_of_key).seconds > 7200: # 3 hours for a gather
+            redis.rpush('harvest_job_id',
+                json.dumps({'harvest_job_id': key.split(':')[-1]})
+            )
+            redis.delete(key)
 
 class Publisher(object):
     def __init__(self, connection, channel, exchange, routing_key):
@@ -71,26 +115,73 @@ class Publisher(object):
     def close(self):
         self.connection.close()
 
+class RedisPublisher(object):
+    def __init__(self, redis, routing_key):
+        self.redis = redis ## not used
+        self.routing_key = routing_key
+    def send(self, body, **kw):
+        value = json.dumps(body)
+        # remove if already there
+        if self.routing_key == 'harvest_job_id':
+            self.redis.lrem(self.routing_key, 0, value)
+        self.redis.rpush(self.routing_key, value)
+
+    def close(self):
+        return
+
 def get_publisher(routing_key):
     connection = get_connection()
-    channel = connection.channel()
-    channel.exchange_declare(exchange=EXCHANGE_NAME, durable=True)
-    return Publisher(connection,
-                     channel,
-                     EXCHANGE_NAME,
-                     routing_key=routing_key)
+    backend = config.get('ckan.harvest.mq.type', MQ_TYPE)
+    if backend == 'ampq':
+        channel = connection.channel()
+        channel.exchange_declare(exchange=EXCHANGE_NAME, durable=True)
+        return Publisher(connection,
+                         channel,
+                         EXCHANGE_NAME,
+                         routing_key=routing_key)
+    if backend == 'redis':
+        return RedisPublisher(connection, routing_key)
 
+
+class FakeMethod(object):
+    ''' This is to act like the method returned by ampq'''
+    def __init__(self, message):
+        self.delivery_tag = message
+
+class RedisConsumer(object):
+    def __init__(self, redis, routing_key):
+        self.redis = redis
+        self.routing_key = routing_key
+    def consume(self, queue):
+        while True:
+            key, body = self.redis.blpop(self.routing_key)
+            self.redis.set(self.persistance_key(body),
+                           str(datetime.datetime.now()))
+            yield (FakeMethod(body), self, body)
+    def persistance_key(self, message):
+        message = json.loads(message)
+        return self.routing_key + ':' + message[self.routing_key]
+    def basic_ack(self, message):
+        self.redis.delete(self.persistance_key(message))
+    def queue_purge(self, queue):
+        self.redis.flushall()
+    def basic_get(self, queue):
+        body = self.redis.lpop(self.routing_key)
+        return (FakeMethod(body), self, body)
 
 def get_consumer(queue_name, routing_key):
 
     connection = get_connection()
-    channel = connection.channel()
+    backend = config.get('ckan.harvest.mq.type', MQ_TYPE)
 
-    channel.exchange_declare(exchange=EXCHANGE_NAME, durable=True)
-    channel.queue_declare(queue=queue_name, durable=True)
-    channel.queue_bind(queue=queue_name, exchange=EXCHANGE_NAME, routing_key=routing_key)
-
-    return channel
+    if backend == 'ampq':
+        channel = connection.channel()
+        channel.exchange_declare(exchange=EXCHANGE_NAME, durable=True)
+        channel.queue_declare(queue=queue_name, durable=True)
+        channel.queue_bind(queue=queue_name, exchange=EXCHANGE_NAME, routing_key=routing_key)
+        return channel
+    if backend == 'redis':
+        return RedisConsumer(connection, routing_key)
 
 
 def gather_callback(channel, method, header, body):

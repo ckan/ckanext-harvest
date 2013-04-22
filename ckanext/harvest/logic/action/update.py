@@ -20,7 +20,7 @@ from ckan import logic
 from ckan.logic import NotFound, check_access
 
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
-from ckanext.harvest.queue import get_gather_publisher
+from ckanext.harvest.queue import get_gather_publisher, resubmit_jobs
 
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 from ckanext.harvest.logic import HarvestJobExists
@@ -321,6 +321,8 @@ def harvest_jobs_run(context,data_dict):
                     if package_dict:
                         package_index.index_package(package_dict)
 
+    # resubmit old redis tasks
+    resubmit_jobs()
 
     # Check if there are pending harvest jobs
     jobs = harvest_job_list(context,{'source_id':source_id,'status':u'New'})
