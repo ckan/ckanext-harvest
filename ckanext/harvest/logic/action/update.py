@@ -105,7 +105,7 @@ def harvest_source_clear(context,data_dict):
 
     sql = '''begin;
 
-    select package_id as id into "{harvest_source_id}" from harvest_object where harvest_source_id = '{harvest_source_id}' ;
+    update package set state = 'to_delete' where id in (select package_id from harvest_object where harvest_source_id = '{harvest_source_id}') ;
 
     --harvest
     delete from harvest_object_error where harvest_object_id in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
@@ -114,14 +114,14 @@ def harvest_source_clear(context,data_dict):
     delete from harvest_gather_error where harvest_job_id in (select id from harvest_job where source_id = '{harvest_source_id}');
     delete from harvest_job where source_id = '{harvest_source_id}';
 
-    delete from package_role where package_id in (select id from "{harvest_source_id}" );
+    delete from package_role where package_id in (select id from package where state = 'to_delete' );
     delete from user_object_role where id not in (select user_object_role_id from package_role) and context = 'Package';
-    delete from resource_revision where resource_group_id in (select id from resource_group where package_id in (select id from "{harvest_source_id}"));
-    delete from resource_group_revision where package_id in (select id from "{harvest_source_id}");
-    delete from package_tag_revision where package_id in (select id from "{harvest_source_id}");
-    delete from member_revision where table_id in (select id from "{harvest_source_id}");
-    delete from package_extra_revision where package_id in (select id from "{harvest_source_id}");
-    delete from package_revision where id in (select id from "{harvest_source_id}");
+    delete from resource_revision where resource_group_id in (select id from resource_group where package_id in (select id from package where state = 'to_delete'));
+    delete from resource_group_revision where package_id in (select id from package where state = 'to_delete');
+    delete from package_tag_revision where package_id in (select id from package where state = 'to_delete');
+    delete from member_revision where table_id in (select id from package where state = 'to_delete');
+    delete from package_extra_revision where package_id in (select id from package where state = 'to_delete');
+    delete from package_revision where id in (select id from package where state = 'to_delete');
 
     delete from package_tag where id not in (select id from package_tag_revision);
     delete from resource where id not in (select id from resource_revision);
@@ -129,8 +129,6 @@ def harvest_source_clear(context,data_dict):
     delete from member where id not in (select id from member_revision);
     delete from resource_group where id not in (select id from resource_group_revision);
     delete from package where id not in (select id from package_revision);
-
-    drop table "{harvest_source_id}";
 
     commit;'''.format(harvest_source_id=harvest_source_id)
 
