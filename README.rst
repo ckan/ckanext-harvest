@@ -38,7 +38,7 @@ Run the following command to create the necessary tables in the database::
 The extension needs a user with sysadmin privileges to perform the
 harvesting jobs. You can create such a user running this command::
 
-    paster --plugin=ckan sysadmin add harvest
+    paster --plugin=ckan sysadmin add harvest --config=mysite.ini
 
 After installation, the harvest interface should be available under /harvest
 if you're logged in with sysadmin permissions, eg.
