@@ -1,0 +1,44 @@
+header.with-filter {
+  clear: both;
+  overflow: hidden;
+}
+header.with-filter h1 {
+  margin-top: 0;
+}
+[data-diff] {
+  color: #000;
+  background-color: #DDD;
+  text-shadow: none;
+  font-weight: normal;
+}
+[data-diff="added"] {
+  background-color: #9ee592;
+}
+[data-diff="updated"] {
+  background-color: #c5aaff;
+}
+[data-diff="deleted"] {
+  background-color: #e7a4a6;
+}
+.harvest-error-summary .count {
+  text-align: right;
+}
+.harvest-error-list h5 {
+  margin-top: 0;
+}
+.harvest-error-list .error {
+  padding-left: 20px;
+}
+.harvest-types label.radio {
+  font-weight: normal;
+  margin-bottom: 10px;
+}
+.harvest-types label.radio input {
+  top: 3px;
+}
+#source-new .controls {
+  margin-left: 135px;
+}
+#source-new .control-label {
+  width: 125px;
+}

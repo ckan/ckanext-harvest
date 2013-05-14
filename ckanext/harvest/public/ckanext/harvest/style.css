@@ -21,14 +21,15 @@ body.index.ViewController .content-outer {
 
 #new-harvest-source {
 	background: transparent url("images/icons/source_new.png") no-repeat 0px 0px;
-    padding-left: 20px;
-    margin-bottom: 10px;
-    font-weight: bold;
+  margin-top: 30px;
+  padding-left: 20px;
+  margin-bottom: 10px;
+  font-weight: bold;
 }
 
 #show-inactive-sources-content{
     float: right;
-    width: 150px;
+    width: 170px;
 }
 
 #show-inactive-sources-content input{
@@ -38,11 +39,21 @@ body.index.ViewController .content-outer {
 #show-inactive-sources-content label{
     float: left;
     font-weight: normal;
-    margin-left: 5px;
+    margin-right: 5px;
 }
 
 #harvest-sources th.action{
     font-style: italic;
+    width: 50px;
+    text-align: middle;
+}
+
+#harvest-sources th.url{
+    width: 200px;
+}
+
+#harvest-sources td.action{
+    text-align: middle;
 }
 
 #harvest-sources .inactive{
@@ -57,15 +68,6 @@ body.index.ViewController .content-outer {
     font-weight: bold;
 }
 
-#harvest-source-actions {
-    margin-bottom: 10px;
-}
-
-#harvest-source-actions img{
-    vertical-align: middle;
-    margin: 0 5px;
-}
-
 .source-state-active{
     font-weight:bold;
 }
@@ -75,9 +77,25 @@ body.index.ViewController .content-outer {
     color: red;
 }
 
+#harvest-source-actions {
+  margin: 20px 0;
+}
+
+#harvest-source-actions img{
+    vertical-align: middle;
+    margin: 0 5px;
+}
+
 #harvest-sources .publisher > td{
     background-color: #E3E3E3 !important;
     padding: 3px;
     font-weight: bold;
 }
 
+#harvest-source-details th {
+  width: 33%;
+}
+
+#source-new {
+  margin-top: 30px;
+}

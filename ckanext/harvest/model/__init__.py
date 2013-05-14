@@ -1,5 +1,6 @@
 import logging
 import datetime
+import uuid
 
 from sqlalchemy import event
 from sqlalchemy import distinct
@@ -11,14 +12,14 @@ from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import backref, relation
 
 from ckan import model
+from ckan import logic
 from ckan.model.meta import metadata,  mapper, Session
 from ckan.model.types import make_uuid
 from ckan.model.domain_object import DomainObject
 from ckan.model.package import Package
+from ckan.lib.munge import munge_title_to_name
 
-
-
-
+UPDATE_FREQUENCIES = ['MANUAL','MONTHLY','WEEKLY','BIWEEKLY','DAILY', 'ALWAYS']
 
 log = logging.getLogger(__name__)
 
@@ -36,6 +37,7 @@ harvest_job_table = None
 harvest_object_table = None
 harvest_gather_error_table = None
 harvest_object_error_table = None
+harvest_object_extra_table = None
 
 def setup():
 
@@ -53,6 +55,7 @@ def setup():
             harvest_object_table.create()
             harvest_gather_error_table.create()
             harvest_object_error_table.create()
+            harvest_object_extra_table.create()
 
             log.debug('Harvest tables created')
         else:
@@ -64,6 +67,17 @@ def setup():
             if not 'title' in [column['name'] for column in columns]:
                 log.debug('Harvest tables need to be updated')
                 migrate_v2()
+            if not 'frequency' in [column['name'] for column in columns]:
+                log.debug('Harvest tables need to be updated')
+                migrate_v3()
+
+            # Check if this instance has harvest source datasets
+            source_id = Session.query(HarvestSource.id).first()
+            if source_id:
+                pkg = Session.query(model.Package).filter(model.Package.id==source_id[0]).first()
+                if not pkg:
+                    log.debug('Creating harvest source datasets from existing sources')
+                    migrate_v3_create_datasets()
 
     else:
         log.debug('Harvest table creation deferred')
@@ -123,6 +137,9 @@ class HarvestObject(HarvestDomainObject):
 
     '''
 
+class HarvestObjectExtra(HarvestDomainObject):
+    '''Extra key value data for Harvest objects'''
+
 class HarvestGatherError(HarvestDomainObject):
     '''Gather errors are raised during the **gather** stage of a harvesting
        job.
@@ -152,6 +169,7 @@ def define_harvester_tables():
     global harvest_source_table
     global harvest_job_table
     global harvest_object_table
+    global harvest_object_extra_table
     global harvest_gather_error_table
     global harvest_object_error_table
 
@@ -166,6 +184,8 @@ def define_harvester_tables():
         Column('active',types.Boolean,default=True),
         Column('user_id', types.UnicodeText, default=u''),
         Column('publisher_id', types.UnicodeText, default=u''),
+        Column('frequency', types.UnicodeText, default=u'MANUAL'),
+        Column('next_run', types.DateTime),
     )
     # Was harvesting_job
     harvest_job_table = Table('harvest_job', metadata,
@@ -173,6 +193,7 @@ def define_harvester_tables():
         Column('created', types.DateTime, default=datetime.datetime.utcnow),
         Column('gather_started', types.DateTime),
         Column('gather_finished', types.DateTime),
+        Column('finished', types.DateTime),
         Column('source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
         Column('status', types.UnicodeText, default=u'New', nullable=False),
     )
@@ -185,12 +206,25 @@ def define_harvester_tables():
         Column('fetch_started', types.DateTime),
         Column('content', types.UnicodeText, nullable=True),
         Column('fetch_finished', types.DateTime),
+        Column('import_started', types.DateTime),
+        Column('import_finished', types.DateTime),
+        Column('state', types.UnicodeText, default=u'WAITING'),
         Column('metadata_modified_date', types.DateTime),
-        Column('retry_times',types.Integer),
+        Column('retry_times',types.Integer, default=0),
         Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
         Column('harvest_source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
-        Column('package_id', types.UnicodeText, ForeignKey('package.id'), nullable=True),
+        Column('package_id', types.UnicodeText, ForeignKey('package.id', deferrable=True), nullable=True),
+        Column('report_status', types.UnicodeText, nullable=True),
     )
+
+    # New table
+    harvest_object_extra_table = Table('harvest_object_extra', metadata,
+        Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
+        Column('harvest_object_id', types.UnicodeText, ForeignKey('harvest_object.id')),
+        Column('key',types.UnicodeText),
+        Column('value', types.UnicodeText),
+    )
+
     # New table
     harvest_gather_error_table = Table('harvest_gather_error',metadata,
         Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
@@ -202,8 +236,9 @@ def define_harvester_tables():
     harvest_object_error_table = Table('harvest_object_error',metadata,
         Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
         Column('harvest_object_id', types.UnicodeText, ForeignKey('harvest_object.id')),
-        Column('message',types.UnicodeText),
+        Column('message', types.UnicodeText),
         Column('stage', types.UnicodeText),
+        Column('line', types.Integer),
         Column('created', types.DateTime, default=datetime.datetime.utcnow),
     )
 
@@ -265,7 +300,18 @@ def define_harvester_tables():
         properties={
             'object':relation(
                 HarvestObject,
-                backref='errors'
+                backref=backref('errors', cascade='all,delete-orphan')
+            ),
+        },
+    )
+
+    mapper(
+        HarvestObjectExtra,
+        harvest_object_extra_table,
+        properties={
+            'object':relation(
+                HarvestObject,
+                backref=backref('extras', cascade='all,delete-orphan')
             ),
         },
     )
@@ -312,3 +358,129 @@ def migrate_v2():
 
     Session.commit()
     log.info('Harvest tables migrated to v2')
+
+
+def migrate_v3():
+    log.debug('Migrating harvest tables to v3. This may take a while...')
+    conn = Session.connection()
+
+    statement =  """CREATE TABLE harvest_object_extra (
+	id text NOT NULL,
+	harvest_object_id text,
+	"key" text,
+	"value" text
+);
+
+ALTER TABLE harvest_object
+	ADD COLUMN import_started timestamp without time zone,
+	ADD COLUMN import_finished timestamp without time zone,
+	ADD COLUMN "state" text,
+	ADD COLUMN "report_status" text;
+
+ALTER TABLE harvest_source
+	ADD COLUMN frequency text,
+    ADD COLUMN next_run timestamp without time zone;
+
+ALTER TABLE harvest_job
+    ADD COLUMN finished timestamp without time zone;
+
+ALTER TABLE harvest_object_extra
+	ADD CONSTRAINT harvest_object_extra_pkey PRIMARY KEY (id);
+
+ALTER TABLE harvest_object_extra
+	ADD CONSTRAINT harvest_object_extra_harvest_object_id_fkey FOREIGN KEY (harvest_object_id) REFERENCES harvest_object(id);
+
+UPDATE harvest_object set state = 'COMPLETE';
+UPDATE harvest_object set retry_times = 0;
+UPDATE harvest_object set report_status = 'new';
+UPDATE harvest_source set frequency = 'MANUAL';
+
+ALTER TABLE harvest_object DROP CONSTRAINT harvest_object_package_id_fkey;
+ALTER TABLE harvest_object
+    ADD CONSTRAINT harvest_object_package_id_fkey FOREIGN KEY (package_id) REFERENCES package(id) DEFERRABLE;
+
+ALTER TABLE harvest_object_error
+	ADD COLUMN line integer;
+
+"""
+    conn.execute(statement)
+    Session.commit()
+    log.info('Harvest tables migrated to v3')
+
+class PackageIdHarvestSourceIdMismatch(Exception):
+    """
+    The package created for the harvest source must match the id of the
+    harvest source
+    """
+    pass
+
+def migrate_v3_create_datasets():
+    import pylons
+    from paste.registry import Registry
+
+    from ckan.lib.cli import MockTranslator
+    registry = Registry()
+    registry.prepare()
+    registry.register(pylons.translator, MockTranslator())
+
+    sources = model.Session.query(HarvestSource).all()
+
+    if not sources:
+        log.debug('No harvest sources to migrate')
+        return
+
+    site_user_name = logic.get_action('get_site_user')({'model': model, 'ignore_auth': True},{})['name']
+
+    context = {'model': model,
+               'session': model.Session,
+               'user': site_user_name, # TODO: auth of existing sources?
+               'return_id_only': True,
+               'extras_as_string': True,
+              }
+
+    def gen_new_name(title):
+        name = munge_title_to_name(title).replace('_', '-')
+        while '--' in name:
+            name = name.replace('--', '-')
+        pkg_obj = Session.query(Package).filter(Package.name == name).first()
+        if pkg_obj:
+            return name + str(uuid.uuid4())[:5]
+        else:
+            return name
+
+    for source in sources:
+        if 'id' in context:
+            del context['id']
+        if 'package' in context:
+            del context['package']
+
+        # Check if package already exists
+
+        try:
+            logic.get_action('package_show')(context, {'id': source.id})
+            continue
+        except logic.NotFound:
+            pass
+
+        package_dict = {
+            'id': source.id,
+            'name': gen_new_name(source.title) if source.title else source.id,
+            'title': source.title if source.title else source.url,
+            'notes': source.description,
+            'url': source.url,
+            'type': 'harvest_source',
+            'source_type': source.type,
+            'config': source.config,
+            'frequency': source.frequency,
+            }
+        context['message'] = 'Created package for harvest source {0}'.format(source.id)
+        try:
+            new_package_id = logic.get_action('package_create')(context, package_dict)
+            if new_package_id != source.id or not context['return_id_only']:
+                # this check only makes sense if we are sure we are returning
+                # the package id not the package object
+                raise PackageIdHarvestSourceIdMismatch
+
+            log.info('Created new package for source {0} ({1})'.format(source.id, source.url))
+        except logic.ValidationError,e:
+            log.error('Validation Error: %s' % str(e.error_summary))

@@ -8,24 +8,50 @@ and adds a CLI and a WUI to CKAN to manage harvesting sources and jobs.
 Installation
 ============
 
-The harvest extension uses Message Queuing to handle the different gather
-stages.
+1. The harvest extension can use two different backends. You can choose whichever
+   you prefer depending on your needs:
 
-You will need to install the RabbitMQ server::
+   * `RabbitMQ <http://www.rabbitmq.com/>`_: To install it, run::
 
-    sudo apt-get install rabbitmq-server
+      sudo apt-get install rabbitmq-server
 
-Clone the repository and set up the extension::
+   * `Redis <http://redis.io/>`_: To install it, run::
 
-    git clone https://github.com/okfn/ckanext-harvest
-    cd ckanext-harvest
-    pip install -r pip-requirements.txt
-    python setup.py develop
+      sudo apt-get install redis-server
 
-Make sure the CKAN configuration ini file contains the harvest main plugin, as
-well as the harvester for CKAN instances (included with the extension)::
+2. Install the extension into your python environment.
+
+   *Note:* Depending on the CKAN core version you are targeting you will need to
+   use a different branch from the extension.
+
+   For a production site, use the `stable` branch, unless there is a specific
+   branch that targets the CKAN core version that you are using.
+
+   To target the latest CKAN core release::
+
+     (pyenv) $ pip install -e git+https://github.com/okfn/ckanext-harvest.git@stable#egg=ckanext-harvest
+
+   To target an old release (if a release branch exists, otherwise use `stable`)::
+
+     (pyenv) $ pip install -e git+https://github.com/okfn/ckanext-harvest.git@release-v1.8#egg=ckanext-harvest
+
+   To target CKAN `master`, use the extension `master` branch (ie no branch defined)::
+
+     (pyenv) $ pip install -e git+https://github.com/okfn/ckanext-harvest.git#egg=ckanext-harvest
+
+3. Install the rest of python modules required by the extension::
+
+     (pyenv) $ pip install -r pip-requirements.txt
+
+4. Make sure the CKAN configuration ini file contains the harvest main plugin, as
+   well as the harvester for CKAN instances if you need it (included with the extension)::
 
     ckan.plugins = harvest ckan_harvester
+
+5. Also define the backend that you are using with the ``ckan.harvest.mq.type``
+   option (it defaults to ``rabbitmq``)::
+
+    ckan.harvest.mq.type = redis
 
 
 Configuration
@@ -35,13 +61,7 @@ Run the following command to create the necessary tables in the database::
 
     paster --plugin=ckanext-harvest harvester initdb --config=mysite.ini
 
-The extension needs a user with sysadmin privileges to perform the
-harvesting jobs. You can create such a user running this command::
-
-    paster --plugin=ckan sysadmin add harvest --config=mysite.ini
-
-After installation, the harvest interface should be available under /harvest
-if you're logged in with sysadmin permissions, eg.
+After installation, the harvest source listing should be available under /harvest, eg:
 
 	http://localhost:5000/harvest
 
@@ -55,7 +75,7 @@ The following operations can be run from the command line using the
       harvester initdb
         - Creates the necessary tables in the database
 
-      harvester source {url} {type} [{active}] [{user-id}] [{publisher-id}]
+      harvester source {url} {type} [{config}] [{active}] [{user-id}] [{publisher-id}] [{frequency}]
         - create new harvest source
 
       harvester rmsource {id}
@@ -80,47 +100,42 @@ The following operations can be run from the command line using the
       harvester fetch_consumer
         - starts the consumer for the fetching queue
 
-      harvester import [{source-id}]
-        - perform the import stage with the last fetched objects, optionally
-          belonging to a certain source.
-          Please note that no objects will be fetched from the remote server.
-          It will only affect the last fetched objects already present in the
-          database.
+      harvester purge_queues
+        - removes all jobs from fetch and gather queue
+
+      harvester [-j] [--segments={segments}] import [{source-id}]
+        - perform the import stage with the last fetched objects, optionally belonging to a certain source.
+          Please note that no objects will be fetched from the remote server. It will only affect
+          the last fetched objects already present in the database.
+
+          If the -j flag is provided, the objects are not joined to existing datasets. This may be useful
+          when importing objects for the first time.
+
+          The --segments flag allows to define a string containing hex digits that represent which of
+          the 16 harvest object segments to import. e.g. 15af will run segments 1,5,a,f
 
       harvester job-all
         - create new harvest jobs for all active sources.
+
+      harvester reindex
+        - reindexes the harvest source datasets
 
 The commands should be run with the pyenv activated and refer to your sites configuration file (mysite.ini in this example)::
 
         paster --plugin=ckanext-harvest harvester sources --config=mysite.ini
 
-Authorization Profiles
-======================
+Authorization
+=============
 
-Starting from CKAN 1.6.1, the harvester extension offers the ability to use
-different authorization profiles. These can be defined in your ini file as::
+Starting from CKAN 2.0, harvest sources behave exactly the same as datasets
+(they are actually internally implemented as a dataset type). That means that
+can be searched and faceted, and that the same authorization rules can be
+applied to them. The default authorization settings are based on organizations
+(equivalent to the `publisher profile` found in old versions).
 
-    ckan.harvest.auth.profile = <profile_name>
-
-The two available profiles right now are:
-
-* `default`: This is the default profile, the same one that this extension has
-  used historically. Basically, only sysadmins can manage anything related to
-  harvesting, including creating and editing harvest sources or running harvest
-  jobs.
-
-* `publisher`: When using this profile, sysadmins can still perform any
-  harvesting related action, but in addition, users belonging to a publisher
-  (with role `admin`) can manage and run their own harvest sources and jobs.
-  Note that this requires CKAN core to also use the `publisher` authorization
-  profile, i.e you will also need to add::
-
-    ckan.auth.profile = publisher
-
-To know more about the CKAN publisher auth profile, visit:
-
- http://oldwiki.ckan.org/Working_with_the_publisher_auth_profile
-
+Have a look at the `Authorization <http://docs.ckan.org/en/latest/authorization.html>`_ 
+documentation on CKAN core to see how to configure your instance depending on
+your needs.
 
 The CKAN harvester
 ===================
@@ -224,6 +239,7 @@ following methods::
     '''
     implements(IHarvester)
 
+
     def info(self):
         '''
         Harvesting implementations must provide this method, which will return a
@@ -237,30 +253,53 @@ following methods::
           in the WUI.
         * description: a small description of what the harvester does. This will
           appear on the form as a guidance to the user.
-        * form_config_interface [optional]: Harvesters willing to store configuration
-          values in the database must provide this key. The only supported value is
-          'Text'. This will enable the configuration text box in the form. See also
-          the ``validate_config`` method.
 
         A complete example may be::
 
             {
                 'name': 'csw',
                 'title': 'CSW Server',
-                'description': 'A server that implements OGC\'s Catalog Service
+                'description': 'A server that implements OGC's Catalog Service
                                 for the Web (CSW) standard'
             }
 
-        returns: A dictionary with the harvester descriptors
+        :returns: A dictionary with the harvester descriptors
         '''
 
     def validate_config(self, config):
         '''
+
+        [optional]
+
         Harvesters can provide this method to validate the configuration entered in the
         form. It should return a single string, which will be stored in the database.
         Exceptions raised will be shown in the form's error messages.
 
-        returns A string with the validated configuration options
+        :param harvest_object_id: Config string coming from the form
+        :returns: A string with the validated configuration options
+        '''
+
+    def get_original_url(self, harvest_object_id):
+        '''
+
+        [optional]
+
+        This optional but very recommended method allows harvesters to return
+        the URL to the original remote document, given a Harvest Object id.
+        Note that getting the harvest object you have access to its guid as
+        well as the object source, which has the URL.
+        This URL will be used on error reports to help publishers link to the
+        original document that has the errors. If this method is not provided
+        or no URL is returned, only a link to the local copy of the remote
+        document will be shown.
+
+        Examples:
+            * For a CKAN record: http://{ckan-instance}/api/rest/{guid}
+            * For a WAF record: http://{waf-root}/{file-name}
+            * For a CSW record: http://{csw-server}/?Request=GetElementById&Id={guid}&...
+
+        :param harvest_object_id: HarvestObject id
+        :returns: A string with the URL to the original document
         '''
 
     def gather_stage(self, harvest_job):
@@ -270,7 +309,10 @@ following methods::
             - gathering all the necessary objects to fetch on a later.
               stage (e.g. for a CSW server, perform a GetRecords request)
             - creating the necessary HarvestObjects in the database, specifying
-              the guid and a reference to its source and job.
+              the guid and a reference to its job. The HarvestObjects need a
+              reference date with the last modified date for the resource, this
+              may need to be set in a different stage depending on the type of
+              source.
             - creating and storing any suitable HarvestGatherErrors that may
               occur.
             - returning a list with all the ids of the created HarvestObjects.
@@ -301,8 +343,7 @@ following methods::
             - performing any necessary action with the fetched object (e.g
               create a CKAN package).
               Note: if this stage creates or updates a package, a reference
-              to the package must be added to the HarvestObject.
-              Additionally, the HarvestObject must be flagged as current.
+              to the package should be added to the HarvestObject.
             - creating the HarvestObject - Package relation (if necessary)
             - creating and storing any suitable HarvestObjectErrors that may
               occur.
@@ -311,6 +352,7 @@ following methods::
         :param harvest_object: HarvestObject object
         :returns: True if everything went right, False if errors were found
         '''
+
 
 See the CKAN harvester for an example of how to implement the harvesting
 interface:
@@ -342,11 +384,12 @@ pending harvesting jobs::
 
       paster --plugin=ckanext-harvest harvester run --config=mysite.ini
 
-Note: If you don't have the `synchronous_search` plugin loaded, you will need
-to update the search index after the harvesting in order for the packages to
-appear in search results::
-
-      paster --plugin=ckan search-index rebuild
+The ``run`` command not only starts any pending harvesting jobs, but also
+flags those that are finished, allowing new jobs to be created on that particular
+source and refreshing the source statistics. That means that you will need to run
+this command before being able to create a new job on a source that was being
+harvested (On a production site you will tipically have a cron job that runs the
+command regularly, see next section).
 
 
 Setting up the harvesters on a production server
@@ -466,8 +509,8 @@ following steps with the one you are using.
       you defined in the `stdout_logfile` section to see what happened. Common errors include::
 
           `socket.error: [Errno 111] Connection refused`
-          RabbitMQ is not running:: 
-          
+          RabbitMQ is not running::
+
             sudo service rabbitmq-server start
 
 4. Once we have the two consumers running and monitored, we just need to create a cron job

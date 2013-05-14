@@ -1,0 +1,58 @@
+@import 'mixins.less';
+@import 'variables.less';
+
+header.with-filter {
+  clear: both;
+  overflow: hidden;
+  h1 {
+    margin-top: 0;
+  }
+}
+
+[data-diff] {
+  color: #000;
+  background-color: #DDD;
+  text-shadow: none;
+  font-weight: normal;
+}
+[data-diff="added"] {
+  background-color: @diffAdded;
+}
+[data-diff="updated"] {
+  background-color: @diffUpdated;
+}
+[data-diff="deleted"] {
+  background-color: @diffDeleted;
+}
+
+.harvest-error-summary {
+  .count {
+    text-align: right;
+  }
+}
+
+.harvest-error-list {
+  h5 {
+    margin-top: 0;
+  }
+  .error {
+    padding-left: 20px;
+  }
+}
+
+.harvest-types label.radio {
+  font-weight: normal;
+  margin-bottom: 10px;
+  input {
+    top: 3px;
+  }
+}
+
+#source-new {
+  .controls {
+    margin-left: 135px;
+  }
+  .control-label {
+    width: 125px;
+  }
+}

@@ -1,0 +1,25 @@
+{% extends "page.html" %}
+
+{% set source = c.pkg_dict or c.harvest_source %}
+{% if source %}
+    {% set authorized_user = h.check_access('harvest_source_update', {'id':source.id }) %}
+{% else %}
+    {% set authorized_user = h.check_access('harvest_source_create') %}
+{% endif %}
+
+{% block subtitle %}{{ source.title or source.name }}{% endblock %}
+
+{% block breadcrumb_content_root_selected %} class="active"{% endblock %}
+
+{% block breadcrumb_content %}
+  {% if source.organization %}
+    {% set org = source.organization %}
+    <li>{{ h.nav_named_link(_('Organizations'), 'organizations_index') }}</li>
+    <li>{{ h.nav_named_link(org.title or org.name|truncate(10), 'organization_read', id=org.name) }}</li>
+    <li>{{ h.nav_named_link(_('Harvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
+    <li{{ self.breadcrumb_content_root_selected() }}>{{ h.nav_named_link(c.harvest_source.title|truncate(10), '{0}_read'.format(c.dataset_type), id=c.harvest_source.name) }}</li>
+  {% else %}
+    <li>{{ h.nav_named_link(_('Harvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
+    <li{{ self.breadcrumb_content_root_selected() }}>{{ h.nav_named_link(c.harvest_source.title|truncate(30), '{0}_read'.format(c.dataset_type), id=c.harvest_source.name) }}</li>
+  {% endif %}
+{% endblock %}

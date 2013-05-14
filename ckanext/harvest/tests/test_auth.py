@@ -20,6 +20,7 @@ log = logging.getLogger(__name__)
 class HarvestAuthBaseCase():
     @classmethod
     def setup_class(cls):
+        raise SkipTest()
         harvest_model_setup()
 
     @classmethod

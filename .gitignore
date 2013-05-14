@@ -10,3 +10,4 @@ dist
 development.ini
 *.swp
 *~
+node_modules

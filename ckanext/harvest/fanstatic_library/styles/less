@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+
+// This file is only used to generate the harvest.css
+
+var path = require('path'),
+    nodeWatch = require('nodewatch'),
+    exec = require('child_process').exec,
+    watch = path.join(__dirname),
+    lastArg = process.argv.slice().pop();
+
+function now() {
+  return new Date().toISOString().replace('T', ' ').substr(0, 19);
+}
+
+function compile(event, filename) {
+  var start = Date.now();
+
+  exec('`npm bin`/lessc ' + __dirname + '/harvest.less > ' + __dirname + '/harvest.css', function (err, stdout, stderr) {
+    var duration = Date.now() - start;
+
+    if (err) {
+      console.log('An error occurred running the less command:');
+      console.log(err.message);
+    }
+    else if (stderr || stdout) {
+      console.log(stdout, stderr);
+    } else {
+      console.log('[%s] recompiled in %sms', now(), duration);
+    }
+  });
+}
+
+nodeWatch.add(watch).onChange(compile);
+compile();
