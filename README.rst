@@ -8,31 +8,48 @@ and adds a CLI and a WUI to CKAN to manage harvesting sources and jobs.
 Installation
 ============
 
-The harvest extension can use two different backends. You can choose whichever
-you prefer depending on your needs:
+1. The harvest extension can use two different backends. You can choose whichever
+   you prefer depending on your needs:
 
-* `RabbitMQ <http://www.rabbitmq.com/>`_: To install it, run::
+   * `RabbitMQ <http://www.rabbitmq.com/>`_: To install it, run::
 
-    sudo apt-get install rabbitmq-server
+      sudo apt-get install rabbitmq-server
 
-* `Redis <http://redis.io/>`_: To install it, run::
+   * `Redis <http://redis.io/>`_: To install it, run::
 
-    sudo apt-get install redis-server
+      sudo apt-get install redis-server
 
-Clone the repository and set up the extension::
+2. Install the extension into your python environment.
 
-    git clone https://github.com/okfn/ckanext-harvest
-    cd ckanext-harvest
-    pip install -r pip-requirements.txt
-    python setup.py develop
+   *Note:* Depending on the CKAN core version you are targeting you will need to
+   use a different branch from the extension.
 
-Make sure the CKAN configuration ini file contains the harvest main plugin, as
-well as the harvester for CKAN instances (included with the extension)::
+   For a production site, use the `stable` branch, unless there is a specific
+   branch that targets the CKAN core version that you are using.
+
+   To target the latest CKAN core release::
+
+     (pyenv) $ pip install -e git+https://github.com/okfn/ckanext-harvest.git@stable#egg=ckanext-harvest
+
+   To target an old release (if a release branch exists, otherwise use `stable`)::
+
+     (pyenv) $ pip install -e git+https://github.com/okfn/ckanext-harvest.git@release-v1.8#egg=ckanext-harvest
+
+   To target CKAN `master`, use the extension `master` branch (ie no branch defined)::
+
+     (pyenv) $ pip install -e git+https://github.com/okfn/ckanext-harvest.git#egg=ckanext-harvest
+
+3. Install the rest of python modules required by the extension::
+
+     (pyenv) $ pip install -r pip-requirements.txt
+
+4. Make sure the CKAN configuration ini file contains the harvest main plugin, as
+   well as the harvester for CKAN instances if you need it (included with the extension)::
 
     ckan.plugins = harvest ckan_harvester
 
-Also define the backend that you are using with the ``ckan.harvest.mq.type``
-option (it defaults to ``rabbitmq``)::
+5. Also define the backend that you are using with the ``ckan.harvest.mq.type``
+   option (it defaults to ``rabbitmq``)::
 
     ckan.harvest.mq.type = redis
 
