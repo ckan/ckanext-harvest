@@ -242,7 +242,10 @@ class CKANHarvester(HarvesterBase):
                 package_dict['tags'].extend([t for t in default_tags if t not in package_dict['tags']])
 
             # Ignore remote groups for the time being
-            del package_dict['groups']
+            package_dict.pop('groups', None)
+
+            # Ignore remote orgs for the time being
+            package_dict.pop('owner_org', None)
 
             # Set default groups if needed
             default_groups = self.config.get('default_groups',[])
