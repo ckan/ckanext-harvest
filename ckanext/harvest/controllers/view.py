@@ -60,6 +60,21 @@ class ViewController(BaseController):
 
         redirect(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
 
+    def clear(self, id):
+        try:
+            context = {'model':model, 'user':c.user, 'session':model.Session}
+            p.toolkit.get_action('harvest_source_clear')(context,{'id':id})
+            h.flash_success(_('Harvest source cleared'))
+        except p.toolkit.ObjectNotFound:
+            abort(404,_('Harvest source not found'))
+        except p.toolkit.NotAuthorized:
+            abort(401,self.not_auth_message)
+        except Exception, e:
+            msg = 'An error occurred: [%s]' % str(e)
+            h.flash_error(msg)
+
+        redirect(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
+
     def show_object(self,id):
 
         try:
