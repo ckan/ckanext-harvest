@@ -28,7 +28,12 @@ def harvest_source_update(context, data_dict):
                 'msg': pt._('User {0} not authorized to update harvest source {1}').format(user, source_id)}
 
 def harvest_source_clear(context, data_dict):
-    return {'success': False, 'msg': pt._('Only sysadmins can clear harvest source')}
+    '''
+        Authorization check for clearing a harvest source
+
+        It forwards to harvest_source_update
+    '''
+    return harvest_source_update(context, data_dict)
 
 def harvest_objects_import(context, data_dict):
     '''

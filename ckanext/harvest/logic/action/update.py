@@ -103,6 +103,10 @@ def harvest_source_clear(context,data_dict):
 
     harvest_source_id = source.id
 
+    # Clear all datasets from this source from the index
+    harvest_source_index_clear(context, data_dict)
+
+
     sql = '''begin; update package set state = 'to_delete' where id in (select package_id from harvest_object where harvest_source_id = '{harvest_source_id}');
     delete from harvest_object_error where harvest_object_id in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
     delete from harvest_object_extra where harvest_object_id in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
@@ -117,18 +121,25 @@ def harvest_source_clear(context,data_dict):
     delete from member_revision where table_id in (select id from package where state = 'to_delete');
     delete from package_extra_revision where package_id in (select id from package where state = 'to_delete');
     delete from package_revision where id in (select id from package where state = 'to_delete');
-    delete from package_tag where id in (select id from package where state = 'to_delete');
-    delete from resource where id in (select id from package where state = 'to_delete');
-    delete from package_extra where id in (select id from package where state = 'to_delete');
-    delete from member where id in (select id from package where state = 'to_delete');
-    delete from resource_group where id  in (select id from package where state = 'to_delete');
+    delete from package_tag where package_id in (select id from package where state = 'to_delete');
+    delete from resource where resource_group_id in (select id from resource_group where package_id in (select id from package where state = 'to_delete'));
+    delete from package_extra where package_id in (select id from package where state = 'to_delete');
+    delete from member where table_id in (select id from package where state = 'to_delete');
+    delete from resource_group where package_id  in (select id from package where state = 'to_delete');
     delete from package where id in (select id from package where state = 'to_delete'); commit;'''.format(harvest_source_id=harvest_source_id)
 
     model = context['model']
 
     model.Session.execute(sql)
 
-    harvest_source_index_clear(context, data_dict)
+    # Refresh the index for this source to update the status object
+    context.update({'validate': False, 'ignore_auth': True})
+    package_dict = logic.get_action('package_show')(context,
+            {'id': harvest_source_id})
+
+    if package_dict:
+        package_index = PackageSearchIndex()
+        package_index.index_package(package_dict)
 
     return {'id': harvest_source_id}
 
