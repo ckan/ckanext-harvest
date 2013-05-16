@@ -19,7 +19,7 @@
       </a>
     </li>
   {% endif %}
-    {% set locale = h.dump_json({'content': _('Warning: This will remove all datasets for this source, as well all previous job reports. Are you sure you want to continue?')}) %}
+    {% set locale = h.dump_json({'content': _('Warning: This will remove all datasets for this source, as well as all previous job reports. Are you sure you want to continue?')}) %}
     <li>
       <a href="{{ h.url_for('harvest_clear', id=source.id) }}" class="btn" data-module="confirm-action" data-module-i18n="{{ locale }}">
         {{ _('Clear') }}
