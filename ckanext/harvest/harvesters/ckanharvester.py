@@ -24,6 +24,9 @@ class CKANHarvester(HarvesterBase):
 
     api_version = '2'
 
+    def _get_api_offset(self):
+        return '/api/%s' % self.api_version
+
     def _get_rest_api_offset(self):
         return '/api/%s/rest' % self.api_version
 
@@ -241,14 +244,45 @@ class CKANHarvester(HarvesterBase):
                     package_dict['tags'] = []
                 package_dict['tags'].extend([t for t in default_tags if t not in package_dict['tags']])
 
-            # Ignore remote groups for the time being
-            del package_dict['groups']
+            if not 'groups' in package_dict:
+                package_dict['groups'] = []
+
+            remote_groups = self.config.get('remote_groups', None)
+            if not remote_groups:  # ignore remote groups
+                del package_dict['groups']
+            elif remote_groups == 'only_local' or remote_groups == 'create':
+                # check if remote groups exist locally, otherwise remove
+                validated_groups = []
+                version_1 = self.api_version == '1'
+                context = {'model': model, 'session': Session, 'user': 'harvest'}
+                for group_name in package_dict['groups']:
+                    try:
+                        data_dict = {'id': group_name}
+                        group = get_action('group_show')(context, data_dict)
+                        if version_1:
+                            validated_groups.append(group['name'])
+                        else:
+                            validated_groups.append(group['id'])
+                    except NotFound, e:
+                        log.info('Group %s is not available' % group_name)
+                        if remote_groups == 'create':
+                            url = harvest_object.source.url + self._get_api_offset()
+                            client = CkanClient(base_location=url)
+                            group = client.group_entity_get(group_name)
+                            for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name']:
+                                group.pop(key, None)
+                            get_action('group_create')(context, group)
+                            log.info('Group %s has been newly created' % group_name)
+                            if version_1:
+                                validated_groups.append(group['name'])
+                            else:
+                                validated_groups.append(group['id'])
+
+                package_dict['groups'] = validated_groups
 
             # Set default groups if needed
-            default_groups = self.config.get('default_groups',[])
+            default_groups = self.config.get('default_groups', [])
             if default_groups:
-                if not 'groups' in package_dict:
-                    package_dict['groups'] = []
                 package_dict['groups'].extend([g for g in default_groups if g not in package_dict['groups']])
 
             # Set default extras if needed
