@@ -8,7 +8,7 @@ from ckan import model
 import ckan.plugins as p
 import ckan.lib.helpers as h, json
 from ckan.lib.base import BaseController, c, \
-                          response, render, abort, redirect
+                          request, response, render, abort, redirect
 
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
 
@@ -28,9 +28,15 @@ class ViewController(BaseController):
     def delete(self,id):
         try:
             context = {'model':model, 'user':c.user}
+
+            context['clear_source'] = request.params.get('clear', '').lower() in (u'true', u'1')
+
             p.toolkit.get_action('harvest_source_delete')(context, {'id':id})
 
-            h.flash_success(_('Harvesting source successfully inactivated'))
+            if context['clear_source']:
+                h.flash_success(_('Harvesting source successfully cleared'))
+            else:
+                h.flash_success(_('Harvesting source successfully inactivated'))
 
             redirect(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
         except p.toolkit.ObjectNotFound:
