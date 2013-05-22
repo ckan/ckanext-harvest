@@ -9,8 +9,6 @@ from ckan.lib.helpers import json
 from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError, \
                                     HarvestObjectError
 
-from ckanclient import CkanClient
-
 import logging
 log = logging.getLogger(__name__)
 
@@ -23,9 +21,6 @@ class CKANHarvester(HarvesterBase):
     config = None
 
     api_version = '2'
-
-    def _get_api_offset(self):
-        return '/api/%s' % self.api_version
 
     def _get_rest_api_offset(self):
         return '/api/%s/rest' % self.api_version
@@ -45,6 +40,14 @@ class CKANHarvester(HarvesterBase):
             http_response = urllib2.urlopen(http_request)
 
             return http_response.read()
+        except Exception, e:
+            raise e
+
+    def _get_group(self, base_url, group_name):
+        url = base_url + self._get_api_offset() + '/group/' + group_name
+        try:
+            content = self._get_content(url)
+            return json.loads(content)
         except Exception, e:
             raise e
 
@@ -251,27 +254,28 @@ class CKANHarvester(HarvesterBase):
                 package_dict['groups'] = []
 
             remote_groups = self.config.get('remote_groups', None)
-            if not remote_groups:  # ignore remote groups
-                del package_dict['groups']
-            elif remote_groups == 'only_local' or remote_groups == 'create':
+            if remote_groups in ('only_local', 'create'):
                 # check if remote groups exist locally, otherwise remove
                 validated_groups = []
-                version_1 = self.api_version == '1'
                 context = {'model': model, 'session': Session, 'user': 'harvest'}
+
                 for group_name in package_dict['groups']:
                     try:
                         data_dict = {'id': group_name}
                         group = get_action('group_show')(context, data_dict)
-                        if version_1:
+                        if self.api_version == '1':
                             validated_groups.append(group['name'])
                         else:
                             validated_groups.append(group['id'])
                     except NotFound, e:
                         log.info('Group %s is not available' % group_name)
                         if remote_groups == 'create':
-                            url = harvest_object.source.url + self._get_api_offset()
-                            client = CkanClient(base_location=url)
-                            group = client.group_entity_get(group_name)
+                            try:
+                                group = _get_group(harvest_object.source.url, group_name)
+                            except:
+                                log.error('Could not get remote group %s' % group_name)
+                                continue
+
                             for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name']:
                                 group.pop(key, None)
                             get_action('group_create')(context, group)
