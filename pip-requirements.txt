@@ -3,5 +3,4 @@
 # to suit the packaging system.
 
 carrot==0.10.1
-ckanclient>=0.7
 lxml==2.2.4
