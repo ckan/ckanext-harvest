@@ -20,13 +20,13 @@ class CKANHarvester(HarvesterBase):
     '''
     config = None
 
-    api_version = '2'
+    api_version = 2
 
     def _get_rest_api_offset(self):
-        return '/api/%s/rest' % self.api_version
+        return '/api/%d/rest' % self.api_version
 
     def _get_search_api_offset(self):
-        return '/api/%s/search' % self.api_version
+        return '/api/%d/search' % self.api_version
 
     def _get_content(self, url):
         http_request = urllib2.Request(
@@ -53,7 +53,7 @@ class CKANHarvester(HarvesterBase):
             self.config = json.loads(config_str)
 
             if 'api_version' in self.config:
-                self.api_version = self.config['api_version']
+                self.api_version = int(self.config['api_version'])
 
             log.debug('Using config: %r', self.config)
         else:
@@ -263,7 +263,7 @@ class CKANHarvester(HarvesterBase):
                     try:
                         data_dict = {'id': group_name}
                         group = get_action('group_show')(context, data_dict)
-                        if self.api_version == '1':
+                        if self.api_version == 1:
                             validated_groups.append(group['name'])
                         else:
                             validated_groups.append(group['id'])
