@@ -1,6 +1,5 @@
 import re
-from lxml import etree
-from lxml.etree import XMLSyntaxError
+import xml.etree.ElementTree as etree
 from pylons.i18n import _
 
 from ckan import model
@@ -102,7 +101,7 @@ class ViewController(BaseController):
                 if not '<?xml' in content.split('\n')[0]:
                     content = u'<?xml version="1.0" encoding="UTF-8"?>\n' + content
 
-            except XMLSyntaxError:
+            except etree.ParseError:
                 try:
                     json.loads(obj['content'])
                     response.content_type = 'application/json; charset=utf-8'
