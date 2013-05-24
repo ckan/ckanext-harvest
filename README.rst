@@ -194,6 +194,12 @@ field. The currently supported configuration options are:
     Setting this property to true will force the harvester to gather all remote
     packages regardless of the modification date. Default is False.
 
+*   remote_groups: By default, remote groups are ignored. Setting this property
+    enables the harvester to import the remote groups. There are two alternatives.
+    Setting it to 'only_local' will just import groups which name/id is already
+    present in the local CKAN. Setting it to 'create' will make an attempt to
+    create the groups by copying the details from the remote CKAN.
+
 Here is an example of a configuration object (the one that must be entered in
 the configuration field)::
 
@@ -205,7 +211,8 @@ the configuration field)::
      "override_extras": true,
      "user":"harverster-user",
      "api_key":"<REMOTE_API_KEY>",
-     "read_only": true
+     "read_only": true,
+     "remote_groups": "only_local"
     }
 
 
