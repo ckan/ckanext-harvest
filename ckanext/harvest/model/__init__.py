@@ -468,7 +468,7 @@ def migrate_v3_create_datasets():
             'title': source.title if source.title else source.url,
             'notes': source.description,
             'url': source.url,
-            'type': 'harvest_source',
+            'type': 'harvest',
             'source_type': source.type,
             'config': source.config,
             'frequency': source.frequency,
