@@ -9,8 +9,6 @@ from ckan.lib.helpers import json
 from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError, \
                                     HarvestObjectError
 
-from ckanclient import CkanClient
-
 import logging
 log = logging.getLogger(__name__)
 
