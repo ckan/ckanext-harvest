@@ -1,6 +1,5 @@
 import re
-from lxml import etree
-from lxml.etree import XMLSyntaxError
+import xml.etree.ElementTree as etree
 from pylons.i18n import _
 
 from ckan.authz import Authorizer
@@ -238,7 +237,7 @@ class ViewController(BaseController):
                 content = re.sub('<\?xml(.*)\?>','', obj['content'])
                 etree.fromstring(content)
                 response.content_type = 'application/xml'
-            except XMLSyntaxError:
+            except etree.ParseError:
                 try:
                     json.loads(obj['content'])
                     response.content_type = 'application/json'
