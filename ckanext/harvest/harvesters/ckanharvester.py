@@ -42,6 +42,14 @@ class CKANHarvester(HarvesterBase):
 
         return http_response.read()
 
+    def _get_group(self, base_url, group_name):
+        url = base_url + self._get_rest_api_offset() + '/group/' + group_name
+        try:
+            content = self._get_content(url)
+            return json.loads(content)
+        except Exception, e:
+            raise e
+
     def _set_config(self,config_str):
         if config_str:
             self.config = json.loads(config_str)
@@ -241,17 +249,49 @@ class CKANHarvester(HarvesterBase):
                     package_dict['tags'] = []
                 package_dict['tags'].extend([t for t in default_tags if t not in package_dict['tags']])
 
-            # Ignore remote groups for the time being
-            package_dict.pop('groups', None)
+            if not 'groups' in package_dict:
+                package_dict['groups'] = []
+
+            remote_groups = self.config.get('remote_groups', None)
+            if remote_groups in ('only_local', 'create'):
+                # check if remote groups exist locally, otherwise remove
+                validated_groups = []
+                context = {'model': model, 'session': Session, 'user': 'harvest'}
+
+                for group_name in package_dict['groups']:
+                    try:
+                        data_dict = {'id': group_name}
+                        group = get_action('group_show')(context, data_dict)
+                        if self.api_version == '1':
+                            validated_groups.append(group['name'])
+                        else:
+                            validated_groups.append(group['id'])
+                    except NotFound, e:
+                        log.info('Group %s is not available' % group_name)
+                        if remote_groups == 'create':
+                            try:
+                                group = self._get_group(harvest_object.source.url, group_name)
+                            except:
+                                log.error('Could not get remote group %s' % group_name)
+                                continue
+
+                            for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name']:
+                                group.pop(key, None)
+                            get_action('group_create')(context, group)
+                            log.info('Group %s has been newly created' % group_name)
+                            if self.api_version == '1':
+                                validated_groups.append(group['name'])
+                            else:
+                                validated_groups.append(group['id'])
+
+                package_dict['groups'] = validated_groups
 
             # Ignore remote orgs for the time being
             package_dict.pop('owner_org', None)
 
             # Set default groups if needed
-            default_groups = self.config.get('default_groups',[])
+            default_groups = self.config.get('default_groups', [])
             if default_groups:
-                if not 'groups' in package_dict:
-                    package_dict['groups'] = []
                 package_dict['groups'].extend([g for g in default_groups if g not in package_dict['groups']])
 
             # Set default extras if needed
