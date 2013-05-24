@@ -72,12 +72,13 @@ def setup():
                 migrate_v3()
 
             # Check if this instance has harvest source datasets
-            source_id = Session.query(HarvestSource.id).first()
-            if source_id:
-                pkg = Session.query(model.Package).filter(model.Package.id==source_id[0]).first()
-                if not pkg:
-                    log.debug('Creating harvest source datasets from existing sources')
-                    migrate_v3_create_datasets()
+            source_ids = Session.query(HarvestSource.id).all()
+            source_package_ids = Session.query(model.Package.id).filter(model.Package.type==u'harvest').all()
+            sources_to_migrate = set(source_ids) - set(source_package_ids)
+            if sources_to_migrate:
+                log.debug('Creating harvest source datasets for %i existing sources', len(sources_to_migrate))
+                sources_to_migrate = [s[0] for s in sources_to_migrate]
+                migrate_v3_create_datasets(sources_to_migrate)
 
     else:
         log.debug('Harvest table creation deferred')
@@ -414,7 +415,7 @@ class PackageIdHarvestSourceIdMismatch(Exception):
     """
     pass
 
-def migrate_v3_create_datasets():
+def migrate_v3_create_datasets(source_ids=None):
     import pylons
     from paste.registry import Registry
 
@@ -423,11 +424,19 @@ def migrate_v3_create_datasets():
     registry.prepare()
     registry.register(pylons.translator, MockTranslator())
 
-    sources = model.Session.query(HarvestSource).all()
+    sources = []
+    if not source_ids:
+        sources = model.Session.query(HarvestSource).all()
+
+    else:
+        sources = model.Session.query(HarvestSource) \
+                  .filter(HarvestSource.id.in_(source_ids)) \
+                  .all()
 
     if not sources:
         log.debug('No harvest sources to migrate')
         return
+
 
     site_user_name = logic.get_action('get_site_user')({'model': model, 'ignore_auth': True},{})['name']
 
