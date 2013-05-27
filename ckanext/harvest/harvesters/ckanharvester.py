@@ -280,7 +280,7 @@ class CKANHarvester(HarvesterBase):
                                 group.pop(key, None)
                             get_action('group_create')(context, group)
                             log.info('Group %s has been newly created' % group_name)
-                            if self.api_version == '1':
+                            if self.api_version == 1:
                                 validated_groups.append(group['name'])
                             else:
                                 validated_groups.append(group['id'])
