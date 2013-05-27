@@ -53,7 +53,10 @@ class CKANHarvester(HarvesterBase):
             self.config = json.loads(config_str)
 
             if 'api_version' in self.config:
-                self.api_version = int(self.config['api_version'])
+                try:
+                    self.api_version = int(self.config['api_version'])
+                except ValueError:
+                    raise ValueError('api_version must be an integer')
 
             log.debug('Using config: %r', self.config)
         else:
