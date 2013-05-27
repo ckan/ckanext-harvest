@@ -159,7 +159,7 @@ field. The currently supported configuration options are:
 *   default_groups: A list of groups to which the harvested datasets will be
     added to. The groups must exist. Note that you must use ids or names to
     define the groups according to the API version you defined (names for version
-    '1', ids for version '2').
+    1, ids for version 2).
 
 *   default_extras: A dictionary of key value pairs that will be added to extras
     of the harvested datasets. You can use the following replacement strings,
