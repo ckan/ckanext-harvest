@@ -254,6 +254,12 @@ class CKANHarvester(HarvesterBase):
                     package_dict['groups'] = []
                 package_dict['groups'].extend([g for g in default_groups if g not in package_dict['groups']])
 
+            # Delete any extras whose values are not strings, as these cause
+            # errors from CKAN when trying to create/update the package.
+            for key in package_dict['extras'].keys():
+                if not isinstance(package_dict['extras'][key], basestring):
+                    del package_dict['extras'][key]
+
             # Set default extras if needed
             default_extras = self.config.get('default_extras',{})
             if default_extras:
