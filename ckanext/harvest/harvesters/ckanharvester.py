@@ -302,6 +302,18 @@ class CKANHarvester(HarvesterBase):
             if default_groups:
                 package_dict['groups'].extend([g for g in default_groups if g not in package_dict['groups']])
 
+            # Find any extras whose values are not strings and try to convert
+            # them to strings, as non-string extras are not allowed anymore in
+            # CKAN 2.0.
+            for key in package_dict['extras'].keys():
+                if not isinstance(package_dict['extras'][key], basestring):
+                    try:
+                        package_dict['extras'][key] = json.dumps(
+                                package_dict['extras'][key])
+                    except TypeError:
+                        # If converting to a string fails, just delete it.
+                        del package_dict['extras'][key]
+
             # Set default extras if needed
             default_extras = self.config.get('default_extras',{})
             if default_extras:
