@@ -254,11 +254,14 @@ class CKANHarvester(HarvesterBase):
                     package_dict['tags'] = []
                 package_dict['tags'].extend([t for t in default_tags if t not in package_dict['tags']])
 
-            if not 'groups' in package_dict:
-                package_dict['groups'] = []
-
             remote_groups = self.config.get('remote_groups', None)
-            if remote_groups in ('only_local', 'create'):
+            if not remote_groups in ('only_local', 'create'):
+                # Ignore remote groups
+                package_dict.pop('groups', None)
+            else:
+                if not 'groups' in package_dict:
+                    package_dict['groups'] = []
+
                 # check if remote groups exist locally, otherwise remove
                 validated_groups = []
                 context = {'model': model, 'session': Session, 'user': 'harvest'}
