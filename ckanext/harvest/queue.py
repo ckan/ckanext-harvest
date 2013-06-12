@@ -117,6 +117,8 @@ def fetch_callback(message_data,message):
 
         try:
             obj = HarvestObject.get(id)
+            if obj is None:
+                raise Exception
         except:
             log.error('Harvest object does not exist: %s' % id)
         else:
