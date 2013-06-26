@@ -21,7 +21,7 @@ def package_list_for_source(source_id):
     fq = 'harvest_source_id:{0}'.format(source_id)
     search_dict = {
         'fq' : fq,
-        'rows': 10,
+        'rows': limit,
         'sort': 'metadata_modified desc',
         'start': (page - 1) * limit,
     }
