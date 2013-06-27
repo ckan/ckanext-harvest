@@ -59,6 +59,7 @@ def harvest_source_create_package_schema():
 def harvest_source_update_package_schema():
 
     schema = harvest_source_create_package_schema()
+    schema['owner_org'] = [ignore_missing, owner_org_validator, unicode]
 
     return schema
 
