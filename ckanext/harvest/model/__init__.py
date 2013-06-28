@@ -72,8 +72,8 @@ def setup():
                 migrate_v3()
 
             # Check if this instance has harvest source datasets
-            source_ids = Session.query(HarvestSource.id).all()
-            source_package_ids = Session.query(model.Package.id).filter(model.Package.type==u'harvest').all()
+            source_ids = Session.query(HarvestSource.id).filter_by(active=True).all()
+            source_package_ids = Session.query(model.Package.id).filter_by(type=u'harvest', state='active').all()
             sources_to_migrate = set(source_ids) - set(source_package_ids)
             if sources_to_migrate:
                 log.debug('Creating harvest source datasets for %i existing sources', len(sources_to_migrate))
