@@ -211,7 +211,7 @@ def gather_callback(channel, method, header, body):
         if harvester.info()['name'] == job.source.type:
             harvester_found = True
             # Get a list of harvest object ids from the plugin
-            job.gather_started = datetime.datetime.now()
+            job.gather_started = datetime.datetime.utcnow()
 
             try:
                 harvest_object_ids = harvester.gather_stage(job)
@@ -222,7 +222,7 @@ def gather_callback(channel, method, header, body):
                 ).delete()
                 raise
             finally:
-                job.gather_finished = datetime.datetime.now()
+                job.gather_finished = datetime.datetime.utcnow()
                 job.save()
 
             if not isinstance(harvest_object_ids, list):
@@ -292,19 +292,19 @@ def fetch_callback(channel, method, header, body):
     channel.basic_ack(method.delivery_tag)
 
 def fetch_and_import_stages(harvester, obj):
-    obj.fetch_started = datetime.datetime.now()
+    obj.fetch_started = datetime.datetime.utcnow()
     obj.state = "FETCH"
     obj.save()
     success_fetch = harvester.fetch_stage(obj)
-    obj.fetch_finished = datetime.datetime.now()
+    obj.fetch_finished = datetime.datetime.utcnow()
     obj.save()
     if success_fetch:
         # If no errors where found, call the import method
-        obj.import_started = datetime.datetime.now()
+        obj.import_started = datetime.datetime.utcnow()
         obj.state = "IMPORT"
         obj.save()
         success_import = harvester.import_stage(obj)
-        obj.import_finished = datetime.datetime.now()
+        obj.import_finished = datetime.datetime.utcnow()
         if success_import:
             obj.state = "COMPLETE"
         else:
