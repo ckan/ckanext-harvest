@@ -217,9 +217,12 @@ def gather_callback(channel, method, header, body):
                 harvest_object_ids = harvester.gather_stage(job)
             except (Exception, KeyboardInterrupt):
                 channel.basic_ack(method.delivery_tag)
-                model.Session.query(HarvestObject).filter_by(
+                harvest_objects = model.Session.query(HarvestObject).filter_by(
                     harvest_job_id=job.id
-                ).delete()
+                )
+                for harvest_object in harvest_objects:
+                    model.Session.delete(harvest_object)
+                model.Session.commit()
                 raise
             finally:
                 job.gather_finished = datetime.datetime.utcnow()
