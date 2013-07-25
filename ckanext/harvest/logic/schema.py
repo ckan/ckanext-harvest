@@ -19,7 +19,6 @@ from ckanext.harvest.logic.validators import (harvest_source_url_validator,
                                               harvest_source_extra_validator,
                                               harvest_source_frequency_exists,
                                               dataset_type_exists,
-                                              harvest_source_convert_from_config,
                                               )
 
 def harvest_source_schema():
@@ -69,7 +68,7 @@ def harvest_source_show_package_schema():
     schema.update({
         'source_type': [convert_from_extras, ignore_missing],
         'frequency': [convert_from_extras, ignore_missing],
-        'config': [convert_from_extras, harvest_source_convert_from_config, ignore_missing],
+        'config': [convert_from_extras, ignore_missing],
         'owner_org': [ignore_missing]
     })
 
