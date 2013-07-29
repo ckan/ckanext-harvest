@@ -105,9 +105,9 @@ def harvest_job_create_all(context,data_dict):
     jobs = []
     # Create a new job for each, if there isn't already one
     for source in sources:
-        exists = _check_for_existing_jobs(context, source.id)
+        exists = _check_for_existing_jobs(context, source['id'])
         if exists:
-            log.info('Skipping source %s as it already has a pending job',source.id)
+            log.info('Skipping source %s as it already has a pending job', source['id'])
             continue
 
         job = harvest_job_create(context,{'source_id':source['id']})
