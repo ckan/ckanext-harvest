@@ -15,7 +15,7 @@ class Harvester(CkanCommand):
       harvester initdb
         - Creates the necessary tables in the database
 
-      harvester source {url} {type} [{config}] [{active}] [{user-id}] [{publisher-id}] [{frequency}]
+      harvester source {name} {url} {type} [{config}] [{active}] [{user-id}] [{publisher-id}] [{frequency}]
         - create new harvest source
 
       harvester rmsource {id}
@@ -156,34 +156,40 @@ class Harvester(CkanCommand):
     def create_harvest_source(self):
 
         if len(self.args) >= 2:
-            url = unicode(self.args[1])
+            name = unicode(self.args[1]
+        else:
+            print 'Please provide a source name'
+            sys.exit(1)
+        if len(self.args) >= 3:
+            url = unicode(self.args[2])
         else:
             print 'Please provide a source URL'
             sys.exit(1)
-        if len(self.args) >= 3:
-            type = unicode(self.args[2])
+        if len(self.args) >= 4:
+            type = unicode(self.args[3])
         else:
             print 'Please provide a source type'
             sys.exit(1)
-        if len(self.args) >= 4:
-            config = unicode(self.args[3])
+
+        if len(self.args) >= 5:
+            config = unicode(self.args[4])
         else:
             config = None
-        if len(self.args) >= 5:
-            active = not(self.args[4].lower() == 'false' or \
-                    self.args[4] == '0')
+        if len(self.args) >= 6:
+            active = not(self.args[5].lower() == 'false' or \
+                    self.args[5] == '0')
         else:
             active = True
-        if len(self.args) >= 6:
-            user_id = unicode(self.args[5])
+        if len(self.args) >= 7:
+            user_id = unicode(self.args[6])
         else:
             user_id = u''
-        if len(self.args) >= 7:
-            publisher_id = unicode(self.args[6])
+        if len(self.args) >= 8:
+            publisher_id = unicode(self.args[7])
         else:
             publisher_id = u''
-        if len(self.args) >= 8:
-            frequency = unicode(self.args[7])
+        if len(self.args) >= 9:
+            frequency = unicode(self.args[8])
             if not frequency:
                 frequency = 'MANUAL'
         else:
@@ -192,6 +198,7 @@ class Harvester(CkanCommand):
             data_dict = {
                     'url':url,
                     'source_type':type,
+                    'name':name,
                     'config':config,
                     'frequency':frequency,
                     'active':active,
