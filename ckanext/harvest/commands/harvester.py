@@ -306,14 +306,14 @@ class Harvester(CkanCommand):
             self.print_harvest_source(source)
 
     def print_harvest_source(self, source):
-        print 'Source id: %s' % source['id']
-        print '      url: %s' % source['url']
-        print '     type: %s' % source['type']
-        print '   active: %s' % source['active']
-        print '     user: %s' % source['user_id']
-        print 'publisher: %s' % source['publisher_id']
-        print 'frequency: %s' % source['frequency']
-        print '     jobs: %s' % source['status']['job_count']
+        print 'Source id: %s' % source.get('id')
+        print '      url: %s' % source.get('url')
+        print '     type: %s' % source.get('type')
+        print '   active: %s' % source.get('active')
+        print '     user: %s' % source.get('user_id')
+        print 'publisher: %s' % source.get('publisher_id')
+        print 'frequency: %s' % source.get('frequency')
+        print '     jobs: %s' % source.get('status').get('job_count')
         print ''
 
     def print_harvest_jobs(self, jobs):
@@ -323,9 +323,9 @@ class Harvester(CkanCommand):
             self.print_harvest_job(job)
 
     def print_harvest_job(self, job):
-        print '       Job id: %s' % job['id']
-        print '       status: %s' % job['status']
-        print '       source: %s' % job['source_id']
+        print '       Job id: %s' % job.get('id')
+        print '       status: %s' % job.get('status')
+        print '       source: %s' % job.get('source_id')
         print '      objects: %s' % len(job.get('objects', []))
 
         print 'gather_errors: %s' % len(job.get('gather_errors', []))
