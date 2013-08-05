@@ -282,7 +282,8 @@ def _get_logic_functions(module_root, logic_functions = {}):
             module = getattr(module, part)
 
         for key, value in module.__dict__.items():
-            if not key.startswith('_') and isinstance(value, types.FunctionType):
+            if not key.startswith('_') and  (hasattr(value, '__call__')
+                        and (value.__module__ == module_path)):
                 logic_functions[key] = value
 
     return logic_functions
