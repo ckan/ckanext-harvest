@@ -75,7 +75,7 @@ The following operations can be run from the command line using the
       harvester initdb
         - Creates the necessary tables in the database
 
-      harvester source {url} {type} [{config}] [{active}] [{user-id}] [{publisher-id}] [{frequency}]
+      harvester source {name} {url} {type} [{config}] [{active}] [{user-id}] [{publisher-id}] [{frequency}]
         - create new harvest source
 
       harvester rmsource {id}
