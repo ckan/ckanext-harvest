@@ -191,7 +191,7 @@ class Harvester(CkanCommand):
         try:
             data_dict = {
                     'url':url,
-                    'type':type,
+                    'source_type':type,
                     'config':config,
                     'frequency':frequency,
                     'active':active,
