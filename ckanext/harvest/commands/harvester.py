@@ -15,7 +15,7 @@ class Harvester(CkanCommand):
       harvester initdb
         - Creates the necessary tables in the database
 
-      harvester source {url} {type} [{config}] [{active}] [{user-id}] [{publisher-id}] [{frequency}]
+      harvester source {name} {url} {type} [{config}] [{active}] [{user-id}] [{publisher-id}] [{frequency}]
         - create new harvest source
 
       harvester rmsource {id}
@@ -156,34 +156,40 @@ class Harvester(CkanCommand):
     def create_harvest_source(self):
 
         if len(self.args) >= 2:
-            url = unicode(self.args[1])
+            name = unicode(self.args[1]
+        else:
+            print 'Please provide a source name'
+            sys.exit(1)
+        if len(self.args) >= 3:
+            url = unicode(self.args[2])
         else:
             print 'Please provide a source URL'
             sys.exit(1)
-        if len(self.args) >= 3:
-            type = unicode(self.args[2])
+        if len(self.args) >= 4:
+            type = unicode(self.args[3])
         else:
             print 'Please provide a source type'
             sys.exit(1)
-        if len(self.args) >= 4:
-            config = unicode(self.args[3])
+
+        if len(self.args) >= 5:
+            config = unicode(self.args[4])
         else:
             config = None
-        if len(self.args) >= 5:
-            active = not(self.args[4].lower() == 'false' or \
-                    self.args[4] == '0')
+        if len(self.args) >= 6:
+            active = not(self.args[5].lower() == 'false' or \
+                    self.args[5] == '0')
         else:
             active = True
-        if len(self.args) >= 6:
-            user_id = unicode(self.args[5])
+        if len(self.args) >= 7:
+            user_id = unicode(self.args[6])
         else:
             user_id = u''
-        if len(self.args) >= 7:
-            publisher_id = unicode(self.args[6])
+        if len(self.args) >= 8:
+            publisher_id = unicode(self.args[7])
         else:
             publisher_id = u''
-        if len(self.args) >= 8:
-            frequency = unicode(self.args[7])
+        if len(self.args) >= 9:
+            frequency = unicode(self.args[8])
             if not frequency:
                 frequency = 'MANUAL'
         else:
@@ -191,7 +197,8 @@ class Harvester(CkanCommand):
         try:
             data_dict = {
                     'url':url,
-                    'type':type,
+                    'source_type':type,
+                    'name':name,
                     'config':config,
                     'frequency':frequency,
                     'active':active,
@@ -299,14 +306,14 @@ class Harvester(CkanCommand):
             self.print_harvest_source(source)
 
     def print_harvest_source(self, source):
-        print 'Source id: %s' % source['id']
-        print '      url: %s' % source['url']
-        print '     type: %s' % source['type']
-        print '   active: %s' % source['active']
-        print '     user: %s' % source['user_id']
-        print 'publisher: %s' % source['publisher_id']
-        print 'frequency: %s' % source['frequency']
-        print '     jobs: %s' % source['status']['job_count']
+        print 'Source id: %s' % source.get('id')
+        print '      url: %s' % source.get('url')
+        print '     type: %s' % source.get('type')
+        print '   active: %s' % source.get('active')
+        print '     user: %s' % source.get('user_id')
+        print 'publisher: %s' % source.get('publisher_id')
+        print 'frequency: %s' % source.get('frequency')
+        print '     jobs: %s' % source.get('status').get('job_count')
         print ''
 
     def print_harvest_jobs(self, jobs):
@@ -316,9 +323,9 @@ class Harvester(CkanCommand):
             self.print_harvest_job(job)
 
     def print_harvest_job(self, job):
-        print '       Job id: %s' % job['id']
-        print '       status: %s' % job['status']
-        print '       source: %s' % job['source_id']
+        print '       Job id: %s' % job.get('id')
+        print '       status: %s' % job.get('status')
+        print '       source: %s' % job.get('source_id')
         print '      objects: %s' % len(job.get('objects', []))
 
         print 'gather_errors: %s' % len(job.get('gather_errors', []))
