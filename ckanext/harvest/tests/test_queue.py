@@ -54,7 +54,7 @@ class TestHarvester(SingletonPlugin):
 
         package_dict = logic.get_action(logic_function)(
             {'model': model, 'session': model.Session,
-             'user': user, 'api_version': 3},
+             'user': user, 'api_version': 3, 'ignore_auth': True},
             json.loads(harvest_object.content)
         )
 
@@ -103,7 +103,7 @@ class TestHarvestQueue(object):
         )['name']
 
         context = {'model': model, 'session': model.Session,
-                   'user': user, 'api_version': 3}
+                   'user': user, 'api_version': 3, 'ignore_auth': True}
 
         source_dict = {
             'title': 'Test Source',

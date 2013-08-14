@@ -206,7 +206,12 @@ class Harvester(CkanCommand):
                     'config': config,
                     }
 
-            context = {'model':model, 'session':model.Session, 'user': self.admin_user['name']}
+            context = {
+                'model':model,
+                'session':model.Session,
+                'user': self.admin_user['name'],
+                'ignore_auth': True,
+            }
             source = get_action('harvest_source_create')(context,data_dict)
             print 'Created new harvest source:'
             self.print_harvest_source(source)
