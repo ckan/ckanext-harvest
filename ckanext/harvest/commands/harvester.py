@@ -156,7 +156,7 @@ class Harvester(CkanCommand):
     def create_harvest_source(self):
 
         if len(self.args) >= 2:
-            name = unicode(self.args[1]
+            name = unicode(self.args[1])
         else:
             print 'Please provide a source name'
             sys.exit(1)
@@ -308,7 +308,7 @@ class Harvester(CkanCommand):
     def print_harvest_source(self, source):
         print 'Source id: %s' % source.get('id')
         print '      url: %s' % source.get('url')
-        print '     type: %s' % source.get('type')
+        print '     type: %s' % source.get('source_type')
         print '   active: %s' % source.get('active')
         print '     user: %s' % source.get('user_id')
         print 'publisher: %s' % source.get('publisher_id')
