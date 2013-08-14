@@ -1,5 +1,4 @@
 import sys
-import re
 from pprint import pprint
 
 from ckan import model
@@ -15,7 +14,7 @@ class Harvester(CkanCommand):
       harvester initdb
         - Creates the necessary tables in the database
 
-      harvester source {name} {url} {type} [{config}] [{active}] [{user-id}] [{publisher-id}] [{frequency}]
+      harvester source {name} {url} {type} [{title}] [{active}] [{owner_org}] [{frequency}] [{config}]
         - create new harvest source
 
       harvester rmsource {id}
@@ -172,38 +171,40 @@ class Harvester(CkanCommand):
             sys.exit(1)
 
         if len(self.args) >= 5:
-            config = unicode(self.args[4])
+            title = unicode(self.args[4])
         else:
-            config = None
+            title = None
         if len(self.args) >= 6:
             active = not(self.args[5].lower() == 'false' or \
                     self.args[5] == '0')
         else:
             active = True
         if len(self.args) >= 7:
-            user_id = unicode(self.args[6])
+            owner_org = unicode(self.args[6])
         else:
-            user_id = u''
+            owner_org = None
         if len(self.args) >= 8:
-            publisher_id = unicode(self.args[7])
-        else:
-            publisher_id = u''
-        if len(self.args) >= 9:
-            frequency = unicode(self.args[8])
+            frequency = unicode(self.args[7])
             if not frequency:
                 frequency = 'MANUAL'
         else:
             frequency = 'MANUAL'
+        if len(self.args) >= 9:
+            config = unicode(self.args[8])
+        else:
+            config = None
+
         try:
             data_dict = {
-                    'url':url,
-                    'source_type':type,
-                    'name':name,
-                    'config':config,
-                    'frequency':frequency,
+                    'name': name,
+                    'url': url,
+                    'source_type': type,
+                    'title': title,
                     'active':active,
-                    'user_id':user_id,
-                    'publisher_id':publisher_id}
+                    'owner_org': owner_org,
+                    'frequency': frequency,
+                    'config': config,
+                    }
 
             context = {'model':model, 'session':model.Session, 'user': self.admin_user['name']}
             source = get_action('harvest_source_create')(context,data_dict)
@@ -309,9 +310,8 @@ class Harvester(CkanCommand):
         print 'Source id: %s' % source.get('id')
         print '      url: %s' % source.get('url')
         print '     type: %s' % source.get('source_type')
-        print '   active: %s' % source.get('active')
-        print '     user: %s' % source.get('user_id')
-        print 'publisher: %s' % source.get('publisher_id')
+        print '   active: %s' % (source.get('active') if 'active' in source else source.get('state') == 'active')
+        print 'owner org: %s' % source.get('owner_org')
         print 'frequency: %s' % source.get('frequency')
         print '     jobs: %s' % source.get('status').get('job_count')
         print ''
