@@ -70,7 +70,7 @@ class Harvester(CkanCommand):
 
     summary = __doc__.split('\n')[0]
     usage = __doc__
-    max_args = 8
+    max_args = 9
     min_args = 0
 
     def __init__(self,name):
