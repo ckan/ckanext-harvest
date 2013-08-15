@@ -51,7 +51,8 @@ class CKANHarvester(HarvesterBase):
     def _set_config(self,config_str):
         if config_str:
             self.config = json.loads(config_str)
-            self.api_version = int(self.config['api_version'])
+            if 'api_version' in self.config:
+                self.api_version = int(self.config['api_version'])
 
             log.debug('Using config: %r', self.config)
         else:
@@ -243,6 +244,10 @@ class CKANHarvester(HarvesterBase):
 
         try:
             package_dict = json.loads(harvest_object.content)
+
+            if package_dict.get('type') == 'harvest':
+                log.warn('Remote dataset is a harvest source, ignoring...')
+                return False
 
             # Set default tags if needed
             default_tags = self.config.get('default_tags',[])
