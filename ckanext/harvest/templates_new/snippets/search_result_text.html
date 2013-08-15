@@ -1,0 +1,8 @@
+{% ckan_extends %}
+
+{% if type == 'harvest' %}
+  {% set text_query = ungettext('{number} harvest source found for "{query}"', '{number} harvest sources found for "{query}"', count) %}
+  {% set text_query_none = _('Sorry no harvest sources found for "{query}"') %}
+  {% set text_no_query = ungettext('{number} harvest source found', '{number} harvest sources found', count) %}
+  {% set text_no_query_none = _('Sorry no harvest sources found') %}
+{%- endif -%}
