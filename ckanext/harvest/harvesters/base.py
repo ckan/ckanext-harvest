@@ -147,6 +147,7 @@ class HarvesterBase(SingletonPlugin):
                 'user': user_name,
                 'api_version': api_version,
                 'schema': schema,
+                'ignore_auth': True,
             }
 
             tags = package_dict.get('tags', [])
