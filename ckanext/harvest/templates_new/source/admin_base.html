@@ -9,7 +9,7 @@
 
 {% block action_links %}
   {% set show_li = c.__version == '2.0' %}
-  {% if source.status.last_job and (source.status.last_job.status == 'New' or source.status.last_job.status == 'Running') %}
+  {% if source.status and source.status.last_job and (source.status.last_job.status == 'New' or source.status.last_job.status == 'Running') %}
     {{ '<li>' if show_li }}<a class="btn disabled" rel="tooltip" title="There already is an unrun job for this source"><i class="icon-refresh icon-large"></i> Reharvest</a>{{ '</li>' if show_li }}
   {% else %}
     {% set locale = h.dump_json({'content': _('This will re-run the harvesting for this source. Any updates at the source will overwrite the local datasets. Sources with a large number of datasets may take a significant amount of time to finish harvesting. Please confirm you would like us to start reharvesting.')}) %}
