@@ -38,7 +38,9 @@ Example:
     {% endif %}
 
     <p class="muted">
-      {{ _('Datasets') }}: {{ source.status.total_datasets }}
+      {% if source.status %}
+        {{ _('Datasets') }}: {{ source.status.total_datasets }}
+      {% endif %}
       {% if not within_organization and source.organization %}
       &mdash; {{ _('Organization') }}: {{ h.link_to(source.organization.title or source.organization.name, h.url_for('organization_read', id=source.organization.name)) }}</a>
       {% endif %}
