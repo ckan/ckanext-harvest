@@ -21,8 +21,10 @@
       {% endif %}
       <div class="nums">
         <dl>
-          <dt>{{ _('Datasets') }}</dt>
-          <dd>{{ c.harvest_source.status.total_datasets }}</dd>
+        {% if c.harvest_source.status %}
+            <dt>{{ _('Datasets') }}</dt>
+            <dd>{{ c.harvest_source.status.total_datasets }}</dd>
+        {% endif %}
         </dl>
       </div>
     </section>
