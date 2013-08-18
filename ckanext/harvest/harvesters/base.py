@@ -166,6 +166,8 @@ class HarvesterBase(SingletonPlugin):
                     log.info('Package with GUID %s exists and needs to be updated' % harvest_object.guid)
                     # Update package
                     context.update({'id':package_dict['id']})
+                    package_dict.setdefault('name',
+                            existing_package_dict['name'])
                     new_package = get_action('package_update_rest')(context, package_dict)
 
                 else:
