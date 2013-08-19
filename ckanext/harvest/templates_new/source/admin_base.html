@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block action_links %}
-  {% set show_li = c.__version == '2.0' %}
+  {% set show_li = c.__version__.startswith('2.0') %}
   {% if source.status and source.status.last_job and (source.status.last_job.status == 'New' or source.status.last_job.status == 'Running') %}
     {{ '<li>' if show_li }}<a class="btn disabled" rel="tooltip" title="There already is an unrun job for this source"><i class="icon-refresh icon-large"></i> Reharvest</a>{{ '</li>' if show_li }}
   {% else %}
