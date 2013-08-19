@@ -41,7 +41,7 @@
     {% block page_header %}
       <header class="module-content page-header">
         {# CKAN 2.1+ #}
-        {% if authorized_user and c.__version__ != '2.0' %}
+        {% if authorized_user and not c.__version__.startswith('2.0') %}
           {% block content_action %}
             <div class="content_action">
               {{ self.admin_link() }}
