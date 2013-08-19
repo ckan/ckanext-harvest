@@ -16,7 +16,7 @@
 {% block primary_content %}
    <section class="module">
     <div class="module-content">
-      {% if c.__version__ == '2.0' %}
+      {% if c.__version__.startswith('2.0') %}
       <form id="dataset-search" class="dataset-search clearfix" method="get" data-module="select-switch">
         <span class="control-group search-giant">
           <input type="text" class="search" name="q" value="{{ c.q }}" autocomplete="off" placeholder="{{ _('Search...') }}" />
