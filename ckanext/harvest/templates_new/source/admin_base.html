@@ -7,30 +7,42 @@
   <li class="active"><a href="">{{ _('Admin') }}</a></li>
 {% endblock %}
 
-{% block actions_content %}
+{% block action_links %}
+  {% set show_li = c.__version__.startswith('2.0') %}
   {% if source.status and source.status.last_job and (source.status.last_job.status == 'New' or source.status.last_job.status == 'Running') %}
-    <li><a class="btn disabled" rel="tooltip" title="There already is an unrun job for this source"><i class="icon-refresh icon-large"></i> Reharvest</a></li>
+    {{ '<li>' if show_li }}<a class="btn disabled" rel="tooltip" title="There already is an unrun job for this source"><i class="icon-refresh icon-large"></i> Reharvest</a>{{ '</li>' if show_li }}
   {% else %}
     {% set locale = h.dump_json({'content': _('This will re-run the harvesting for this source. Any updates at the source will overwrite the local datasets. Sources with a large number of datasets may take a significant amount of time to finish harvesting. Please confirm you would like us to start reharvesting.')}) %}
-    <li>
+    {{ '<li>' if show_li }}
       <a href="{{ h.url_for('harvest_refresh', id=source.id) }}" class="btn" data-module="confirm-action" data-module-i18n="{{ locale }}"
          title="{{ _('Start a new harvesting job for this harvest source now') }}">
         <i class="icon-refresh"></i>
         {{ _('Reharvest') }}
       </a>
-    </li>
+    {{ '</li>' if show_li }}
   {% endif %}
     {% set locale = h.dump_json({'content': _('Warning: This will remove all datasets for this source, as well as all previous job reports. Are you sure you want to continue?')}) %}
-    <li>
+    {{ '<li>' if show_li }}
       <a href="{{ h.url_for('harvest_clear', id=source.id) }}" class="btn" data-module="confirm-action" data-module-i18n="{{ locale }}"
          title="{{ _('Delete all harvest jobs and existing datasets from this source') }}">
         {{ _('Clear') }}
       </a>
-    </li>
+    {{ '</li>' if show_li }}
 
-  <li>{{ h.nav_named_link(_('View harvest source'), '{0}_read'.format(c.dataset_type), id=source.name, class_='btn', icon='eye-open')}}</li>
+  {{ '<li>' if show_li }}{{ h.nav_named_link(_('View harvest source'), '{0}_read'.format(c.dataset_type), id=source.name, class_='btn', icon='eye-open')}}{{ '</li>' if show_li }}
 {% endblock %}
 
+{# CKAN 2.0 #}
+{% block actions_content %}
+  {{ self.action_links() }}
+{% endblock %}
+
+{# CKAN 2.1 #}
+{% block content_action %}
+  <div class="content_action btn-group">
+    {{ self.action_links() }}
+  </div>
+{% endblock %}
 
 {% block page_header_tabs %}
   {{ h.build_nav_icon('{0}_admin'.format(c.dataset_type), _('Dashboard'), id=source.name, icon='dashboard') }}
