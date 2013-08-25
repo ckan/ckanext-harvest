@@ -45,7 +45,7 @@ Installation
      
 4. Install the ckanext-harvest package:
 
-     sudo python setup.py develop
+     $ sudo python setup.py develop
 
 5. Make sure the CKAN configuration ini file contains the harvest main plugin, as
    well as the harvester for CKAN instances if you need it (included with the extension)::
