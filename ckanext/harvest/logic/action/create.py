@@ -6,8 +6,9 @@ from ckan.logic import NotFound, check_access
 from ckanext.harvest.logic import HarvestJobExists
 
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
-from ckanext.harvest.model import (HarvestSource, HarvestJob)
-from ckanext.harvest.logic.dictization import harvest_job_dictize
+from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject)
+from ckanext.harvest.logic.dictization import (harvest_job_dictize,
+    harvest_object_dictize)
 from ckanext.harvest.logic.schema import harvest_source_show_package_schema
 from ckanext.harvest.logic.action.get import harvest_source_list,harvest_job_list
 
@@ -136,3 +137,19 @@ def _check_for_existing_jobs(context, source_id):
     exist = len(exist_new + exist_running) > 0
 
     return exist
+
+def harvest_object_create(context, data_dict):
+    check_access('harvest_object_create', context, data_dict)
+
+    job_id = data_dict['job_id']
+
+    job = HarvestJob.get(job_id)
+    if not job:
+        log.warn('Harvest job %s does not exist', job_id)
+        raise NotFound('Harvest job %s does not exist' % job_id)
+
+    guid = data_dict['guid']
+    content = data_dict.get('content', '')
+
+    obj = HarvestObject(guid=guid, content=content, job=job)
+    return harvest_object_dictize(obj, context)
