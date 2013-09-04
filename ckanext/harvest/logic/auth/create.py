@@ -52,3 +52,13 @@ def harvest_job_create_all(context, data_dict):
         return {'success': False, 'msg': pt._('Only sysadmins can create harvest jobs for all sources')}
     else:
         return {'success': True}
+
+def harvest_object_create(context, data_dict):
+    """
+        Auth check for creating a harvest object
+
+        only the sysadmins can create harvest objects
+    """
+    # sysadmins can run all actions if we've got to this point we're not a sysadmin
+    return {'success': False, 'msg': pt._('Only the sysadmins can create harvest objects')}
+
