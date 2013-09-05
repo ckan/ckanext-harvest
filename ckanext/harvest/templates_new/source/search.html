@@ -2,11 +2,21 @@
 
 {% block subtitle %}{{ _("Harvest sources") }}{% endblock %}
 
-{% block content_action %}
+{% block add_link %}
   <a href="{{ h.url_for('{0}_new'.format(c.dataset_type)) }}" class="btn btn-primary">
     <i class="icon-plus-sign-alt"></i>
     {{ _('Add Harvest Source') }}
   </a>
+{% endblock %}
+
+{# CKAN 2.0 #}
+{% block add_action_content %}
+  {{ self.add_link() }}
+{% endblock %}
+
+{# CKAN 2.1 #}
+{% block content_action %}
+  {{ self.add_link() }}
 {% endblock %}
 
 {% block breadcrumb_content %}
