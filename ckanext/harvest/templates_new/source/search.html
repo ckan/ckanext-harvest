@@ -2,7 +2,7 @@
 
 {% block subtitle %}{{ _("Harvest sources") }}{% endblock %}
 
-{% block add_action_content %}
+{% block content_action %}
   <a href="{{ h.url_for('{0}_new'.format(c.dataset_type)) }}" class="btn btn-primary">
     <i class="icon-plus-sign-alt"></i>
     {{ _('Add Harvest Source') }}
