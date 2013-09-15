@@ -219,3 +219,33 @@ class HarvesterBase(SingletonPlugin):
             self._save_object_error('%r'%e,harvest_object,'Import')
 
         return None
+
+    def _delete_package(self, harvest_object):
+        if self.config:
+            api_version = self.config.get('api_version','2')
+            #TODO: use site user when available
+            user_name = self.config.get('user',u'harvest')
+        else:
+            api_version = '2'
+            user_name = u'harvest'
+
+        context = {
+                'model':model,
+                'session':Session,
+                'user':'harvest',
+                'api_version': api_version,
+                #'extras_as_string': True, 
+                'user': user_name
+        }
+
+        harvest_object.current = False
+        get_action('package_delete')(context, {'id': harvest_object.package_id})
+        log.info('Deleted package {0} with guid {1}'.format(harvest_object.package_id, harvest_object.guid))
+        
+
+        previous_harvest = Session.query(HarvestObject) \
+                          .filter(HarvestObject.guid==harvest_object.guid) \
+                          .filter(HarvestObject.current==True) \
+                          .first()
+        previous_harvest.current = False
+        previous_harvest.save()
