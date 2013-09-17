@@ -146,19 +146,6 @@ def _check_for_existing_jobs(context, source_id):
 
     return exist
 
-def _get_harvest_source(source_id):
-    # Check if source exists
-    source = HarvestSource.get(source_id)
-    if not source:
-        log.warn('Harvest source %s does not exist', source_id)
-        raise NotFound('Harvest source %s does not exist' % source_id)
-
-    # Check if the source is active
-    if not source.active:
-        log.warn('Harvest job cannot be created for inactive source %s', source_id)
-        raise InactiveSource('Can not create jobs on inactive sources')
-    return source
-
 def harvest_object_create(context, data_dict):
     """ Create a new harvest object
 
