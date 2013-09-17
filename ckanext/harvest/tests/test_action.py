@@ -3,11 +3,15 @@ import copy
 import ckan
 import paste
 import pylons.test
+import factories
+import unittest
 
 from ckan import tests
 from ckan import plugins as p
+from ckan.plugins import toolkit
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.model as harvest_model
+
 
 class MockHarvesterForActionTests(p.SingletonPlugin):
     p.implements(IHarvester)
@@ -203,3 +207,58 @@ class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
         assert source.url == source_dict['url']
         assert source.type == source_dict['source_type']
 
+class TestHarvestObject(unittest.TestCase):
+    @classmethod
+    def setup_class(cls):
+        harvest_model.setup()
+
+    @classmethod
+    def teardown_class(cls):
+        ckan.model.repo.rebuild_db()
+
+    def test_create(self):
+        job = factories.HarvestJobFactory()
+        job.save()
+
+        context = {
+            'model' : ckan.model,
+            'session': ckan.model.Session,
+            'ignore_auth': True,
+        }
+        data_dict = {
+            'guid' : 'guid',
+            'content' : 'content',
+            'job_id' : job.id,
+            'extras' : { 'a key' : 'a value' },
+        }
+        harvest_object = toolkit.get_action('harvest_object_create')(
+            context, data_dict)
+
+        # fetch the object from database to check it was created
+        created_object = harvest_model.HarvestObject.get(harvest_object['id'])
+        assert created_object.guid == harvest_object['guid'] == data_dict['guid']
+
+    def test_create_bad_parameters(self):
+        source_a = factories.HarvestSourceFactory()
+        source_a.save()
+        job = factories.HarvestJobFactory()
+        job.save()
+
+        context = {
+            'model' : ckan.model,
+            'session': ckan.model.Session,
+            'ignore_auth': True,
+        }
+        data_dict = {
+            'job_id' : job.id,
+            'source_id' : source_a.id,
+            'extras' : 1
+        }
+        harvest_object_create = toolkit.get_action('harvest_object_create')
+        self.assertRaises(ckan.logic.ValidationError, harvest_object_create,
+            context, data_dict)
+
+        data_dict['extras'] = {'test': 1 }
+
+        self.assertRaises(ckan.logic.ValidationError, harvest_object_create,
+            context, data_dict)
