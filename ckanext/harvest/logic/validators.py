@@ -1,6 +1,5 @@
 import logging
 import urlparse
-import json
 
 from ckan.lib.navl.dictization_functions import Invalid, validate
 from ckan import model
@@ -143,38 +142,6 @@ def harvest_source_extra_validator(key,data,errors,context):
 
     for key, value in extra_errors.iteritems():
         errors[(key,)] = value
-
-    ## need to get config out of extras as __extra runs
-    ## after rest of validation
-    package_extras = data.get(('extras',), [])
-
-    for num, extra in enumerate(list(package_extras)):
-        if extra['key'] == 'config':
-            # remove config extra so we can add back cleanly later
-            package_extras.pop(num)
-            try:
-                config_dict = json.loads(extra.get('value') or '{}')
-            except ValueError:
-                log.error('Wrong JSON provided in config, skipping')
-                config_dict = {}
-            break
-    else:
-        config_dict = {}
-    config_dict.update(extra_data)
-    if config_dict and not extra_errors:
-        config = json.dumps(config_dict)
-        package_extras.append(dict(key='config',
-                                   value=config))
-        data[('config',)] = config
-    if package_extras:
-        data[('extras',)] = package_extras
-
-def harvest_source_convert_from_config(key,data,errors,context):
-    config = data[key]
-    if config:
-        config_dict = json.loads(config)
-        for key, value in config_dict.iteritems():
-            data[(key,)] = value
 
 def harvest_source_active_validator(value,context):
     if isinstance(value,basestring):

@@ -27,6 +27,9 @@ class Harvester(CkanCommand):
       harvester job {source-id}
         - create new harvest job
 
+      harvester job-sync {source-id}
+        - run a new harvest job synchronously with output to the console
+        
       harvester jobs
         - lists harvest jobs
 
@@ -93,8 +96,6 @@ class Harvester(CkanCommand):
         self.admin_user = get_action('get_site_user')(context,{})
 
 
-        print ''
-
         if len(self.args) == 0:
             self.parser.print_usage()
             sys.exit(1)
@@ -140,6 +141,8 @@ class Harvester(CkanCommand):
             pprint(harvesters_info)
         elif cmd == 'reindex':
             self.reindex()
+        elif cmd == 'job-sync':
+            self.run_job_synchronously()
         else:
             print 'Command %s not recognized' % cmd
 
@@ -304,6 +307,55 @@ class Harvester(CkanCommand):
         context = {'model': model, 'user': self.admin_user['name']}
         get_action('harvest_sources_reindex')(context,{})
 
+    def run_job_synchronously(self):
+        import datetime
+        from ckan import model
+        from ckan.plugins import PluginImplementations
+        from ckanext.harvest.interfaces import IHarvester
+        from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
+        from ckanext.harvest.queue import fetch_and_import_stages
+        from ckan.lib.search.index import PackageSearchIndex
+
+        package_index = PackageSearchIndex()
+        
+        source_id = unicode(self.args[1])
+        source = HarvestSource.get(source_id)
+        
+        for harvester in PluginImplementations(IHarvester):
+            if harvester.info()['name'] == source.type:
+                break
+        else:
+            print "No harvester found to handle the job."
+            return
+
+        job = HarvestJob()
+        job.source = source
+        job.status = "Running"
+        job.gather_started = datetime.datetime.utcnow()
+        job.save()
+        
+        try:
+            harvest_object_ids = harvester.gather_stage(job)
+            job.gather_finished = datetime.datetime.utcnow()
+            job.save()
+            
+            for obj_id in harvest_object_ids:
+                obj = HarvestObject.get(obj_id)
+                obj.retry_times += 1
+                obj.save()
+                fetch_and_import_stages(harvester, obj)
+                
+            job.finished = datetime.datetime.utcnow()
+            job.status = "Done"
+            job.save()
+
+            # And reindex the harvest source so it gets its counts right.
+            # Must call update on a data_dict as returned by package_show, not the class object.
+            package_index.index_package(get_action('package_show')({'validate': False, 'ignore_auth': True}, {'id': source.id}))
+        finally:
+            job.finished = datetime.datetime.utcnow()
+            if job.status != "Done": job.status = "Error"
+            job.save()
 
     def print_harvest_sources(self, sources):
         if sources:
