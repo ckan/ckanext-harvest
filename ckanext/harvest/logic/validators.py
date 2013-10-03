@@ -7,7 +7,7 @@ from ckan import model
 from ckan.plugins import PluginImplementations
 
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
-from ckanext.harvest.model import HarvestSource, UPDATE_FREQUENCIES
+from ckanext.harvest.model import HarvestSource, UPDATE_FREQUENCIES, HarvestJob
 from ckanext.harvest.interfaces import IHarvester
 
 from ckan.lib.navl.validators import keep_extras
@@ -21,6 +21,14 @@ def harvest_source_id_exists(value, context):
     if not result:
         raise Invalid('Harvest Source with id %r does not exist.' % str(value))
     return value
+
+def harvest_job_exists(value, context):
+    """Check if a harvest job exists and returns the model if it does"""
+    result = HarvestJob.get(value, None)
+
+    if not result:
+        raise Invalid('Harvest Job with id %r does not exist.' % str(value))
+    return result
 
 def _normalize_url(url):
     o = urlparse.urlparse(url)
@@ -195,4 +203,12 @@ def harvest_source_frequency_exists(value):
 def dataset_type_exists(value):
     if value != DATASET_TYPE_NAME:
         value = DATASET_TYPE_NAME
+    return value
+
+def harvest_object_extras_validator(value, context):
+    if not isinstance(value, dict):
+        raise Invalid('extras must be a dict')
+    for v in value.values():
+        if not isinstance(v, basestring):
+            raise Invalid('extras must be a dict of strings')
     return value
