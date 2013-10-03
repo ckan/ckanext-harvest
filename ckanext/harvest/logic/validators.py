@@ -22,13 +22,13 @@ def harvest_source_id_exists(value, context):
         raise Invalid('Harvest Source with id %r does not exist.' % str(value))
     return value
 
-def harvest_job_id_exists(value, context):
-
-    result = HarvestJob.get(value,None)
+def harvest_job_exists(value, context):
+    """Check if a harvest job exists and returns the model if it does"""
+    result = HarvestJob.get(value, None)
 
     if not result:
         raise Invalid('Harvest Job with id %r does not exist.' % str(value))
-    return value
+    return result
 
 def _normalize_url(url):
     o = urlparse.urlparse(url)
