@@ -296,8 +296,37 @@ class CKANHarvester(HarvesterBase):
 
                 package_dict['groups'] = validated_groups
 
-            # Ignore remote orgs for the time being
-            package_dict.pop('owner_org', None)
+            remote_orgs = self.config.get('remote_orgs', None)
+            if not remote_groups in ('only_local', 'create'):
+                # Ignore remote groups
+                package_dict.pop('owner_org', None)
+            else:
+                if not 'owner_org' in package_dict:
+                    package_dict['owner_org'] = None
+
+                # check if remote org exist locally, otherwise remove
+                validated_org = None
+                remote_org = package_dict['owner_org']
+                context = {'model': model, 'session': Session, 'user': 'harvest'}
+
+                try:
+                    data_dict = {'id': remote_org}
+                    org = get_action('organization_show')(context, data_dict)
+                    validated_org = org['id']
+                except NotFound, e:
+                    log.info('Organization %s is not available' % remote_org)
+                    if remote_groups == 'create':
+                        try:
+                            org = self._get_group(harvest_object.source.url, remote_org)
+                            for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name', 'type']:
+                                org.pop(key, None)
+                            get_action('organization_create')(context, org)
+                            log.info('Organization %s has been newly created' % remote_org)
+                            validated_org = org['id']
+                        except:
+                            log.error('Could not get remote org %s' % remote_org)
+
+                package_dict['owner_org'] = validated_org
 
             # Set default groups if needed
             default_groups = self.config.get('default_groups', [])
