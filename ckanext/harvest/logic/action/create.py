@@ -1,17 +1,26 @@
 import logging
 
+import ckan
 from ckan import logic
 
 from ckan.logic import NotFound, check_access
 from ckanext.harvest.logic import HarvestJobExists
 
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
-from ckanext.harvest.model import (HarvestSource, HarvestJob)
-from ckanext.harvest.logic.dictization import harvest_job_dictize
-from ckanext.harvest.logic.schema import harvest_source_show_package_schema
+from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject,
+    HarvestObjectExtra)
+from ckanext.harvest.logic.dictization import (harvest_job_dictize,
+    harvest_object_dictize)
+from ckanext.harvest.logic.schema import (harvest_source_show_package_schema,
+    harvest_object_create_schema)
 from ckanext.harvest.logic.action.get import harvest_source_list,harvest_job_list
 
 log = logging.getLogger(__name__)
+
+_validate = ckan.lib.navl.dictization_functions.validate
+
+class InactiveSource(Exception):
+    pass
 
 def harvest_source_create(context,data_dict):
     '''
@@ -136,3 +145,32 @@ def _check_for_existing_jobs(context, source_id):
     exist = len(exist_new + exist_running) > 0
 
     return exist
+
+def harvest_object_create(context, data_dict):
+    """ Create a new harvest object
+
+    :type guid: string (optional)
+    :type content: string (optional)
+    :type job_id: string 
+    :type source_id: string (optional)
+    :type package_id: string (optional)
+    :type extras: dict (optional)
+    """
+    check_access('harvest_object_create', context, data_dict)
+    data, errors = _validate(data_dict, harvest_object_create_schema(), context)
+
+    if errors:
+        raise logic.ValidationError(errors)
+
+    obj = HarvestObject(
+        guid=data.get('guid'),
+        content=data.get('content'),
+        job=data['job_id'],
+        harvest_source_id=data.get('source_id'),
+        package_id=data.get('package_id'),
+        extras=[ HarvestObjectExtra(key=k, value=v) 
+            for k, v in data.get('extras', {}).items() ]
+    )
+
+    obj.save()
+    return harvest_object_dictize(obj, context)

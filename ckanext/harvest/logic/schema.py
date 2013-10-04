@@ -20,6 +20,9 @@ from ckanext.harvest.logic.validators import (harvest_source_url_validator,
                                               harvest_source_frequency_exists,
                                               dataset_type_exists,
                                               harvest_source_convert_from_config,
+                                              harvest_source_id_exists,
+                                              harvest_job_exists,
+                                              harvest_object_extras_validator,
                                               )
 
 def harvest_source_schema():
@@ -74,3 +77,16 @@ def harvest_source_show_package_schema():
     })
 
     return schema
+
+def harvest_object_create_schema():
+    schema = {
+        'guid': [ignore_missing, unicode],
+        'content': [ignore_missing, unicode],
+        'state': [ignore_missing, unicode],
+        'job_id': [harvest_job_exists],
+        'source_id': [ignore_missing, harvest_source_id_exists],
+        'package_id': [ignore_missing, package_id_exists],
+        'extras': [ignore_missing, harvest_object_extras_validator],
+    }
+    return schema
+
