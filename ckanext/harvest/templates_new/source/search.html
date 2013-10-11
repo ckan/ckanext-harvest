@@ -2,11 +2,15 @@
 
 {% block subtitle %}{{ _("Harvest sources") }}{% endblock %}
 
+{% set authorized_user = h.check_access('harvest_source_create') %}
+
 {% block add_link %}
+  {% if authorized_user %}
   <a href="{{ h.url_for('{0}_new'.format(c.dataset_type)) }}" class="btn btn-primary">
     <i class="icon-plus-sign-alt"></i>
     {{ _('Add Harvest Source') }}
   </a>
+  {% endif %}
 {% endblock %}
 
 {# CKAN 2.0 #}
