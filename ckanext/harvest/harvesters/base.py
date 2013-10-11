@@ -191,8 +191,8 @@ class HarvesterBase(SingletonPlugin):
             except NotFound:
                 # Package needs to be created
 
-                # Check if name has not already been used
-                package_dict['name'] = self._gen_new_name(package_dict['title'])
+                # Set name if not already there
+                package_dict.setdefault('name', self._gen_new_name(package_dict['title']))
 
                 log.info('Package with GUID %s does not exist, let\'s create it' % harvest_object.guid)
                 harvest_object.current = True
