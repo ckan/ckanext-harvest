@@ -200,6 +200,12 @@ field. The currently supported configuration options are:
     present in the local CKAN. Setting it to 'create' will make an attempt to
     create the groups by copying the details from the remote CKAN.
 
+*   remote_orgs: By default, remote organizations are ignored. Setting this property
+    enables the harvester to import remote organizations. There are two alternatives.
+    Setting it to 'only_local' will just import organizations which id is already
+    present in the local CKAN. Setting it to 'create' will make an attempt to
+    create the organizations by copying the details from the remote CKAN.
+
 Here is an example of a configuration object (the one that must be entered in
 the configuration field)::
 
@@ -212,7 +218,8 @@ the configuration field)::
      "user":"harverster-user",
      "api_key":"<REMOTE_API_KEY>",
      "read_only": true,
-     "remote_groups": "only_local"
+     "remote_groups": "only_local",
+     "remote_orgs": "create"
     }
 
 
