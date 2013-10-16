@@ -314,9 +314,8 @@ class Harvester(CkanCommand):
     def print_harvest_source(self, source):
         print 'Source id: %s' % source.get('id')
         print '      url: %s' % source.get('url')
-        print '     type: %s' % source.get('source_type')
-        print '   active: %s' % (source.get('active') if 'active' in source else source.get('state') == 'active')
-        print 'owner org: %s' % source.get('owner_org')
+        print '     type: %s' % source.get('type')
+        print '   active: %s' % (source.get('active', source.get('state') == 'active'))
         print 'frequency: %s' % source.get('frequency')
         print '     jobs: %s' % source.get('status').get('job_count')
         print ''
