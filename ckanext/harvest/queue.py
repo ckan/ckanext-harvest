@@ -65,13 +65,15 @@ def get_connection_redis():
                           db=int(config.get('ckan.harvest.mq.redis_db', REDIS_DB)))
 
 def purge_queues():
+
+    backend = config.get('ckan.harvest.mq.type', MQ_TYPE)
     connection = get_connection()
-    if config.get('ckan.harvest.mq.type') in ('amqp', 'ampq'):
+    if backend in ('amqp', 'ampq'):
         channel = connection.channel()
         channel.queue_purge(queue='ckan.harvest.gather')
         channel.queue_purge(queue='ckan.harvest.fetch')
         return
-    if config.get('ckan.harvest.mq.type') == 'redis':
+    if backend == 'redis':
         connection.flushall()
 
 def resubmit_jobs():
