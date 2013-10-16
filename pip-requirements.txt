@@ -1,2 +1,1 @@
 pika==0.9.8
-factory-boy>=2
