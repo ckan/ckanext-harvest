@@ -296,10 +296,17 @@ class CKANHarvester(HarvesterBase):
 
                 package_dict['groups'] = validated_groups
 
+            context = {'model': model, 'session': Session, 'user': 'harvest'}
+
+            # Local harvest source organization
+            source_dataset = get_action('package_show')(context, {'id': harvest_object.source.id})
+            local_org = source_dataset.get('owner_org')
+
             remote_orgs = self.config.get('remote_orgs', None)
+
             if not remote_orgs in ('only_local', 'create'):
-                # Ignore remote groups
-                package_dict.pop('owner_org', None)
+                # Assign dataset to the source organization
+                package_dict['owner_org'] = local_org
             else:
                 if not 'owner_org' in package_dict:
                     package_dict['owner_org'] = None
@@ -307,8 +314,7 @@ class CKANHarvester(HarvesterBase):
                 # check if remote org exist locally, otherwise remove
                 validated_org = None
                 remote_org = package_dict['owner_org']
-                context = {'model': model, 'session': Session, 'user': 'harvest'}
-                
+
                 if remote_org:
                     try:
                         data_dict = {'id': remote_org}
@@ -327,7 +333,7 @@ class CKANHarvester(HarvesterBase):
                             except:
                                 log.error('Could not get remote org %s' % remote_org)
 
-                package_dict['owner_org'] = validated_org
+                package_dict['owner_org'] = validated_org or local_org
 
             # Set default groups if needed
             default_groups = self.config.get('default_groups', [])
