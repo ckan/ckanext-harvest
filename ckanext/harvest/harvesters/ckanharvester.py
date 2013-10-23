@@ -247,7 +247,7 @@ class CKANHarvester(HarvesterBase):
 
             if package_dict.get('type') == 'harvest':
                 log.warn('Remote dataset is a harvest source, ignoring...')
-                return False
+                return True
 
             # Set default tags if needed
             default_tags = self.config.get('default_tags',[])
