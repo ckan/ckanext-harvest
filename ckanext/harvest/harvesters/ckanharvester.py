@@ -40,7 +40,7 @@ class CKANHarvester(HarvesterBase):
             http_request.add_header('Authorization',api_key)
         http_response = urllib2.urlopen(http_request)
 
-        return http_response.read().decode('utf-8')
+        return http_response.read()
 
     def _get_group(self, base_url, group_name):
         url = base_url + self._get_rest_api_offset() + '/group/' + group_name
@@ -109,7 +109,7 @@ class CKANHarvester(HarvesterBase):
                 except NotFound,e:
                     raise ValueError('User not found')
 
-            for key in ('read_only','force_all'):
+            for key in ('read_only','force_all', 'manage_deletions'):
                 if key in config_obj:
                     if not isinstance(config_obj[key],bool):
                         raise ValueError('%s must be boolean' % key)
@@ -223,7 +223,7 @@ class CKANHarvester(HarvesterBase):
 
         try:
             object_ids = []
-            if int(self.config['api_version']) < 3:
+            if self.config.get('manage_deletions', False):
                 missing_ids = self._get_deleted_packages(base_rest_url + '/package', harvest_job)
                 if missing_ids:
                     object_ids.extend(missing_ids)
@@ -254,7 +254,7 @@ class CKANHarvester(HarvesterBase):
         for extra in harvest_object.extras:
             if extra.key == 'status' and extra.value == DELETE:
                 harvest_object.content = DELETE
-                harvest_object.package_id = harvest_object.guid
+                harvest_object.save()
                 return True
 
         # Get source URL

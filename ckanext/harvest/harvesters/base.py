@@ -8,7 +8,7 @@ from sqlalchemy.exc import InvalidRequestError
 from ckan import plugins as p
 from ckan import model
 from ckan.model import Session, Package
-from ckan.logic import ValidationError, NotFound, get_action
+from ckan.logic import ActionError, ValidationError, NotFound, get_action
 
 from ckan.logic.schema import default_create_package_schema
 from ckan.lib.navl.validators import ignore_missing,ignore
@@ -238,9 +238,14 @@ class HarvesterBase(SingletonPlugin):
                 'user': user_name
         }
 
-        harvest_object.current = False
-        get_action('package_delete')(context, {'id': harvest_object.package_id})
-        log.info('Deleted package {0} with guid {1}'.format(harvest_object.package_id, harvest_object.guid))
+        try:
+            harvest_object.current = False
+            get_action('package_delete')(context, {'id': harvest_object.package_id})
+            log.info('Deleted package {0} with guid {1}'.format(
+                harvest_object.package_id, harvest_object.guid))
+        except ActionError, e:
+            log.exception(e)
+            self._save_object_error('%r'%e, harvest_object, 'Import')
         
 
         previous_harvest = Session.query(HarvestObject) \
