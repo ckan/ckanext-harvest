@@ -8,7 +8,7 @@ from sqlalchemy.exc import InvalidRequestError
 from ckan import plugins as p
 from ckan import model
 from ckan.model import Session, Package
-from ckan.logic import ValidationError, NotFound, get_action
+from ckan.logic import ActionError, ValidationError, NotFound, get_action
 
 from ckan.logic.schema import default_create_package_schema
 from ckan.lib.navl.validators import ignore_missing,ignore
@@ -219,3 +219,38 @@ class HarvesterBase(SingletonPlugin):
             self._save_object_error('%r'%e,harvest_object,'Import')
 
         return None
+
+    def _delete_package(self, harvest_object):
+        if self.config:
+            api_version = self.config.get('api_version','2')
+            #TODO: use site user when available
+            user_name = self.config.get('user',u'harvest')
+        else:
+            api_version = '2'
+            user_name = u'harvest'
+
+        context = {
+                'model':model,
+                'session':Session,
+                'user':'harvest',
+                'api_version': api_version,
+                #'extras_as_string': True, 
+                'user': user_name
+        }
+
+        try:
+            harvest_object.current = False
+            get_action('package_delete')(context, {'id': harvest_object.guid})
+            log.info('Deleted package with guid {0}'.format(
+                harvest_object.guid))
+        except ActionError, e:
+            log.exception(e)
+            self._save_object_error('%r'%e, harvest_object, 'Import')
+        
+
+        previous_harvest = Session.query(HarvestObject) \
+                          .filter(HarvestObject.guid==harvest_object.guid) \
+                          .filter(HarvestObject.current==True) \
+                          .first()
+        previous_harvest.current = False
+        previous_harvest.save()

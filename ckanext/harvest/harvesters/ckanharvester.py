@@ -6,13 +6,15 @@ from ckan.model import Session, Package
 from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
 
-from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError, \
-                                    HarvestObjectError
+from ckanext.harvest.model import (HarvestJob, HarvestObject, HarvestGatherError,
+                                    HarvestObjectError, HarvestObjectExtra)
 
 import logging
 log = logging.getLogger(__name__)
 
 from base import HarvesterBase
+
+DELETE="delete"
 
 class CKANHarvester(HarvesterBase):
     '''
@@ -107,7 +109,7 @@ class CKANHarvester(HarvesterBase):
                 except NotFound,e:
                     raise ValueError('User not found')
 
-            for key in ('read_only','force_all'):
+            for key in ('read_only','force_all', 'manage_deletions'):
                 if key in config_obj:
                     if not isinstance(config_obj[key],bool):
                         raise ValueError('%s must be boolean' % key)
@@ -117,6 +119,37 @@ class CKANHarvester(HarvesterBase):
 
         return config
 
+    def _get_deleted_packages(self, url, harvest_job):
+        """
+        Checks all packages on remote instance against ones existing, returns
+        the difference
+        """
+        #Prior to 2.0, https://github.com/okfn/ckan/pull/545 the api returns
+        #a 403 error. Deletions will appear in the list of revisions in the 
+        #gather stage but will error during the import stage. In order to
+        #harvest < 2.0 ckan instances I've written this mess.
+        try:
+            content = self._get_content(url)
+            remote_packages = json.loads(content)
+        except urllib2.URLError, e:
+            self._save_gather_error('Unable to get all packages for URL: %s: %s' % (url, str(e)), harvest_job)
+        except ValueError, e:
+            self._save_gather_error('Unable to decode JSON for URL: %s: %s' % (url, str(e)), harvest_job)
+
+        existing_packages = model.Session.query(HarvestObject.guid) \
+                                  .filter(HarvestObject.current==True)\
+                                  .filter(HarvestObject.harvest_source_id==harvest_job.source_id)
+        deleted_ids = set(zip(*existing_packages.all())[0]) - set(remote_packages)
+
+        deleted = []
+        for package_id in deleted_ids:
+            harvest_object = HarvestObject(job=harvest_job,
+                extras=[HarvestObjectExtra(key='status', value=DELETE)],
+                guid=package_id
+            )
+            harvest_object.save()
+            deleted.append(harvest_object.id)
+        return deleted
 
     def gather_stage(self,harvest_job):
         log.debug('In CKANHarvester gather_stage (%s)' % harvest_job.source.url)
@@ -190,6 +223,11 @@ class CKANHarvester(HarvesterBase):
 
         try:
             object_ids = []
+            if self.config.get('manage_deletions', False):
+                missing_ids = self._get_deleted_packages(base_rest_url + '/package', harvest_job)
+                if missing_ids:
+                    object_ids.extend(missing_ids)
+
             if len(package_ids):
                 for package_id in package_ids:
                     # Create a new HarvestObject for this identifier
@@ -197,6 +235,7 @@ class CKANHarvester(HarvesterBase):
                     obj.save()
                     object_ids.append(obj.id)
 
+            if package_ids or missing_ids:
                 return object_ids
 
             else:
@@ -211,6 +250,12 @@ class CKANHarvester(HarvesterBase):
         log.debug('In CKANHarvester fetch_stage')
 
         self._set_config(harvest_object.job.source.config)
+
+        for extra in harvest_object.extras:
+            if extra.key == 'status' and extra.value == DELETE:
+                harvest_object.content = DELETE
+                harvest_object.save()
+                return True
 
         # Get source URL
         url = harvest_object.source.url.rstrip('/')
@@ -241,6 +286,14 @@ class CKANHarvester(HarvesterBase):
             return False
 
         self._set_config(harvest_object.job.source.config)
+
+        if harvest_object.content == DELETE:
+            try:
+                self._delete_package(harvest_object)
+            except Exception, e:
+                self._save_object_error('%r'%e,harvest_object,'Import')
+                return False
+            return True
 
         try:
             package_dict = json.loads(harvest_object.content)
