@@ -240,9 +240,9 @@ class HarvesterBase(SingletonPlugin):
 
         try:
             harvest_object.current = False
-            get_action('package_delete')(context, {'id': harvest_object.package_id})
-            log.info('Deleted package {0} with guid {1}'.format(
-                harvest_object.package_id, harvest_object.guid))
+            get_action('package_delete')(context, {'id': harvest_object.guid})
+            log.info('Deleted package with guid {0}'.format(
+                harvest_object.guid))
         except ActionError, e:
             log.exception(e)
             self._save_object_error('%r'%e, harvest_object, 'Import')
