@@ -18,7 +18,7 @@ def package_list_for_source(source_id):
     '''
     limit = 20
     page = int(request.params.get('page', 1))
-    fq = 'harvest_source_id:{0}'.format(source_id)
+    fq = 'harvest_source_id:"{0}"'.format(source_id)
     search_dict = {
         'fq' : fq,
         'rows': limit,
