@@ -203,8 +203,9 @@ field. The currently supported configuration options are:
 *   manage_deletions: By default, if a package is deleted on a remote site and
     the remote site is a version of CKAN before 2.0. The package will not be
     deleted when harvested. Setting this will delete any packages that are not
-    on the remote site. For remote sites running a version greater than CKAN 2.0
-    the packages will be deleted by default.
+    on the remote site package list. For remote sites running a version greater
+    than CKAN 2.0 the packages will be deleted by default and there is no need to
+    set this option.
 
 Here is an example of a configuration object (the one that must be entered in
 the configuration field)::
