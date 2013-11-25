@@ -239,18 +239,15 @@ class HarvesterBase(SingletonPlugin):
         }
 
         try:
-            harvest_object.current = False
-            get_action('package_delete')(context, {'id': harvest_object.guid})
+            get_action('package_delete')(context, {'id': harvest_object.package_id})
             log.info('Deleted package with guid {0}'.format(
                 harvest_object.guid))
-        except ActionError, e:
+            Session.query(HarvestObject).\
+                    filter_by(guid=harvest_object.guid).\
+                    update({'current': False}, False)
+            Session.commit()
+            return True
+        except Exception, e:
             log.exception(e)
             self._save_object_error('%r'%e, harvest_object, 'Import')
-        
-
-        previous_harvest = Session.query(HarvestObject) \
-                          .filter(HarvestObject.guid==harvest_object.guid) \
-                          .filter(HarvestObject.current==True) \
-                          .first()
-        previous_harvest.current = False
-        previous_harvest.save()
+            return False

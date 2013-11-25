@@ -288,12 +288,7 @@ class CKANHarvester(HarvesterBase):
         self._set_config(harvest_object.job.source.config)
 
         if harvest_object.content == DELETE:
-            try:
-                self._delete_package(harvest_object)
-            except Exception, e:
-                self._save_object_error('%r'%e,harvest_object,'Import')
-                return False
-            return True
+            return self._delete_package(harvest_object)
 
         try:
             package_dict = json.loads(harvest_object.content)
