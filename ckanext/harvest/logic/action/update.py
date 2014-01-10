@@ -156,7 +156,7 @@ def harvest_source_index_clear(context,data_dict):
     harvest_source_id = source.id
 
     conn = make_connection()
-    query = ''' +%s:%s +site_id:"%s" ''' % ('harvest_source_id', harvest_source_id,
+    query = ''' +%s:"%s" +site_id:"%s" ''' % ('harvest_source_id', harvest_source_id,
                                             config.get('ckan.site_id'))
     try:
         conn.delete_query(query)
