@@ -2,91 +2,37 @@
 
 {% block subtitle %}{{ _("Harvest sources") }}{% endblock %}
 
-{% set authorized_user = h.check_access('harvest_source_create') %}
-
-{% block add_link %}
-  {% if authorized_user %}
-  <a href="{{ h.url_for('{0}_new'.format(c.dataset_type)) }}" class="btn btn-primary">
-    <i class="icon-plus-sign-alt"></i>
-    {{ _('Add Harvest Source') }}
-  </a>
-  {% endif %}
-{% endblock %}
-
-{# CKAN 2.0 #}
-{% block add_action_content %}
-  {{ self.add_link() }}
-{% endblock %}
-
-{# CKAN 2.1 #}
-{% block content_action %}
-  {{ self.add_link() }}
-{% endblock %}
 
 {% block breadcrumb_content %}
   <li class="active">{{ h.nav_named_link(_('Harvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
 {% endblock %}
 
+
+{% if g.ckan_base_version.startswith('2.0') %}
+  {# CKAN 2.0 #}
+
+  {% block add_action_content %}
+    {{ h.snippet('snippets/add_source_button.html', dataset_type=c.dataset_type) }}
+  {% endblock %}
+{% endif %}
+
 {% block primary_content %}
-   <section class="module">
-    <div class="module-content">
-      {% if c.__version__.startswith('2.0') %}
-      <form id="dataset-search" class="dataset-search clearfix" method="get" data-module="select-switch">
-        <span class="control-group search-giant">
-          <input type="text" class="search" name="q" value="{{ c.q }}" autocomplete="off" placeholder="{{ _('Search...') }}" />
-          <button type="submit" value="{{ _('Search') }}">Submit</button>
-        </span>
+  {% if g.ckan_base_version.startswith('2.0') %}
+    {# CKAN 2.0 #}
 
-        {{ h.snippet('snippets/sort_by.html', sort=c.sort_by_selected) }}
+    {% include 'source/search_2.0.html' %}
 
-        {% if c.fields -%}
-          <span>
-            {%- for k, v in c.fields -%}
-              <input type="hidden" name="{{ k }}" value="{{ v }}" />
-            {% endfor -%}
-          </span>
-        {%- endif %}
+  {% else %}
+    {# > CKAN 2.0 #}
 
-      </form>
-      <div class="results">
-        <strong>
-          {%- if request.params and c.page.item_count -%}
-            {{ c.page.item_count }} harvest sources{{ _(" found for \"{query}\"").format(query=c.q) if c.q }}
-          {%- elif request.params and c.page.item_count == 0 -%}
-            {{ _('Sorry no harvest sources found for "{query}"').format(query=c.q) }}
-          {%- else -%}
-            {{ _('All harvest sources') }}
-          {%- endif -%}
-        </strong>
-        <div class="filter-list">
-          {% for field in c.fields_grouped %}
-            <span class="facet">{{ c.facet_titles.get(field) }}:</span>
-            {% for value in c.fields_grouped[field] %}
-              <span class="filtered pill">
-                {%- if c.translated_fields and c.translated_fields.has_key((field,value)) -%}
-                  {{ c.translated_fields[(field,value)] }}
-                {%- else -%}
-                  {{ value }}
-                {%- endif %}
-                <a href="{{ c.remove_field(field, value) }}" class="remove" title="{{ _('Remove') }}"><i class="icon-remove"></i></a>
-              </span>
-            {% endfor %}
-          {% endfor %}
-        </div>
-        {% if request.params and c.page.item_count == 0 %}
-          <p class="extra">Try another search term,
-          browse the sources below or <a href="{{ h.url_for('{0}_new'.format(c.dataset_type)) }}">{{ _('add a new one') }}</a>.
-          </p>
-        {% endif %}
-      </div>
+    <section class="module">
+      <div class="module-content">
+        {% block page_primary_action %}
+          <div class="page_primary_action">
+            {{ h.snippet('snippets/add_source_button.html', dataset_type=c.dataset_type) }}
+          </div>
+        {% endblock %}
 
-      {% if c.query_error %}
-        {% trans %}
-          <p><strong>There was an error while searching.</strong> Please try again.</p>
-        {% endtrans %}
-      {% endif %}
-
-      {% else %}
         {% set facets = {
           'fields': c.fields_grouped,
           'search': c.search_facets,
@@ -103,16 +49,18 @@
         %}
         {% snippet 'snippets/search_form.html', type='harvest', query=c.q, sorting=sorting, sorting_selected=c.sort_by_selected, count=c.page.item_count, facets=facets, show_empty=request.params, error=c.query_error, placeholder=_("Search harvest sources...") %}
 
-      {% endif %}
+        {{ h.snippet('snippets/source_list.html', sources=c.page.items, show_organization=true) }}
 
-      {{ h.snippet('snippets/source_list.html', sources=c.page.items, show_organization=true) }}
+      </div>
 
-    </div>
+      {{ c.page.pager(q=c.q) }}
+    </section>
 
-    {{ c.page.pager(q=c.q) }}
-  </section>
+  {% endif %}
 
 {% endblock %}
+
+
 
 {% block secondary_content %}
   {% for facet in c.facet_titles %}
