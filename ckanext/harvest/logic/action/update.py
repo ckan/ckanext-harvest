@@ -366,8 +366,8 @@ def harvest_sources_reindex(context, data_dict):
     for package in packages:
         if 'extras_as_string'in context:
             del context['extras_as_string']
-        context.update({'validate': False, 'ignore_auth': True})
-        package_dict = logic.get_action('package_show')(context,
+        context.update({'ignore_auth': True})
+        package_dict = logic.get_action('harvest_source_show')(context,
             {'id': package.id})
         log.debug('Updating search index for harvest source {0}'.format(package.id))
         package_index.index_package(package_dict, defer_commit=True)
