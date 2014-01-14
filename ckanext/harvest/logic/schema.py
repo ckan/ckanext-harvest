@@ -1,9 +1,12 @@
+import ckan.plugins as p
+
 from ckan.logic.schema import default_extras_schema
 from ckan.logic.validators import (package_id_exists,
                                    name_validator,
                                    owner_org_validator,
                                    package_name_validator,
                                    ignore_not_package_admin,
+                                   boolean_validator,
                                    )
 from ckan.logic.converters import convert_to_extras, convert_from_extras
 
@@ -36,6 +39,7 @@ def harvest_source_schema():
         'title': [if_empty_same_as("name"), unicode],
         'notes': [ignore_missing, unicode],
         'owner_org': [owner_org_validator, unicode],
+        'private': [ignore_missing, boolean_validator],
         'organization': [ignore_missing],
         'frequency': [ignore_missing, unicode, harvest_source_frequency_exists, convert_to_extras],
         'state': [ignore_missing],
@@ -47,6 +51,11 @@ def harvest_source_schema():
     extras_schema['__extras'] = [ignore]
 
     schema['extras'] = extras_schema
+
+    if p.toolkit.check_ckan_version('2.2'):
+        from ckan.logic.validators import datasets_with_no_organization_cannot_be_private
+        schema['private'].append(datasets_with_no_organization_cannot_be_private)
+
 
     return schema
 
@@ -73,8 +82,12 @@ def harvest_source_show_package_schema():
         'source_type': [convert_from_extras, ignore_missing],
         'frequency': [convert_from_extras, ignore_missing],
         'config': [convert_from_extras, harvest_source_convert_from_config, ignore_missing],
-        'owner_org': [ignore_missing]
+        'owner_org': [ignore_missing],
+        'metadata_created': [],
+        'metadata_modified': [],
     })
+
+    schema['__extras'] = [ignore]
 
     return schema
 
