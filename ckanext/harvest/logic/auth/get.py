@@ -3,6 +3,19 @@ from ckan.plugins import toolkit as pt
 from ckanext.harvest.logic.auth import get_job_object
 
 
+
+def auth_allow_anonymous_access(auth_function):
+    '''
+        Local version of the auth_allow_anonymous_access decorator that only
+        calls the actual toolkit decorator if the CKAN version supports it
+    '''
+    if pt.check_ckan_version(min_version='2.2'):
+        auth_function = pt.auth_allow_anonymous_access(auth_function)
+
+    return auth_function
+
+
+@auth_allow_anonymous_access
 def harvest_source_show(context, data_dict):
     '''
         Authorization check for getting the details of a harvest source
@@ -29,6 +42,7 @@ def harvest_source_show(context, data_dict):
                 'msg': pt._('User {0} not authorized to read harvest source {1}')
                 .format(user, source_id)}
 
+@auth_allow_anonymous_access
 def harvest_source_show_status(context, data_dict):
     '''
         Authorization check for getting the status of a harvest source
@@ -37,6 +51,7 @@ def harvest_source_show_status(context, data_dict):
     '''
     return harvest_source_show(context, data_dict)
 
+@auth_allow_anonymous_access
 def harvest_source_list(context, data_dict):
     '''
         Authorization check for getting a list of harveste sources
@@ -91,6 +106,7 @@ def harvest_job_list(context, data_dict):
 
 
 
+@auth_allow_anonymous_access
 def harvest_object_show(context, data_dict):
     '''
         Authorization check for getting the contents of a harvest object
@@ -107,6 +123,7 @@ def harvest_object_list(context, data_dict):
     return {'success': True}
 
 
+@auth_allow_anonymous_access
 def harvesters_info_show(context, data_dict):
     '''
         Authorization check for getting information about the available
