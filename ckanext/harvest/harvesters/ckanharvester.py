@@ -145,7 +145,7 @@ class CKANHarvester(HarvesterBase):
         for package_id in deleted_ids:
             harvest_object = HarvestObject(job=harvest_job,
                 extras=[HarvestObjectExtra(key='status', value=DELETE)],
-                guid=package_id
+                package_id=package_id
             )
             harvest_object.save()
             deleted.append(harvest_object.id)
