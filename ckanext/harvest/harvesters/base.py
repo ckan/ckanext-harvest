@@ -20,17 +20,18 @@ from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError,
 from ckan.plugins.core import SingletonPlugin, implements
 from ckanext.harvest.interfaces import IHarvester
 
-from pylons import config
 
 log = logging.getLogger(__name__)
 
 
 def munge_tag(tag):
-    clean_tags = config.get('ckanext.harvest.ckanharvester.clean_tags')
-    if clean_tags:
-        tag = substitute_ascii_equivalents(tag)
-        tag = tag.lower().strip()
-        return re.sub(r'[^a-zA-Z0-9 -]', '', tag).replace(' ', '-')
+    if self.config:
+        if self.config.get('clean_tags', False):
+            tag = substitute_ascii_equivalents(tag)
+            tag = tag.lower().strip()
+            return re.sub(r'[^a-zA-Z0-9 -]', '', tag).replace(' ', '-')
+        else:
+            return tag
     else:
         return tag
 
