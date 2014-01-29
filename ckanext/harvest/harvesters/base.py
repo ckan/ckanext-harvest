@@ -35,7 +35,6 @@ def munge_tag(tag):
         return tag
 
 
-
 class HarvesterBase(SingletonPlugin):
     '''
     Generic class for  harvesters with helper functions
