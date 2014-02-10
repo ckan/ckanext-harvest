@@ -20,6 +20,7 @@ from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError,
 from ckan.plugins.core import SingletonPlugin, implements
 from ckanext.harvest.interfaces import IHarvester
 
+
 log = logging.getLogger(__name__)
 
 
@@ -150,10 +151,11 @@ class HarvesterBase(SingletonPlugin):
                 'ignore_auth': True,
             }
 
-            tags = package_dict.get('tags', [])
-            tags = [munge_tag(t) for t in tags]
-            tags = list(set(tags))
-            package_dict['tags'] = tags
+            if self.config and self.config.get('clean_tags', False):
+                tags = package_dict.get('tags', [])
+                tags = [munge_tag(t) for t in tags]
+                tags = list(set(tags))
+                package_dict['tags'] = tags
 
             # Check if package exists
             data_dict = {}
