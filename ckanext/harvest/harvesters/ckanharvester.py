@@ -338,6 +338,8 @@ class CKANHarvester(HarvesterBase):
             # Set default groups if needed
             default_groups = self.config.get('default_groups', [])
             if default_groups:
+                if not 'groups' in package_dict:
+                    package_dict['groups'] = []
                 package_dict['groups'].extend([g for g in default_groups if g not in package_dict['groups']])
 
             # Find any extras whose values are not strings and try to convert
