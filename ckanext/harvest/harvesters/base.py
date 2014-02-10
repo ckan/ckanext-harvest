@@ -193,6 +193,10 @@ class HarvesterBase(SingletonPlugin):
             except NotFound:
                 # Package needs to be created
 
+                # Get rid of auth audit on the context otherwise we'll get an
+                # exception
+                context.pop('__auth_audit', None)
+
                 # Set name if not already there
                 package_dict.setdefault('name', self._gen_new_name(package_dict['title']))
 
