@@ -25,15 +25,9 @@ log = logging.getLogger(__name__)
 
 
 def munge_tag(tag):
-    if self.config:
-        if self.config.get('clean_tags', False):
-            tag = substitute_ascii_equivalents(tag)
-            tag = tag.lower().strip()
-            return re.sub(r'[^a-zA-Z0-9 -]', '', tag).replace(' ', '-')
-        else:
-            return tag
-    else:
-        return tag
+    tag = substitute_ascii_equivalents(tag)
+    tag = tag.lower().strip()
+    return re.sub(r'[^a-zA-Z0-9 -]', '', tag).replace(' ', '-')
 
 
 class HarvesterBase(SingletonPlugin):
@@ -157,10 +151,11 @@ class HarvesterBase(SingletonPlugin):
                 'ignore_auth': True,
             }
 
-            tags = package_dict.get('tags', [])
-            tags = [munge_tag(t) for t in tags]
-            tags = list(set(tags))
-            package_dict['tags'] = tags
+            if self.config and self.config.get('clean_tags', False):
+                tags = package_dict.get('tags', [])
+                tags = [munge_tag(t) for t in tags]
+                tags = list(set(tags))
+                package_dict['tags'] = tags
 
             # Check if package exists
             data_dict = {}
