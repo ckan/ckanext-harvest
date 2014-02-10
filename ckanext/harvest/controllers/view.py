@@ -1,5 +1,13 @@
 import re
 import xml.etree.ElementTree as etree
+try:
+    # Python 2.7
+    xml_parser_exception = etree.ParseError
+except AttributeError:
+    # Python 2.6
+    from xml.parsers import expat
+    xml_parser_exception = expat.ExpatError
+
 from pylons.i18n import _
 
 from ckan import model
@@ -101,7 +109,7 @@ class ViewController(BaseController):
                 if not '<?xml' in content.split('\n')[0]:
                     content = u'<?xml version="1.0" encoding="UTF-8"?>\n' + content
 
-            except etree.ParseError:
+            except xml_parser_exception:
                 try:
                     json.loads(obj['content'])
                     response.content_type = 'application/json; charset=utf-8'
