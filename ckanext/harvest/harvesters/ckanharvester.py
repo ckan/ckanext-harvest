@@ -373,6 +373,11 @@ class CKANHarvester(HarvesterBase):
 
                         package_dict['extras'][key] = value
 
+            # Clear remote url_type for resources (eg datastore, upload) as we
+            # are only creating normal resources with links to the remote ones
+            for resource in package_dict.get('resources', []):
+                resource.pop('url_type', None)
+
             result = self._create_or_update_package(package_dict,harvest_object)
 
             if result and self.config.get('read_only',False) == True:
