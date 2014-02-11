@@ -56,7 +56,9 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
 
     def before_view(self, data_dict):
 
-        if not 'type' in data_dict or data_dict['type'] != DATASET_TYPE_NAME:
+        # check_ckan_version should be more clever than this
+        if p.toolkit.check_ckan_version(max_version='2.1.99') and (
+           not 'type' in data_dict or data_dict['type'] != DATASET_TYPE_NAME):
             # This is a normal dataset, check if it was harvested and if so, add
             # info about the HarvestObject and HarvestSource
             harvest_object = model.Session.query(HarvestObject) \
