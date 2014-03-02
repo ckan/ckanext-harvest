@@ -182,6 +182,9 @@ def harvest_source_convert_from_config(key,data,errors,context):
     if config:
         config_dict = json.loads(config)
         for key, value in config_dict.iteritems():
+            if isinstance(value, list) or isinstance(value, dict):
+               value = json.dumps(value)
+               log.debug('Config key %s value serialized into %s '% (key,value) )
             data[(key,)] = value
 
 def harvest_source_active_validator(value,context):
