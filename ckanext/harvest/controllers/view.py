@@ -88,11 +88,14 @@ class ViewController(BaseController):
 
         redirect(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
 
-    def show_object(self,id):
+    def show_object(self, id, ref_type='object'):
 
         try:
             context = {'model':model, 'user':c.user}
-            obj = p.toolkit.get_action('harvest_object_show')(context, {'id':id})
+            if ref_type == 'object':
+                obj = p.toolkit.get_action('harvest_object_show')(context, {'id': id})
+            elif ref_type == 'dataset':
+                obj = p.toolkit.get_action('harvest_object_show')(context, {'dataset_id': id})
 
             # Check content type. It will probably be either XML or JSON
             try:
@@ -119,8 +122,8 @@ class ViewController(BaseController):
 
             response.headers['Content-Length'] = len(content)
             return content.encode('utf-8')
-        except p.toolkit.ObjectNotFound:
-            abort(404,_('Harvest object not found'))
+        except p.toolkit.ObjectNotFound, e:
+            abort(404,_(str(e)))
         except p.toolkit.NotAuthorized:
             abort(401,self.not_auth_message)
         except Exception, e:

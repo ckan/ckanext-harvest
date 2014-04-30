@@ -249,15 +249,34 @@ def harvest_job_list(context,data_dict):
 @side_effect_free
 def harvest_object_show(context,data_dict):
 
-    check_access('harvest_object_show',context,data_dict)
+    p.toolkit.check_access('harvest_object_show', context, data_dict)
 
     id = data_dict.get('id')
-    attr = data_dict.get('attr',None)
-    obj = HarvestObject.get(id,attr=attr)
-    if not obj:
-        raise NotFound
+    dataset_id = data_dict.get('dataset_id')
 
-    return harvest_object_dictize(obj,context)
+    if id:
+        attr = data_dict.get('attr',None)
+        obj = HarvestObject.get(id,attr=attr)
+    elif dataset_id:
+        model = context['model']
+
+        pkg = model.Package.get(dataset_id)
+        if not pkg:
+            raise p.toolkit.ObjectNotFound('Dataset not found')
+
+        obj = model.Session.query(HarvestObject) \
+              .filter(HarvestObject.package_id == pkg.id) \
+              .filter(HarvestObject.current == True) \
+              .first()
+    else:
+        raise p.toolkit.ValidationError(
+            'Please provide either an "id" or a "dataset_id" parameter')
+
+    if not obj:
+        raise p.toolkit.ObjectNotFound('Harvest object not found')
+
+
+    return harvest_object_dictize(obj, context)
 
 @side_effect_free
 def harvest_object_list(context,data_dict):
