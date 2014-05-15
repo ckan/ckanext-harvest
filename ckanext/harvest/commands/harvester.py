@@ -42,10 +42,13 @@ class Harvester(CkanCommand):
       harvester purge_queues
         - removes all jobs from fetch and gather queue
 
-      harvester [-j] [--segments={segments}] import [{source-id}]
-        - perform the import stage with the last fetched objects, optionally belonging to a certain source.
-          Please note that no objects will be fetched from the remote server. It will only affect
-          the last fetched objects already present in the database.
+      harvester [-j] [-o] [--segments={segments}] import [{source-id}]
+        - perform the import stage with the last fetched objects, for a certain
+          source or a single harvest object. Please note that no objects will
+          be fetched from the remote server. It will only affect the objects
+          already present in the database.
+
+          To perform it on a particular object use the -o flag.
 
           If the -j flag is provided, the objects are not joined to existing datasets. This may be useful
           when importing objects for the first time.
@@ -78,6 +81,12 @@ class Harvester(CkanCommand):
 
         self.parser.add_option('-j', '--no-join-datasets', dest='no_join_datasets',
             action='store_true', default=False, help='Do not join harvest objects to existing datasets')
+
+        self.parser.add_option('-o', '--harvest-object-id', dest='harvest_object_id',
+            default=False, help='Id of the harvest object to which perfom the import stage')
+
+        self.parser.add_option('-p', '--package-id', dest='package_id',
+            default=False, help='Id of the package whose harvest object to perfom the import stage for')
 
         self.parser.add_option('--segments', dest='segments',
             default=False, help=
@@ -291,9 +300,13 @@ class Harvester(CkanCommand):
                    'segments': self.options.segments}
 
 
-        objs = get_action('harvest_objects_import')(context,{'source_id':source_id})
+        objs_count = get_action('harvest_objects_import')(context,{
+                'source_id': source_id,
+                'harvest_object_id': self.options.harvest_object_id,
+                'package_id': self.options.package_id,
+                })
 
-        print '%s objects reimported' % len(objs)
+        print '%s objects reimported' % objs_count
 
     def create_harvest_job_all(self):
         context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
