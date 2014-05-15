@@ -106,8 +106,10 @@ class ViewController(BaseController):
                     content = obj['extras']['original_document']
                 else:
                     abort(404,_('No content found'))
-
-                etree.fromstring(re.sub('<\?xml(.*)\?>','',content))
+                try:
+                    etree.fromstring(re.sub('<\?xml(.*)\?>','',content))
+                except UnicodeEncodeError:
+                    etree.fromstring(re.sub('<\?xml(.*)\?>','',content.encode('utf-8')))
                 response.content_type = 'application/xml; charset=utf-8'
                 if not '<?xml' in content.split('\n')[0]:
                     content = u'<?xml version="1.0" encoding="UTF-8"?>\n' + content
