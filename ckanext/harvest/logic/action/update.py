@@ -5,7 +5,7 @@ import datetime
 
 from pylons import config
 from paste.deploy.converters import asbool
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 from ckan.lib.search.index import PackageSearchIndex
 from ckan.plugins import PluginImplementations
@@ -185,6 +185,8 @@ def harvest_objects_import(context,data_dict):
     model = context['model']
     session = context['session']
     source_id = data_dict.get('source_id',None)
+    harvest_object_id = data_dict.get('harvest_object_id',None)
+    package_id_or_name = data_dict.get('package_id',None)
 
     segments = context.get('segments',None)
 
@@ -205,9 +207,20 @@ def harvest_objects_import(context,data_dict):
                 .filter(HarvestObject.source==source) \
                 .filter(HarvestObject.current==True)
 
+    elif harvest_object_id:
+        last_objects_ids = session.query(HarvestObject.id) \
+                .filter(HarvestObject.id==harvest_object_id)
+    elif package_id_or_name:
+        last_objects_ids = session.query(HarvestObject.id) \
+            .join(Package) \
+            .filter(HarvestObject.current==True) \
+            .filter(Package.state==u'active') \
+            .filter(or_(Package.id==package_id_or_name,
+                        Package.name==package_id_or_name))
+        join_datasets = False
     else:
         last_objects_ids = session.query(HarvestObject.id) \
-                .filter(HarvestObject.current==True) \
+                .filter(HarvestObject.current==True)
 
     if join_datasets:
         last_objects_ids = last_objects_ids.join(Package) \
