@@ -133,13 +133,7 @@ def harvest_source_clear(context,data_dict):
     model.Session.execute(sql)
 
     # Refresh the index for this source to update the status object
-    context.update({'validate': False, 'ignore_auth': True})
-    package_dict = logic.get_action('package_show')(context,
-            {'id': harvest_source_id})
-
-    if package_dict:
-        package_index = PackageSearchIndex()
-        package_index.index_package(package_dict)
+    get_action('harvest_source_reindex')(context, {'id': harvest_source_id})
 
     return {'id': harvest_source_id}
 
@@ -326,14 +320,8 @@ def harvest_jobs_run(context,data_dict):
                     job_obj.save()
                     # Reindex the harvest source dataset so it has the latest
                     # status
-                    if 'extras_as_string'in context:
-                        del context['extras_as_string']
-                    context.update({'validate': False, 'ignore_auth': True})
-                    package_dict = logic.get_action('package_show')(context,
-                            {'id': job_obj.source.id})
-
-                    if package_dict:
-                        package_index.index_package(package_dict)
+                    get_action('harvest_source_reindex')(reindex_context,
+                        {'id': job_obj.source.id})
 
     # resubmit old redis tasks
     resubmit_jobs()
@@ -361,6 +349,8 @@ def harvest_jobs_run(context,data_dict):
     publisher.close()
     return sent_jobs
 
+
+@logic.side_effect_free
 def harvest_sources_reindex(context, data_dict):
     '''
         Reindexes all harvest source datasets with the latest status
@@ -376,14 +366,30 @@ def harvest_sources_reindex(context, data_dict):
                             .all()
 
     package_index = PackageSearchIndex()
+
+    reindex_context = {'defer_commit': True}
     for package in packages:
-        if 'extras_as_string'in context:
-            del context['extras_as_string']
-        context.update({'ignore_auth': True})
-        package_dict = logic.get_action('harvest_source_show')(context,
-            {'id': package.id})
-        log.debug('Updating search index for harvest source {0}'.format(package.id))
-        package_index.index_package(package_dict, defer_commit=True)
+        get_action('harvest_source_reindex')(reindex_context, {'id': package.id})
 
     package_index.commit()
-    log.info('Updated search index for {0} harvest sources'.format(len(packages)))
+
+    return True
+
+@logic.side_effect_free
+def harvest_source_reindex(context, data_dict):
+    '''Reindex a single harvest source'''
+
+    harvest_source_id = logic.get_or_bust(data_dict, 'id')
+    defer_commit = context.get('defer_commit', False)
+
+    if 'extras_as_string'in context:
+        del context['extras_as_string']
+    context.update({'ignore_auth': True})
+    package_dict = logic.get_action('harvest_source_show')(context,
+        {'id': harvest_source_id})
+    log.debug('Updating search index for harvest source {0}'.format(harvest_source_id))
+
+    package_index = PackageSearchIndex()
+    package_index.index_package(package_dict, defer_commit=defer_commit)
+
+    return True
