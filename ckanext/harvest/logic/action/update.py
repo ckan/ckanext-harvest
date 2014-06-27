@@ -1,4 +1,5 @@
 import hashlib
+import json
 
 import logging
 import datetime
@@ -389,7 +390,14 @@ def harvest_source_reindex(context, data_dict):
         {'id': harvest_source_id})
     log.debug('Updating search index for harvest source {0}'.format(harvest_source_id))
 
+    # Remove configuration values
+    new_dict = {}
+    if package_dict.get('config'):
+        config = json.loads(package_dict['config'])
+        for key, value in package_dict.iteritems():
+            if key not in config:
+                new_dict[key] = value
     package_index = PackageSearchIndex()
-    package_index.index_package(package_dict, defer_commit=defer_commit)
+    package_index.index_package(new_dict, defer_commit=defer_commit)
 
     return True
