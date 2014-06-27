@@ -68,3 +68,11 @@ def harvest_sources_reindex(context, data_dict):
         return {'success': False, 'msg': pt._('Only sysadmins can reindex all harvest sources')}
     else:
         return {'success': True}
+
+def harvest_source_reindex(context, data_dict):
+    '''
+        Authorization check for reindexing a harvest source
+
+        It forwards to harvest_source_update
+    '''
+    return harvest_source_update(context, data_dict)
