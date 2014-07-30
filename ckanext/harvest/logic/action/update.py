@@ -298,7 +298,6 @@ def harvest_jobs_run(context,data_dict):
     # Flag finished jobs as such
     jobs = harvest_job_list(context,{'source_id':source_id,'status':u'Running'})
     if len(jobs):
-        package_index = PackageSearchIndex()
         for job in jobs:
             if job['gather_finished']:
                 objects = session.query(HarvestObject.id) \
@@ -321,7 +320,7 @@ def harvest_jobs_run(context,data_dict):
                     job_obj.save()
                     # Reindex the harvest source dataset so it has the latest
                     # status
-                    get_action('harvest_source_reindex')(reindex_context,
+                    get_action('harvest_source_reindex')(context,
                         {'id': job_obj.source.id})
 
     # resubmit old redis tasks
