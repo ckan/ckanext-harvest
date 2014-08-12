@@ -162,6 +162,10 @@ class HarvesterBase(SingletonPlugin):
             data_dict['id'] = package_dict['id']
             try:
                 existing_package_dict = get_action('package_show')(context, data_dict)
+
+                # In case name has been modified when first importing. See issue #101.
+                package_dict['name'] = existing_package_dict['name']
+
                 # Check modified date
                 if not 'metadata_modified' in package_dict or \
                    package_dict['metadata_modified'] > existing_package_dict.get('metadata_modified'):
