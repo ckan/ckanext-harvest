@@ -97,10 +97,10 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
                     .filter(HarvestObject.current==True) \
                     .first()
 
-            if context.get('for_edit') and 'extras' in  data_dict:
-                # If we are editing the dataset, check if the harvest extras
-                # are there, and if so, remove them. This can happen eg when
-                # doing resource_update, which calls package_show
+            # If the harvest extras are there, remove them. This can happen eg
+            # when calling package_update or resource_update, which call
+            # package_show
+            if data_dict.get('extras'):
                 data_dict['extras'][:] = [e for e in data_dict.get('extras', [])
                                           if not e['key']
                                           in ('harvest_object_id', 'harvest_source_id', 'harvest_source_title',)]
