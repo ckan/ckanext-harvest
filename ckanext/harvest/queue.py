@@ -318,7 +318,7 @@ def fetch_and_import_stages(harvester, obj):
     else:
         obj.state = "ERROR"
         obj.save()
-    if obj.report_status:
+    if obj.report_status == 'not modified':
         return
     if obj.state == 'ERROR':
         obj.report_status = 'errored'

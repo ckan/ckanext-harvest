@@ -165,7 +165,7 @@ class CKANHarvester(HarvesterBase):
                                     package_ids.append(package_id)
                     else:
                         log.info('No packages have been updated on the remote CKAN instance since the last harvest job')
-                        return None
+                        return []
 
                 except urllib2.HTTPError,e:
                     if e.getcode() == 400:
