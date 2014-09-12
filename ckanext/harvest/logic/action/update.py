@@ -107,6 +107,14 @@ def harvest_source_clear(context,data_dict):
     # Clear all datasets from this source from the index
     harvest_source_index_clear(context, data_dict)
 
+    model = context['model']
+
+    sql = "select id from related where id in (select related_id from related_dataset where dataset_id in (select package_id from harvest_object where harvest_source_id = '{harvest_source_id}'));".format(harvest_source_id=harvest_source_id)
+    result = model.Session.execute(sql)
+    ids = []
+    for row in result:
+        ids.append(row[0])
+    related_ids = "('" + "','".join(ids) + "')"
 
     sql = '''begin; update package set state = 'to_delete' where id in (select package_id from harvest_object where harvest_source_id = '{harvest_source_id}');
     delete from harvest_object_error where harvest_object_id in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
@@ -127,9 +135,9 @@ def harvest_source_clear(context,data_dict):
     delete from package_extra where package_id in (select id from package where state = 'to_delete');
     delete from member where table_id in (select id from package where state = 'to_delete');
     delete from resource_group where package_id  in (select id from package where state = 'to_delete');
-    delete from package where id in (select id from package where state = 'to_delete'); commit;'''.format(harvest_source_id=harvest_source_id)
-
-    model = context['model']
+    delete from related_dataset where dataset_id in (select id from package where state = 'to_delete');
+    delete from related where id in {related_ids};
+    delete from package where id in (select id from package where state = 'to_delete'); commit;'''.format(harvest_source_id=harvest_source_id, related_ids=related_ids)
 
     model.Session.execute(sql)
 
