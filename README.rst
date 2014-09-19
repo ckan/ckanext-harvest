@@ -9,15 +9,25 @@ Installation
 ============
 
 1. The harvest extension can use two different backends. You can choose whichever
-   you prefer depending on your needs:
+   you prefer depending on your needs, but Redis has been found to be more stable
+   and reliable so it is the recommended one:
+
+   * `Redis <http://redis.io/>`_ (recommended): To install it, run::
+
+      sudo apt-get install redis-server
+
+     On your CKAN configuration file, add::
+
+      ckan.harvest.mq.type = redis
 
    * `RabbitMQ <http://www.rabbitmq.com/>`_: To install it, run::
 
       sudo apt-get install rabbitmq-server
 
-   * `Redis <http://redis.io/>`_: To install it, run::
+     On your CKAN configuration file, add::
 
-      sudo apt-get install redis-server
+      ckan.harvest.mq.type = rabbitmq
+
 
 2. Install the extension into your python environment.
 
@@ -48,7 +58,7 @@ Installation
 
     ckan.plugins = harvest ckan_harvester
 
-5. Also define the backend that you are using with the ``ckan.harvest.mq.type``
+5. If you haven't done it yet on the previous step, define the backend that you are using with the ``ckan.harvest.mq.type``
    option (it defaults to ``rabbitmq``)::
 
     ckan.harvest.mq.type = redis
