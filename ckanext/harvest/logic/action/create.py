@@ -65,10 +65,7 @@ def harvest_source_create(context,data_dict):
     data_dict['type'] = DATASET_TYPE_NAME
 
     context['extras_as_string'] = True
-    package_dict = logic.get_action('package_create')(context, data_dict)
-
-    context['schema'] = harvest_source_show_package_schema()
-    source = logic.get_action('package_show')(context, package_dict)
+    source = logic.get_action('package_create')(context, data_dict)
 
     return source
 
