@@ -82,9 +82,15 @@ def harvest_source_show_package_schema():
         'source_type': [convert_from_extras, ignore_missing],
         'frequency': [convert_from_extras, ignore_missing],
         'config': [convert_from_extras, harvest_source_convert_from_config, ignore_missing],
-        'owner_org': [ignore_missing],
         'metadata_created': [],
         'metadata_modified': [],
+        'owner_org': [],
+        'creator_user_id': [],
+        'organization': [],
+        'notes': [],
+        'revision_id': [],
+        'revision_timestamp': [],
+        'tracking_summary': [],
     })
 
     schema['__extras'] = [ignore]
