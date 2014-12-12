@@ -17,6 +17,7 @@ from ckan.lib.search.common import SearchIndexError, make_connection
 
 from ckan.model import Package
 from ckan import logic
+from ckan.plugins.toolkit import check_ckan_version
 
 from ckan.logic import NotFound, check_access
 
@@ -121,20 +122,34 @@ def harvest_source_clear(context,data_dict):
     delete from harvest_job where source_id = '{harvest_source_id}';
     delete from package_role where package_id in (select id from package where state = 'to_delete' );
     delete from user_object_role where id not in (select user_object_role_id from package_role) and context = 'Package';
-    delete from resource_revision where resource_group_id in (select id from resource_group where package_id in (select id from package where state = 'to_delete'));
-    delete from resource_group_revision where package_id in (select id from package where state = 'to_delete');
     delete from package_tag_revision where package_id in (select id from package where state = 'to_delete');
     delete from member_revision where table_id in (select id from package where state = 'to_delete');
     delete from package_extra_revision where package_id in (select id from package where state = 'to_delete');
     delete from package_revision where id in (select id from package where state = 'to_delete');
     delete from package_tag where package_id in (select id from package where state = 'to_delete');
-    delete from resource where resource_group_id in (select id from resource_group where package_id in (select id from package where state = 'to_delete'));
     delete from package_extra where package_id in (select id from package where state = 'to_delete');
     delete from member where table_id in (select id from package where state = 'to_delete');
-    delete from resource_group where package_id  in (select id from package where state = 'to_delete');
     delete from related_dataset where dataset_id in (select id from package where state = 'to_delete');
     delete from related where id in {related_ids};
-    delete from package where id in (select id from package where state = 'to_delete'); commit;'''.format(harvest_source_id=harvest_source_id, related_ids=related_ids)
+    delete from package where id in (select id from package where state = 'to_delete');'''.format(
+        harvest_source_id=harvest_source_id, related_ids=related_ids)
+
+    # Backwards-compatibility: support ResourceGroup (pre-CKAN-2.3)
+    if check_ckan_version(min_version='2.3'):
+        sql += 'commit;'
+    else:
+        sql += '''delete from resource_revision where resource_group_id in 
+        (select id from resource_group where package_id in 
+        (select id from package where state = 'to_delete'));
+        delete from resource where resource_group_id in 
+        (select id from resource_group where package_id in 
+        (select id from package where state = 'to_delete'));
+        delete from resource_group_revision where package_id in 
+        (select id from package where state = 'to_delete');
+        delete from resource_group where package_id  in 
+        (select id from package where state = 'to_delete');
+        commit;
+        '''
 
     model.Session.execute(sql)
 
