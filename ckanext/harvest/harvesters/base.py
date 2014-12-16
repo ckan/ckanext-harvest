@@ -201,8 +201,11 @@ class HarvesterBase(SingletonPlugin):
                 # exception
                 context.pop('__auth_audit', None)
 
-                # Set name if not already there
-                package_dict.setdefault('name', self._gen_new_name(package_dict['title']))
+                # Set name for new package to prevent name conflict, see issue #117
+                if ('name' in package_dict and not package_dict['name']):
+                    package_dict['name'] = self._gen_new_name(package_dict['name'])
+                else:
+                    package_dict['name'] = self._gen_new_name(package_dict['title'])
 
                 log.info('Package with GUID %s does not exist, let\'s create it' % harvest_object.guid)
                 harvest_object.current = True
