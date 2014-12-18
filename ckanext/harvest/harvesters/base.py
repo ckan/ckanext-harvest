@@ -202,7 +202,7 @@ class HarvesterBase(SingletonPlugin):
                 context.pop('__auth_audit', None)
 
                 # Set name for new package to prevent name conflict, see issue #117
-                if ('name' in package_dict and not package_dict['name']):
+                if package_dict.get('name', None):
                     package_dict['name'] = self._gen_new_name(package_dict['name'])
                 else:
                     package_dict['name'] = self._gen_new_name(package_dict['title'])
