@@ -337,7 +337,14 @@ class CKANHarvester(HarvesterBase):
                         log.info('Organization %s is not available' % remote_org)
                         if remote_orgs == 'create':
                             try:
-                                org = self._get_organization(harvest_object.source.url, remote_org)
+                                try:
+                                    org = self._get_organization(harvest_object.source.url, remote_org)
+                                except:
+                                    # fallback if remote CKAN exposes organizations as groups
+                                    # this especially targets older versions of CKAN
+                                    log.debug('_get_organization() failed, now trying _get_group()')
+                                    org = self._get_group(harvest_object.source.url, remote_org)
+
                                 for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name', 'type']:
                                     org.pop(key, None)
                                 get_action('organization_create')(context, org)
