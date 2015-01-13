@@ -21,9 +21,13 @@ class CKANHarvester(HarvesterBase):
     config = None
 
     api_version = 2
+    action_api_version = 3
 
     def _get_rest_api_offset(self):
         return '/api/%d/rest' % self.api_version
+
+    def _get_action_api_offset(self):
+        return '/api/%d/action' % self.action_api_version
 
     def _get_search_api_offset(self):
         return '/api/%d/search' % self.api_version
@@ -45,6 +49,15 @@ class CKANHarvester(HarvesterBase):
         try:
             content = self._get_content(url)
             return json.loads(content)
+        except Exception, e:
+            raise e
+
+    def _get_organization(self, base_url, org_name):
+        url = base_url + self._get_action_api_offset() + '/organization_show?id=' + org_name
+        try:
+            content = self._get_content(url)
+            content_dict = json.loads(content)
+            return content_dict['result']
         except Exception, e:
             raise e
 
@@ -324,7 +337,7 @@ class CKANHarvester(HarvesterBase):
                         log.info('Organization %s is not available' % remote_org)
                         if remote_orgs == 'create':
                             try:
-                                org = self._get_group(harvest_object.source.url, remote_org)
+                                org = self._get_organization(harvest_object.source.url, remote_org)
                                 for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name', 'type']:
                                     org.pop(key, None)
                                 get_action('organization_create')(context, org)
