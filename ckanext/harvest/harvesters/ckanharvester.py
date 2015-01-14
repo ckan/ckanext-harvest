@@ -177,7 +177,7 @@ class CKANHarvester(HarvesterBase):
                             url = base_rest_url + '/revision/%s' % revision_id
                             try:
                                 content = self._get_content(url)
-                            except Exception,e:
+                            except ContentFetchError,e:
                                 self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
                                 continue
 
@@ -204,7 +204,7 @@ class CKANHarvester(HarvesterBase):
             url = base_rest_url + '/package'
             try:
                 content = self._get_content(url)
-            except Exception,e:
+            except ContentFetchError,e:
                 self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
                 return None
 
@@ -241,7 +241,7 @@ class CKANHarvester(HarvesterBase):
         # Get contents
         try:
             content = self._get_content(url)
-        except Exception,e:
+        except ContentFetchError,e:
             self._save_object_error('Unable to get content for package: %s: %r' % \
                                         (url, e),harvest_object)
             return None
