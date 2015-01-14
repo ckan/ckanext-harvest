@@ -5,6 +5,7 @@ from ckan import model
 from ckan.model import Session, Package
 from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
+from ckan.lib.munge import munge_name
 
 from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError, \
                                     HarvestObjectError
@@ -51,7 +52,7 @@ class CKANHarvester(HarvesterBase):
         return http_response.read()
 
     def _get_group(self, base_url, group_name):
-        url = base_url + self._get_rest_api_offset() + '/group/' + group_name
+        url = base_url + self._get_rest_api_offset() + '/group/' + munge_name(group_name)
         try:
             content = self._get_content(url)
             return json.loads(content)
