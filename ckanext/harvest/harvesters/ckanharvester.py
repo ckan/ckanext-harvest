@@ -40,8 +40,14 @@ class CKANHarvester(HarvesterBase):
         api_key = self.config.get('api_key',None)
         if api_key:
             http_request.add_header('Authorization',api_key)
-        http_response = urllib2.urlopen(http_request)
 
+        try:
+            http_response = urllib2.urlopen(http_request)
+        except urllib2.HTTPError, e:
+            raise ContentFetchError(
+                'Could not fetch url: %s, HTTP error code: %s' % 
+                (url, e.code)
+            )
         return http_response.read()
 
     def _get_group(self, base_url, group_name):
@@ -49,8 +55,9 @@ class CKANHarvester(HarvesterBase):
         try:
             content = self._get_content(url)
             return json.loads(content)
-        except Exception, e:
-            raise e
+        except (ContentFetchError, ValueError):
+            log.debug('Could not fetch/decode remote group');
+            raise RemoteResourceError('Could not fetch/decode remote group')
 
     def _get_organization(self, base_url, org_name):
         url = base_url + self._get_action_api_offset() + '/organization_show?id=' + org_name
@@ -58,8 +65,9 @@ class CKANHarvester(HarvesterBase):
             content = self._get_content(url)
             content_dict = json.loads(content)
             return content_dict['result']
-        except Exception, e:
-            raise e
+        except (ContentFetchError, ValueError, KeyError):
+            log.debug('Could not fetch/decode remote group');
+            raise RemoteResourceError('Could not fetch/decode remote organization')
 
     def _set_config(self,config_str):
         if config_str:
@@ -294,7 +302,7 @@ class CKANHarvester(HarvesterBase):
                         if remote_groups == 'create':
                             try:
                                 group = self._get_group(harvest_object.source.url, group_name)
-                            except:
+                            except RemoteResourceError:
                                 log.error('Could not get remote group %s' % group_name)
                                 continue
 
@@ -339,10 +347,9 @@ class CKANHarvester(HarvesterBase):
                             try:
                                 try:
                                     org = self._get_organization(harvest_object.source.url, remote_org)
-                                except:
+                                except RemoteResourceError:
                                     # fallback if remote CKAN exposes organizations as groups
                                     # this especially targets older versions of CKAN
-                                    log.debug('_get_organization() failed, now trying _get_group()')
                                     org = self._get_group(harvest_object.source.url, remote_org)
 
                                 for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name', 'type']:
@@ -350,7 +357,7 @@ class CKANHarvester(HarvesterBase):
                                 get_action('organization_create')(context, org)
                                 log.info('Organization %s has been newly created' % remote_org)
                                 validated_org = org['id']
-                            except:
+                            except (RemoteResourceError, ValidationError):
                                 log.error('Could not get remote org %s' % remote_org)
 
                 package_dict['owner_org'] = validated_org or local_org
@@ -425,3 +432,8 @@ class CKANHarvester(HarvesterBase):
         except Exception, e:
             self._save_object_error('%r'%e,harvest_object,'Import')
 
+class ContentFetchError(Exception):
+    pass
+
+class RemoteResourceError(Exception):
+    pass
