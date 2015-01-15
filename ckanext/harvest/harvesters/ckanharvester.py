@@ -44,10 +44,10 @@ class CKANHarvester(HarvesterBase):
 
         try:
             http_response = urllib2.urlopen(http_request)
-        except urllib2.HTTPError, e:
+        except urllib2.URLError, e:
             raise ContentFetchError(
-                'Could not fetch url: %s, HTTP error code: %s' % 
-                (url, e.code)
+                'Could not fetch url: %s, error: %s' % 
+                (url, e.reason)
             )
         return http_response.read()
 
