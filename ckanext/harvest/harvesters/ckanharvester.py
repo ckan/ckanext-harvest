@@ -330,12 +330,13 @@ class CKANHarvester(HarvesterBase):
                 # Assign dataset to the source organization
                 package_dict['owner_org'] = local_org
             else:
-                if not 'owner_org' in package_dict:
-                    package_dict['owner_org'] = None
-
                 # check if remote org exist locally, otherwise remove
                 validated_org = None
-                remote_org = package_dict['owner_org']
+                try:
+                    remote_org = package_dict['organization']['name']
+                except KeyError:
+                    log.info('Information about remote organization missing')
+                    remote_org = None
 
                 if remote_org:
                     try:
