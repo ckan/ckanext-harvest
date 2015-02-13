@@ -71,9 +71,13 @@ Run the following command to create the necessary tables in the database::
 
     paster --plugin=ckanext-harvest harvester initdb --config=mysite.ini
 
+Finally, restart CKAN to have the changes take affect:
+
+    sudo service apache2 restart
+
 After installation, the harvest source listing should be available under /harvest, eg:
 
-	http://localhost:5000/harvest
+    http://localhost:5000/harvest
 
 
 Command line interface
