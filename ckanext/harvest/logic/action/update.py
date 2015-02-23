@@ -113,28 +113,62 @@ def harvest_source_clear(context,data_dict):
         ids.append(row[0])
     related_ids = "('" + "','".join(ids) + "')"
 
-    sql = '''begin; update package set state = 'to_delete' where id in (select package_id from harvest_object where harvest_source_id = '{harvest_source_id}');
-    delete from harvest_object_error where harvest_object_id in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
-    delete from harvest_object_extra where harvest_object_id in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
+    sql = '''begin; update package set state = 'to_delete' where id in 
+    (select package_id from harvest_object where 
+    harvest_source_id = '{harvest_source_id}');
+    delete from harvest_object_error where harvest_object_id in 
+    (select id from harvest_object where 
+    harvest_source_id = '{harvest_source_id}');
+    delete from harvest_object_extra where harvest_object_id in 
+    (select id from harvest_object where 
+    harvest_source_id = '{harvest_source_id}');
     delete from harvest_object where harvest_source_id = '{harvest_source_id}';
-    delete from harvest_gather_error where harvest_job_id in (select id from harvest_job where source_id = '{harvest_source_id}');
+    delete from harvest_gather_error where harvest_job_id in 
+    (select id from harvest_job where source_id = '{harvest_source_id}');
     delete from harvest_job where source_id = '{harvest_source_id}';
-    delete from package_role where package_id in (select id from package where state = 'to_delete' );
-    delete from user_object_role where id not in (select user_object_role_id from package_role) and context = 'Package';
-    delete from resource_revision where resource_group_id in (select id from resource_group where package_id in (select id from package where state = 'to_delete'));
-    delete from resource_group_revision where package_id in (select id from package where state = 'to_delete');
-    delete from package_tag_revision where package_id in (select id from package where state = 'to_delete');
-    delete from member_revision where table_id in (select id from package where state = 'to_delete');
-    delete from package_extra_revision where package_id in (select id from package where state = 'to_delete');
-    delete from package_revision where id in (select id from package where state = 'to_delete');
-    delete from package_tag where package_id in (select id from package where state = 'to_delete');
-    delete from resource where resource_group_id in (select id from resource_group where package_id in (select id from package where state = 'to_delete'));
-    delete from package_extra where package_id in (select id from package where state = 'to_delete');
-    delete from member where table_id in (select id from package where state = 'to_delete');
-    delete from resource_group where package_id  in (select id from package where state = 'to_delete');
-    delete from related_dataset where dataset_id in (select id from package where state = 'to_delete');
+    delete from package_role where package_id in 
+    (select id from package where state = 'to_delete' );
+    delete from user_object_role where id not in 
+    (select user_object_role_id from package_role) and context = 'Package';
+    delete from package_tag_revision where package_id in 
+    (select id from package where state = 'to_delete');
+    delete from member_revision where table_id in 
+    (select id from package where state = 'to_delete');
+    delete from package_extra_revision where package_id in 
+    (select id from package where state = 'to_delete');
+    delete from package_revision where id in 
+    (select id from package where state = 'to_delete');
+    delete from package_tag where package_id in 
+    (select id from package where state = 'to_delete');
+    delete from package_extra where package_id in 
+    (select id from package where state = 'to_delete');
+    delete from member where table_id in 
+    (select id from package where state = 'to_delete');
+    delete from related_dataset where dataset_id in 
+    (select id from package where state = 'to_delete');
     delete from related where id in {related_ids};
-    delete from package where id in (select id from package where state = 'to_delete'); commit;'''.format(harvest_source_id=harvest_source_id, related_ids=related_ids)
+    delete from package where id in 
+    (select id from package where state = 'to_delete');'''.format(
+        harvest_source_id=harvest_source_id, related_ids=related_ids)
+
+    try:
+        # Backwards-compatibility: support ResourceGroup (pre-CKAN-2.3)
+        from ckan.model import ResourceGroup
+        sql += '''delete from resource_revision where resource_group_id in
+        (select id from resource_group where package_id in
+        (select id from package where state = 'to_delete'));
+        delete from resource where resource_group_id in
+        (select id from resource_group where package_id in
+        (select id from package where state = 'to_delete'));
+        delete from resource_group_revision where package_id in
+        (select id from package where state = 'to_delete');
+        delete from resource_group where package_id  in
+        (select id from package where state = 'to_delete');
+        commit;
+        '''
+    except ImportError:
+        # CKAN 2.3 removed ckan.model.ResourceGroup
+        sql += 'commit;'
 
     model.Session.execute(sql)
 
