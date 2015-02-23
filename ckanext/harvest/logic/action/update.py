@@ -114,7 +114,32 @@ def harvest_source_clear(context,data_dict):
         ids.append(row[0])
     related_ids = "('" + "','".join(ids) + "')"
 
-    sql = '''begin; update package set state = 'to_delete' where id in (select package_id from harvest_object where harvest_source_id = '{harvest_source_id}');
+    sql = '''begin; 
+    update package set state = 'to_delete' where id in (select package_id from harvest_object where harvest_source_id = '{harvest_source_id}');'''.format(
+        harvest_source_id=harvest_source_id)
+
+    # CKAN-2.3 or above: delete resource views, resource revisions & resources
+    if check_ckan_version(min_version='2.3'):
+        sql += '''
+        delete from resource_view where resource_id in (select id from resource where package_id in (select id from package where state = 'to_delete' ));
+        delete from resource_revision where package_id in (select id from package where state = 'to_delete' );
+        delete from resource where package_id in (select id from package where state = 'to_delete' );
+        '''
+    # Backwards-compatibility: support ResourceGroup (pre-CKAN-2.3)
+    else:
+        sql += '''
+        delete from resource_revision where resource_group_id in 
+        (select id from resource_group where package_id in 
+        (select id from package where state = 'to_delete'));
+        delete from resource where resource_group_id in 
+        (select id from resource_group where package_id in 
+        (select id from package where state = 'to_delete'));
+        delete from resource_group_revision where package_id in 
+        (select id from package where state = 'to_delete');
+        delete from resource_group where package_id  in 
+        (select id from package where state = 'to_delete');
+        '''
+    sql += '''
     delete from harvest_object_error where harvest_object_id in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
     delete from harvest_object_extra where harvest_object_id in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
     delete from harvest_object where harvest_source_id = '{harvest_source_id}';
@@ -131,25 +156,10 @@ def harvest_source_clear(context,data_dict):
     delete from member where table_id in (select id from package where state = 'to_delete');
     delete from related_dataset where dataset_id in (select id from package where state = 'to_delete');
     delete from related where id in {related_ids};
-    delete from package where id in (select id from package where state = 'to_delete');'''.format(
+    delete from package where id in (select id from package where state = 'to_delete');
+    commit;
+    '''.format(
         harvest_source_id=harvest_source_id, related_ids=related_ids)
-
-    # Backwards-compatibility: support ResourceGroup (pre-CKAN-2.3)
-    if check_ckan_version(min_version='2.3'):
-        sql += 'commit;'
-    else:
-        sql += '''delete from resource_revision where resource_group_id in 
-        (select id from resource_group where package_id in 
-        (select id from package where state = 'to_delete'));
-        delete from resource where resource_group_id in 
-        (select id from resource_group where package_id in 
-        (select id from package where state = 'to_delete'));
-        delete from resource_group_revision where package_id in 
-        (select id from package where state = 'to_delete');
-        delete from resource_group where package_id  in 
-        (select id from package where state = 'to_delete');
-        commit;
-        '''
 
     model.Session.execute(sql)
 
