@@ -178,8 +178,6 @@ class HarvesterBase(SingletonPlugin):
 
                 else:
                     log.info('Package with GUID %s not updated, skipping...' % harvest_object.guid)
-                    harvest_object.report_status = 'not modified'
-                    harvest_object.save()
                     return
 
                 # Flag the other objects linking to this package as not current anymore

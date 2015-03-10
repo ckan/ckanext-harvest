@@ -378,6 +378,17 @@ class CKANHarvester(HarvesterBase):
             for resource in package_dict.get('resources', []):
                 resource.pop('url_type', None)
 
+            # Check if package exists
+            data_dict = {}
+            data_dict['id'] = package_dict['id']
+            try:
+                existing_package_dict = get_action('package_show')(context, data_dict)
+                if 'metadata_modified' in package_dict and \
+                                package_dict['metadata_modified'] <= existing_package_dict.get('metadata_modified'):
+                    return "unchanged"
+            except NotFound:
+                pass
+
             result = self._create_or_update_package(package_dict,harvest_object)
 
             if result and self.config.get('read_only',False) == True:
