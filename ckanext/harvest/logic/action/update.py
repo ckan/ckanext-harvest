@@ -17,7 +17,8 @@ from ckan.lib.search.common import SearchIndexError, make_connection
 
 from ckan.model import Package
 from ckan import logic
-from ckan.plugins.toolkit import check_ckan_version
+from ckan.plugins import toolkit
+
 
 from ckan.logic import NotFound, check_access
 
@@ -119,7 +120,7 @@ def harvest_source_clear(context,data_dict):
         harvest_source_id=harvest_source_id)
 
     # CKAN-2.3 or above: delete resource views, resource revisions & resources
-    if check_ckan_version(min_version='2.3'):
+    if toolkit.check_ckan_version(min_version='2.3'):
         sql += '''
         delete from resource_view where resource_id in (select id from resource where package_id in (select id from package where state = 'to_delete' ));
         delete from resource_revision where package_id in (select id from package where state = 'to_delete' );
