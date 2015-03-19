@@ -289,11 +289,8 @@ def _get_logic_functions(module_root, logic_functions = {}):
 
     for module_name in ['get', 'create', 'update','delete']:
         module_path = '%s.%s' % (module_root, module_name,)
-        try:
-            module = __import__(module_path)
-        except ImportError:
-            log.debug('No auth module for action "{0}"'.format(module_name))
-            continue
+
+        module = __import__(module_path)
 
         for part in module_path.split('.')[1:]:
             module = getattr(module, part)
