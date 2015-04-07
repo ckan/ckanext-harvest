@@ -1,0 +1,12 @@
+language: python
+python:
+    - "2.7"
+env:
+    - CKANVERSION=master
+    - CKANVERSION=2.2
+    - CKANVERSION=2.3
+services:
+    - redis-server
+install:
+    - bash bin/travis-build.bash
+script: sh bin/travis-run.sh

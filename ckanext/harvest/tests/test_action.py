@@ -6,11 +6,71 @@ import pylons.test
 import factories
 import unittest
 
-from ckan import tests
+from ckan.lib.create_test_data import CreateTestData
+import ckan.new_tests.helpers as helpers
 from ckan import plugins as p
 from ckan.plugins import toolkit
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.model as harvest_model
+
+def call_action_api(app, action, apikey=None, status=200, **kwargs):
+    '''POST an HTTP request to the CKAN API and return the result.
+
+    Any additional keyword arguments that you pass to this function as **kwargs
+    are posted as params to the API.
+
+    Usage:
+
+        package_dict = post(app, 'package_create', apikey=apikey,
+                name='my_package')
+        assert package_dict['name'] == 'my_package'
+
+        num_followers = post(app, 'user_follower_count', id='annafan')
+
+    If you are expecting an error from the API and want to check the contents
+    of the error dict, you have to use the status param otherwise an exception
+    will be raised:
+
+        error_dict = post(app, 'group_activity_list', status=403,
+                id='invalid_id')
+        assert error_dict['message'] == 'Access Denied'
+
+    :param app: the test app to post to
+    :type app: paste.fixture.TestApp
+
+    :param action: the action to post to, e.g. 'package_create'
+    :type action: string
+
+    :param apikey: the API key to put in the Authorization header of the post
+        (optional, default: None)
+    :type apikey: string
+
+    :param status: the HTTP status code expected in the response from the CKAN
+        API, e.g. 403, if a different status code is received an exception will
+        be raised (optional, default: 200)
+    :type status: int
+
+    :param **kwargs: any other keyword arguments passed to this function will
+        be posted to the API as params
+
+    :raises paste.fixture.AppError: if the HTTP status code of the response
+        from the CKAN API is different from the status param passed to this
+        function
+
+    :returns: the 'result' or 'error' dictionary from the CKAN API response
+    :rtype: dictionary
+
+    '''
+    params = json.dumps(kwargs)
+    response = app.post('/api/action/{0}'.format(action), params=params,
+            extra_environ={'Authorization': str(apikey)}, status=status)
+
+    if status in (200,):
+        assert response.json['success'] is True
+        return response.json['result']
+    else:
+        assert response.json['success'] is False
+        return response.json['error']
 
 
 class MockHarvesterForActionTests(p.SingletonPlugin):
@@ -48,7 +108,7 @@ class HarvestSourceActionBase(object):
     @classmethod
     def setup_class(cls):
         harvest_model.setup()
-        tests.CreateTestData.create()
+        CreateTestData.create()
 
         sysadmin_user = ckan.model.User.get('testsysadmin')
         cls.sysadmin = {
@@ -70,11 +130,15 @@ class HarvestSourceActionBase(object):
           "config": json.dumps({"custom_option":["a","b"]})
         }
 
+        if not p.plugin_loaded('test_action_harvester'):
+            p.load('test_action_harvester')
 
 
     @classmethod
     def teardown_class(cls):
         ckan.model.repo.rebuild_db()
+
+        p.unload('test_action_harvester')
 
     def teardown(self):
         pass
@@ -85,7 +149,7 @@ class HarvestSourceActionBase(object):
         if 'id' in self.default_source_dict:
             source_dict['id'] = self.default_source_dict['id']
 
-        result = tests.call_action_api(self.app, self.action,
+        result = call_action_api(self.app, self.action,
                                 apikey=self.sysadmin['apikey'], status=409, **source_dict)
 
         for key in ('name','title','url','source_type'):
@@ -96,7 +160,7 @@ class HarvestSourceActionBase(object):
         source_dict = copy.deepcopy(self.default_source_dict)
         source_dict['source_type'] = 'unknown'
 
-        result = tests.call_action_api(self.app, self.action,
+        result = call_action_api(self.app, self.action,
                                 apikey=self.sysadmin['apikey'], status=409, **source_dict)
 
         assert 'source_type' in result
@@ -107,7 +171,7 @@ class HarvestSourceActionBase(object):
         source_dict = copy.deepcopy(self.default_source_dict)
         source_dict['frequency'] = wrong_frequency
 
-        result = tests.call_action_api(self.app, self.action,
+        result = call_action_api(self.app, self.action,
                                 apikey=self.sysadmin['apikey'], status=409, **source_dict)
 
         assert 'frequency' in result
@@ -118,7 +182,7 @@ class HarvestSourceActionBase(object):
         source_dict = copy.deepcopy(self.default_source_dict)
         source_dict['config'] = 'not_json'
 
-        result = tests.call_action_api(self.app, self.action,
+        result = call_action_api(self.app, self.action,
                                 apikey=self.sysadmin['apikey'], status=409, **source_dict)
 
         assert 'config' in result
@@ -126,7 +190,7 @@ class HarvestSourceActionBase(object):
 
         source_dict['config'] = json.dumps({'custom_option': 'not_a_list'})
 
-        result = tests.call_action_api(self.app, self.action,
+        result = call_action_api(self.app, self.action,
                                 apikey=self.sysadmin['apikey'], status=409, **source_dict)
 
         assert 'config' in result
@@ -144,7 +208,7 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
 
         source_dict = self.default_source_dict
 
-        result = tests.call_action_api(self.app, 'harvest_source_create',
+        result = call_action_api(self.app, 'harvest_source_create',
                                 apikey=self.sysadmin['apikey'], **source_dict)
 
         for key in source_dict.keys():
@@ -161,7 +225,7 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
         source_dict = copy.deepcopy(self.default_source_dict)
         source_dict['name'] = 'test-source-action-new'
 
-        result = tests.call_action_api(self.app, 'harvest_source_create',
+        result = call_action_api(self.app, 'harvest_source_create',
                                 apikey=self.sysadmin['apikey'], status=409, **source_dict)
 
         assert 'url' in result
@@ -178,7 +242,7 @@ class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
 
         # Create a source to udpate
         source_dict = cls.default_source_dict
-        result = tests.call_action_api(cls.app, 'harvest_source_create',
+        result = call_action_api(cls.app, 'harvest_source_create',
                                 apikey=cls.sysadmin['apikey'], **source_dict)
 
         cls.default_source_dict['id'] = result['id']
@@ -196,7 +260,7 @@ class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
           "config": json.dumps({"custom_option":["c","d"]})
           })
 
-        result = tests.call_action_api(self.app, 'harvest_source_update',
+        result = call_action_api(self.app, 'harvest_source_update',
                                 apikey=self.sysadmin['apikey'], **source_dict)
 
         for key in source_dict.keys():

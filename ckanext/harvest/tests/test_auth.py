@@ -9,7 +9,11 @@ from ckan.lib.base import config
 
 
 from ckan.tests import CreateTestData
-from ckan.tests.functional.base import FunctionalTestCase
+#TODO: remove references to old tests
+try:
+    from ckan.tests.functional.base import FunctionalTestCase
+except ImportError:
+    from ckan.tests.legacy.functional.base import FunctionalTestCase
 
 from ckanext.harvest.plugin import Harvest
 from ckanext.harvest.model import HarvestSource, HarvestJob, setup as harvest_model_setup
