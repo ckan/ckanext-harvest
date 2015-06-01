@@ -66,6 +66,23 @@ Installation
 
     ckan.harvest.mq.type = redis
 
+There are a number of configuration options available for the backends. These don't need to
+be modified at all if you are using the default Redis or RabbitMQ install (step 1). The list
+below shows the available options and their default values:
+
+    * Redis:
+        - ``ckan.harvest.mq.hostname`` (localhost)
+        - ``ckan.harvest.mq.port`` (6379)
+        - ``ckan.harvest.mq.redis_db`` (0)
+
+    * RabbitMQ:
+        - ``ckan.harvest.mq.user_id`` (guest)
+        - ``ckan.harvest.mq.password`` (guest)
+        - ``ckan.harvest.mq.hostname`` (localhost)
+        - ``ckan.harvest.mq.port`` (5672)
+        - ``ckan.harvest.mq.virtual_host`` (/)
+
+
 
 Configuration
 =============
