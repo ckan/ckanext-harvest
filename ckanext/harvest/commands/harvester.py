@@ -18,10 +18,10 @@ class Harvester(CkanCommand):
         - create new harvest source
 
       harvester rmsource {id}
-        - remove (inactivate) a harvester source
+        - remove (deactivate) a harvester source, whilst leaving any related datasets, jobs and objects
 
       harvester clearsource {id}
-        - clear a harvester source (delete all associtated datasets)
+        - clears all datasets, jobs and objects related to a harvest source, but keeps the source itself
 
       harvester sources [all]
         - lists harvest sources
