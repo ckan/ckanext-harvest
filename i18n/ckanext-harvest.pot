@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ckanext-harvest 0.2\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2015-06-10 09:47+0100\n"
+"POT-Creation-Date: 2015-06-10 12:12+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -152,10 +152,6 @@ msgstr ""
 msgid "Only sysadmins can reindex all harvest sources"
 msgstr ""
 
-#: ckanext/harvest/templates_new/index.html:3
-msgid "Harvesting Sources"
-msgstr ""
-
 #: ckanext/harvest/templates_new/snippets/add_source_button.html:6
 #: ckanext/harvest/templates_new/source/org_source_list.html:11
 msgid "Add Harvest Source"
@@ -198,6 +194,10 @@ msgstr ""
 msgid "Message"
 msgstr ""
 
+#: ckanext/harvest/templates_new/snippets/package_list_empty.html:1
+msgid "There are no datasets associated to this harvest source."
+msgstr ""
+
 #: ckanext/harvest/templates_new/snippets/search_result_text.html:4
 msgid "{number} harvest source found for \"{query}\""
 msgid_plural "{number} harvest sources found for \"{query}\""
@@ -237,6 +237,7 @@ msgid "There is no description for this harvest source"
 msgstr ""
 
 #: ckanext/harvest/templates_new/snippets/source_item.html:42
+#: ckanext/harvest/templates_new/source/read.html:5
 #: ckanext/harvest/templates_new/source/read_base.html:30
 #: ckanext/harvest/templates_new/source/read_base.html:53
 msgid "Datasets"
@@ -245,6 +246,10 @@ msgstr ""
 #: ckanext/harvest/templates_new/snippets/source_item.html:45
 #: ckanext/harvest/templates_new/source/new_source_form.html:63
 msgid "Organization"
+msgstr ""
+
+#: ckanext/harvest/templates_new/source/admin.html:5
+msgid "Last Harvest Job"
 msgstr ""
 
 #: ckanext/harvest/templates_new/source/admin.html:11
@@ -414,6 +419,10 @@ msgstr ""
 msgid "Delete and clear source"
 msgstr ""
 
+#: ckanext/harvest/templates_new/source/old_new_source_form.html:5
+msgid "Return to the harvest sources list"
+msgstr ""
+
 #: ckanext/harvest/templates_new/source/org_source_list.html:15
 #: ckanext/harvest/templates_new/source/search_2.0.html:25
 msgid " found for \"{query}\""
@@ -470,6 +479,10 @@ msgstr ""
 
 #: ckanext/harvest/templates_new/source/search_2.0.html:42
 msgid "Remove"
+msgstr ""
+
+#: ckanext/harvest/templates_new/source/search_2.0.html:48
+msgid "Try another search term, browse the sources below or "
 msgstr ""
 
 #: ckanext/harvest/templates_new/source/search_2.0.html:49
