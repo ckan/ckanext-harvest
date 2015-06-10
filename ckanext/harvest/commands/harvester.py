@@ -20,6 +20,9 @@ class Harvester(CkanCommand):
       harvester rmsource {id}
         - remove (inactivate) a harvester source
 
+      harvester clearsource {id}
+        - clear a harvester source (delete all associtated datasets)
+
       harvester sources [all]
         - lists harvest sources
           If 'all' is defined, it also shows the Inactive sources
