@@ -113,7 +113,7 @@ class Harvester(CkanCommand):
         cmd = self.args[0]
         if cmd == 'source':
             self.create_harvest_source()
-        elif cmd == "rmsource":
+        elif cmd == 'rmsource':
             self.remove_harvest_source()
         elif cmd == 'clearsource':
             self.clear_harvest_source()
