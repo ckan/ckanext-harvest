@@ -18,15 +18,15 @@
 {% block primary %}
   <article class="module">
     <div class="module-content">
-      <h1>Harvesting Sources</h1>
+      <h1>{% trans %}Harvesting Sources{% endtrans %}</h1>
       {% if c.status %}
         <div class="status">
-          <h3>Status:</h3>
+          <h3>{{ _('Status') }}:</h3>
           {{ h.literal(c.status) }}
         </div>
       {% endif %}
 
-      <div id="new-harvest-source"><a href="harvest/new">Add a harvesting source</a></div>
+      <div id="new-harvest-source"><a href="harvest/new">{% trans %}Add a harvesting source{% endtrans %}</a></div>
 
       {% if c.sources %}
         <div id="show-inactive-sources-content">
@@ -36,15 +36,19 @@
 
         <table id="harvest-sources" class="table table-bordered table-condensed ${'publishers' if c.publisher_auth else ''}" >
           <tr>
-            <th class="action">View</th>
-            <th class="action">Edit</th>
-            <th class="action">Refresh</th>
+            <th class="action">{{ _('View') }}</th>
+            <th class="action">{{ _('Edit') }}</th>
+            <th class="action">{{ _('Refresh'}}</th>
             <th class="url">URL</th>
-            <th>Type</th>
-            <th>Active</th>
-            <th>Statistics</th>
-            <th>Next Harvest</th>
-            <th>Created</th>
+            {# TRANSLATORS: Appears in harvest source table for the type of harvester #}
+            <th>{{ _('Type')}}</th>
+            {# TRANSLATORS: Appears in harvest source table 'is Active' #}
+            <th>{{ _('Active')}}</th>
+            <th>{{ _('Statistics') }}</th>
+            {# TRANSLATORS: Appears in harvest source table 'date of next harvest #}
+            <th>{{ _('Next Harvest') }}</th>
+            {# TRANSLATORS: Appears in harvest source table date created #}
+            <th>{{ _('Created') }}</th>
           </tr>
           {% set old_publisher = None %}
           {% for source in c.sources %}
@@ -78,7 +82,7 @@
           {% endfor %}
         </table>
       {% else %}
-        <div id="no-harvest-sources">No harvest sources defined yet.</div>
+        <div id="no-harvest-sources">{% trans %}No harvest sources defined yet.{% endtrans %}</div>
       {% endif %}
     </div>
   </article>

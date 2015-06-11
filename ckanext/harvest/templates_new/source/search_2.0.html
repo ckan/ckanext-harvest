@@ -45,8 +45,8 @@
           {% endfor %}
         </div>
         {% if request.params and c.page.item_count == 0 %}
-          <p class="extra">Try another search term,
-          browse the sources below or <a href="{{ h.url_for('{0}_new'.format(c.dataset_type)) }}">{{ _('add a new one') }}</a>.
+          <p class="extra">{% trans %}Try another search term,
+          browse the sources below or {% endtrans %}<a href="{{ h.url_for('{0}_new'.format(c.dataset_type)) }}">{{ _('add a new one') }}</a>.
           </p>
         {% endif %}
       </div>

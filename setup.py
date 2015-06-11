@@ -34,8 +34,19 @@ setup(
 	# Add plugins here, eg
 	harvest=ckanext.harvest.plugin:Harvest
 	ckan_harvester=ckanext.harvest.harvesters:CKANHarvester
+    [ckan.test_plugins]
 	test_harvester=ckanext.harvest.tests.test_queue:TestHarvester
+	test_action_harvester=ckanext.harvest.tests.test_action:MockHarvesterForActionTests
 	[paste.paster_command]
 	harvester = ckanext.harvest.commands.harvester:Harvester
+    [babel.extractors]
+    ckan = ckan.lib.extract:extract_ckan
 	""",
+        message_extractors={
+            'ckanext': [
+                ('**.py', 'python', None),
+                ('**.js', 'javascript', None),
+                ('**/templates_new/**.html', 'ckan', None),
+            ],
+        }
 )
