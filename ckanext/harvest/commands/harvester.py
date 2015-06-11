@@ -127,17 +127,19 @@ class Harvester(CkanCommand):
             self.run_harvester()
         elif cmd == 'gather_consumer':
             import logging
-            from ckanext.harvest.queue import get_gather_consumer, gather_callback
+            from ckanext.harvest.queue import (get_gather_consumer,
+                gather_callback, get_gather_queue_name)
             logging.getLogger('amqplib').setLevel(logging.INFO)
             consumer = get_gather_consumer()
-            for method, header, body in consumer.consume(queue='ckan.harvest.gather'):
+            for method, header, body in consumer.consume(queue=get_gather_queue_name()):
                 gather_callback(consumer, method, header, body)
         elif cmd == 'fetch_consumer':
             import logging
             logging.getLogger('amqplib').setLevel(logging.INFO)
-            from ckanext.harvest.queue import get_fetch_consumer, fetch_callback
+            from ckanext.harvest.queue import (get_fetch_consumer, fetch_callback,
+                get_fetch_queue_name)
             consumer = get_fetch_consumer()
-            for method, header, body in consumer.consume(queue='ckan.harvest.fetch'):
+            for method, header, body in consumer.consume(queue=get_fetch_queue_name()):
                fetch_callback(consumer, method, header, body)
         elif cmd == 'purge_queues':
             from ckanext.harvest.queue import purge_queues
