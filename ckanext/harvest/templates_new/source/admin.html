@@ -2,7 +2,7 @@
 
 {% block primary_content_inner %}
   <section class="module-content">
-    <h1>Last Harvest Job</h1>
+    <h1>{{ _('Last Harvest Job') }}</h1>
     {% if source.status and source.status.last_job %}
       {% snippet "snippets/job_details.html", job=source.status.last_job %}
       <div class="form-actions">
