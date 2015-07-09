@@ -25,9 +25,15 @@
               {% endif %}
             </h3>
             <p>
-              {{ _('Started:') }} {{ h.render_datetime(job.gather_started, with_hours=True) or _('Not yet') }}
+              {{ _('Started:') }}
+              <span class="datetime" data-datetime="{{ h.render_datetime(job.gather_started, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+                {{ h.render_datetime(job.gather_started, with_hours=True) or _('Not yet') }}
+              </span>
               &mdash;
-              {{ _('Finished:') }} {{ h.render_datetime(job.finished, with_hours=True) or _('Not yet') }}
+              {{ _('Finished:') }}
+              <span class="datetime" data-datetime="{{ h.render_datetime(job.finished, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+                {{ h.render_datetime(job.finished, with_hours=True) or _('Not yet') }}
+              </span>
             </p>
           </div>
           {% if job.status == 'Finished' %}
