@@ -273,6 +273,9 @@ class CKANHarvester(HarvesterBase):
                 log.warn('Remote dataset is a harvest source, ignoring...')
                 return True
 
+            if not self._should_import(package_dict):
+                package_dict['state'] = 'deleted'
+
             # Set default tags if needed
             default_tags = self.config.get('default_tags',[])
             if default_tags:
@@ -433,6 +436,11 @@ class CKANHarvester(HarvesterBase):
                     harvest_object, 'Import')
         except Exception, e:
             self._save_object_error('%r'%e,harvest_object,'Import')
+
+    def _should_import(self,package_dict):
+        # Override in harvesters that inherit from CKANHarvester to avoid importing unwanted packages.
+        # Overriding classes should do their own logging of the reason the package is not imported.
+        return True
 
 class ContentFetchError(Exception):
     pass
