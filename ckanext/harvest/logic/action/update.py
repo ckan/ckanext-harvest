@@ -26,7 +26,7 @@ from ckanext.harvest.plugin import DATASET_TYPE_NAME
 from ckanext.harvest.queue import get_gather_publisher, resubmit_jobs
 
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
-from ckanext.harvest.logic import HarvestJobExists
+from ckanext.harvest.logic import HarvestJobExists, NoNewHarvestJobError
 from ckanext.harvest.logic.schema import harvest_source_show_package_schema
 
 from ckanext.harvest.logic.action.get import harvest_source_show, harvest_job_list, _get_sources_for_user
@@ -361,7 +361,7 @@ def harvest_jobs_run(context,data_dict):
     jobs = harvest_job_list(context,{'source_id':source_id,'status':u'New'})
     if len(jobs) == 0:
         log.info('No new harvest jobs.')
-        raise Exception('There are no new harvesting jobs')
+        raise NoNewHarvestJobError('There are no new harvesting jobs')
 
     # Send each job to the gather queue
     publisher = get_gather_publisher()

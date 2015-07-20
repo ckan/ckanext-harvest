@@ -7,3 +7,7 @@ except ImportError:
 
 class HarvestJobExists(Exception):
     pass
+
+
+class NoNewHarvestJobError(Exception):
+    pass
