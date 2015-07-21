@@ -3,6 +3,7 @@ from pprint import pprint
 
 from ckan import model
 from ckan.logic import get_action, ValidationError
+from ckanext.harvest.logic import NoNewHarvestJobError
 
 from ckan.lib.cli import CkanCommand
 
@@ -301,9 +302,10 @@ class Harvester(CkanCommand):
 
     def run_harvester(self):
         context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
-        jobs = get_action('harvest_jobs_run')(context,{})
-
-        #print 'Sent %s jobs to the gather queue' % len(jobs)
+        try:
+            jobs = get_action('harvest_jobs_run')(context,{})
+        except NoNewHarvestJobError:
+            print 'There are no new harvest jobs to run.'
 
     def import_stage(self):
 
