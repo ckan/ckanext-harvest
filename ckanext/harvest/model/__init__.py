@@ -196,12 +196,21 @@ def define_harvester_tables():
         Column('gather_finished', types.DateTime),
         Column('finished', types.DateTime),
         Column('source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
+        # status: New, Running, Finished
         Column('status', types.UnicodeText, default=u'New', nullable=False),
     )
-    # Was harvested_document
+    # A harvest_object contains a representation of one dataset during a
+    # particular harvest
     harvest_object_table = Table('harvest_object', metadata,
         Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
+        # The guid is the 'identity' of the dataset, according to the source.
+        # So if you reharvest it, then the harvester knows which dataset to
+        # update because of this identity. The identity needs to be unique
+        # within this CKAN.
         Column('guid', types.UnicodeText, default=u''),
+        # When you harvest a dataset multiple times, only the latest
+        # successfully imported harvest_object should be flagged 'current'.
+        # The import_stage reads and writes it.
         Column('current',types.Boolean,default=False),
         Column('gathered', types.DateTime, default=datetime.datetime.utcnow),
         Column('fetch_started', types.DateTime),
@@ -209,6 +218,7 @@ def define_harvester_tables():
         Column('fetch_finished', types.DateTime),
         Column('import_started', types.DateTime),
         Column('import_finished', types.DateTime),
+        # state: WAITING, FETCH, IMPORT, COMPLETE, ERROR
         Column('state', types.UnicodeText, default=u'WAITING'),
         Column('metadata_modified_date', types.DateTime),
         Column('retry_times',types.Integer, default=0),
@@ -391,9 +401,11 @@ ALTER TABLE harvest_object_extra
 ALTER TABLE harvest_object_extra
 	ADD CONSTRAINT harvest_object_extra_harvest_object_id_fkey FOREIGN KEY (harvest_object_id) REFERENCES harvest_object(id);
 
-UPDATE harvest_object set state = 'COMPLETE';
+UPDATE harvest_object set state = 'COMPLETE' where package_id is not null;
+UPDATE harvest_object set state = 'ERROR' where package_id is null;
 UPDATE harvest_object set retry_times = 0;
-UPDATE harvest_object set report_status = 'new';
+UPDATE harvest_object set report_status = 'updated' where package_id is not null;
+UPDATE harvest_object set report_status = 'errored' where package_id is null;
 UPDATE harvest_source set frequency = 'MANUAL';
 
 ALTER TABLE harvest_object DROP CONSTRAINT harvest_object_package_id_fkey;
