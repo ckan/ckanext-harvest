@@ -3,6 +3,7 @@ from pprint import pprint
 
 from ckan import model
 from ckan.logic import get_action, ValidationError
+from ckanext.harvest.logic import NoNewHarvestJobError
 
 from ckan.lib.cli import CkanCommand
 
@@ -18,7 +19,10 @@ class Harvester(CkanCommand):
         - create new harvest source
 
       harvester rmsource {id}
-        - remove (inactivate) a harvester source
+        - remove (deactivate) a harvester source, whilst leaving any related datasets, jobs and objects
+
+      harvester clearsource {id}
+        - clears all datasets, jobs and objects related to a harvest source, but keeps the source itself
 
       harvester sources [all]
         - lists harvest sources
@@ -110,8 +114,10 @@ class Harvester(CkanCommand):
         cmd = self.args[0]
         if cmd == 'source':
             self.create_harvest_source()
-        elif cmd == "rmsource":
+        elif cmd == 'rmsource':
             self.remove_harvest_source()
+        elif cmd == 'clearsource':
+            self.clear_harvest_source()
         elif cmd == 'sources':
             self.list_harvest_sources()
         elif cmd == 'job':
@@ -122,17 +128,19 @@ class Harvester(CkanCommand):
             self.run_harvester()
         elif cmd == 'gather_consumer':
             import logging
-            from ckanext.harvest.queue import get_gather_consumer, gather_callback
+            from ckanext.harvest.queue import (get_gather_consumer,
+                gather_callback, get_gather_queue_name)
             logging.getLogger('amqplib').setLevel(logging.INFO)
             consumer = get_gather_consumer()
-            for method, header, body in consumer.consume(queue='ckan.harvest.gather'):
+            for method, header, body in consumer.consume(queue=get_gather_queue_name()):
                 gather_callback(consumer, method, header, body)
         elif cmd == 'fetch_consumer':
             import logging
             logging.getLogger('amqplib').setLevel(logging.INFO)
-            from ckanext.harvest.queue import get_fetch_consumer, fetch_callback
+            from ckanext.harvest.queue import (get_fetch_consumer, fetch_callback,
+                get_fetch_queue_name)
             consumer = get_fetch_consumer()
-            for method, header, body in consumer.consume(queue='ckan.harvest.fetch'):
+            for method, header, body in consumer.consume(queue=get_fetch_queue_name()):
                fetch_callback(consumer, method, header, body)
         elif cmd == 'purge_queues':
             from ckanext.harvest.queue import purge_queues
@@ -248,6 +256,16 @@ class Harvester(CkanCommand):
         get_action('harvest_source_delete')(context,{'id':source_id})
         print 'Removed harvest source: %s' % source_id
 
+    def clear_harvest_source(self):
+        if len(self.args) >= 2:
+            source_id = unicode(self.args[1])
+        else:
+            print 'Please provide a source id'
+            sys.exit(1)
+        context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
+        get_action('harvest_source_clear')(context,{'id':source_id})
+        print 'Cleared harvest source: %s' % source_id
+
     def list_harvest_sources(self):
         if len(self.args) >= 2 and self.args[1] == 'all':
             data_dict = {}
@@ -284,9 +302,10 @@ class Harvester(CkanCommand):
 
     def run_harvester(self):
         context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
-        jobs = get_action('harvest_jobs_run')(context,{})
-
-        #print 'Sent %s jobs to the gather queue' % len(jobs)
+        try:
+            jobs = get_action('harvest_jobs_run')(context,{})
+        except NoNewHarvestJobError:
+            print 'There are no new harvest jobs to run.'
 
     def import_stage(self):
 

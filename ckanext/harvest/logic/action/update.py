@@ -26,7 +26,7 @@ from ckanext.harvest.plugin import DATASET_TYPE_NAME
 from ckanext.harvest.queue import get_gather_publisher, resubmit_jobs
 
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
-from ckanext.harvest.logic import HarvestJobExists
+from ckanext.harvest.logic import HarvestJobExists, NoNewHarvestJobError
 from ckanext.harvest.logic.schema import harvest_source_show_package_schema
 
 from ckanext.harvest.logic.action.get import harvest_source_show, harvest_job_list, _get_sources_for_user
@@ -154,6 +154,10 @@ def harvest_source_clear(context,data_dict):
     delete from package_revision where id in (select id from package where state = 'to_delete');
     delete from package_tag where package_id in (select id from package where state = 'to_delete');
     delete from package_extra where package_id in (select id from package where state = 'to_delete');
+    delete from package_relationship_revision where subject_package_id in (select id from package where state = 'to_delete');
+    delete from package_relationship_revision where object_package_id in (select id from package where state = 'to_delete');
+    delete from package_relationship where subject_package_id in (select id from package where state = 'to_delete');
+    delete from package_relationship where object_package_id in (select id from package where state = 'to_delete');
     delete from member where table_id in (select id from package where state = 'to_delete');
     delete from related_dataset where dataset_id in (select id from package where state = 'to_delete');
     delete from related where id in {related_ids};
@@ -361,7 +365,7 @@ def harvest_jobs_run(context,data_dict):
     jobs = harvest_job_list(context,{'source_id':source_id,'status':u'New'})
     if len(jobs) == 0:
         log.info('No new harvest jobs.')
-        raise Exception('There are no new harvesting jobs')
+        raise NoNewHarvestJobError('There are no new harvesting jobs')
 
     # Send each job to the gather queue
     publisher = get_gather_publisher()

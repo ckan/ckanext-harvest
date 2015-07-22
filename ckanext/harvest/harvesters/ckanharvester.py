@@ -253,6 +253,8 @@ class CKANHarvester(HarvesterBase):
 
     def import_stage(self,harvest_object):
         log.debug('In CKANHarvester import_stage')
+
+        context = {'model': model, 'session': Session, 'user': self._get_user_name()}
         if not harvest_object:
             log.error('No harvest object received')
             return False
@@ -288,7 +290,6 @@ class CKANHarvester(HarvesterBase):
 
                 # check if remote groups exist locally, otherwise remove
                 validated_groups = []
-                context = {'model': model, 'session': Session, 'user': 'harvest'}
 
                 for group_name in package_dict['groups']:
                     try:
@@ -309,6 +310,7 @@ class CKANHarvester(HarvesterBase):
 
                             for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name']:
                                 group.pop(key, None)
+
                             get_action('group_create')(context, group)
                             log.info('Group %s has been newly created' % group_name)
                             if self.api_version == 1:
@@ -318,7 +320,6 @@ class CKANHarvester(HarvesterBase):
 
                 package_dict['groups'] = validated_groups
 
-            context = {'model': model, 'session': Session, 'user': 'harvest'}
 
             # Local harvest source organization
             source_dataset = get_action('package_show')(context, {'id': harvest_object.source.id})
