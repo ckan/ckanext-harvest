@@ -1,2 +1,3 @@
 recursive-include ckanext/harvest/templates *
+recursive-include ckanext/harvest/templates_new *
 recursive-include ckanext/harvest/public *
