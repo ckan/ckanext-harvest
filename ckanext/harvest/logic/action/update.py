@@ -141,7 +141,7 @@ def harvest_source_clear(context,data_dict):
         (select id from package where state = 'to_delete');
         '''
     # CKAN pre-2.5: authz models were removed in migration 078
-    if toolkit.check_ckan_version(max_version='2.4'):
+    if toolkit.check_ckan_version(max_version='2.4.99'):
         sql += '''
         delete from user_object_role where id not in 
         (select user_object_role_id from package_role) and context = 'Package';
