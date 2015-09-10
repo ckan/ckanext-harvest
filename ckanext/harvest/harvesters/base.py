@@ -150,9 +150,9 @@ class HarvesterBase(SingletonPlugin):
         '''
         Creates a new package or updates an exisiting one according to the
         package dictionary provided. The package dictionary should look like
-        the REST API response for a package:
+        the Action API response for a package:
 
-        http://ckan.net/api/rest/package/statistics-catalunya
+        http://ckan.net/api/action/package_show?id=statistics-catalunya
 
         Note that the package_dict must contain an id, which will be used to
         check if the package needs to be created or updated (use the remote
@@ -161,10 +161,6 @@ class HarvesterBase(SingletonPlugin):
         If the remote server provides the modification date of the remote
         package, add it to package_dict['metadata_modified'].
 
-
-        TODO: Not sure it is worth keeping this function. If useful it should
-        use the output of package_show logic function (maybe keeping support
-        for rest api based dicts
         '''
         try:
             # Change default schema
@@ -199,6 +195,7 @@ class HarvesterBase(SingletonPlugin):
 
             # Check if package exists
             data_dict = {}
+
             data_dict['id'] = package_dict['id']
             try:
                 existing_package_dict = get_action('package_show')(context, data_dict)
@@ -214,7 +211,7 @@ class HarvesterBase(SingletonPlugin):
                     context.update({'id':package_dict['id']})
                     package_dict.setdefault('name',
                             existing_package_dict['name'])
-                    new_package = get_action('package_update_rest')(context, package_dict)
+                    new_package = get_action('package_update')(context, package_dict)
 
                 else:
                     log.info('Package with GUID %s not updated, skipping...' % harvest_object.guid)
@@ -258,7 +255,7 @@ class HarvesterBase(SingletonPlugin):
                 model.Session.execute('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
                 model.Session.flush()
 
-                new_package = get_action('package_create_rest')(context, package_dict)
+                new_package = get_action('package_create')(context, package_dict)
 
             Session.commit()
 

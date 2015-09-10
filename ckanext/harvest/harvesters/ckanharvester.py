@@ -6,6 +6,7 @@ from ckan.model import Session, Package
 from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
 from ckan.lib.munge import munge_name
+from urlparse import urljoin
 
 from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError, \
                                     HarvestObjectError
@@ -24,14 +25,11 @@ class CKANHarvester(HarvesterBase):
     api_version = 2
     action_api_version = 3
 
-    def _get_rest_api_offset(self):
-        return '/api/%d/rest' % self.api_version
-
     def _get_action_api_offset(self):
         return '/api/%d/action' % self.action_api_version
 
     def _get_search_api_offset(self):
-        return '/api/%d/search' % self.api_version
+        return "%s/package_search" % self._get_action_api_offset()
 
     def _get_content(self, url):
         http_request = urllib2.Request(
@@ -46,13 +44,13 @@ class CKANHarvester(HarvesterBase):
             http_response = urllib2.urlopen(http_request)
         except urllib2.URLError, e:
             raise ContentFetchError(
-                'Could not fetch url: %s, error: %s' % 
+                'Could not fetch url: %s, error: %s' %
                 (url, str(e))
             )
         return http_response.read()
 
     def _get_group(self, base_url, group_name):
-        url = base_url + self._get_rest_api_offset() + '/group/' + munge_name(group_name)
+        url = base_url + self._get_action_api_offset() + '/group_show?id=' + munge_name(group_name)
         try:
             content = self._get_content(url)
             return json.loads(content)
@@ -157,8 +155,9 @@ class CKANHarvester(HarvesterBase):
 
         # Get source URL
         base_url = harvest_job.source.url.rstrip('/')
-        base_rest_url = base_url + self._get_rest_api_offset()
         base_search_url = base_url + self._get_search_api_offset()
+
+        log.debug("%r", previous_job)
 
         if (previous_job and not previous_job.gather_errors and not len(previous_job.objects) == 0):
             if not self.config.get('force_all',False):
@@ -166,25 +165,18 @@ class CKANHarvester(HarvesterBase):
 
                 # Request only the packages modified since last harvest job
                 last_time = previous_job.gather_finished.isoformat()
-                url = base_search_url + '/revision?since_time=%s' % last_time
+                log.info("Searching for datasets modified since: %s", last_time)
+
+                fq = "metadata_modified:[{last_check} TO *]".format(last_check=last_time)
+                url = base_search_url + '?fq={fq}&rows=1000'.format(fq)
 
                 try:
                     content = self._get_content(url)
 
-                    revision_ids = json.loads(content)
-                    if len(revision_ids):
-                        for revision_id in revision_ids:
-                            url = base_rest_url + '/revision/%s' % revision_id
-                            try:
-                                content = self._get_content(url)
-                            except ContentFetchError,e:
-                                self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
-                                continue
-
-                            revision = json.loads(content)
-                            for package_id in revision['packages']:
-                                if not package_id in package_ids:
-                                    package_ids.append(package_id)
+                    package_dicts = json.loads(content).get('result', {}).get('results', [])
+                    for package in package_dicts:
+                        if not package['id'] in package_ids:
+                            package_ids.append(package['id'])
                     else:
                         log.info('No packages have been updated on the remote CKAN instance since the last harvest job')
                         return None
@@ -197,23 +189,21 @@ class CKANHarvester(HarvesterBase):
                         self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
                         return None
 
-
-
         if get_all_packages:
             # Request all remote packages
-            url = base_rest_url + '/package'
+            url = urljoin(base_url,self._get_action_api_offset() + '/package_list')
             try:
                 content = self._get_content(url)
             except ContentFetchError,e:
                 self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
                 return None
-
-            package_ids = json.loads(content)
+            package_ids = json.loads(content).get('result',[])
 
         try:
             object_ids = []
             if len(package_ids):
                 for package_id in package_ids:
+                    log.debug("Creating harvestjob for %s", package_id)
                     # Create a new HarvestObject for this identifier
                     obj = HarvestObject(guid = package_id, job = harvest_job)
                     obj.save()
@@ -236,7 +226,7 @@ class CKANHarvester(HarvesterBase):
 
         # Get source URL
         url = harvest_object.source.url.rstrip('/')
-        url = url + self._get_rest_api_offset() + '/package/' + harvest_object.guid
+        url = url + self._get_action_api_offset() + '/package_show?id=' + harvest_object.guid
 
         # Get contents
         try:
@@ -246,8 +236,10 @@ class CKANHarvester(HarvesterBase):
                                         (url, e),harvest_object)
             return None
 
+        content = json.loads(content)['result']
+
         # Save the fetched contents in the HarvestObject
-        harvest_object.content = content
+        harvest_object.content = json.dumps(content)
         harvest_object.save()
         return True
 
@@ -374,7 +366,7 @@ class CKANHarvester(HarvesterBase):
             # Find any extras whose values are not strings and try to convert
             # them to strings, as non-string extras are not allowed anymore in
             # CKAN 2.0.
-            for key in package_dict['extras'].keys():
+            for key in package_dict.get('extras', {}).keys():
                 if not isinstance(package_dict['extras'][key], basestring):
                     try:
                         package_dict['extras'][key] = json.dumps(
@@ -390,7 +382,7 @@ class CKANHarvester(HarvesterBase):
                 if not 'extras' in package_dict:
                     package_dict['extras'] = {}
                 for key,value in default_extras.iteritems():
-                    if not key in package_dict['extras'] or override_extras:
+                    if not key in package_dict.get('extras', {}) or override_extras:
                         # Look for replacement strings
                         if isinstance(value,basestring):
                             value = value.format(harvest_source_id=harvest_object.job.source.id,
