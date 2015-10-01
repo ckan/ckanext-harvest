@@ -3,18 +3,19 @@ import datetime
 import json
 
 import pika
+import sqlalchemy
 
 from ckan.lib.base import config
 from ckan.plugins import PluginImplementations
 from ckan import model
 
-from ckanext.harvest.model import HarvestJob, HarvestObject,HarvestGatherError
+from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError
 from ckanext.harvest.interfaces import IHarvester
 
 log = logging.getLogger(__name__)
 assert not log.disabled
 
-__all__ = ['get_gather_publisher', 'get_gather_consumer', \
+__all__ = ['get_gather_publisher', 'get_gather_consumer',
            'get_fetch_publisher', 'get_fetch_consumer']
 
 PORT = 5672
@@ -211,11 +212,12 @@ def gather_callback(channel, method, header, body):
 
     try:
         job = HarvestJob.get(id)
-    except Exception, e:
-        # Occasionally we see:
-        # sqlalchemy.exc.OperationalError "SSL connection has been closed unexpectedly"
+    except sqlalchemy.exc.OperationalError, e:
+        # Occasionally we see: sqlalchemy.exc.OperationalError
+        # "SSL connection has been closed unexpectedly"
         log.exception(e)
-        log.error('Connection Error during gather of %s: %r %r' % (id, e, e.args))
+        log.error('Connection Error during gather of job %s: %r %r',
+                  id, e, e.args)
         # By not sending the ack, it will be retried later.
         # Try to clear the issue with a remove.
         model.Session.remove()
@@ -291,11 +293,12 @@ def fetch_callback(channel, method, header, body):
 
     try:
         obj = HarvestObject.get(id)
-    except Exception, e:
+    except sqlalchemy.exc.OperationalError, e:
         # Occasionally we see: sqlalchemy.exc.OperationalError
         # "SSL connection has been closed unexpectedly"
         log.exception(e)
-        log.error('Connection Error during gather of %s: %r %r' % (id, e, e.args))
+        log.error('Connection Error during gather of harvest object %s: %r %r',
+                  id, e, e.args)
         # By not sending the ack, it will be retried later.
         # Try to clear the issue with a remove.
         model.Session.remove()
