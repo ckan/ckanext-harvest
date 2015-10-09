@@ -1,15 +1,20 @@
 import json
 import copy
-import ckan
 import paste
 import pylons.test
 import factories
 import unittest
 
+try:
+    from ckan.tests import factories as ckan_factories
+except ImportError:
+    from ckan.new_tests import factories as ckan_factories
 from ckan.lib.create_test_data import CreateTestData
 import ckan.new_tests.helpers as helpers
 from ckan import plugins as p
 from ckan.plugins import toolkit
+from ckan import model
+
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.model as harvest_model
 
@@ -62,6 +67,7 @@ def call_action_api(app, action, apikey=None, status=200, **kwargs):
 
     '''
     params = json.dumps(kwargs)
+    import pdb; pdb.set_trace()
     response = app.post('/api/action/{0}'.format(action), params=params,
             extra_environ={'Authorization': str(apikey)}, status=status)
 
@@ -103,24 +109,22 @@ class MockHarvesterForActionTests(p.SingletonPlugin):
     def import_stage(self, harvest_object):
         return True
 
-class HarvestSourceActionBase(object):
+
+class HarvestSourceActionBase(helpers.FunctionalTestBase):
 
     @classmethod
     def setup_class(cls):
+        super(HarvestSourceActionBase, cls).setup_class()
         harvest_model.setup()
         CreateTestData.create()
 
-        sysadmin_user = ckan.model.User.get('testsysadmin')
-        cls.sysadmin = {
-                'id': sysadmin_user.id,
-                'apikey': sysadmin_user.apikey,
-                'name': sysadmin_user.name,
-                }
+        import pdb; pdb.set_trace()
+        cls.sysadmin = ckan_factories.Sysadmin()
 
+        cls.app = cls._test_app
+        #paste.fixture.TestApp(pylons.test.pylonsapp)
 
-        cls.app = paste.fixture.TestApp(pylons.test.pylonsapp)
-
-        cls.default_source_dict =  {
+        cls.default_source_dict = {
           "url": "http://test.action.com",
           "name": "test-source-action",
           "title": "Test source action",
@@ -136,7 +140,9 @@ class HarvestSourceActionBase(object):
 
     @classmethod
     def teardown_class(cls):
-        ckan.model.repo.rebuild_db()
+        super(HarvestSourceActionBase, cls).teardown_class()
+        import pdb; pdb.set_trace()
+        model.repo.rebuild_db()
 
         p.unload('test_action_harvester')
 
@@ -278,15 +284,15 @@ class TestHarvestObject(unittest.TestCase):
 
     @classmethod
     def teardown_class(cls):
-        ckan.model.repo.rebuild_db()
+        import pdb; pdb.set_trace()
+        model.repo.rebuild_db()
 
     def test_create(self):
-        job = factories.HarvestJobFactory()
-        job.save()
+        job = factories.HarvestJobObj()
 
         context = {
-            'model' : ckan.model,
-            'session': ckan.model.Session,
+            'model' : model,
+            'session': model.Session,
             'ignore_auth': True,
         }
         data_dict = {
@@ -303,14 +309,12 @@ class TestHarvestObject(unittest.TestCase):
         assert created_object.guid == harvest_object['guid'] == data_dict['guid']
 
     def test_create_bad_parameters(self):
-        source_a = factories.HarvestSourceFactory()
-        source_a.save()
-        job = factories.HarvestJobFactory()
-        job.save()
+        source_a = factories.HarvestSourceObj()
+        job = factories.HarvestJobObj()
 
         context = {
-            'model' : ckan.model,
-            'session': ckan.model.Session,
+            'model' : model,
+            'session': model.Session,
             'ignore_auth': True,
         }
         data_dict = {

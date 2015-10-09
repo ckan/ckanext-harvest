@@ -82,10 +82,13 @@ def purge_queues():
     if backend in ('amqp', 'ampq'):
         channel = connection.channel()
         channel.queue_purge(queue=get_gather_queue_name())
+        log.info('AMQP queue purged: %s', get_gather_queue_name())
         channel.queue_purge(queue=get_fetch_queue_name())
+        log.info('AMQP queue purged: %s', get_fetch_queue_name())
         return
     if backend == 'redis':
         connection.flushall()
+        log.info('Redis flushed')
 
 def resubmit_jobs():
     if config.get('ckan.harvest.mq.type') != 'redis':
@@ -95,7 +98,7 @@ def resubmit_jobs():
     for key in harvest_object_pending:
         date_of_key = datetime.datetime.strptime(redis.get(key),
                                                  "%Y-%m-%d %H:%M:%S.%f")
-        if (datetime.datetime.now() - date_of_key).seconds > 180: # 3 minuites for fetch and import max
+        if (datetime.datetime.now() - date_of_key).seconds > 180: # 3 minutes for fetch and import max
             redis.rpush('harvest_object_id',
                 json.dumps({'harvest_object_id': key.split(':')[-1]})
             )
