@@ -123,7 +123,6 @@ class FunctionalTestBaseWithoutClearBetweenTests(object):
 
     @classmethod
     def setup_class(cls):
-        #harvest_model.setup()
         reset_db()
         harvest_model.setup()
         cls._get_test_app()

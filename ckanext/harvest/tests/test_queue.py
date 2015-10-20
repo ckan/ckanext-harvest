@@ -1,3 +1,7 @@
+try:
+    from ckan.tests.helpers import reset_db
+except ImportError:
+    from ckan.new_tests.helpers import reset_db
 import ckanext.harvest.model as harvest_model
 from ckanext.harvest.model import HarvestObject, HarvestObjectExtra
 from ckanext.harvest.interfaces import IHarvester
@@ -82,12 +86,8 @@ class TestHarvester(SingletonPlugin):
 class TestHarvestQueue(object):
     @classmethod
     def setup_class(cls):
+        reset_db()
         harvest_model.setup()
-
-    @classmethod
-    def teardown_class(cls):
-        model.repo.rebuild_db()
-
 
     def test_01_basic_harvester(self):
 
