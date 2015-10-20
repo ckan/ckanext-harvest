@@ -1,7 +1,5 @@
 import json
 import copy
-import paste
-import pylons.test
 import factories
 import unittest
 
@@ -19,7 +17,8 @@ from ckan import model
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.model as harvest_model
 
-def call_action_api(app, action, apikey=None, status=200, **kwargs):
+
+def call_action_api(action, apikey=None, status=200, **kwargs):
     '''POST an HTTP request to the CKAN API and return the result.
 
     Any additional keyword arguments that you pass to this function as **kwargs
@@ -27,7 +26,7 @@ def call_action_api(app, action, apikey=None, status=200, **kwargs):
 
     Usage:
 
-        package_dict = post(app, 'package_create', apikey=apikey,
+        package_dict = call_action_api('package_create', apikey=apikey,
                 name='my_package')
         assert package_dict['name'] == 'my_package'
 
@@ -37,12 +36,9 @@ def call_action_api(app, action, apikey=None, status=200, **kwargs):
     of the error dict, you have to use the status param otherwise an exception
     will be raised:
 
-        error_dict = post(app, 'group_activity_list', status=403,
+        error_dict = call_action_api('group_activity_list', status=403,
                 id='invalid_id')
         assert error_dict['message'] == 'Access Denied'
-
-    :param app: the test app to post to
-    :type app: paste.fixture.TestApp
 
     :param action: the action to post to, e.g. 'package_create'
     :type action: string
@@ -68,8 +64,10 @@ def call_action_api(app, action, apikey=None, status=200, **kwargs):
 
     '''
     params = json.dumps(kwargs)
+    app = _get_test_app()
     response = app.post('/api/action/{0}'.format(action), params=params,
-            extra_environ={'Authorization': str(apikey)}, status=status)
+                        extra_environ={'Authorization': str(apikey)},
+                        status=status)
 
     if status in (200,):
         assert response.json['success'] is True
@@ -81,10 +79,13 @@ def call_action_api(app, action, apikey=None, status=200, **kwargs):
 
 class MockHarvesterForActionTests(p.SingletonPlugin):
     p.implements(IHarvester)
-    def info(self):
-        return {'name': 'test-for-action', 'title': 'Test for action', 'description': 'test'}
 
-    def validate_config(self,config):
+    def info(self):
+        return {'name': 'test-for-action',
+                'title': 'Test for action',
+                'description': 'test'}
+
+    def validate_config(self, config):
         if not config:
             return config
 
@@ -92,10 +93,10 @@ class MockHarvesterForActionTests(p.SingletonPlugin):
             config_obj = json.loads(config)
 
             if 'custom_option' in config_obj:
-                if not isinstance(config_obj['custom_option'],list):
+                if not isinstance(config_obj['custom_option'], list):
                     raise ValueError('custom_option must be a list')
 
-        except ValueError,e:
+        except ValueError, e:
             raise e
 
         return config
@@ -111,21 +112,16 @@ class MockHarvesterForActionTests(p.SingletonPlugin):
 
 
 class FunctionalTestBaseWithoutClearBetweenTests(object):
-    ''' This is like helpers.FunctionalTestBase only it doesn't call reset_db
-    before every test. '''
-    @classmethod
-    def _get_test_app(cls):  # leading _ because nose is terrible
-        # FIXME: remove this method and switch to using helpers.get_test_app
-        # in each test once the old functional tests are fixed or removed
-        if not hasattr(cls, '_test_app'):
-            cls._test_app = _get_test_app()
-        return cls._test_app
+    ''' Functional tests should normally derive from
+    ckan.lib.helpers.FunctionalTestBase, but these are legacy tests so this
+    class is a compromise.  This version doesn't call reset_db before every
+    test, because these tests are designed with fixtures created in
+    setup_class.'''
 
     @classmethod
     def setup_class(cls):
         reset_db()
         harvest_model.setup()
-        cls._get_test_app()
 
     @classmethod
     def teardown_class(cls):
@@ -142,22 +138,18 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
 
         cls.sysadmin = ckan_factories.Sysadmin()
 
-        cls.app = cls._test_app
-        #paste.fixture.TestApp(pylons.test.pylonsapp)
-
         cls.default_source_dict = {
-          "url": "http://test.action.com",
-          "name": "test-source-action",
-          "title": "Test source action",
-          "notes": "Test source action desc",
-          "source_type": "test-for-action",
-          "frequency": "MANUAL",
-          "config": json.dumps({"custom_option":["a","b"]})
+            "url": "http://test.action.com",
+            "name": "test-source-action",
+            "title": "Test source action",
+            "notes": "Test source action desc",
+            "source_type": "test-for-action",
+            "frequency": "MANUAL",
+            "config": json.dumps({"custom_option": ["a", "b"]})
         }
 
         if not p.plugin_loaded('test_action_harvester'):
             p.load('test_action_harvester')
-
 
     @classmethod
     def teardown_class(cls):
@@ -174,10 +166,11 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
         if 'id' in self.default_source_dict:
             source_dict['id'] = self.default_source_dict['id']
 
-        result = call_action_api(self.app, self.action,
-                                apikey=self.sysadmin['apikey'], status=409, **source_dict)
+        result = call_action_api(self.action,
+                                 apikey=self.sysadmin['apikey'], status=409,
+                                 **source_dict)
 
-        for key in ('name','title','url','source_type'):
+        for key in ('name', 'title', 'url', 'source_type'):
             assert result[key] == [u'Missing value']
 
     def test_invalid_unknown_type(self):
@@ -185,8 +178,9 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
         source_dict = copy.deepcopy(self.default_source_dict)
         source_dict['source_type'] = 'unknown'
 
-        result = call_action_api(self.app, self.action,
-                                apikey=self.sysadmin['apikey'], status=409, **source_dict)
+        result = call_action_api(self.action,
+                                 apikey=self.sysadmin['apikey'], status=409,
+                                 **source_dict)
 
         assert 'source_type' in result
         assert u'Unknown harvester type' in result['source_type'][0]
@@ -196,8 +190,9 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
         source_dict = copy.deepcopy(self.default_source_dict)
         source_dict['frequency'] = wrong_frequency
 
-        result = call_action_api(self.app, self.action,
-                                apikey=self.sysadmin['apikey'], status=409, **source_dict)
+        result = call_action_api(self.action,
+                                 apikey=self.sysadmin['apikey'], status=409,
+                                 **source_dict)
 
         assert 'frequency' in result
         assert u'Frequency {0} not recognised'.format(wrong_frequency) in result['frequency'][0]
@@ -207,16 +202,18 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
         source_dict = copy.deepcopy(self.default_source_dict)
         source_dict['config'] = 'not_json'
 
-        result = call_action_api(self.app, self.action,
-                                apikey=self.sysadmin['apikey'], status=409, **source_dict)
+        result = call_action_api(self.action,
+                                 apikey=self.sysadmin['apikey'], status=409,
+                                 **source_dict)
 
         assert 'config' in result
         assert u'Error parsing the configuration options: No JSON object could be decoded' in result['config'][0]
 
         source_dict['config'] = json.dumps({'custom_option': 'not_a_list'})
 
-        result = call_action_api(self.app, self.action,
-                                apikey=self.sysadmin['apikey'], status=409, **source_dict)
+        result = call_action_api(self.action,
+                                 apikey=self.sysadmin['apikey'], status=409,
+                                 **source_dict)
 
         assert 'config' in result
         assert u'Error parsing the configuration options: custom_option must be a list' in result['config'][0]
@@ -227,14 +224,12 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
     def __init__(self):
         self.action = 'harvest_source_create'
 
-
-
     def test_create(self):
 
         source_dict = self.default_source_dict
 
-        result = call_action_api(self.app, 'harvest_source_create',
-                                apikey=self.sysadmin['apikey'], **source_dict)
+        result = call_action_api('harvest_source_create',
+                                 apikey=self.sysadmin['apikey'], **source_dict)
 
         for key in source_dict.keys():
             assert source_dict[key] == result[key]
@@ -244,17 +239,17 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
         assert source.url == source_dict['url']
         assert source.type == source_dict['source_type']
 
-
         # Trying to create a source with the same URL fails
-
         source_dict = copy.deepcopy(self.default_source_dict)
         source_dict['name'] = 'test-source-action-new'
 
-        result = call_action_api(self.app, 'harvest_source_create',
-                                apikey=self.sysadmin['apikey'], status=409, **source_dict)
+        result = call_action_api('harvest_source_create',
+                                 apikey=self.sysadmin['apikey'], status=409,
+                                 **source_dict)
 
         assert 'url' in result
         assert u'There already is a Harvest Source for this URL' in result['url'][0]
+
 
 class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
 
@@ -267,8 +262,8 @@ class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
 
         # Create a source to udpate
         source_dict = cls.default_source_dict
-        result = call_action_api(cls.app, 'harvest_source_create',
-                                apikey=cls.sysadmin['apikey'], **source_dict)
+        result = call_action_api('harvest_source_create',
+                                 apikey=cls.sysadmin['apikey'], **source_dict)
 
         cls.default_source_dict['id'] = result['id']
 
@@ -276,17 +271,17 @@ class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
 
         source_dict = self.default_source_dict
         source_dict.update({
-          "url": "http://test.action.updated.com",
-          "name": "test-source-action-updated",
-          "title": "Test source action updated",
-          "notes": "Test source action desc updated",
-          "source_type": "test",
-          "frequency": "MONTHLY",
-          "config": json.dumps({"custom_option":["c","d"]})
-          })
+            "url": "http://test.action.updated.com",
+            "name": "test-source-action-updated",
+            "title": "Test source action updated",
+            "notes": "Test source action desc updated",
+            "source_type": "test",
+            "frequency": "MONTHLY",
+            "config": json.dumps({"custom_option": ["c", "d"]})
+        })
 
-        result = call_action_api(self.app, 'harvest_source_update',
-                                apikey=self.sysadmin['apikey'], **source_dict)
+        result = call_action_api('harvest_source_update',
+                                 apikey=self.sysadmin['apikey'], **source_dict)
 
         for key in source_dict.keys():
             assert source_dict[key] == result[key]
@@ -295,6 +290,7 @@ class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
         source = harvest_model.HarvestSource.get(result['id'])
         assert source.url == source_dict['url']
         assert source.type == source_dict['source_type']
+
 
 class TestHarvestObject(unittest.TestCase):
     @classmethod
@@ -306,15 +302,15 @@ class TestHarvestObject(unittest.TestCase):
         job = factories.HarvestJobObj()
 
         context = {
-            'model' : model,
+            'model': model,
             'session': model.Session,
             'ignore_auth': True,
         }
         data_dict = {
-            'guid' : 'guid',
-            'content' : 'content',
-            'job_id' : job.id,
-            'extras' : { 'a key' : 'a value' },
+            'guid': 'guid',
+            'content': 'content',
+            'job_id': job.id,
+            'extras': {'a key': 'a value'},
         }
         harvest_object = toolkit.get_action('harvest_object_create')(
             context, data_dict)
@@ -328,20 +324,20 @@ class TestHarvestObject(unittest.TestCase):
         job = factories.HarvestJobObj()
 
         context = {
-            'model' : model,
+            'model': model,
             'session': model.Session,
             'ignore_auth': True,
         }
         data_dict = {
-            'job_id' : job.id,
-            'source_id' : source_a.id,
-            'extras' : 1
+            'job_id': job.id,
+            'source_id': source_a.id,
+            'extras': 1
         }
         harvest_object_create = toolkit.get_action('harvest_object_create')
         self.assertRaises(toolkit.ValidationError, harvest_object_create,
-            context, data_dict)
+                          context, data_dict)
 
-        data_dict['extras'] = {'test': 1 }
+        data_dict['extras'] = {'test': 1}
 
         self.assertRaises(toolkit.ValidationError, harvest_object_create,
-            context, data_dict)
+                          context, data_dict)
