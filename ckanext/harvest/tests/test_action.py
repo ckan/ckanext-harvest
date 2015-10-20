@@ -7,10 +7,11 @@ import unittest
 
 try:
     from ckan.tests import factories as ckan_factories
+    from ckan.tests.helpers import _get_test_app, reset_db
 except ImportError:
     from ckan.new_tests import factories as ckan_factories
+    from ckan.new_tests.helpers import _get_test_app, reset_db
 from ckan.lib.create_test_data import CreateTestData
-import ckan.new_tests.helpers as helpers
 from ckan import plugins as p
 from ckan.plugins import toolkit
 from ckan import model
@@ -67,7 +68,6 @@ def call_action_api(app, action, apikey=None, status=200, **kwargs):
 
     '''
     params = json.dumps(kwargs)
-    import pdb; pdb.set_trace()
     response = app.post('/api/action/{0}'.format(action), params=params,
             extra_environ={'Authorization': str(apikey)}, status=status)
 
@@ -110,7 +110,30 @@ class MockHarvesterForActionTests(p.SingletonPlugin):
         return True
 
 
-class HarvestSourceActionBase(helpers.FunctionalTestBase):
+class FunctionalTestBaseWithoutClearBetweenTests(object):
+    ''' This is like helpers.FunctionalTestBase only it doesn't call reset_db
+    before every test. '''
+    @classmethod
+    def _get_test_app(cls):  # leading _ because nose is terrible
+        # FIXME: remove this method and switch to using helpers.get_test_app
+        # in each test once the old functional tests are fixed or removed
+        if not hasattr(cls, '_test_app'):
+            cls._test_app = _get_test_app()
+        return cls._test_app
+
+    @classmethod
+    def setup_class(cls):
+        #harvest_model.setup()
+        reset_db()
+        harvest_model.setup()
+        cls._get_test_app()
+
+    @classmethod
+    def teardown_class(cls):
+        pass
+
+
+class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
 
     @classmethod
     def setup_class(cls):
@@ -118,7 +141,6 @@ class HarvestSourceActionBase(helpers.FunctionalTestBase):
         harvest_model.setup()
         CreateTestData.create()
 
-        import pdb; pdb.set_trace()
         cls.sysadmin = ckan_factories.Sysadmin()
 
         cls.app = cls._test_app
@@ -141,8 +163,6 @@ class HarvestSourceActionBase(helpers.FunctionalTestBase):
     @classmethod
     def teardown_class(cls):
         super(HarvestSourceActionBase, cls).teardown_class()
-        import pdb; pdb.set_trace()
-        model.repo.rebuild_db()
 
         p.unload('test_action_harvester')
 
@@ -280,12 +300,8 @@ class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
 class TestHarvestObject(unittest.TestCase):
     @classmethod
     def setup_class(cls):
+        reset_db()
         harvest_model.setup()
-
-    @classmethod
-    def teardown_class(cls):
-        import pdb; pdb.set_trace()
-        model.repo.rebuild_db()
 
     def test_create(self):
         job = factories.HarvestJobObj()
@@ -323,10 +339,10 @@ class TestHarvestObject(unittest.TestCase):
             'extras' : 1
         }
         harvest_object_create = toolkit.get_action('harvest_object_create')
-        self.assertRaises(ckan.logic.ValidationError, harvest_object_create,
+        self.assertRaises(toolkit.ValidationError, harvest_object_create,
             context, data_dict)
 
         data_dict['extras'] = {'test': 1 }
 
-        self.assertRaises(ckan.logic.ValidationError, harvest_object_create,
+        self.assertRaises(toolkit.ValidationError, harvest_object_create,
             context, data_dict)
