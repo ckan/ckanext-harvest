@@ -55,5 +55,33 @@ class HarvestJob(factory.Factory):
         else:
             return cls.FACTORY_FOR.get(job_dict['id'])
 
+
 class HarvestJobObj(HarvestJob):
+    _return_type = 'obj'
+
+
+class HarvestObject(factory.Factory):
+    FACTORY_FOR = harvest_model.HarvestObject
+    _return_type = 'dict'
+
+    #source = factory.SubFactory(HarvestSourceObj)
+    job = factory.SubFactory(HarvestJobObj)
+
+    @classmethod
+    def _create(cls, target_class, *args, **kwargs):
+        if args:
+            assert False, "Positional args aren't supported, use keyword args."
+        context = {'user': _get_action_user_name(kwargs)}
+        if 'job_id' not in kwargs:
+            kwargs['job_id'] = kwargs['job'].id
+            kwargs['source_id'] = kwargs['job'].source.id
+        job_dict = toolkit.get_action('harvest_object_create')(
+            context, kwargs)
+        if cls._return_type == 'dict':
+            return job_dict
+        else:
+            return cls.FACTORY_FOR.get(job_dict['id'])
+
+
+class HarvestObjectObj(HarvestObject):
     _return_type = 'obj'

@@ -9,7 +9,6 @@ try:
 except ImportError:
     from ckan.new_tests import factories as ckan_factories
     from ckan.new_tests.helpers import _get_test_app, reset_db
-from ckan.lib.create_test_data import CreateTestData
 from ckan import plugins as p
 from ckan.plugins import toolkit
 from ckan import model
@@ -134,7 +133,6 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
     def setup_class(cls):
         super(HarvestSourceActionBase, cls).setup_class()
         harvest_model.setup()
-        CreateTestData.create()
 
         cls.sysadmin = ckan_factories.Sysadmin()
 
@@ -156,9 +154,6 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
         super(HarvestSourceActionBase, cls).teardown_class()
 
         p.unload('test_action_harvester')
-
-    def teardown(self):
-        pass
 
     def test_invalid_missing_values(self):
 
