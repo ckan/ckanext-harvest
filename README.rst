@@ -149,12 +149,12 @@ Authorization
 =============
 
 Starting from CKAN 2.0, harvest sources behave exactly the same as datasets
-(they are actually internally implemented as a dataset type). That means that
+(they are actually internally implemented as a dataset type). That means they
 can be searched and faceted, and that the same authorization rules can be
 applied to them. The default authorization settings are based on organizations
 (equivalent to the `publisher profile` found in old versions).
 
-Have a look at the `Authorization <http://docs.ckan.org/en/latest/authorization.html>`_ 
+Have a look at the `Authorization <http://docs.ckan.org/en/latest/authorization.html>`_
 documentation on CKAN core to see how to configure your instance depending on
 your needs.
 
@@ -429,7 +429,7 @@ The ``run`` command not only starts any pending harvesting jobs, but also
 flags those that are finished, allowing new jobs to be created on that particular
 source and refreshing the source statistics. That means that you will need to run
 this command before being able to create a new job on a source that was being
-harvested (On a production site you will tipically have a cron job that runs the
+harvested (On a production site you will typically have a cron job that runs the
 command regularly, see next section).
 
 
@@ -598,4 +598,3 @@ http://www.fsf.org/licensing/licenses/agpl-3.0.html
 
 
 .. _Supervisor: http://supervisord.org
-
