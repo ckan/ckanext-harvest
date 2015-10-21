@@ -39,6 +39,7 @@ harvest_gather_error_table = None
 harvest_object_error_table = None
 harvest_object_extra_table = None
 
+
 def setup():
 
     if harvest_source_table is None:
@@ -46,13 +47,11 @@ def setup():
         log.debug('Harvest tables defined in memory')
 
     if not model.package_table.exists():
-        print 'harvest model setup: DEFER'
         log.debug('Harvest table creation deferred')
         return
 
     if not harvest_source_table.exists():
 
-        print 'harvest model setup: CREATE'
         # Create each table individually rather than
         # using metadata.create_all()
         harvest_source_table.create()
@@ -65,7 +64,6 @@ def setup():
         log.debug('Harvest tables created')
     else:
         from ckan.model.meta import engine
-        print 'harvest model setup: NOTHING TO DO'
         log.debug('Harvest tables already exist')
         # Check if existing tables need to be updated
         inspector = Inspector.from_engine(engine)
