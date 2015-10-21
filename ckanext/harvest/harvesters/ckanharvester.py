@@ -46,7 +46,7 @@ class CKANHarvester(HarvesterBase):
             http_response = urllib2.urlopen(http_request)
         except urllib2.URLError, e:
             raise ContentFetchError(
-                'Could not fetch url: %s, error: %s' % 
+                'Could not fetch url: %s, error: %s' %
                 (url, str(e))
             )
         return http_response.read()
@@ -160,6 +160,22 @@ class CKANHarvester(HarvesterBase):
         base_rest_url = base_url + self._get_rest_api_offset()
         base_search_url = base_url + self._get_search_api_offset()
 
+        # Get datasets belonging to selected organizations
+        organization_list = self.config.get('limit_org', [])
+        organization_pkg_ids = []
+        for organization in organization_list:
+            url = base_search_url + '/dataset?organization=%s' % organization
+            content = self._get_content(url)
+            content_json = json.loads(content)
+            result_count = int(content_json['count'])
+            for result in content_json['results']:
+                organization_pkg_ids.append(result)
+            while len(organization_pkg_ids) < result_count:
+                url = base_search_url + '/dataset?organization=%s&offset=%s' % (organization, len(organization_pkg_ids))
+                content = self._get_content(url)
+                content_json = json.loads(content)
+                for result in content_json['results']:
+                    organization_pkg_ids.append(result)
         if (previous_job and not previous_job.gather_errors and not len(previous_job.objects) == 0):
             if not self.config.get('force_all',False):
                 get_all_packages = False
@@ -184,7 +200,11 @@ class CKANHarvester(HarvesterBase):
                             revision = json.loads(content)
                             for package_id in revision['packages']:
                                 if not package_id in package_ids:
-                                    package_ids.append(package_id)
+                                    if len(organization_list) > 0:
+                                        if package_id in organization_pkg_ids:
+                                            package_ids.append(package_id)
+                                    else:
+                                        package_ids.append(package_id)
                     else:
                         log.info('No packages have been updated on the remote CKAN instance since the last harvest job')
                         return None
@@ -202,13 +222,18 @@ class CKANHarvester(HarvesterBase):
         if get_all_packages:
             # Request all remote packages
             url = base_rest_url + '/package'
+
             try:
                 content = self._get_content(url)
             except ContentFetchError,e:
                 self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
                 return None
-
-            package_ids = json.loads(content)
+            if len(organization_list) > 0:
+                for package_id in json.loads(content):
+                    if package_id in organization_pkg_ids:
+                        package_ids.append(package_id)
+            else:
+                package_ids = json.loads(content)
 
         try:
             object_ids = []
