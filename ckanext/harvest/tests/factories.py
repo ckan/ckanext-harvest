@@ -22,8 +22,14 @@ class HarvestSource(factory.Factory):
         if args:
             assert False, "Positional args aren't supported, use keyword args."
         context = {'user': _get_action_user_name(kwargs)}
-        source_dict = toolkit.get_action('harvest_source_create')(
-            context, kwargs)
+        # If there is an existing source for this URL, and we can't create
+        # another source with that URL, just return the original one.
+        try:
+            source_dict = toolkit.get_action('harvest_source_show')(
+                context, dict(url=kwargs['url']))
+        except toolkit.ObjectNotFound:
+            source_dict = toolkit.get_action('harvest_source_create')(
+                context, kwargs)
         if cls._return_type == 'dict':
             return source_dict
         else:
@@ -50,6 +56,12 @@ class HarvestJob(factory.Factory):
             kwargs['source_id'] = kwargs['source'].id
         job_dict = toolkit.get_action('harvest_job_create')(
             context, kwargs)
+        # status doesn't get set by harvest_job_create so do it manually
+        if kwargs['status'] != 'New':
+            job_obj = cls.FACTORY_FOR.get(job_dict['id'])
+            job_obj.status = kwargs['status']
+            job_obj.save()
+            job_dict['status'] = kwargs['status']
         if cls._return_type == 'dict':
             return job_dict
         else:

@@ -11,12 +11,13 @@ from ckan import model
 
 from ckanext.harvest.tests.factories import (HarvestSourceObj, HarvestJobObj,
                                              HarvestObjectObj)
+from ckanext.harvest.tests.lib import run_harvest
 import ckanext.harvest.model as harvest_model
 from ckanext.harvest.harvesters.ckanharvester import CKANHarvester
 
 import mock_ckan
 
-# Start CKAN-alike server we can test harvesting against
+# Start CKAN-alike server we can test harvesting against it
 mock_ckan.serve()
 
 
@@ -69,3 +70,50 @@ class TestCkanHarvester(object):
         assert harvest_object.package_id
         dataset = model.Package.get(harvest_object.package_id)
         assert_equal(dataset.name, mock_ckan.DATASETS[0]['name'])
+
+    def test_harvest(self):
+        results_by_guid = run_harvest(
+            url='http://localhost:%s/' % mock_ckan.PORT,
+            harvester=CKANHarvester())
+
+        result = results_by_guid['abc']
+        assert_equal(result['state'], 'COMPLETE')
+        assert_equal(result['report_status'], 'added')
+        assert_equal(result['dataset']['name'], mock_ckan.DATASETS[0]['name'])
+        assert_equal(result['errors'], [])
+
+        result = results_by_guid[mock_ckan.DATASETS[1]['id']]
+        assert_equal(result['state'], 'COMPLETE')
+        assert_equal(result['report_status'], 'added')
+        assert_equal(result['dataset']['name'], mock_ckan.DATASETS[1]['name'])
+        assert_equal(result['errors'], [])
+
+    def test_harvest_twice(self):
+        run_harvest(
+            url='http://localhost:%s/' % mock_ckan.PORT,
+            harvester=CKANHarvester())
+        results_by_guid = run_harvest(
+            url='http://localhost:%s/' % mock_ckan.PORT,
+            harvester=CKANHarvester())
+
+        # updated the dataset which has revisions
+        result = results_by_guid['dataset1']
+        assert_equal(result['state'], 'COMPLETE')
+        assert_equal(result['report_status'], 'updated')
+        assert_equal(result['dataset']['name'], mock_ckan.DATASETS[0]['name'])
+        assert_equal(result['errors'], [])
+
+        # the other dataset is unchanged and not harvested
+        assert mock_ckan.DATASETS[1]['id'] not in result
+
+    def test_harvest_invalid_tag(self):
+        from nose.plugins.skip import SkipTest; raise SkipTest()
+        results_by_guid = run_harvest(
+            url='http://localhost:%s/invalid_tag' % mock_ckan.PORT,
+            harvester=CKANHarvester())
+
+        result = results_by_guid['abc']
+        assert_equal(result['state'], 'COMPLETE')
+        assert_equal(result['report_status'], 'added')
+        assert_equal(result['dataset']['name'], mock_ckan.DATASETS[0]['name'])
+

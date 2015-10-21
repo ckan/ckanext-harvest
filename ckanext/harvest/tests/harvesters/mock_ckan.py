@@ -1,4 +1,3 @@
-import os
 import json
 import re
 import copy
@@ -7,14 +6,25 @@ import SimpleHTTPServer
 import SocketServer
 from threading import Thread
 
-
 PORT = 8998
 
 
 class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_GET(self):
-        # deal with the API version in the path
-        api_version=None
+        # test name is the first bit of the URL and makes CKAN behave
+        # differently in some way.
+        # Its value is recorded and then removed from the path
+        self.test_name = None
+        test_name_match = re.match('^/([^/]+)/', self.path)
+        if test_name_match:
+            self.test_name = test_name_match.groups()[0]
+            if self.test_name == 'api':
+                self.test_name = None
+            else:
+                self.path = re.sub('^/([^/]+)/', '/', self.path)
+
+        # The API version is recorded and then removed from the path
+        api_version = None
         version_match = re.match('^/api/(\d)', self.path)
         if version_match:
             api_version = int(version_match.groups()[0])
@@ -33,20 +43,37 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 return self.respond_json(
                     convert_dataset_to_restful_form(dataset))
         if self.path.startswith('/api/action/package_show'):
-            import pdb; pdb.set_trace()
-            dataset_ref = self.path.split('/')[-1]
+            params = self.get_url_params()
+            dataset_ref = params['id']
             dataset = self.get_dataset(dataset_ref)
             if dataset:
                 return self.respond_json(dataset)
-        if self.path == '/':
-            self.path = '/simplehttpwebpage_content.html'
-        return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+        if self.path.startswith('/api/search/revision'):
+            revision_ids = [r['id'] for r in REVISIONS]
+            return self.respond_json(revision_ids)
+        if self.path.startswith('/api/rest/revision/'):
+            revision_ref = self.path.split('/')[-1]
+            for rev in REVISIONS:
+                if rev['id'] == revision_ref:
+                    return self.respond_json(rev)
+            self.respond('Cannot find revision', status=404)
+
+        # if we wanted to server a file from disk, then we'd call this:
+        #return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+
+        self.respond('Mock CKAN doesnt recognize that call', status=400)
 
     def get_dataset(self, dataset_ref):
         for dataset in DATASETS:
             if dataset['name'] == dataset_ref or \
                     dataset['id'] == dataset_ref:
+                if self.test_name == 'invalid_tag':
+                    dataset['tags'] = INVALID_TAGS
                 return dataset
+
+    def get_url_params(self):
+        params = self.path.split('?')[-1].split('&')
+        return dict([param.split('=') for param in params])
 
     def respond_action(self, result_dict, status=200):
         response_dict = {'result': result_dict}
@@ -67,7 +94,7 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 def serve(port=PORT):
     '''Runs a CKAN-alike app (over HTTP) that is used for harvesting tests'''
 
-    # We can serve files from a sub directory
+    # Choose the directory to serve files from
     #os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)),
     #                      'mock_ckan_files'))
 
@@ -86,6 +113,7 @@ def serve(port=PORT):
 def convert_dataset_to_restful_form(dataset):
     dataset = copy.deepcopy(dataset)
     dataset['extras'] = dict([(e['key'], e['value']) for e in dataset['extras']])
+    dataset['tags'] = [t['name'] for t in dataset.get('tags', [])]
     return dataset
 
 
@@ -96,6 +124,8 @@ DATASETS = [
      'title': 'Test Dataset1',
      'extras': []},
     {
+    "id": "1c65c66a-fdec-4138-9c64-0f9bf087bcbb",
+    "name": "cabinet-office-energy-use",
     "private": False,
     "maintainer_email": None,
     "revision_timestamp": "2010-11-23T22:34:55.089925",
@@ -117,7 +147,6 @@ DATASETS = [
 
     },
     "update_frequency": "other",
-    "id": "1c65c66a-fdec-4138-9c64-0f9bf087bcbb",
     "metadata_created": "2010-08-02T09:19:47.600853",
     "last_major_modification": "2010-08-02T09:19:47.600853",
     "metadata_modified": "2014-05-09T22:00:01.486366",
@@ -196,7 +225,6 @@ DATASETS = [
     "relationships_as_subject": [],
     "num_tags": 8,
     "update_frequency-other": "Real-time",
-    "name": "cabinet-office-energy-use",
     "isopen": True,
     "url": "http://www.carbonculture.net/orgs/cabinet-office/70-whitehall/",
     "notes": "Cabinet Office head office energy use updated from on-site meters showing use, cost and carbon impact.",
@@ -366,3 +394,40 @@ DATASETS = [
     "theme-primary": "Towns & Cities"
 }
 ]
+
+INVALID_TAGS = [
+    {
+        "vocabulary_id": None,
+        "display_name": "consumption%^&",
+        "name": "consumption%^&",
+        "revision_timestamp": "2010-08-02T09:19:47.600853",
+        "state": "active",
+        "id": "84ce26de-6711-4e85-9609-f7d8a87b0fc8"
+    },
+    ]
+
+REVISIONS = [
+    {
+    "id": "23daf2eb-d7ec-4d86-a844-3924acd311ea",
+    "timestamp": "2015-10-21T09:50:08.160045",
+    "message": "REST API: Update object dataset1",
+    "author": "ross",
+    "approved_timestamp": None,
+    "packages":
+    [
+        "dataset1"
+    ],
+    "groups": [ ]
+    },
+    {
+    "id": "8254a293-10db-4af2-9dfa-6a1f06ee899c",
+    "timestamp": "2015-10-21T09:46:21.198021",
+    "message": "REST API: Update object dataset1",
+    "author": "ross",
+    "approved_timestamp": None,
+    "packages":
+    [
+        "dataset1"
+    ],
+    "groups": [ ]
+    }]
