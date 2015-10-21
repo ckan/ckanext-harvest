@@ -29,7 +29,7 @@ Installation
 
      On your CKAN configuration file, add::
 
-      ckan.harvest.mq.type = rabbitmq
+      ckan.harvest.mq.type = amqp
 
 
 2. Install the extension into your python environment::
@@ -233,6 +233,22 @@ field. The currently supported configuration options are:
     lower-case ones, and spaces replaced with dashes. Setting this option to False
     gives the same effect as leaving it unset.
 
+*   organizations_filter_include: This configuration option allows you to specify
+    a list of remote organization names (e.g. "arkansas-gov" is the name for
+    organization http://catalog.data.gov/organization/arkansas-gov ). If this
+    property has a value then only datasets that are in one of these organizations
+    will be harvested. All other datasets will be skipped. Only one of
+    organizations_filter_include or organizations_filter_exclude should be
+    configured.
+
+*   organizations_filter_exclude: This configuration option allows you to specify
+    a list of remote organization names (e.g. "arkansas-gov" is the name for
+    organization http://catalog.data.gov/organization/arkansas-gov ). If this
+    property is set then all datasets from the remote source will be harvested
+    unless it belongs to one of the organizations in this option. Only one of
+    organizations_filter_exclude or organizations_filter_include should be
+    configured.
+
 Here is an example of a configuration object (the one that must be entered in
 the configuration field)::
 
@@ -242,6 +258,8 @@ the configuration field)::
      "default_groups":["my-own-group"],
      "default_extras":{"new_extra":"Test","harvest_url":"{harvest_source_url}/dataset/{dataset_id}"},
      "override_extras": true,
+     "organizations_filter_include": [],
+     "organizations_filter_exclude": ["remote-organization"],
      "user":"harverster-user",
      "api_key":"<REMOTE_API_KEY>",
      "read_only": true,

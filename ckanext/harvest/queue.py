@@ -82,10 +82,13 @@ def purge_queues():
     if backend in ('amqp', 'ampq'):
         channel = connection.channel()
         channel.queue_purge(queue=get_gather_queue_name())
+        log.info('AMQP queue purged: %s', get_gather_queue_name())
         channel.queue_purge(queue=get_fetch_queue_name())
+        log.info('AMQP queue purged: %s', get_fetch_queue_name())
         return
     if backend == 'redis':
         connection.flushall()
+        log.info('Redis flushed')
 
 def resubmit_jobs():
     if config.get('ckan.harvest.mq.type') != 'redis':
@@ -95,7 +98,7 @@ def resubmit_jobs():
     for key in harvest_object_pending:
         date_of_key = datetime.datetime.strptime(redis.get(key),
                                                  "%Y-%m-%d %H:%M:%S.%f")
-        if (datetime.datetime.now() - date_of_key).seconds > 180: # 3 minuites for fetch and import max
+        if (datetime.datetime.now() - date_of_key).seconds > 180: # 3 minutes for fetch and import max
             redis.rpush('harvest_object_id',
                 json.dumps({'harvest_object_id': key.split(':')[-1]})
             )
@@ -223,23 +226,12 @@ def gather_callback(channel, method, header, body):
     for harvester in PluginImplementations(IHarvester):
         if harvester.info()['name'] == job.source.type:
             harvester_found = True
-            # Get a list of harvest object ids from the plugin
-            job.gather_started = datetime.datetime.utcnow()
 
             try:
-                harvest_object_ids = harvester.gather_stage(job)
+                harvest_object_ids = gather_stage(harvester, job)
             except (Exception, KeyboardInterrupt):
                 channel.basic_ack(method.delivery_tag)
-                harvest_objects = model.Session.query(HarvestObject).filter_by(
-                    harvest_job_id=job.id
-                )
-                for harvest_object in harvest_objects:
-                    model.Session.delete(harvest_object)
-                model.Session.commit()
                 raise
-            finally:
-                job.gather_finished = datetime.datetime.utcnow()
-                job.save()
 
             if not isinstance(harvest_object_ids, list):
                 log.error('Gather stage failed')
@@ -271,6 +263,31 @@ def gather_callback(channel, method, header, body):
     channel.basic_ack(method.delivery_tag)
 
 
+def gather_stage(harvester, job):
+    '''Calls the harvester's gather_stage, returning harvest object ids, with
+    some error handling.
+
+    This is split off from gather_callback so that tests can call it without
+    dealing with queue stuff.
+    '''
+    job.gather_started = datetime.datetime.utcnow()
+
+    try:
+        harvest_object_ids = harvester.gather_stage(job)
+    except (Exception, KeyboardInterrupt):
+        harvest_objects = model.Session.query(HarvestObject).filter_by(
+            harvest_job_id=job.id
+        )
+        for harvest_object in harvest_objects:
+            model.Session.delete(harvest_object)
+        model.Session.commit()
+        raise
+    finally:
+        job.gather_finished = datetime.datetime.utcnow()
+        job.save()
+    return harvest_object_ids
+
+
 def fetch_callback(channel, method, header, body):
     try:
         id = json.loads(body)['harvest_object_id']
@@ -279,7 +296,6 @@ def fetch_callback(channel, method, header, body):
         log.error('No harvest object id received')
         channel.basic_ack(method.delivery_tag)
         return False
-
 
     obj = HarvestObject.get(id)
     if not obj:
