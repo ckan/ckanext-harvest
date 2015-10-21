@@ -45,43 +45,47 @@ def setup():
         define_harvester_tables()
         log.debug('Harvest tables defined in memory')
 
-    if model.package_table.exists():
-        if not harvest_source_table.exists():
-
-            # Create each table individually rather than
-            # using metadata.create_all()
-            harvest_source_table.create()
-            harvest_job_table.create()
-            harvest_object_table.create()
-            harvest_gather_error_table.create()
-            harvest_object_error_table.create()
-            harvest_object_extra_table.create()
-
-            log.debug('Harvest tables created')
-        else:
-            from ckan.model.meta import engine
-            log.debug('Harvest tables already exist')
-            # Check if existing tables need to be updated
-            inspector = Inspector.from_engine(engine)
-            columns = inspector.get_columns('harvest_source')
-            if not 'title' in [column['name'] for column in columns]:
-                log.debug('Harvest tables need to be updated')
-                migrate_v2()
-            if not 'frequency' in [column['name'] for column in columns]:
-                log.debug('Harvest tables need to be updated')
-                migrate_v3()
-
-            # Check if this instance has harvest source datasets
-            source_ids = Session.query(HarvestSource.id).filter_by(active=True).all()
-            source_package_ids = Session.query(model.Package.id).filter_by(type=u'harvest', state='active').all()
-            sources_to_migrate = set(source_ids) - set(source_package_ids)
-            if sources_to_migrate:
-                log.debug('Creating harvest source datasets for %i existing sources', len(sources_to_migrate))
-                sources_to_migrate = [s[0] for s in sources_to_migrate]
-                migrate_v3_create_datasets(sources_to_migrate)
-
-    else:
+    if not model.package_table.exists():
+        print 'harvest model setup: DEFER'
         log.debug('Harvest table creation deferred')
+        return
+
+    if not harvest_source_table.exists():
+
+        print 'harvest model setup: CREATE'
+        # Create each table individually rather than
+        # using metadata.create_all()
+        harvest_source_table.create()
+        harvest_job_table.create()
+        harvest_object_table.create()
+        harvest_gather_error_table.create()
+        harvest_object_error_table.create()
+        harvest_object_extra_table.create()
+
+        log.debug('Harvest tables created')
+    else:
+        from ckan.model.meta import engine
+        print 'harvest model setup: NOTHING TO DO'
+        log.debug('Harvest tables already exist')
+        # Check if existing tables need to be updated
+        inspector = Inspector.from_engine(engine)
+        columns = inspector.get_columns('harvest_source')
+        column_names = [column['name'] for column in columns]
+        if not 'title' in column_names:
+            log.debug('Harvest tables need to be updated')
+            migrate_v2()
+        if not 'frequency' in column_names:
+            log.debug('Harvest tables need to be updated')
+            migrate_v3()
+
+        # Check if this instance has harvest source datasets
+        source_ids = Session.query(HarvestSource.id).filter_by(active=True).all()
+        source_package_ids = Session.query(model.Package.id).filter_by(type=u'harvest', state='active').all()
+        sources_to_migrate = set(source_ids) - set(source_package_ids)
+        if sources_to_migrate:
+            log.debug('Creating harvest source datasets for %i existing sources', len(sources_to_migrate))
+            sources_to_migrate = [s[0] for s in sources_to_migrate]
+            migrate_v3_create_datasets(sources_to_migrate)
 
 
 class HarvestError(Exception):
