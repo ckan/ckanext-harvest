@@ -11,7 +11,7 @@ from ckan import model
 
 from ckanext.harvest.tests.factories import (HarvestSourceObj, HarvestJobObj,
                                              HarvestObjectObj)
-from ckanext.harvest.tests.lib import run_harvest
+from ckanext.harvest.tests.lib import run_harvest, run_harvest_job
 import ckanext.harvest.model as harvest_model
 from ckanext.harvest.harvesters.ckanharvester import CKANHarvester
 
@@ -76,7 +76,7 @@ class TestCkanHarvester(object):
             url='http://localhost:%s/' % mock_ckan.PORT,
             harvester=CKANHarvester())
 
-        result = results_by_guid['abc']
+        result = results_by_guid['dataset1-id']
         assert_equal(result['state'], 'COMPLETE')
         assert_equal(result['report_status'], 'added')
         assert_equal(result['dataset']['name'], mock_ckan.DATASETS[0]['name'])
@@ -104,7 +104,7 @@ class TestCkanHarvester(object):
         assert_equal(result['errors'], [])
 
         # the other dataset is unchanged and not harvested
-        assert mock_ckan.DATASETS[1]['id'] not in result
+        assert mock_ckan.DATASETS[1]['name'] not in result
 
     def test_harvest_invalid_tag(self):
         from nose.plugins.skip import SkipTest; raise SkipTest()
@@ -112,8 +112,25 @@ class TestCkanHarvester(object):
             url='http://localhost:%s/invalid_tag' % mock_ckan.PORT,
             harvester=CKANHarvester())
 
-        result = results_by_guid['abc']
+        result = results_by_guid['dataset1-id']
         assert_equal(result['state'], 'COMPLETE')
         assert_equal(result['report_status'], 'added')
         assert_equal(result['dataset']['name'], mock_ckan.DATASETS[0]['name'])
 
+    def test_exclude_organizations(self):
+        config = {'organizations_filter_exclude': ['org1-id']}
+        results_by_guid = run_harvest(
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
+        assert 'dataset1-id' not in results_by_guid
+        assert mock_ckan.DATASETS[1]['id'] in results_by_guid
+
+    def test_include_organizations(self):
+        config = {'organizations_filter_include': ['org1-id']}
+        results_by_guid = run_harvest(
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
+        assert 'dataset1-id' in results_by_guid
+        assert mock_ckan.DATASETS[1]['id'] not in results_by_guid

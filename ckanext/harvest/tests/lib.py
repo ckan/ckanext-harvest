@@ -1,26 +1,30 @@
-from ckanext.harvest.tests.factories import (HarvestSourceObj, HarvestJobObj,
-                                             HarvestObjectObj)
+from ckanext.harvest.tests.factories import HarvestSourceObj, HarvestJobObj
 import ckanext.harvest.model as harvest_model
-from ckanext.harvest.logic import HarvestJobExists, NoNewHarvestJobError
+from ckanext.harvest.logic import NoNewHarvestJobError
 from ckanext.harvest import queue
 from ckan.plugins import toolkit
 
 
-def run_harvest(url, harvester):
+def run_harvest(url, harvester, config=''):
     '''Runs a harvest and returns the results.
     This allows you to test a harvester.
     Queues are avoided as they are a pain in tests.
     '''
-
     # User creates a harvest source
-    source = HarvestSourceObj(url=url)
+    source = HarvestSourceObj(url=url, config=config)
 
-    # User triggers a harvest, which creates a harvest job
-    job = HarvestJobObj(source=source, status='Running')
+    # User triggers a harvest, which is the creation of a harvest job
+    job = HarvestJobObj(source=source)
 
-    # When 'paster harvest run' is called by the regular cron, it would change
-    # the job status to Running (wheras here we just set it to that status on
-    # creation) and put the job on the gather queue which is consumed by
+    return run_harvest_job(job, harvester)
+
+
+def run_harvest_job(job, harvester):
+    # When 'paster harvest run' is called by the regular cron it does 2 things:
+    # 1. change the job status to Running
+    job.status = 'Running'
+    job.save()
+    # 2. put the job on the gather queue which is consumed by
     # queue.gather_callback, which determines the harvester and then calls
     # gather_stage. We simply call the gather_stage.
     obj_ids = queue.gather_stage(harvester, job)
@@ -46,6 +50,7 @@ def run_harvest(url, harvester):
     try:
         toolkit.get_action('harvest_jobs_run')({'ignore_auth': True}, {})
     except NoNewHarvestJobError:
+        # This is expected
         pass
 
     return results_by_guid

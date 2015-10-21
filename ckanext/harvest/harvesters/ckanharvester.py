@@ -165,7 +165,7 @@ class CKANHarvester(HarvesterBase):
         org_filter_exclude = self.config.get('organizations_filter_exclude', [])
         def get_pkg_ids_for_organizations(orgs):
             pkg_ids = set()
-            for organization in org_filter_include:
+            for organization in orgs:
                 url = base_search_url + '/dataset?organization=%s' % organization
                 content = self._get_content(url)
                 content_json = json.loads(content)
@@ -227,9 +227,9 @@ class CKANHarvester(HarvesterBase):
             package_ids = json.loads(content)
 
         if org_filter_include:
-            package_ids &= include_pkg_ids
+            package_ids = set(package_ids) & include_pkg_ids
         elif org_filter_exclude:
-            package_ids -= exclude_pkg_ids
+            package_ids = set(package_ids) - exclude_pkg_ids
 
         try:
             object_ids = []

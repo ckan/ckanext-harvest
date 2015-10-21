@@ -44,7 +44,6 @@ class HarvestJob(factory.Factory):
     FACTORY_FOR = harvest_model.HarvestJob
     _return_type = 'dict'
 
-    status = "New"
     source = factory.SubFactory(HarvestSourceObj)
 
     @classmethod
@@ -56,12 +55,6 @@ class HarvestJob(factory.Factory):
             kwargs['source_id'] = kwargs['source'].id
         job_dict = toolkit.get_action('harvest_job_create')(
             context, kwargs)
-        # status doesn't get set by harvest_job_create so do it manually
-        if kwargs['status'] != 'New':
-            job_obj = cls.FACTORY_FOR.get(job_dict['id'])
-            job_obj.status = kwargs['status']
-            job_obj.save()
-            job_dict['status'] = kwargs['status']
         if cls._return_type == 'dict':
             return job_dict
         else:

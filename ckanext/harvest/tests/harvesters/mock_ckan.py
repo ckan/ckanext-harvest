@@ -48,6 +48,17 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             dataset = self.get_dataset(dataset_ref)
             if dataset:
                 return self.respond_json(dataset)
+        if self.path.startswith('/api/search/dataset'):
+            params = self.get_url_params()
+            if params.keys() == ['organization']:
+                org = self.get_org(params['organization'])
+                dataset_ids = [d['id'] for d in DATASETS
+                               if d['owner_org'] == org['id']]
+                return self.respond_json({'count': len(dataset_ids),
+                                          'results': dataset_ids})
+            else:
+                return self.respond(
+                    'Not implemented search params %s' % params, status=400)
         if self.path.startswith('/api/search/revision'):
             revision_ids = [r['id'] for r in REVISIONS]
             return self.respond_json(revision_ids)
@@ -70,6 +81,12 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 if self.test_name == 'invalid_tag':
                     dataset['tags'] = INVALID_TAGS
                 return dataset
+
+    def get_org(self, org_ref):
+        for org in ORGS:
+            if org['name'] == org_ref or \
+                    org['id'] == org_ref:
+                return org
 
     def get_url_params(self):
         params = self.path.split('?')[-1].split('&')
@@ -119,9 +136,10 @@ def convert_dataset_to_restful_form(dataset):
 
 # Datasets are in the package_show form, rather than the RESTful form
 DATASETS = [
-    {'id': 'abc',
+    {'id': 'dataset1-id',
      'name': 'dataset1',
      'title': 'Test Dataset1',
+     'owner_org': 'org1-id',
      'extras': []},
     {
     "id": "1c65c66a-fdec-4138-9c64-0f9bf087bcbb",
@@ -405,6 +423,13 @@ INVALID_TAGS = [
         "id": "84ce26de-6711-4e85-9609-f7d8a87b0fc8"
     },
     ]
+
+ORGS = [
+    {'id': 'org1-id',
+     'name': 'org1'},
+    {'id': 'aa1e068a-23da-4563-b9c2-2cad272b663e',
+     'name': 'cabinet-office'}
+]
 
 REVISIONS = [
     {
