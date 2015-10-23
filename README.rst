@@ -29,7 +29,7 @@ Installation
 
      On your CKAN configuration file, add::
 
-      ckan.harvest.mq.type = rabbitmq
+      ckan.harvest.mq.type = amqp
 
 
 2. Install the extension into your python environment::
