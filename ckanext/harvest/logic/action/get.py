@@ -30,10 +30,22 @@ def harvest_source_show(context,data_dict):
     :param id: the id or name of the harvest source
     :type id: string
 
+    :param url: url of the harvest source (as an alternative to the id)
+    :type url: string
+
     :returns: harvest source metadata
     :rtype: dictionary
     '''
+    model = context.get('model')
 
+    # Find the source by URL
+    if data_dict.get('url') and not data_dict.get('id'):
+        source = model.Session.query(harvest_model.HarvestSource) \
+                      .filter_by(url=data_dict.get('url')) \
+                      .first()
+        if not source:
+            raise NotFound
+        data_dict['id'] = source.id
 
     source_dict = logic.get_action('package_show')(context, data_dict)
 
