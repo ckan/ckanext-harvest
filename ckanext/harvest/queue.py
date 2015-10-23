@@ -264,7 +264,12 @@ def gather_callback(channel, method, header, body):
             log.debug('Sent {0} objects to the fetch queue'.format(len(harvest_object_ids)))
 
     if not harvester_found:
-        msg = 'No harvester could be found for source type %s' % job.source.type
+        # This can occur if you:
+        # * remove a harvester and it still has sources that are then
+        #   refreshed
+        # * add a new harvester and restart CKAN but not the gather
+        #   queue.
+        msg = 'System error - No harvester could be found for source type %s' % job.source.type
         err = HarvestGatherError(message=msg,job=job)
         err.save()
         log.error(msg)
