@@ -39,49 +39,51 @@ harvest_gather_error_table = None
 harvest_object_error_table = None
 harvest_object_extra_table = None
 
+
 def setup():
 
     if harvest_source_table is None:
         define_harvester_tables()
         log.debug('Harvest tables defined in memory')
 
-    if model.package_table.exists():
-        if not harvest_source_table.exists():
-
-            # Create each table individually rather than
-            # using metadata.create_all()
-            harvest_source_table.create()
-            harvest_job_table.create()
-            harvest_object_table.create()
-            harvest_gather_error_table.create()
-            harvest_object_error_table.create()
-            harvest_object_extra_table.create()
-
-            log.debug('Harvest tables created')
-        else:
-            from ckan.model.meta import engine
-            log.debug('Harvest tables already exist')
-            # Check if existing tables need to be updated
-            inspector = Inspector.from_engine(engine)
-            columns = inspector.get_columns('harvest_source')
-            if not 'title' in [column['name'] for column in columns]:
-                log.debug('Harvest tables need to be updated')
-                migrate_v2()
-            if not 'frequency' in [column['name'] for column in columns]:
-                log.debug('Harvest tables need to be updated')
-                migrate_v3()
-
-            # Check if this instance has harvest source datasets
-            source_ids = Session.query(HarvestSource.id).filter_by(active=True).all()
-            source_package_ids = Session.query(model.Package.id).filter_by(type=u'harvest', state='active').all()
-            sources_to_migrate = set(source_ids) - set(source_package_ids)
-            if sources_to_migrate:
-                log.debug('Creating harvest source datasets for %i existing sources', len(sources_to_migrate))
-                sources_to_migrate = [s[0] for s in sources_to_migrate]
-                migrate_v3_create_datasets(sources_to_migrate)
-
-    else:
+    if not model.package_table.exists():
         log.debug('Harvest table creation deferred')
+        return
+
+    if not harvest_source_table.exists():
+
+        # Create each table individually rather than
+        # using metadata.create_all()
+        harvest_source_table.create()
+        harvest_job_table.create()
+        harvest_object_table.create()
+        harvest_gather_error_table.create()
+        harvest_object_error_table.create()
+        harvest_object_extra_table.create()
+
+        log.debug('Harvest tables created')
+    else:
+        from ckan.model.meta import engine
+        log.debug('Harvest tables already exist')
+        # Check if existing tables need to be updated
+        inspector = Inspector.from_engine(engine)
+        columns = inspector.get_columns('harvest_source')
+        column_names = [column['name'] for column in columns]
+        if not 'title' in column_names:
+            log.debug('Harvest tables need to be updated')
+            migrate_v2()
+        if not 'frequency' in column_names:
+            log.debug('Harvest tables need to be updated')
+            migrate_v3()
+
+        # Check if this instance has harvest source datasets
+        source_ids = Session.query(HarvestSource.id).filter_by(active=True).all()
+        source_package_ids = Session.query(model.Package.id).filter_by(type=u'harvest', state='active').all()
+        sources_to_migrate = set(source_ids) - set(source_package_ids)
+        if sources_to_migrate:
+            log.debug('Creating harvest source datasets for %i existing sources', len(sources_to_migrate))
+            sources_to_migrate = [s[0] for s in sources_to_migrate]
+            migrate_v3_create_datasets(sources_to_migrate)
 
 
 class HarvestError(Exception):
@@ -196,12 +198,21 @@ def define_harvester_tables():
         Column('gather_finished', types.DateTime),
         Column('finished', types.DateTime),
         Column('source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
+        # status: New, Running, Finished
         Column('status', types.UnicodeText, default=u'New', nullable=False),
     )
-    # Was harvested_document
+    # A harvest_object contains a representation of one dataset during a
+    # particular harvest
     harvest_object_table = Table('harvest_object', metadata,
         Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
+        # The guid is the 'identity' of the dataset, according to the source.
+        # So if you reharvest it, then the harvester knows which dataset to
+        # update because of this identity. The identity needs to be unique
+        # within this CKAN.
         Column('guid', types.UnicodeText, default=u''),
+        # When you harvest a dataset multiple times, only the latest
+        # successfully imported harvest_object should be flagged 'current'.
+        # The import_stage reads and writes it.
         Column('current',types.Boolean,default=False),
         Column('gathered', types.DateTime, default=datetime.datetime.utcnow),
         Column('fetch_started', types.DateTime),
@@ -209,6 +220,7 @@ def define_harvester_tables():
         Column('fetch_finished', types.DateTime),
         Column('import_started', types.DateTime),
         Column('import_finished', types.DateTime),
+        # state: WAITING, FETCH, IMPORT, COMPLETE, ERROR
         Column('state', types.UnicodeText, default=u'WAITING'),
         Column('metadata_modified_date', types.DateTime),
         Column('retry_times',types.Integer, default=0),
@@ -391,9 +403,11 @@ ALTER TABLE harvest_object_extra
 ALTER TABLE harvest_object_extra
 	ADD CONSTRAINT harvest_object_extra_harvest_object_id_fkey FOREIGN KEY (harvest_object_id) REFERENCES harvest_object(id);
 
-UPDATE harvest_object set state = 'COMPLETE';
+UPDATE harvest_object set state = 'COMPLETE' where package_id is not null;
+UPDATE harvest_object set state = 'ERROR' where package_id is null;
 UPDATE harvest_object set retry_times = 0;
-UPDATE harvest_object set report_status = 'new';
+UPDATE harvest_object set report_status = 'updated' where package_id is not null;
+UPDATE harvest_object set report_status = 'errored' where package_id is null;
 UPDATE harvest_source set frequency = 'MANUAL';
 
 ALTER TABLE harvest_object DROP CONSTRAINT harvest_object_package_id_fkey;
