@@ -45,8 +45,8 @@ class Harvester(CkanCommand):
 
       harvester purge_queues
         - removes all jobs from fetch and gather queue
-          WARNING: if using Redis, this command purges any other data you have
-          in Redis too!
+          WARNING: if using Redis, this command purges all data in the current
+          Redis database
 
       harvester [-j] [-o] [--segments={segments}] import [{source-id}]
         - perform the import stage with the last fetched objects, for a certain

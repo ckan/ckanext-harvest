@@ -87,8 +87,8 @@ def purge_queues():
         log.info('AMQP queue purged: %s', get_fetch_queue_name())
         return
     if backend == 'redis':
-        connection.flushall()
-        log.info('Redis flushed')
+        connection.flushdb()
+        log.info('Redis database flushed')
 
 def resubmit_jobs():
     if config.get('ckan.harvest.mq.type') != 'redis':
@@ -180,7 +180,7 @@ class RedisConsumer(object):
     def basic_ack(self, message):
         self.redis.delete(self.persistance_key(message))
     def queue_purge(self, queue):
-        self.redis.flushall()
+        self.redis.flushdb()
     def basic_get(self, queue):
         body = self.redis.lpop(self.routing_key)
         return (FakeMethod(body), self, body)
