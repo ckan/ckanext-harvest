@@ -36,6 +36,9 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             else:
                 dataset_refs = [d['name'] for d in DATASETS]
             return self.respond_json(dataset_refs)
+        if self.path == '/api/action/package_list':
+            dataset_names = [d['name'] for d in DATASETS]
+            return self.respond_action(dataset_names)
         if self.path.startswith('/api/rest/package/'):
             dataset_ref = self.path.split('/')[-1]
             dataset = self.get_dataset(dataset_ref)
@@ -47,7 +50,7 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             dataset_ref = params['id']
             dataset = self.get_dataset(dataset_ref)
             if dataset:
-                return self.respond_json(dataset)
+                return self.respond_action(dataset)
         if self.path.startswith('/api/search/dataset'):
             params = self.get_url_params()
             if params.keys() == ['organization']:
@@ -68,6 +71,19 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 if rev['id'] == revision_ref:
                     return self.respond_json(rev)
             self.respond('Cannot find revision', status=404)
+        # /api/3/action/package_search?fq=metadata_modified:[2015-10-23T14:51:13.282361Z TO *]&rows=1000
+        if self.path.startswith('/api/action/package_search'):
+            params = self.get_url_params()
+            if set(params.keys()) == set(['fq', 'rows']) and \
+                    'metadata_modified' in params['fq']:
+                datasets = ['dataset1']
+            else:
+                return self.respond(
+                    'Not implemented search params %s' % params, status=400)
+            out = {'count': len(datasets),
+                   'results': [self.get_dataset(dataset_ref_)
+                               for dataset_ref_ in datasets]}
+            return self.respond_action(out)
 
         # if we wanted to server a file from disk, then we'd call this:
         #return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
@@ -93,7 +109,7 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return dict([param.split('=') for param in params])
 
     def respond_action(self, result_dict, status=200):
-        response_dict = {'result': result_dict}
+        response_dict = {'result': result_dict, 'success': True}
         return self.respond_json(response_dict, status=status)
 
     def respond_json(self, content_dict, status=200):
@@ -140,6 +156,7 @@ DATASETS = [
      'name': 'dataset1',
      'title': 'Test Dataset1',
      'owner_org': 'org1-id',
+     'tags': [{'name': 'test-tag'}],
      'extras': []},
     {
     "id": "1c65c66a-fdec-4138-9c64-0f9bf087bcbb",

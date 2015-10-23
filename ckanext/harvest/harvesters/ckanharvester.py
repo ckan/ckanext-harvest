@@ -6,15 +6,16 @@ from ckan.model import Session, Package
 from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
 from ckan.lib.munge import munge_name
+from ckan.plugins import toolkit
 from urlparse import urljoin
 
-from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError, \
-                                    HarvestObjectError
+from ckanext.harvest.model import HarvestJob, HarvestObject
 
 import logging
 log = logging.getLogger(__name__)
 
 from base import HarvesterBase
+
 
 class CKANHarvester(HarvesterBase):
     '''
@@ -140,6 +141,7 @@ class CKANHarvester(HarvesterBase):
 
     def gather_stage(self,harvest_job):
         log.debug('In CKANHarvester gather_stage (%s)' % harvest_job.source.url)
+        toolkit.requires_ckan_version(min_version='2.0')
         get_all_packages = True
         package_ids = []
 
@@ -159,25 +161,33 @@ class CKANHarvester(HarvesterBase):
 
         log.debug("%r", previous_job)
 
+        # Ideally we can request from the remote CKAN only those datasets
+        # modified since last harvest job
         if (previous_job and not previous_job.gather_errors and not len(previous_job.objects) == 0):
             if not self.config.get('force_all',False):
                 get_all_packages = False
 
-                # Request only the packages modified since last harvest job
-                last_time = previous_job.gather_finished.isoformat()
-                log.info("Searching for datasets modified since: %s", last_time)
+                # Request only the datasets modified since last harvest job
+                last_time = previous_job.gather_started.isoformat()
+                # Note: SOLR works in UTC, and gather_started is also UTC, so
+                # this should work as long as local and remote clocks are
+                # relatively accurate
+                log.info("Searching for datasets modified since: %s UTC", last_time)
 
-                fq = "metadata_modified:[{last_check} TO *]".format(last_check=last_time)
-                url = base_search_url + '?fq={fq}&rows=1000'.format(fq)
+                fq = "metadata_modified:[{last_check}Z+TO+*]".format(last_check=last_time)
+                url = base_search_url + '?fq={fq}&rows=1000'.format(fq=fq)
 
                 try:
                     content = self._get_content(url)
 
-                    package_dicts = json.loads(content).get('result', {}).get('results', [])
+                    try:
+                        package_dicts = json.loads(content).get('result', {}).get('results', [])
+                    except ValueError:
+                        raise ValueError('Response from CKAN was not JSON: %r' % content)
                     for package in package_dicts:
                         if not package['id'] in package_ids:
                             package_ids.append(package['id'])
-                    else:
+                    if not package_ids:
                         log.info('No packages have been updated on the remote CKAN instance since the last harvest job')
                         return None
 
@@ -189,6 +199,7 @@ class CKANHarvester(HarvesterBase):
                         self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
                         return None
 
+        # Fall-back option - request all the datasets from the remote CKAN
         if get_all_packages:
             # Request all remote packages
             url = urljoin(base_url,self._get_action_api_offset() + '/package_list')
@@ -361,73 +372,60 @@ class CKANHarvester(HarvesterBase):
             if default_groups:
                 if not 'groups' in package_dict:
                     package_dict['groups'] = []
-                package_dict['groups'].extend([g for g in default_groups if g not in package_dict['groups']])
-
-            # Find any extras whose values are not strings and try to convert
-            # them to strings, as non-string extras are not allowed anymore in
-            # CKAN 2.0.
-            for key in package_dict.get('extras', {}).keys():
-                if not isinstance(package_dict['extras'][key], basestring):
-                    try:
-                        package_dict['extras'][key] = json.dumps(
-                                package_dict['extras'][key])
-                    except TypeError:
-                        # If converting to a string fails, just delete it.
-                        del package_dict['extras'][key]
+                package_dict['groups'].extend(
+                    [g for g in default_groups
+                     if g not in package_dict['groups']])
 
             # Set default extras if needed
-            default_extras = self.config.get('default_extras',{})
+            default_extras = self.config.get('default_extras', {})
+            def get_extra(key, package_dict):
+                for extra in package_dict.get('extras', []):
+                    if extra['key'] == key:
+                        return extra
             if default_extras:
-                override_extras = self.config.get('override_extras',False)
+                override_extras = self.config.get('override_extras', False)
                 if not 'extras' in package_dict:
                     package_dict['extras'] = {}
-                for key,value in default_extras.iteritems():
-                    if not key in package_dict.get('extras', {}) or override_extras:
-                        # Look for replacement strings
-                        if isinstance(value,basestring):
-                            value = value.format(harvest_source_id=harvest_object.job.source.id,
-                                     harvest_source_url=harvest_object.job.source.url.strip('/'),
-                                     harvest_source_title=harvest_object.job.source.title,
-                                     harvest_job_id=harvest_object.job.id,
-                                     harvest_object_id=harvest_object.id,
-                                     dataset_id=package_dict['id'])
+                for key, value in default_extras.iteritems():
+                    existing_extra = get_extra(key, package_dict)
+                    if existing_extra and not override_extras:
+                        continue  # no need for the default
+                    if existing_extra:
+                        package_dict['extras'].remove(existing_extra)
+                    # Look for replacement strings
+                    if isinstance(value, basestring):
+                        value = value.format(
+                            harvest_source_id=harvest_object.job.source.id,
+                            harvest_source_url=
+                            harvest_object.job.source.url.strip('/'),
+                            harvest_source_title=
+                            harvest_object.job.source.title,
+                            harvest_job_id=harvest_object.job.id,
+                            harvest_object_id=harvest_object.id,
+                            dataset_id=package_dict['id'])
 
-                        package_dict['extras'][key] = value
+                    package_dict['extras'].append({'key': key, 'value': value})
 
             # Clear remote url_type for resources (eg datastore, upload) as we
             # are only creating normal resources with links to the remote ones
             for resource in package_dict.get('resources', []):
                 resource.pop('url_type', None)
 
-            result = self._create_or_update_package(package_dict,harvest_object)
-
-            if result and self.config.get('read_only',False) == True:
-
-                package = model.Package.get(package_dict['id'])
-
-                # Clear default permissions
-                model.clear_user_roles(package)
-
-                # Setup harvest user as admin
-                user_name = self.config.get('user',u'harvest')
-                user = model.User.get(user_name)
-                pkg_role = model.PackageRole(package=package, user=user, role=model.Role.ADMIN)
-
-                # Other users can only read
-                for user_name in (u'visitor',u'logged_in'):
-                    user = model.User.get(user_name)
-                    pkg_role = model.PackageRole(package=package, user=user, role=model.Role.READER)
-
+            result = self._create_or_update_package(
+                package_dict, harvest_object, package_dict_form='package_show')
 
             return True
-        except ValidationError,e:
-            self._save_object_error('Invalid package with GUID %s: %r' % (harvest_object.guid, e.error_dict),
-                    harvest_object, 'Import')
+        except ValidationError, e:
+            self._save_object_error('Invalid package with GUID %s: %r' %
+                                    (harvest_object.guid, e.error_dict),
+                                    harvest_object, 'Import')
         except Exception, e:
-            self._save_object_error('%r'%e,harvest_object,'Import')
+            self._save_object_error('%s' % e, harvest_object, 'Import')
+
 
 class ContentFetchError(Exception):
     pass
+
 
 class RemoteResourceError(Exception):
     pass
