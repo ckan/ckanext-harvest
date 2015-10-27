@@ -38,27 +38,29 @@ class TestCkanHarvester(object):
         assert_equal(type(obj_ids), list)
         assert_equal(len(obj_ids), len(mock_ckan.DATASETS))
         harvest_object = harvest_model.HarvestObject.get(obj_ids[0])
-        assert_equal(harvest_object.guid, mock_ckan.DATASETS[0]['name'])
+        assert_equal(harvest_object.guid, mock_ckan.DATASETS[0]['id'])
+        assert_equal(
+            json.loads(harvest_object.content),
+            mock_ckan.DATASETS[0])
 
     def test_fetch_normal(self):
         source = HarvestSourceObj(url='http://localhost:%s/' % mock_ckan.PORT)
         job = HarvestJobObj(source=source)
-        harvest_object = HarvestObjectObj(guid=mock_ckan.DATASETS[0]['name'],
-                                          job=job)
+        harvest_object = HarvestObjectObj(
+            guid=mock_ckan.DATASETS[0]['id'],
+            job=job,
+            content=json.dumps(mock_ckan.DATASETS[0]))
 
         harvester = CKANHarvester()
         result = harvester.fetch_stage(harvest_object)
 
         assert_equal(harvest_object.errors, [])
         assert_equal(result, True)
-        assert_equal(
-            json.loads(harvest_object.content),
-            mock_ckan.DATASETS[0])
 
     def test_import_normal(self):
         org = Organization()
         harvest_object = HarvestObjectObj(
-            guid=mock_ckan.DATASETS[0]['name'],
+            guid=mock_ckan.DATASETS[0]['id'],
             content=json.dumps(mock_ckan.DATASETS[0]),
             job__source__owner_org=org['id'])
 
@@ -76,13 +78,13 @@ class TestCkanHarvester(object):
             url='http://localhost:%s/' % mock_ckan.PORT,
             harvester=CKANHarvester())
 
-        result = results_by_guid['dataset1']
+        result = results_by_guid['dataset1-id']
         assert_equal(result['state'], 'COMPLETE')
         assert_equal(result['report_status'], 'added')
         assert_equal(result['dataset']['name'], mock_ckan.DATASETS[0]['name'])
         assert_equal(result['errors'], [])
 
-        result = results_by_guid[mock_ckan.DATASETS[1]['name']]
+        result = results_by_guid[mock_ckan.DATASETS[1]['id']]
         assert_equal(result['state'], 'COMPLETE')
         assert_equal(result['report_status'], 'added')
         assert_equal(result['dataset']['name'], mock_ckan.DATASETS[1]['name'])

@@ -74,13 +74,23 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # /api/3/action/package_search?fq=metadata_modified:[2015-10-23T14:51:13.282361Z TO *]&rows=1000
         if self.path.startswith('/api/action/package_search'):
             params = self.get_url_params()
-            if set(params.keys()) == set(['fq', 'rows']) and \
+            if set(params.keys()) == set(['rows', 'start']):
+                if params['start'] == '0':
+                    datasets = ['dataset1', DATASETS[1]['name']]
+                else:
+                    datasets = []
+                count = len(DATASETS)
+            elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
                     'metadata_modified' in params['fq']:
-                datasets = ['dataset1']
+                if params['start'] == '0':
+                    datasets = ['dataset1']
+                else:
+                    datasets = []
+                count = 1
             else:
                 return self.respond(
                     'Not implemented search params %s' % params, status=400)
-            out = {'count': len(datasets),
+            out = {'count': count,
                    'results': [self.get_dataset(dataset_ref_)
                                for dataset_ref_ in datasets]}
             return self.respond_action(out)
