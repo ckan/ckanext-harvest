@@ -1,7 +1,7 @@
 import re
 
 from nose.tools import assert_equal
-
+from ckanext.harvest import model as harvest_model
 from ckanext.harvest.harvesters.base import HarvesterBase
 try:
     from ckan.tests import helpers
@@ -18,6 +18,7 @@ class TestGenNewName(object):
     @classmethod
     def setup_class(cls):
         helpers.reset_db()
+        harvest_model.setup()
 
     def test_basic(self):
         assert_equal(HarvesterBase._gen_new_name('Trees'), 'trees')
@@ -31,6 +32,7 @@ class TestGenNewName(object):
 class TestEnsureNameIsUnique(object):
     def setup(self):
         helpers.reset_db()
+        harvest_model.setup()
 
     def test_no_existing_datasets(self):
         factories.Dataset(name='unrelated')
