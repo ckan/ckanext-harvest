@@ -29,7 +29,7 @@ class CKANHarvester(HarvesterBase):
         return '/api/%d/action' % self.action_api_version
 
     def _get_search_api_offset(self):
-        return "%s/package_search" % self._get_action_api_offset()
+        return '%s/package_search' % self._get_action_api_offset()
 
     def _get_content(self, url):
         http_request = urllib2.Request(url=url)
@@ -48,25 +48,28 @@ class CKANHarvester(HarvesterBase):
         return http_response.read()
 
     def _get_group(self, base_url, group_name):
-        url = base_url + self._get_action_api_offset() + '/group_show?id=' + munge_name(group_name)
+        url = base_url + self._get_action_api_offset() + '/group_show?id=' + \
+            munge_name(group_name)
         try:
             content = self._get_content(url)
             return json.loads(content)
         except (ContentFetchError, ValueError):
-            log.debug('Could not fetch/decode remote group');
+            log.debug('Could not fetch/decode remote group')
             raise RemoteResourceError('Could not fetch/decode remote group')
 
     def _get_organization(self, base_url, org_name):
-        url = base_url + self._get_action_api_offset() + '/organization_show?id=' + org_name
+        url = base_url + self._get_action_api_offset() + \
+            '/organization_show?id=' + org_name
         try:
             content = self._get_content(url)
             content_dict = json.loads(content)
             return content_dict['result']
         except (ContentFetchError, ValueError, KeyError):
-            log.debug('Could not fetch/decode remote group');
-            raise RemoteResourceError('Could not fetch/decode remote organization')
+            log.debug('Could not fetch/decode remote group')
+            raise RemoteResourceError(
+                'Could not fetch/decode remote organization')
 
-    def _set_config(self,config_str):
+    def _set_config(self, config_str):
         if config_str:
             self.config = json.loads(config_str)
             if 'api_version' in self.config:
@@ -81,10 +84,10 @@ class CKANHarvester(HarvesterBase):
             'name': 'ckan',
             'title': 'CKAN',
             'description': 'Harvests remote CKAN instances',
-            'form_config_interface':'Text'
+            'form_config_interface': 'Text'
         }
 
-    def validate_config(self,config):
+    def validate_config(self, config):
         if not config:
             return config
 
@@ -98,39 +101,41 @@ class CKANHarvester(HarvesterBase):
                     raise ValueError('api_version must be an integer')
 
             if 'default_tags' in config_obj:
-                if not isinstance(config_obj['default_tags'],list):
+                if not isinstance(config_obj['default_tags'], list):
                     raise ValueError('default_tags must be a list')
 
             if 'default_groups' in config_obj:
-                if not isinstance(config_obj['default_groups'],list):
+                if not isinstance(config_obj['default_groups'], list):
                     raise ValueError('default_groups must be a list')
 
                 # Check if default groups exist
-                context = {'model':model,'user':c.user}
+                context = {'model': model, 'user': c.user}
                 for group_name in config_obj['default_groups']:
                     try:
-                        group = get_action('group_show')(context,{'id':group_name})
-                    except NotFound,e:
+                        group = get_action('group_show')(
+                            context, {'id': group_name})
+                    except NotFound, e:
                         raise ValueError('Default group not found')
 
             if 'default_extras' in config_obj:
-                if not isinstance(config_obj['default_extras'],dict):
+                if not isinstance(config_obj['default_extras'], dict):
                     raise ValueError('default_extras must be a dictionary')
 
             if 'user' in config_obj:
                 # Check if user exists
-                context = {'model':model,'user':c.user}
+                context = {'model': model, 'user': c.user}
                 try:
-                    user = get_action('user_show')(context,{'id':config_obj.get('user')})
-                except NotFound,e:
+                    user = get_action('user_show')(
+                        context, {'id': config_obj.get('user')})
+                except NotFound, e:
                     raise ValueError('User not found')
 
-            for key in ('read_only','force_all'):
+            for key in ('read_only', 'force_all'):
                 if key in config_obj:
-                    if not isinstance(config_obj[key],bool):
+                    if not isinstance(config_obj[key], bool):
                         raise ValueError('%s must be boolean' % key)
 
-        except ValueError,e:
+        except ValueError, e:
             raise e
 
         return config
@@ -334,19 +339,19 @@ class CKANHarvester(HarvesterBase):
                         else:
                             validated_groups.append(group['id'])
                     except NotFound, e:
-                        log.info('Group %s is not available' % group_name)
+                        log.info('Group %s is not available', group_name)
                         if remote_groups == 'create':
                             try:
                                 group = self._get_group(harvest_object.source.url, group_name)
                             except RemoteResourceError:
-                                log.error('Could not get remote group %s' % group_name)
+                                log.error('Could not get remote group %s', group_name)
                                 continue
 
                             for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name']:
                                 group.pop(key, None)
 
                             get_action('group_create')(context, group)
-                            log.info('Group %s has been newly created' % group_name)
+                            log.info('Group %s has been newly created', group_name)
                             if self.api_version == 1:
                                 validated_groups.append(group['name'])
                             else:
@@ -378,7 +383,7 @@ class CKANHarvester(HarvesterBase):
                         org = get_action('organization_show')(context, data_dict)
                         validated_org = org['id']
                     except NotFound, e:
-                        log.info('Organization %s is not available' % remote_org)
+                        log.info('Organization %s is not available', remote_org)
                         if remote_orgs == 'create':
                             try:
                                 try:
@@ -391,10 +396,10 @@ class CKANHarvester(HarvesterBase):
                                 for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name', 'type']:
                                     org.pop(key, None)
                                 get_action('organization_create')(context, org)
-                                log.info('Organization %s has been newly created' % remote_org)
+                                log.info('Organization %s has been newly created', remote_org)
                                 validated_org = org['id']
                             except (RemoteResourceError, ValidationError):
-                                log.error('Could not get remote org %s' % remote_org)
+                                log.error('Could not get remote org %s', remote_org)
 
                 package_dict['owner_org'] = validated_org or local_org
 
