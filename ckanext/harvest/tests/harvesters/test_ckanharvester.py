@@ -118,3 +118,21 @@ class TestCkanHarvester(object):
         assert_equal(result['state'], 'COMPLETE')
         assert_equal(result['report_status'], 'added')
         assert_equal(result['dataset']['name'], mock_ckan.DATASETS[0]['name'])
+
+    def test_exclude_organizations(self):
+        config = {'organizations_filter_exclude': ['org1']}
+        results_by_guid = run_harvest(
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
+        assert 'dataset1-id' not in results_by_guid
+        assert mock_ckan.DATASETS[1]['id'] in results_by_guid
+
+    def test_include_organizations(self):
+        config = {'organizations_filter_include': ['org1']}
+        results_by_guid = run_harvest(
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
+        assert 'dataset1-id' in results_by_guid
+        assert mock_ckan.DATASETS[1]['id'] not in results_by_guid

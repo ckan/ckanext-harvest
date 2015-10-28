@@ -163,6 +163,17 @@ class CKANHarvester(HarvesterBase):
 
         log.debug('Previous job: %r', previous_job)
 
+        # Filter in/out datasets from particular organizations
+        fq_terms = []
+        org_filter_include = self.config.get('organizations_filter_include', [])
+        org_filter_exclude = self.config.get('organizations_filter_exclude', [])
+        if org_filter_include:
+            fq_terms.append(' OR '.join(
+                'organization:%s' % org_name for org_name in org_filter_include))
+        elif org_filter_exclude:
+            fq_terms.extend(
+                '-organization:%s' % org_name for org_name in org_filter_exclude)
+
         # Ideally we can request from the remote CKAN only those datasets
         # modified since last harvest job
         if (previous_job and
@@ -179,12 +190,13 @@ class CKANHarvester(HarvesterBase):
             log.info('Searching for datasets modified since: %s UTC',
                      last_time)
 
-            fq = 'metadata_modified:[{last_check}Z+TO+*]'.format(
+            fq_since_last_time = 'metadata_modified:[{last_check}Z+TO+*]'.format(
                 last_check=last_time)
 
             try:
-                pkg_dicts = self._search_for_datasets(remote_ckan_base_url,
-                                                      fq)
+                pkg_dicts = self._search_for_datasets(
+                    remote_ckan_base_url,
+                    fq_terms + [fq_since_last_time])
             except SearchError, e:
                 log.info('Searching for datasets changed since last time '
                          'gave an error: s', e)
@@ -200,7 +212,8 @@ class CKANHarvester(HarvesterBase):
         if get_all_packages:
             # Request all remote packages
             try:
-                pkg_dicts = self._search_for_datasets(remote_ckan_base_url)
+                pkg_dicts = self._search_for_datasets(remote_ckan_base_url,
+                                                      fq_terms)
             except SearchError, e:
                 log.info('Searching for all datasets gave an error: s', e)
                 self._save_gather_error(
@@ -237,15 +250,15 @@ class CKANHarvester(HarvesterBase):
         except Exception, e:
             self._save_gather_error('%r' % e.message, harvest_job)
 
-    def _search_for_datasets(self, remote_ckan_base_url, fq=None):
+    def _search_for_datasets(self, remote_ckan_base_url, fq_terms=None):
         '''Does a dataset search on a remote CKAN and returns the results.
 
         Deals with paging to return all the results, not just the first page.
         '''
         base_search_url = remote_ckan_base_url + self._get_search_api_offset()
         params = {'rows': '100', 'start': '0'}
-        if fq:
-            params['fq'] = fq
+        if fq_terms:
+            params['fq'] = ' '.join(fq_terms)
 
         pkg_dicts = []
         previous_content = None
