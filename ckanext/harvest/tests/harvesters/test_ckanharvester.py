@@ -11,7 +11,7 @@ from ckan import model
 
 from ckanext.harvest.tests.factories import (HarvestSourceObj, HarvestJobObj,
                                              HarvestObjectObj)
-from ckanext.harvest.tests.lib import run_harvest, run_harvest_job
+from ckanext.harvest.tests.lib import run_harvest
 import ckanext.harvest.model as harvest_model
 from ckanext.harvest.harvesters.ckanharvester import CKANHarvester
 

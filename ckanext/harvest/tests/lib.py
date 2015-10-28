@@ -1,6 +1,5 @@
 from ckanext.harvest.tests.factories import HarvestSourceObj, HarvestJobObj
 import ckanext.harvest.model as harvest_model
-from ckanext.harvest.logic import NoNewHarvestJobError
 from ckanext.harvest import queue
 from ckan.plugins import toolkit
 
@@ -13,14 +12,16 @@ def run_harvest(url, harvester, config=''):
     # User creates a harvest source
     source = HarvestSourceObj(url=url, config=config)
 
-    # User triggers a harvest, which is the creation of a harvest job
-    job = HarvestJobObj(source=source)
+    # User triggers a harvest, which is the creation of a harvest job.
+    # We set run=False so that it doesn't put it on the gather queue.
+    job = HarvestJobObj(source=source, run=False)
 
     return run_harvest_job(job, harvester)
 
 
 def run_harvest_job(job, harvester):
-    # When 'paster harvest run' is called by the regular cron it does 2 things:
+    # In 'harvest_job_create' it would call 'harvest_send_job_to_gather_queue'
+    # which would do 2 things to 'run' the job:
     # 1. change the job status to Running
     job.status = 'Running'
     job.save()
@@ -47,10 +48,6 @@ def run_harvest_job(job, harvester):
         results_by_guid[guid]['errors'] = harvest_object.errors
 
     # Do 'harvest_jobs_run' to change the job status to 'finished'
-    try:
-        toolkit.get_action('harvest_jobs_run')({'ignore_auth': True}, {})
-    except NoNewHarvestJobError:
-        # This is expected
-        pass
+    toolkit.get_action('harvest_jobs_run')({'ignore_auth': True}, {})
 
     return results_by_guid

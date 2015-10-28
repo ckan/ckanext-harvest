@@ -3,7 +3,6 @@ from pprint import pprint
 
 from ckan import model
 from ckan.logic import get_action, ValidationError
-from ckanext.harvest.logic import NoNewHarvestJobError
 
 from ckan.lib.cli import CkanCommand
 
@@ -29,13 +28,14 @@ class Harvester(CkanCommand):
           If 'all' is defined, it also shows the Inactive sources
 
       harvester job {source-id}
-        - create new harvest job
+        - create new harvest job and runs it (puts it on the gather queue)
 
       harvester jobs
         - lists harvest jobs
 
       harvester run
-        - runs harvest jobs
+        - runs any scheduled harvest jobs and looks for jobs that can be marked
+          as finished
 
       harvester gather_consumer
         - starts the consumer for the gathering queue
@@ -240,7 +240,8 @@ class Harvester(CkanCommand):
 
             # Create a harvest job for the new source if not regular job.
             if not data_dict['frequency']:
-                get_action('harvest_job_create')(context,{'source_id':source['id']})
+                get_action('harvest_job_create')(
+                    context, {'source_id': source['id'], 'run': True})
                 print 'A new Harvest Job for this source has also been created'
 
         except ValidationError,e:
@@ -289,7 +290,8 @@ class Harvester(CkanCommand):
             sys.exit(1)
 
         context = {'model': model,'session':model.Session, 'user': self.admin_user['name']}
-        job = get_action('harvest_job_create')(context,{'source_id':source_id})
+        job = get_action('harvest_job_create')(
+            context, {'source_id': source_id, 'run': True})
 
         self.print_harvest_job(job)
         jobs = get_action('harvest_job_list')(context,{'status':u'New'})
@@ -303,11 +305,9 @@ class Harvester(CkanCommand):
         self.print_there_are(what='harvest job', sequence=jobs)
 
     def run_harvester(self):
-        context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
-        try:
-            jobs = get_action('harvest_jobs_run')(context,{})
-        except NoNewHarvestJobError:
-            print 'There are no new harvest jobs to run.'
+        context = {'model': model, 'user': self.admin_user['name'],
+                   'session': model.Session}
+        get_action('harvest_jobs_run')(context, {})
 
     def import_stage(self):
 

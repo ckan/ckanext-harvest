@@ -113,7 +113,8 @@ The following operations can be run from the command line using the
         - lists harvest jobs
 
       harvester run
-        - runs harvest jobs
+        - runs any scheduled harvest jobs and looks for jobs that can be marked
+          as finished
 
       harvester gather_consumer
         - starts the consumer for the gathering queue

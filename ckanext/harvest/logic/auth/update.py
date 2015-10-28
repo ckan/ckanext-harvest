@@ -58,6 +58,18 @@ def harvest_jobs_run(context, data_dict):
     else:
         return {'success': True}
 
+
+def harvest_send_job_to_gather_queue(context, data_dict):
+    '''
+        Authorization check for sending a job to the gather queue
+
+        It forwards the checks to harvest_job_create, ie the user can only run
+        the job if she is allowed to create the job.
+    '''
+    from ckanext.harvest.auth.create import harvest_job_create
+    return harvest_job_create(context, data_dict)
+
+
 def harvest_sources_reindex(context, data_dict):
     '''
         Authorization check for reindexing all harvest sources

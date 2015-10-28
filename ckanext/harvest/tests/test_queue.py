@@ -120,22 +120,16 @@ class TestHarvestQueue(object):
         assert harvest_source['source_type'] == 'test', harvest_source
         assert harvest_source['url'] == 'basic_test', harvest_source
 
-
         harvest_job = logic.get_action('harvest_job_create')(
             context,
-            {'source_id':harvest_source['id']}
+            {'source_id': harvest_source['id'], 'run': True}
         )
 
         job_id = harvest_job['id']
 
         assert harvest_job['source_id'] == harvest_source['id'], harvest_job
 
-        assert harvest_job['status'] == u'New'
-
-        logic.get_action('harvest_jobs_run')(
-            context,
-            {'source_id':harvest_source['id']}
-        )
+        assert harvest_job['status'] == u'Running'
 
         assert logic.get_action('harvest_job_show')(
             context,
@@ -181,13 +175,10 @@ class TestHarvestQueue(object):
         assert all_objects[2].report_status == 'added'
 
         ## fire run again to check if job is set to Finished
-        try:
-            logic.get_action('harvest_jobs_run')(
-                context,
-                {'source_id':harvest_source['id']}
-            )
-        except Exception, e:
-            assert 'There are no new harvesting jobs' in str(e)
+        logic.get_action('harvest_jobs_run')(
+            context,
+            {'source_id':harvest_source['id']}
+        )
 
         harvest_job = logic.get_action('harvest_job_show')(
             context,
@@ -210,12 +201,7 @@ class TestHarvestQueue(object):
         ########### Second run ########################
         harvest_job = logic.get_action('harvest_job_create')(
             context,
-            {'source_id':harvest_source['id']}
-        )
-
-        logic.get_action('harvest_jobs_run')(
-            context,
-            {'source_id':harvest_source['id']}
+            {'source_id': harvest_source['id'], 'run': True}
         )
 
         job_id = harvest_job['id']
@@ -254,13 +240,10 @@ class TestHarvestQueue(object):
         assert len(all_objects) == 1, len(all_objects)
 
         # run to make sure job is marked as finshed
-        try:
-            logic.get_action('harvest_jobs_run')(
-                context,
-                {'source_id':harvest_source['id']}
-            )
-        except Exception, e:
-            assert 'There are no new harvesting jobs' in str(e)
+        logic.get_action('harvest_jobs_run')(
+            context,
+            {'source_id':harvest_source['id']}
+        )
 
         harvest_job = logic.get_action('harvest_job_show')(
             context,
