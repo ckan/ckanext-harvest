@@ -60,6 +60,11 @@ def _normalize_url(url):
 
 
 def harvest_source_url_validator(key, data, errors, context):
+    """Validate the provided harvest source URL.
+
+    Checks that the URL is not already existing with the same config.
+    """
+
     package = context.get("package")
 
     if package:
@@ -67,21 +72,36 @@ def harvest_source_url_validator(key, data, errors, context):
     else:
         package_id = data.get(key[:-1] + ("id",))
 
-    new_url = _normalize_url(data[key])
-    # pkg_id = data.get(('id',),'')
+    try:
+        new_config = data.get(key[:-1] + ('config',))
+        new_config_dict = json.loads(new_config)
+        new_config_set = new_config_dict.get('set', None)
+    except:
+        new_config_set = None
 
-    q = model.Session.query(model.Package.url, model.Package.state) \
+    new_url = _normalize_url(data[key])
+
+    # q = model.Session.query(model.Package.url, model.Package.state) \
+    q = model.Session.query(HarvestSource.url, HarvestSource.config) \
         .filter(model.Package.type == DATASET_TYPE_NAME)
 
     if package_id:
-        # When editing a source we need to avoid its own URL
+        # When editing a source we need to avoid its own URL.
         q = q.filter(model.Package.id != package_id)
 
     existing_sources = q.all()
 
-    for url, state in existing_sources:
+    for url, conf in existing_sources:
         url = _normalize_url(url)
-        if url == new_url:
+        try:
+            config_dict = json.loads(conf)
+            config_set = config_dict.get('set', None)
+        except:
+            config_set = None
+
+        if url == new_url and config_set == new_config_set:
+            # You can have a duplicate URL if it's pointing to a unique
+            # set as it will be harvesting unique datasets.
             raise Invalid(
                 'There already is a Harvest Source for this URL: %s'
                 % data[key]
