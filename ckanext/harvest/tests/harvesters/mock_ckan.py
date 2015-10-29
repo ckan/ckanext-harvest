@@ -87,6 +87,9 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 datasets = ['dataset1']
             elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
                     'metadata_modified' in params['fq']:
+                assert '+TO+' not in params['fq'], \
+                    'Spaces should not be decoded by now - seeing + means ' \
+                    'they were double encoded and SOLR doesnt like that'
                 datasets = ['dataset1']
             else:
                 return self.respond(
@@ -117,7 +120,7 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def get_url_params(self):
         params_str = self.path.split('?')[-1]
-        params_unicode = urllib.unquote(params_str).decode('utf8')
+        params_unicode = urllib.unquote_plus(params_str).decode('utf8')
         params = params_unicode.split('&')
         return dict([param.split('=') for param in params])
 

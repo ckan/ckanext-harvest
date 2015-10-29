@@ -190,8 +190,8 @@ class CKANHarvester(HarvesterBase):
             log.info('Searching for datasets modified since: %s UTC',
                      last_time)
 
-            fq_since_last_time = 'metadata_modified:[{last_check}Z+TO+*]'.format(
-                last_check=last_time)
+            fq_since_last_time = 'metadata_modified:[{last_check}Z TO *]' \
+                .format(last_check=last_time)
 
             try:
                 pkg_dicts = self._search_for_datasets(
