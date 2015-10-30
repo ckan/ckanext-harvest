@@ -79,8 +79,8 @@ def harvest_source_url_validator(key, data, errors, context):
 
     new_url = _normalize_url(data[key])
 
-    # q = model.Session.query(model.Package.url, model.Package.state) \
-    q = model.Session.query(HarvestSource.url, HarvestSource.config) \
+    q = model.Session.query(
+        model.Package.id, model.Package.url) \
         .filter(model.Package.type == DATASET_TYPE_NAME)
 
     if package_id:
@@ -89,8 +89,14 @@ def harvest_source_url_validator(key, data, errors, context):
 
     existing_sources = q.all()
 
-    for url, conf in existing_sources:
+    for uid, url in existing_sources:
         url = _normalize_url(url)
+        conf = model.Session.query(HarvestSource.config).filter(
+            HarvestSource.id == uid).first()
+        if conf:
+            conf = conf[0]
+        else:
+            conf = None
 
         if url == new_url and conf == new_config:
             # You can have a duplicate URL if it's pointing to a unique
