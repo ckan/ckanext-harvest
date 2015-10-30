@@ -74,10 +74,8 @@ def harvest_source_url_validator(key, data, errors, context):
 
     try:
         new_config = data.get(key[:-1] + ('config',))
-        new_config_dict = json.loads(new_config)
-        new_config_set = new_config_dict.get('set', None)
     except:
-        new_config_set = None
+        new_config = None
 
     new_url = _normalize_url(data[key])
 
@@ -93,13 +91,8 @@ def harvest_source_url_validator(key, data, errors, context):
 
     for url, conf in existing_sources:
         url = _normalize_url(url)
-        try:
-            config_dict = json.loads(conf)
-            config_set = config_dict.get('set', None)
-        except:
-            config_set = None
 
-        if url == new_url and config_set == new_config_set:
+        if url == new_url and conf == new_config:
             # You can have a duplicate URL if it's pointing to a unique
             # set as it will be harvesting unique datasets.
             raise Invalid(
