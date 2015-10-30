@@ -31,24 +31,27 @@ Installation
 
       ckan.harvest.mq.type = amqp
 
+2. Activate your CKAN virtual environment, for example::
 
-2. Install the extension into your python environment::
+     $ . /usr/lib/ckan/default/bin/activate
+
+3. Install the ckanext-harvest Python package into your virtual environment::
 
      (pyenv) $ pip install -e git+https://github.com/ckan/ckanext-harvest.git#egg=ckanext-harvest
 
-3. Install the rest of python modules required by the extension::
+4. Install the python modules required by the extension::
 
      (pyenv) $ pip install -r pip-requirements.txt
 
-4. Make sure the CKAN configuration ini file contains the harvest main plugin, as
+5. Make sure the CKAN configuration ini file contains the harvest main plugin, as
    well as the harvester for CKAN instances if you need it (included with the extension)::
 
-    ckan.plugins = harvest ckan_harvester
+     ckan.plugins = harvest ckan_harvester
 
-5. If you haven't done it yet on the previous step, define the backend that you are using with the ``ckan.harvest.mq.type``
-   option (it defaults to ``rabbitmq``)::
+6. If you haven't done it yet on the previous step, define the backend that you
+   are using with the ``ckan.harvest.mq.type`` option (it defaults to ``amqp``)::
 
-    ckan.harvest.mq.type = redis
+     ckan.harvest.mq.type = redis
 
 There are a number of configuration options available for the backends. These don't need to
 be modified at all if you are using the default Redis or RabbitMQ install (step 1). The list
