@@ -285,7 +285,7 @@ def harvest_objects_import(context, data_dict):
 
     segments = context.get('segments')
 
-    join_datasets = context.get('join_datasets', rue)
+    join_datasets = context.get('join_datasets')
 
     if source_id:
         source = HarvestSource.get(source_id)
