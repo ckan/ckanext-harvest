@@ -440,7 +440,7 @@ def harvest_sources_reindex(context, data_dict):
 
 @logic.side_effect_free
 def harvest_source_reindex(context, data_dict):
-    """Reindex a single harvest source."""
+    '''Reindex a single harvest source.'''
 
     harvest_source_id = logic.get_or_bust(data_dict, 'id')
     defer_commit = context.get('defer_commit', False)

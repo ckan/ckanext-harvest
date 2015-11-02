@@ -7,14 +7,12 @@ log = logging.getLogger(__name__)
 
 
 def harvest_source_delete(context, data_dict):
-    """
-    Deletes an existing harvest source
+    '''Deletes an existing harvest source.
 
     This method just proxies the request to package_delete,
     which will delete the actual harvest type dataset and the
     HarvestSource object (via the after_delete extension point).
-
-    """
+    '''
 
     log.info('Deleting harvest source: %r', data_dict)
 

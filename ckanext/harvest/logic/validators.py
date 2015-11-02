@@ -25,7 +25,8 @@ def harvest_source_id_exists(value, context):
 
 
 def harvest_job_exists(value, context):
-    """Check if a harvest job exists and returns the model if it does"""
+    '''Check if a harvest job exists and returns the model if it does'''
+
     result = HarvestJob.get(value, None)
 
     if not result:
@@ -60,10 +61,10 @@ def _normalize_url(url):
 
 
 def harvest_source_url_validator(key, data, errors, context):
-    """Validate the provided harvest source URL.
+    '''Validate the provided harvest source URL.
 
     Checks that the URL is not already existing with the same config.
-    """
+    '''
 
     package = context.get("package")
 
