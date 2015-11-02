@@ -100,7 +100,7 @@ def harvest_source_clear(context, data_dict):
 
     check_access('harvest_source_clear', context, data_dict)
 
-    harvest_source_id = data_dict.get('id', None)
+    harvest_source_id = data_dict.get('id')
 
     source = HarvestSource.get(harvest_source_id)
     if not source:
@@ -195,7 +195,7 @@ def harvest_source_clear(context, data_dict):
 def harvest_source_index_clear(context, data_dict):
 
     check_access('harvest_source_clear', context, data_dict)
-    harvest_source_id = data_dict.get('id', None)
+    harvest_source_id = data_dict.get('id')
 
     source = HarvestSource.get(harvest_source_id)
     if not source:
@@ -235,11 +235,11 @@ def harvest_objects_import(context, data_dict):
 
     model = context['model']
     session = context['session']
-    source_id = data_dict.get('source_id', None)
-    harvest_object_id = data_dict.get('harvest_object_id', None)
-    package_id_or_name = data_dict.get('package_id', None)
+    source_id = data_dict.get('source_id',)
+    harvest_object_id = data_dict.get('harvest_object_id')
+    package_id_or_name = data_dict.get('package_id')
 
-    segments = context.get('segments', None)
+    segments = context.get('segments')
 
     join_datasets = context.get('join_datasets', rue)
 
@@ -347,7 +347,7 @@ def harvest_jobs_run(context, data_dict):
 
     session = context['session']
 
-    source_id = data_dict.get('source_id', None)
+    source_id = data_dict.get('source_id')
 
     if not source_id:
         _make_scheduled_jobs(context, data_dict)
@@ -455,7 +455,7 @@ def harvest_source_reindex(context, data_dict):
 
     # Remove configuration values
     new_dict = {}
-    if package_dict.get('config', None):
+    if package_dict.get('config'):
         config = json.loads(package_dict['config'])
         for key, value in package_dict.iteritems():
             if value:
