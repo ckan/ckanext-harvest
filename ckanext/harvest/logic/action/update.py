@@ -375,7 +375,8 @@ def harvest_jobs_run(context,data_dict):
                 if num_objects_in_progress == 0:
                     job_obj = HarvestJob.get(job['id'])
                     job_obj.status = u'Finished'
-                    log.info('Marking job as finished %s %s', job.source.url, job.id)
+                    log.info('Marking job as finished %s %s',
+                             job_obj.source.url, job_obj.id)
 
                     # save the time of finish, according to the last running object
                     last_object = session.query(HarvestObject) \
