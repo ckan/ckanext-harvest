@@ -12,6 +12,8 @@ def harvest_source_delete(context, data_dict):
     This method just proxies the request to package_delete,
     which will delete the actual harvest type dataset and the
     HarvestSource object (via the after_delete extension point).
+
+    :param id: the name or id of the harvest source to delete
     '''
 
     log.info('Deleting harvest source: %r', data_dict)
