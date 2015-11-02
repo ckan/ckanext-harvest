@@ -382,6 +382,8 @@ def harvest_jobs_run(context,data_dict):
                           .first()
                     if last_object:
                         job_obj.finished = last_object.import_finished
+                    else:
+                        job_obj.finished = job['gather_finished']
                     job_obj.save()
                     # Reindex the harvest source dataset so it has the latest
                     # status
