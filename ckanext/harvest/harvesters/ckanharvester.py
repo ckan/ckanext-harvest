@@ -470,10 +470,16 @@ class CKANHarvester(HarvesterBase):
 
                     package_dict['extras'].append({'key': key, 'value': value})
 
-            # Clear remote url_type for resources (eg datastore, upload) as we
-            # are only creating normal resources with links to the remote ones
             for resource in package_dict.get('resources', []):
+                # Clear remote url_type for resources (eg datastore, upload) as
+                # we are only creating normal resources with links to the
+                # remote ones
                 resource.pop('url_type', None)
+
+                # Clear revision_id as the revision won't exist on this CKAN
+                # and saving it will cause an IntegrityError with the foreign
+                # key.
+                resource.pop('revision_id', None)
 
             result = self._create_or_update_package(
                 package_dict, harvest_object, package_dict_form='package_show')

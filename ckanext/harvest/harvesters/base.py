@@ -303,7 +303,8 @@ class HarvesterBase(SingletonPlugin):
                     # Update package
                     context.update({'id':package_dict['id']})
                     package_dict.setdefault('name',
-                            existing_package_dict['name'])
+                                            existing_package_dict['name'])
+
                     new_package = p.toolkit.get_action('package_update')(context, package_dict)
 
                 else:

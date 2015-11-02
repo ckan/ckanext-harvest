@@ -90,7 +90,7 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 assert '+TO+' not in params['fq'], \
                     'Spaces should not be decoded by now - seeing + means ' \
                     'they were double encoded and SOLR doesnt like that'
-                datasets = ['dataset1']
+                datasets = [DATASETS[1]['name']]
             else:
                 return self.respond(
                     'Not implemented search params %s' % params, status=400)

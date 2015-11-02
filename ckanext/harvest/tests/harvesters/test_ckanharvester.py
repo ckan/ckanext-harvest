@@ -1,5 +1,8 @@
-from nose.tools import assert_equal
+import copy
 import json
+
+from nose.tools import assert_equal
+import mock
 
 try:
     from ckan.tests.helpers import reset_db
@@ -11,7 +14,7 @@ from ckan import model
 
 from ckanext.harvest.tests.factories import (HarvestSourceObj, HarvestJobObj,
                                              HarvestObjectObj)
-from ckanext.harvest.tests.lib import run_harvest, run_harvest_job
+from ckanext.harvest.tests.lib import run_harvest
 import ckanext.harvest.model as harvest_model
 from ckanext.harvest.harvesters.ckanharvester import CKANHarvester
 
@@ -94,19 +97,24 @@ class TestCkanHarvester(object):
         run_harvest(
             url='http://localhost:%s/' % mock_ckan.PORT,
             harvester=CKANHarvester())
-        results_by_guid = run_harvest(
-            url='http://localhost:%s/' % mock_ckan.PORT,
-            harvester=CKANHarvester())
+        patched_datasets = copy.deepcopy(mock_ckan.DATASETS)
+        patched_datasets[1]['title'] = 'Title CHANGED'
+        patched_datasets[1]['metadata_modified'] = '2015-05-09T22:00:01.486366'
+        with mock.patch("ckanext.harvest.tests.harvesters.mock_ckan.DATASETS",
+                        patched_datasets):
+            results_by_guid = run_harvest(
+                url='http://localhost:%s/' % mock_ckan.PORT,
+                harvester=CKANHarvester())
 
         # updated the dataset which has revisions
-        result = results_by_guid['dataset1-id']
+        result = results_by_guid[mock_ckan.DATASETS[1]['id']]
         assert_equal(result['state'], 'COMPLETE')
         assert_equal(result['report_status'], 'updated')
-        assert_equal(result['dataset']['name'], mock_ckan.DATASETS[0]['name'])
+        assert_equal(result['dataset']['name'], mock_ckan.DATASETS[1]['name'])
         assert_equal(result['errors'], [])
 
         # the other dataset is unchanged and not harvested
-        assert mock_ckan.DATASETS[1]['name'] not in result
+        assert mock_ckan.DATASETS[0]['id'] not in result
 
     def test_harvest_invalid_tag(self):
         from nose.plugins.skip import SkipTest; raise SkipTest()
