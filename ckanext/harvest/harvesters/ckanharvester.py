@@ -205,7 +205,7 @@ class CKANHarvester(HarvesterBase):
                             package_ids = revision['packages']
                     else:
                         log.info('No packages have been updated on the remote CKAN instance since the last harvest job')
-                        return None
+                        return []
 
                 except urllib2.HTTPError,e:
                     if e.getcode() == 400:
@@ -427,6 +427,17 @@ class CKANHarvester(HarvesterBase):
             # are only creating normal resources with links to the remote ones
             for resource in package_dict.get('resources', []):
                 resource.pop('url_type', None)
+
+            # Check if package exists
+            data_dict = {}
+            data_dict['id'] = package_dict['id']
+            try:
+                existing_package_dict = get_action('package_show')(context, data_dict)
+                if 'metadata_modified' in package_dict and \
+                                package_dict['metadata_modified'] <= existing_package_dict.get('metadata_modified'):
+                    return "unchanged"
+            except NotFound:
+                pass
 
             result = self._create_or_update_package(package_dict,harvest_object)
 
