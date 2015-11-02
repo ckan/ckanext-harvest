@@ -36,25 +36,27 @@ running a version lower than 2.0.
 
       ckan.harvest.mq.type = amqp
 
+2. Activate your CKAN virtual environment, for example::
 
-2. Install the extension into your python environment::
+     $ . /usr/lib/ckan/default/bin/activate
+
+3. Install the ckanext-harvest Python package into your virtual environment::
 
      (pyenv) $ pip install -e git+https://github.com/ckan/ckanext-harvest.git#egg=ckanext-harvest
 
-3. Install the rest of python modules required by the extension::
+4. Install the python modules required by the extension::
 
      (pyenv) $ pip install -r pip-requirements.txt
 
-4. Make sure the CKAN configuration ini file contains the harvest main plugin, as
+5. Make sure the CKAN configuration ini file contains the harvest main plugin, as
    well as the harvester for CKAN instances if you need it (included with the extension)::
 
-    ckan.plugins = harvest ckan_harvester
+     ckan.plugins = harvest ckan_harvester
 
-5. If you haven't done it yet on the previous step, define the backend that you
-   are using with the ``ckan.harvest.mq.type`` option (it defaults to
-   ``rabbitmq``)::
+6. If you haven't done it yet on the previous step, define the backend that you
+   are using with the ``ckan.harvest.mq.type`` option (it defaults to ``amqp``)::
 
-    ckan.harvest.mq.type = redis
+     ckan.harvest.mq.type = redis
 
 There are a number of configuration options available for the backends. These don't need to
 be modified at all if you are using the default Redis or RabbitMQ install (step 1). The list
@@ -102,24 +104,44 @@ The following operations can be run from the command line using the
       harvester source {name} {url} {type} [{title}] [{active}] [{owner_org}] [{frequency}] [{config}]
         - create new harvest source
 
-      harvester rmsource {id}
-        - remove (deactivate) a harvester source, whilst leaving any related datasets, jobs and objects
+      harvester source {source-id/name}
+        - shows a harvest source
 
-      harvester clearsource {id}
-        - clears all datasets, jobs and objects related to a harvest source, but keeps the source itself
+      harvester rmsource {source-id/name}
+        - remove (deactivate) a harvester source, whilst leaving any related
+          datasets, jobs and objects
+
+      harvester clearsource {source-id/name}
+        - clears all datasets, jobs and objects related to a harvest source,
+          but keeps the source itself
 
       harvester sources [all]
         - lists harvest sources
           If 'all' is defined, it also shows the Inactive sources
 
-      harvester job {source-id}
+      harvester job {source-id/name}
         - create new harvest job
 
       harvester jobs
         - lists harvest jobs
 
+      harvester job_abort {source-id/name}
+        - marks a job as "Aborted" so that the source can be restarted afresh.
+          It ensures that the job's harvest objects status are also marked
+          finished. You should ensure that neither the job nor its objects are
+          currently in the gather/fetch queues.
+
       harvester run
-        - runs harvest jobs
+        - starts any harvest jobs that have been created by putting them onto
+          the gather queue. Also checks running jobs and if finished, it
+          changes their status to Finished.
+
+      harvester run_test {source-id/name}
+        - runs a harvest - for testing only.
+          This does all the stages of the harvest (creates job, gather, fetch,
+          import) without involving the web UI or the queue backends. This is
+          useful for testing a harvester without having to fire up
+          gather/fetch_consumer processes, as is done in production.
 
       harvester gather_consumer
         - starts the consumer for the gathering queue
@@ -129,14 +151,22 @@ The following operations can be run from the command line using the
 
       harvester purge_queues
         - removes all jobs from fetch and gather queue
+          WARNING: if using Redis, this command purges all data in the current
+          Redis database
 
-      harvester [-j] [--segments={segments}] import [{source-id}]
-        - perform the import stage with the last fetched objects, optionally belonging to a certain source.
-          Please note that no objects will be fetched from the remote server. It will only affect
-          the last fetched objects already present in the database.
+      harvester [-j] [-o] [--segments={segments}] import [{source-id}]
+        - perform the import stage with the last fetched objects, for a certain
+          source or a single harvest object. Please note that no objects will
+          be fetched from the remote server. It will only affect the objects
+          already present in the database.
 
-          If the -j flag is provided, the objects are not joined to existing datasets. This may be useful
-          when importing objects for the first time.
+          To import a particular harvest source, specify its id as an argument.
+          To import a particular harvest object use the -o option.
+          To import a particular package use the -p option.
+
+          You will need to specify the -j flag in cases where the datasets are
+          not yet created (e.g. first harvest, or all previous harvests have
+          failed)
 
           The --segments flag allows to define a string containing hex digits that represent which of
           the 16 harvest object segments to import. e.g. 15af will run segments 1,5,a,f
@@ -429,14 +459,43 @@ Here you can also find other examples of custom harvesters:
 * https://github.com/ckan/ckanext-dcat/tree/master/ckanext/dcat/harvesters
 * https://github.com/ckan/ckanext-spatial/tree/master/ckanext/spatial/harvesters
 
-
 Running the harvest jobs
 ========================
 
-The harvesting extension uses two different queues, one that handles the
-gathering and another one that handles the fetching and importing. To start
-the consumers run the following command
-(make sure you have your python environment activated)::
+There are two ways to run a harvest::
+
+    1. ``harvester run_test`` for the command-line, suitable for testing
+    2. ``harvester run`` used by the Web UI and scheduled runs
+
+harvester run_test
+------------------
+
+You can run a harvester simply using the ``run_test`` command. This is handy
+for running a harvest with one command in the console and see all the output
+in-line. It runs the gather, fetch and import stages all in the same process.
+
+This is useful for developing a harvester because you can insert break-points
+in your harvester, and rerun a harvest without having to restart the
+gather_consumer and fetch_consumer processes each time. In addition, because it
+doesn't use the queue backends it doesn't interfere with harvests of other
+sources that may be going on in the background.
+
+However running this way, if gather_stage, fetch_stage or import_stage raise an
+exception, they are not caught, whereas with ``harvester run`` they are handled
+slightly differently as they are called by queue.py. So when testing this
+aspect its best to use ``harvester run``.
+
+harvester run
+-------------
+
+When a harvest job is started by a user in the Web UI, or by a scheduled
+harvest, the harvest is started by the ``harvester run`` command. This is the
+normal method in production systems and scales well.
+
+In this case, the harvesting extension uses two different queues: one that
+handles the gathering and another one that handles the fetching and importing.
+To start the consumers run the following command (make sure you have your
+python environment activated)::
 
       paster --plugin=ckanext-harvest harvester gather_consumer --config=mysite.ini
 
@@ -453,8 +512,18 @@ The ``run`` command not only starts any pending harvesting jobs, but also
 flags those that are finished, allowing new jobs to be created on that particular
 source and refreshing the source statistics. That means that you will need to run
 this command before being able to create a new job on a source that was being
-harvested (On a production site you will typically have a cron job that runs the
+harvested. (On a production site you will typically have a cron job that runs the
 command regularly, see next section).
+
+Occasionally you can find a harvesting job is in a "limbo state" where the job
+has run with errors but the ``harvester run`` command will not mark it as
+finished, and therefore you cannot run another job. This is due to particular
+harvester not handling errors correctly e.g. during development. In this
+circumstance, ensure that the gather & fetch consumers are running and have
+nothing more to consume, and then run this abort command with the name or id of
+the harvest source::
+
+      paster --plugin=ckanext-harvest harvester job_abort {source-id/name} --config=mysite.ini
 
 
 Setting up the harvesters on a production server
