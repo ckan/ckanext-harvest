@@ -118,7 +118,13 @@ class HarvestSource(HarvestDomainObject):
        or "inactive". The harvesting processes are not fired on inactive
        sources.
     '''
-    pass
+    def __repr__(self):
+        return '<HarvestSource id=%s title=%s url=%s active=%r>' % \
+               (self.id, self.title, self.url, self.active)
+
+    def __str__(self):
+        return self.__repr__().encode('ascii', 'ignore')
+
 
 class HarvestJob(HarvestDomainObject):
     '''A Harvesting Job is performed in two phases. In first place, the

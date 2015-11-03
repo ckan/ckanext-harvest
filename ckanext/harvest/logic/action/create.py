@@ -95,13 +95,16 @@ def harvest_job_create(context, data_dict):
 
     # Check if the source is active
     if not source.active:
-        log.warn('Harvest job cannot be created for inactive source %s', source_id)
+        log.warn('Harvest job cannot be created for inactive source %s',
+                 source_id)
         raise Exception('Can not create jobs on inactive sources')
 
-    # Check if there already is an unrun or currently running job for this source
+    # Check if there already is an unrun or currently running job for this
+    # source
     exists = _check_for_existing_jobs(context, source_id)
     if exists:
-        log.warn('There is already an unrun job %r for this source %s', exists, source_id)
+        log.warn('There is already an unrun job %r for this source %s',
+                 exists, source_id)
         raise HarvestJobExists('There already is an unrun job for this source')
 
     job = HarvestJob()

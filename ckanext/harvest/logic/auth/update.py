@@ -70,6 +70,15 @@ def harvest_send_job_to_gather_queue(context, data_dict):
     return harvest_job_create(context, data_dict)
 
 
+def harvest_job_abort(context, data_dict):
+    '''
+        Authorization check for aborting a running harvest job
+
+        Same permissions as running one
+    '''
+    return harvest_jobs_run(context, data_dict)
+
+
 def harvest_sources_reindex(context, data_dict):
     '''
         Authorization check for reindexing all harvest sources
