@@ -246,34 +246,6 @@ def harvest_source_index_clear(context, data_dict):
     return {'id': harvest_source_id}
 
 
-def harvest_source_index_clear(context, data_dict):
-
-    check_access('harvest_source_clear', context, data_dict)
-    harvest_source_id = data_dict.get('id')
-
-    source = HarvestSource.get(harvest_source_id)
-    if not source:
-        log.error('Harvest source %s does not exist', harvest_source_id)
-        raise NotFound('Harvest source %s does not exist' % harvest_source_id)
-
-    harvest_source_id = source.id
-
-    conn = make_connection()
-    query = ''' +%s:"%s" +site_id:"%s" ''' % (
-        'harvest_source_id', harvest_source_id, config.get('ckan.site_id'))
-    try:
-        conn.delete_query(query)
-        if asbool(config.get('ckan.search.solr_commit', 'true')):
-            conn.commit()
-    except Exception, e:
-        log.exception(e)
-        raise SearchIndexError(e)
-    finally:
-        conn.close()
-
-    return {'id': harvest_source_id}
-
-
 def harvest_objects_import(context, data_dict):
     '''
     Reimports the existing harvest objects, specified by either source_id,
