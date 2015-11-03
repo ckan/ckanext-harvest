@@ -1,5 +1,8 @@
+import copy
+
 from nose.tools import assert_equal
 import json
+from mock import patch
 
 try:
     from ckan.tests.helpers import reset_db
@@ -92,9 +95,15 @@ class TestCkanHarvester(object):
         run_harvest(
             url='http://localhost:%s/' % mock_ckan.PORT,
             harvester=CKANHarvester())
-        results_by_guid = run_harvest(
-            url='http://localhost:%s/' % mock_ckan.PORT,
-            harvester=CKANHarvester())
+
+        # change the modified date
+        datasets = copy.deepcopy(mock_ckan.DATASETS)
+        datasets[1]['metadata_modified'] = '2050-05-09T22:00:01.486366'
+        with patch('ckanext.harvest.tests.harvesters.mock_ckan.DATASETS',
+                   datasets):
+            results_by_guid = run_harvest(
+                url='http://localhost:%s/' % mock_ckan.PORT,
+                harvester=CKANHarvester())
 
         # updated the dataset which has revisions
         result = results_by_guid[mock_ckan.DATASETS[1]['name']]
