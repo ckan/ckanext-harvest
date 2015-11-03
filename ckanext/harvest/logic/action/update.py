@@ -216,6 +216,7 @@ def harvest_source_index_clear(context, data_dict):
     Clears all datasets, jobs and objects related to a harvest source, but
     keeps the source itself.  This is useful to clean history of long running
     harvest sources to start again fresh.
+
     :param id: the id of the harvest source to clear
     :type id: string
     '''

@@ -22,6 +22,7 @@ def harvest_source_delete(context, data_dict):
     p.toolkit.get_action('package_delete')(context, data_dict)
 
     if context.get('clear_source', False):
+
         # We need the id. The name won't work.
         package_dict = p.toolkit.get_action('package_show')(context, data_dict)
 
