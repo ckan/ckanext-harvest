@@ -550,8 +550,8 @@ def harvest_source_reindex(context, data_dict):
     if 'extras_as_string'in context:
         del context['extras_as_string']
     context.update({'ignore_auth': True})
-    package_dict = logic.get_action('harvest_source_show')(
-        context, {'id': harvest_source_id})
+    package_dict = logic.get_action('harvest_source_show')(context,
+        {'id': harvest_source_id})
     log.debug('Updating search index for harvest source: {0}'.format(
         package_dict.get('name') or harvest_source_id))
 
@@ -562,10 +562,7 @@ def harvest_source_reindex(context, data_dict):
         for key, value in package_dict.iteritems():
             if key not in config:
                 new_dict[key] = value
-
     package_index = PackageSearchIndex()
-    package_index.index_package(
-        new_dict,
-        defer_commit=defer_commit)
+    package_index.index_package(new_dict, defer_commit=defer_commit)
 
     return True
