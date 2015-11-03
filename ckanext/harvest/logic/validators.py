@@ -60,16 +60,26 @@ def _normalize_url(url):
 
 
 def harvest_source_url_validator(key, data, errors, context):
-    package = context.get("package")
+    '''Validate the provided harvest source URL
+
+    Checks that the URL & config combination are unique to this HarvestSource.
+    '''
+
+    package = context.get('package')
 
     if package:
         package_id = package.id
     else:
-        package_id = data.get(key[:-1] + ("id",))
+        package_id = data.get(key[:-1] + ('id',))
+
+    try:
+        new_config = data.get(key[:-1] + ('config',))
+    except:
+        new_config = None
 
     new_url = _normalize_url(data[key])
 
-    q = model.Session.query(model.Package.url, model.Package.state) \
+    q = model.Session.query(model.Package.id, model.Package.url) \
              .filter(model.Package.type == DATASET_TYPE_NAME)
 
     if package_id:
@@ -78,11 +88,18 @@ def harvest_source_url_validator(key, data, errors, context):
 
     existing_sources = q.all()
 
-    for url, state in existing_sources:
+    for id_, url in existing_sources:
         url = _normalize_url(url)
-        if url == new_url:
-            raise Invalid('There already is a Harvest Source for this URL: %s'
-                          % data[key])
+        conf = model.Session.query(HarvestSource.config).filter(
+            HarvestSource.id == id_).first()
+        if conf:
+            conf = conf[0]
+        else:
+            conf = None
+
+        if url == new_url and conf == new_config:
+            raise Invalid('There already is a Harvest Source for this URL (& '
+                          'config): url=%s config=%s' % (new_url, new_config))
 
     return data[key]
 
