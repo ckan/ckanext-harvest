@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 def harvest_source_id_exists(value, context):
 
-    result = HarvestSource.get(value, None)
+    result = HarvestSource.get(value)
 
     if not result:
         raise Invalid('Harvest Source with id %r does not exist.' % str(value))
@@ -26,8 +26,7 @@ def harvest_source_id_exists(value, context):
 
 def harvest_job_exists(value, context):
     '''Check if a harvest job exists and returns the model if it does'''
-
-    result = HarvestJob.get(value, None)
+    result = HarvestJob.get(value)
 
     if not result:
         raise Invalid('Harvest Job with id %r does not exist.' % str(value))
@@ -52,10 +51,10 @@ def _normalize_url(url):
     path = o.path.rstrip('/')
 
     check_url = urlparse.urlunparse((
-            o.scheme,
-            netloc,
-            path,
-            None, None, None))
+        o.scheme,
+        netloc,
+        path,
+        None, None, None))
 
     return check_url
 
@@ -80,12 +79,11 @@ def harvest_source_url_validator(key, data, errors, context):
 
     new_url = _normalize_url(data[key])
 
-    q = model.Session.query(
-        model.Package.id, model.Package.url) \
-        .filter(model.Package.type == DATASET_TYPE_NAME)
+    q = model.Session.query(model.Package.id, model.Package.url) \
+             .filter(model.Package.type == DATASET_TYPE_NAME)
 
     if package_id:
-        # When editing a source we need to avoid its own URL.
+        # When editing a source we need to avoid its own URL
         q = q.filter(model.Package.id != package_id)
 
     existing_sources = q.all()
@@ -102,10 +100,8 @@ def harvest_source_url_validator(key, data, errors, context):
         if url == new_url and conf == new_config:
             # You can have a duplicate URL if it's pointing to a unique
             # set as it will be harvesting unique datasets.
-            raise Invalid(
-                'There already is a Harvest Source for this URL: %s'
-                % data[key]
-            )
+            raise Invalid('There already is a Harvest Source for this URL: %s'
+                          % data[key])
 
     return data[key]
 
@@ -118,18 +114,14 @@ def harvest_source_type_exists(value, context):
     for harvester in PluginImplementations(IHarvester):
         info = harvester.info()
         if not info or 'name' not in info:
-            log.error(
-                'Harvester %r does not provide the harvester name in the info '
-                'response' % str(harvester)
-            )
+            log.error('Harvester %s does not provide the harvester name in '
+                      'the info response' % harvester)
             continue
         available_types.append(info['name'])
 
-    if value not in available_types:
-        raise Invalid(
-            'Unknown harvester type: %s. Have you registered a harvester for '
-            'this type?' % value
-        )
+    if not value in available_types:
+        raise Invalid('Unknown harvester type: %s. Have you registered a '
+                      'harvester for this type?' % value)
 
     return value
 
@@ -143,8 +135,8 @@ def harvest_source_config_validator(key, data, errors, context):
                 try:
                     return harvester.validate_config(data[key])
                 except Exception, e:
-                    raise Invalid(
-                        'Error parsing the configuration options: %s' % str(e))
+                    raise Invalid('Error parsing the configuration options: %s'
+                                  % e)
             else:
                 return data[key]
 
