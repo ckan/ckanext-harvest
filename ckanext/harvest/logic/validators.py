@@ -14,21 +14,25 @@ from ckan.lib.navl.validators import keep_extras
 
 log = logging.getLogger(__name__)
 
+
 def harvest_source_id_exists(value, context):
 
-    result = HarvestSource.get(value,None)
+    result = HarvestSource.get(value, None)
 
     if not result:
         raise Invalid('Harvest Source with id %r does not exist.' % str(value))
     return value
 
+
 def harvest_job_exists(value, context):
-    """Check if a harvest job exists and returns the model if it does"""
+    '''Check if a harvest job exists and returns the model if it does'''
+
     result = HarvestJob.get(value, None)
 
     if not result:
         raise Invalid('Harvest Job with id %r does not exist.' % str(value))
     return result
+
 
 def _normalize_url(url):
     o = urlparse.urlparse(url)
@@ -51,11 +55,17 @@ def _normalize_url(url):
             o.scheme,
             netloc,
             path,
-            None,None,None))
+            None, None, None))
 
     return check_url
 
-def harvest_source_url_validator(key,data,errors,context):
+
+def harvest_source_url_validator(key, data, errors, context):
+    '''Validate the provided harvest source URL.
+
+    Checks that the URL is not already existing with the same config.
+    '''
+
     package = context.get("package")
 
     if package:
@@ -63,45 +73,69 @@ def harvest_source_url_validator(key,data,errors,context):
     else:
         package_id = data.get(key[:-1] + ("id",))
 
-    new_url = _normalize_url(data[key])
-    #pkg_id = data.get(('id',),'')
+    try:
+        new_config = data.get(key[:-1] + ('config',))
+    except:
+        new_config = None
 
-    q = model.Session.query(model.Package.url, model.Package.state) \
-               .filter(model.Package.type==DATASET_TYPE_NAME)
+    new_url = _normalize_url(data[key])
+
+    q = model.Session.query(
+        model.Package.id, model.Package.url) \
+        .filter(model.Package.type == DATASET_TYPE_NAME)
 
     if package_id:
-        # When editing a source we need to avoid its own URL
-        q = q.filter(model.Package.id!=package_id)
+        # When editing a source we need to avoid its own URL.
+        q = q.filter(model.Package.id != package_id)
 
     existing_sources = q.all()
 
-    for url, state in existing_sources:
+    for uid, url in existing_sources:
         url = _normalize_url(url)
-        if url == new_url:
-            raise Invalid('There already is a Harvest Source for this URL: %s' % data[key])
+        conf = model.Session.query(HarvestSource.config).filter(
+            HarvestSource.id == uid).first()
+        if conf:
+            conf = conf[0]
+        else:
+            conf = None
+
+        if url == new_url and conf == new_config:
+            # You can have a duplicate URL if it's pointing to a unique
+            # set as it will be harvesting unique datasets.
+            raise Invalid(
+                'There already is a Harvest Source for this URL: %s'
+                % data[key]
+            )
 
     return data[key]
 
-def harvest_source_type_exists(value,context):
-    #TODO: use new description interface
+
+def harvest_source_type_exists(value, context):
+    # TODO: use new description interface
 
     # Get all the registered harvester types
     available_types = []
     for harvester in PluginImplementations(IHarvester):
         info = harvester.info()
         if not info or 'name' not in info:
-            log.error('Harvester %r does not provide the harvester name in the info response' % str(harvester))
+            log.error(
+                'Harvester %r does not provide the harvester name in the info '
+                'response' % str(harvester)
+            )
             continue
         available_types.append(info['name'])
 
-
-    if not value in available_types:
-        raise Invalid('Unknown harvester type: %s. Have you registered a harvester for this type?' % value)
+    if value not in available_types:
+        raise Invalid(
+            'Unknown harvester type: %s. Have you registered a harvester for '
+            'this type?' % value
+        )
 
     return value
 
-def harvest_source_config_validator(key,data,errors,context):
-    harvester_type = data.get(('source_type',),'')
+
+def harvest_source_config_validator(key, data, errors, context):
+    harvester_type = data.get(('source_type',), '')
     for harvester in PluginImplementations(IHarvester):
         info = harvester.info()
         if info['name'] == harvester_type:
@@ -109,9 +143,11 @@ def harvest_source_config_validator(key,data,errors,context):
                 try:
                     return harvester.validate_config(data[key])
                 except Exception, e:
-                    raise Invalid('Error parsing the configuration options: %s' % str(e))
+                    raise Invalid(
+                        'Error parsing the configuration options: %s' % str(e))
             else:
                 return data[key]
+
 
 def keep_not_empty_extras(key, data, errors, context):
     extras = data.pop(key, {})
@@ -119,11 +155,12 @@ def keep_not_empty_extras(key, data, errors, context):
         if value:
             data[key[:-1] + (extras_key,)] = value
 
-def harvest_source_extra_validator(key,data,errors,context):
-    harvester_type = data.get(('source_type',),'')
 
-    #gather all extra fields to use as whitelist of what
-    #can be added to top level data_dict
+def harvest_source_extra_validator(key, data, errors, context):
+    harvester_type = data.get(('source_type',), '')
+
+    # gather all extra fields to use as whitelist of what
+    # can be added to top level data_dict
     all_extra_fields = set()
     for harvester in PluginImplementations(IHarvester):
         if not hasattr(harvester, 'extra_schema'):
@@ -142,7 +179,7 @@ def harvest_source_extra_validator(key,data,errors,context):
 
     extra_data, extra_errors = validate(data.get(key, {}), extra_schema)
     for key in extra_data.keys():
-        #only allow keys that appear in at least one harvester
+        # only allow keys that appear in at least one harvester
         if key not in all_extra_fields:
             extra_data.pop(key)
 
@@ -152,8 +189,8 @@ def harvest_source_extra_validator(key,data,errors,context):
     for key, value in extra_errors.iteritems():
         errors[(key,)] = value
 
-    ## need to get config out of extras as __extra runs
-    ## after rest of validation
+    # need to get config out of extras as __extra runs
+    # after rest of validation
     package_extras = data.get(('extras',), [])
 
     for num, extra in enumerate(list(package_extras)):
@@ -177,20 +214,23 @@ def harvest_source_extra_validator(key,data,errors,context):
     if package_extras:
         data[('extras',)] = package_extras
 
-def harvest_source_convert_from_config(key,data,errors,context):
+
+def harvest_source_convert_from_config(key, data, errors, context):
     config = data[key]
     if config:
         config_dict = json.loads(config)
         for key, value in config_dict.iteritems():
             data[(key,)] = value
 
-def harvest_source_active_validator(value,context):
-    if isinstance(value,basestring):
+
+def harvest_source_active_validator(value, context):
+    if isinstance(value, basestring):
         if value.lower() == 'true':
             return True
         else:
             return False
     return bool(value)
+
 
 def harvest_source_frequency_exists(value):
     if value == '':
@@ -204,6 +244,7 @@ def dataset_type_exists(value):
     if value != DATASET_TYPE_NAME:
         value = DATASET_TYPE_NAME
     return value
+
 
 def harvest_object_extras_validator(value, context):
     if not isinstance(value, dict):
