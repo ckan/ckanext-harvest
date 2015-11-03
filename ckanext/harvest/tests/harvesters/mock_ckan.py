@@ -440,7 +440,7 @@ REVISIONS = [
     "approved_timestamp": None,
     "packages":
     [
-        "dataset1"
+        DATASETS[1]['name']
     ],
     "groups": [ ]
     },
@@ -452,7 +452,7 @@ REVISIONS = [
     "approved_timestamp": None,
     "packages":
     [
-        "dataset1"
+        DATASETS[1]['name']
     ],
     "groups": [ ]
     }]

@@ -12,7 +12,7 @@ import ckan.logic as logic
 from ckan import model
 
 
-class TestHarvester(SingletonPlugin):
+class MockHarvester(SingletonPlugin):
     implements(IHarvester)
     def info(self):
         return {'name': 'test', 'title': 'test', 'description': 'test'}

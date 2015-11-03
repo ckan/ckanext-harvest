@@ -218,7 +218,7 @@ def define_harvester_tables():
         Column('guid', types.UnicodeText, default=u''),
         # When you harvest a dataset multiple times, only the latest
         # successfully imported harvest_object should be flagged 'current'.
-        # The import_stage reads and writes it.
+        # The import_stage usually reads and writes it.
         Column('current',types.Boolean,default=False),
         Column('gathered', types.DateTime, default=datetime.datetime.utcnow),
         Column('fetch_started', types.DateTime),
@@ -233,6 +233,7 @@ def define_harvester_tables():
         Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
         Column('harvest_source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
         Column('package_id', types.UnicodeText, ForeignKey('package.id', deferrable=True), nullable=True),
+        # report_status: 'added', 'updated', 'not modified', 'deleted', 'errored'
         Column('report_status', types.UnicodeText, nullable=True),
     )
 

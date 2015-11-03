@@ -430,17 +430,24 @@ following methods::
         '''
         The import stage will receive a HarvestObject object and will be
         responsible for:
-            - performing any necessary action with the fetched object (e.g
-              create a CKAN package).
+            - performing any necessary action with the fetched object (e.g.
+              create, update or delete a CKAN package).
               Note: if this stage creates or updates a package, a reference
               to the package should be added to the HarvestObject.
-            - creating the HarvestObject - Package relation (if necessary)
+            - setting the HarvestObject.package (if there is one)
+            - setting the HarvestObject.current for this harvest:
+               - True if successfully created/updated
+               - False if successfully deleted
+            - setting HarvestObject.current to False for previous harvest
+              objects of this harvest source if the action was successful.
             - creating and storing any suitable HarvestObjectErrors that may
               occur.
-            - returning True if everything went as expected, False otherwise.
+            - returning True if the action was done, "unchanged" if nothing
+              was needed doing after all or False if there were errors.
 
         :param harvest_object: HarvestObject object
-        :returns: True if everything went right, False if errors were found
+        :returns: True if the action was done, "unchanged" if nothing was
+                  needed doing after all and False if something went wrong.
         '''
 
 

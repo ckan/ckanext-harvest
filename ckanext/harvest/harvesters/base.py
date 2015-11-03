@@ -240,6 +240,10 @@ class HarvesterBase(SingletonPlugin):
         If the remote server provides the modification date of the remote
         package, add it to package_dict['metadata_modified'].
 
+        :returns: The same as what import_stage should return. i.e. True if the
+                  create or update occurred ok, 'unchanged' if it didn't need
+                  updating or False if there were errors.
+
 
         TODO: Not sure it is worth keeping this function. If useful it should
         use the output of package_show logic function (maybe keeping support
@@ -280,7 +284,10 @@ class HarvesterBase(SingletonPlugin):
             data_dict = {}
             data_dict['id'] = package_dict['id']
             try:
-                existing_package_dict = get_action('package_show')(context, data_dict)
+                package_show_context = {'model': model, 'session': Session,
+                                        'ignore_auth': True}
+                existing_package_dict = get_action('package_show')(
+                    package_show_context, data_dict)
 
                 # In case name has been modified when first importing. See issue #101.
                 package_dict['name'] = existing_package_dict['name']
@@ -297,7 +304,8 @@ class HarvesterBase(SingletonPlugin):
 
                 else:
                     log.info('Package with GUID %s not updated, skipping...' % harvest_object.guid)
-                    return
+                    # NB harvest_object.current/package_id are not set
+                    return 'unchanged'
 
                 # Flag the other objects linking to this package as not current anymore
                 from ckanext.harvest.model import harvest_object_table
