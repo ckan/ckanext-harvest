@@ -148,7 +148,6 @@ class ActionBase(object):
 
     def setup(self):
         reset_db()
-        search.clear_all()
         harvest_model.setup()
 
     @classmethod
