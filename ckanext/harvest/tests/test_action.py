@@ -2,7 +2,7 @@ import json
 import copy
 import factories
 import unittest
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_raises
 
 try:
     from ckan.tests import factories as ckan_factories
@@ -13,6 +13,7 @@ except ImportError:
 from ckan import plugins as p
 from ckan.plugins import toolkit
 from ckan import model
+import ckan.lib.search as search
 
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.model as harvest_model
@@ -142,10 +143,13 @@ SOURCE_DICT = {
 class ActionBase(object):
     @classmethod
     def setup_class(cls):
-        reset_db()
-        harvest_model.setup()
         if not p.plugin_loaded('test_action_harvester'):
             p.load('test_action_harvester')
+
+    def setup(self):
+        reset_db()
+        search.clear_all()
+        harvest_model.setup()
 
     @classmethod
     def teardown_class(cls):
@@ -323,6 +327,48 @@ class TestActions(ActionBase):
         assert_equal(harvest_model.HarvestJob.get(job.id), None)
         assert_equal(harvest_model.HarvestObject.get(object_.id), None)
         assert_equal(model.Package.get(dataset['id']), None)
+
+    def test_harvest_source_create_twice_with_unique_url(self):
+        # don't use factory because it looks for the existing source
+        data_dict = SOURCE_DICT
+        site_user = toolkit.get_action('get_site_user')(
+            {'model': model, 'ignore_auth': True}, {})['name']
+
+        toolkit.get_action('harvest_source_create')(
+            {'user': site_user}, data_dict)
+
+        data_dict['name'] = 'another-source1'
+        data_dict['url'] = 'http://another-url'
+        toolkit.get_action('harvest_source_create')(
+            {'user': site_user}, data_dict)
+
+    def test_harvest_source_create_twice_with_same_url(self):
+        # don't use factory because it looks for the existing source
+        data_dict = SOURCE_DICT
+        site_user = toolkit.get_action('get_site_user')(
+            {'model': model, 'ignore_auth': True}, {})['name']
+
+        toolkit.get_action('harvest_source_create')(
+            {'user': site_user}, data_dict)
+
+        data_dict['name'] = 'another-source2'
+        assert_raises(toolkit.ValidationError,
+                      toolkit.get_action('harvest_source_create'),
+                      {'user': site_user}, data_dict)
+
+    def test_harvest_source_create_twice_with_unique_url_and_config(self):
+        # don't use factory because it looks for the existing source
+        data_dict = SOURCE_DICT
+        site_user = toolkit.get_action('get_site_user')(
+            {'model': model, 'ignore_auth': True}, {})['name']
+
+        toolkit.get_action('harvest_source_create')(
+            {'user': site_user}, data_dict)
+
+        data_dict['name'] = 'another-source3'
+        data_dict['config'] = '{"something": "new"}'
+        toolkit.get_action('harvest_source_create')(
+            {'user': site_user}, data_dict)
 
 
 class TestHarvestObject(unittest.TestCase):
