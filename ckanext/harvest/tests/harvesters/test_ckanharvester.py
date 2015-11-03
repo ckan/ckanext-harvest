@@ -97,10 +97,10 @@ class TestCkanHarvester(object):
             harvester=CKANHarvester())
 
         # updated the dataset which has revisions
-        result = results_by_guid['dataset1']
+        result = results_by_guid[mock_ckan.DATASETS[1]['name']]
         assert_equal(result['state'], 'COMPLETE')
         assert_equal(result['report_status'], 'updated')
-        assert_equal(result['dataset']['name'], mock_ckan.DATASETS[0]['name'])
+        assert_equal(result['dataset']['name'], mock_ckan.DATASETS[1]['name'])
         assert_equal(result['errors'], [])
 
         # the other dataset is unchanged and not harvested
