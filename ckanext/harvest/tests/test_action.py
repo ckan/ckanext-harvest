@@ -2,6 +2,7 @@ import json
 import copy
 import factories
 import unittest
+from nose.tools import assert_equal
 
 try:
     from ckan.tests import factories as ckan_factories
@@ -127,6 +128,30 @@ class FunctionalTestBaseWithoutClearBetweenTests(object):
         pass
 
 
+SOURCE_DICT = {
+    "url": "http://test.action.com",
+    "name": "test-source-action",
+    "title": "Test source action",
+    "notes": "Test source action desc",
+    "source_type": "test-for-action",
+    "frequency": "MANUAL",
+    "config": json.dumps({"custom_option": ["a", "b"]})
+}
+
+
+class ActionBase(object):
+    @classmethod
+    def setup_class(cls):
+        reset_db()
+        harvest_model.setup()
+        if not p.plugin_loaded('test_action_harvester'):
+            p.load('test_action_harvester')
+
+    @classmethod
+    def teardown_class(cls):
+        p.unload('test_action_harvester')
+
+
 class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
 
     @classmethod
@@ -136,15 +161,7 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
 
         cls.sysadmin = ckan_factories.Sysadmin()
 
-        cls.default_source_dict = {
-            "url": "http://test.action.com",
-            "name": "test-source-action",
-            "title": "Test source action",
-            "notes": "Test source action desc",
-            "source_type": "test-for-action",
-            "frequency": "MANUAL",
-            "config": json.dumps({"custom_option": ["a", "b"]})
-        }
+        cls.default_source_dict = SOURCE_DICT
 
         if not p.plugin_loaded('test_action_harvester'):
             p.load('test_action_harvester')
@@ -285,6 +302,27 @@ class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
         source = harvest_model.HarvestSource.get(result['id'])
         assert source.url == source_dict['url']
         assert source.type == source_dict['source_type']
+
+
+class TestActions(ActionBase):
+    def test_harvest_source_clear(self):
+        source = factories.HarvestSourceObj(**SOURCE_DICT)
+        job = factories.HarvestJobObj(source=source)
+        dataset = ckan_factories.Dataset()
+        object_ = factories.HarvestObjectObj(job=job, source=source,
+                                             package_id=dataset['id'])
+
+        context = {'model': model, 'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+        result = toolkit.get_action('harvest_source_clear')(
+            context, {'id': source.id})
+
+        assert_equal(result, {'id': source.id})
+        source = harvest_model.HarvestSource.get(source.id)
+        assert source
+        assert_equal(harvest_model.HarvestJob.get(job.id), None)
+        assert_equal(harvest_model.HarvestObject.get(object_.id), None)
+        assert_equal(model.Package.get(dataset['id']), None)
 
 
 class TestHarvestObject(unittest.TestCase):
