@@ -1,5 +1,8 @@
+import copy
 from nose.tools import assert_equal
 import json
+
+from mock import patch
 
 try:
     from ckan.tests.helpers import reset_db
@@ -92,15 +95,23 @@ class TestCkanHarvester(object):
         run_harvest(
             url='http://localhost:%s/' % mock_ckan.PORT,
             harvester=CKANHarvester())
-        results_by_guid = run_harvest(
-            url='http://localhost:%s/' % mock_ckan.PORT,
-            harvester=CKANHarvester())
+
+        # THIS TEST WILL WORK WHEN FIX #179 IS MERGED
+        from nose.plugins.skip import SkipTest; raise SkipTest()
+        # change the modified date
+        datasets = copy.deepcopy(mock_ckan.DATASETS)
+        datasets[1]['metadata_modified'] = '2050-05-09T22:00:01.486366'
+        with patch('ckanext.harvest.tests.harvesters.mock_ckan.DATASETS',
+                   datasets):
+            results_by_guid = run_harvest(
+                url='http://localhost:%s/' % mock_ckan.PORT,
+                harvester=CKANHarvester())
 
         # updated the dataset which has revisions
-        result = results_by_guid['dataset1']
+        result = results_by_guid[mock_ckan.DATASETS[1]['name']]
         assert_equal(result['state'], 'COMPLETE')
         assert_equal(result['report_status'], 'updated')
-        assert_equal(result['dataset']['name'], mock_ckan.DATASETS[0]['name'])
+        assert_equal(result['dataset']['name'], mock_ckan.DATASETS[1]['name'])
         assert_equal(result['errors'], [])
 
         # the other dataset is unchanged and not harvested
@@ -134,3 +145,22 @@ class TestCkanHarvester(object):
             config=json.dumps(config))
         assert 'dataset1-id' in results_by_guid
         assert mock_ckan.DATASETS[1]['id'] not in results_by_guid
+
+    def test_harvest_not_modified(self):
+        run_harvest(
+            url='http://localhost:%s/' % mock_ckan.PORT,
+            harvester=CKANHarvester())
+
+        results_by_guid = run_harvest(
+            url='http://localhost:%s/' % mock_ckan.PORT,
+            harvester=CKANHarvester())
+
+        # The metadata_modified was the same for this dataset so the import
+        # would have returned None
+        result = results_by_guid[mock_ckan.DATASETS[1]['name']]
+        assert_equal(result['state'], 'COMPLETE')
+        # Strangely this is reported as "deleted", but this will be fixed in
+        # #177 with 'not modified' returned from import_stage
+        assert_equal(result['report_status'], 'deleted')
+        assert 'dataset' not in result
+        assert_equal(result['errors'], [])

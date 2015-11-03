@@ -280,7 +280,10 @@ class HarvesterBase(SingletonPlugin):
             data_dict = {}
             data_dict['id'] = package_dict['id']
             try:
-                existing_package_dict = get_action('package_show')(context, data_dict)
+                package_show_context = {'model': model, 'session': Session,
+                                        'ignore_auth': True}
+                existing_package_dict = get_action('package_show')(
+                    package_show_context, data_dict)
 
                 # In case name has been modified when first importing. See issue #101.
                 package_dict['name'] = existing_package_dict['name']
