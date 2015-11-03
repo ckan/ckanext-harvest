@@ -266,7 +266,6 @@ def harvest_objects_import(context, data_dict):
     :param package_id: the id or name of the package to import
     :type package_id: string
     '''
-
     log.info('Harvest objects import: %r', data_dict)
     check_access('harvest_objects_import', context, data_dict)
 
@@ -540,7 +539,7 @@ def harvest_sources_reindex(context, data_dict):
 
 @logic.side_effect_free
 def harvest_source_reindex(context, data_dict):
-    '''Reindex a single harvest source.'''
+    '''Reindex a single harvest source'''
 
     harvest_source_id = logic.get_or_bust(data_dict, 'id')
     defer_commit = context.get('defer_commit', False)

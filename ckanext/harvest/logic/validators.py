@@ -60,17 +60,17 @@ def _normalize_url(url):
 
 
 def harvest_source_url_validator(key, data, errors, context):
-    '''Validate the provided harvest source URL.
+    '''Validate the provided harvest source URL
 
     Checks that the URL is not already existing with the same config.
     '''
 
-    package = context.get("package")
+    package = context.get('package')
 
     if package:
         package_id = package.id
     else:
-        package_id = data.get(key[:-1] + ("id",))
+        package_id = data.get(key[:-1] + ('id',))
 
     try:
         new_config = data.get(key[:-1] + ('config',))
