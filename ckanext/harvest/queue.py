@@ -16,7 +16,8 @@ log = logging.getLogger(__name__)
 assert not log.disabled
 
 __all__ = ['get_gather_publisher', 'get_gather_consumer',
-           'get_fetch_publisher', 'get_fetch_consumer']
+           'get_fetch_publisher', 'get_fetch_consumer',
+           'get_harvester']
 
 PORT = 5672
 USERID = 'guest'
@@ -233,42 +234,38 @@ def gather_callback(channel, method, header, body):
     # Send the harvest job to the plugins that implement
     # the Harvester interface, only if the source type
     # matches
-    harvester_found = False
-    for harvester in PluginImplementations(IHarvester):
-        if harvester.info()['name'] == job.source.type:
-            harvester_found = True
+    harvester = get_harvester(job.source.type)
 
-            try:
-                harvest_object_ids = gather_stage(harvester, job)
-            except (Exception, KeyboardInterrupt):
-                channel.basic_ack(method.delivery_tag)
-                raise
+    if harvester:
+        try:
+            harvest_object_ids = gather_stage(harvester, job)
+        except (Exception, KeyboardInterrupt):
+            channel.basic_ack(method.delivery_tag)
+            raise
 
-            if not isinstance(harvest_object_ids, list):
-                log.error('Gather stage failed')
-                publisher.close()
-                channel.basic_ack(method.delivery_tag)
-                return False
+        if not isinstance(harvest_object_ids, list):
+            log.error('Gather stage failed')
+            publisher.close()
+            channel.basic_ack(method.delivery_tag)
+            return False
 
-            if len(harvest_object_ids) == 0:
-                log.info('No harvest objects to fetch')
-                publisher.close()
-                channel.basic_ack(method.delivery_tag)
-                return False
+        if len(harvest_object_ids) == 0:
+            log.info('No harvest objects to fetch')
+            publisher.close()
+            channel.basic_ack(method.delivery_tag)
+            return False
 
-            log.debug('Received from plugin gather_stage: {0} objects (first: {1} last: {2})'.format(
-                        len(harvest_object_ids), harvest_object_ids[:1], harvest_object_ids[-1:]))
-            for id in harvest_object_ids:
-                # Send the id to the fetch queue
-                publisher.send({'harvest_object_id':id})
-            log.debug('Sent {0} objects to the fetch queue'.format(len(harvest_object_ids)))
+        log.debug('Received from plugin gather_stage: {0} objects (first: {1} last: {2})'.format(
+                    len(harvest_object_ids), harvest_object_ids[:1], harvest_object_ids[-1:]))
+        for id in harvest_object_ids:
+            # Send the id to the fetch queue
+            publisher.send({'harvest_object_id':id})
+        log.debug('Sent {0} objects to the fetch queue'.format(len(harvest_object_ids)))
 
-    if not harvester_found:
+    else:
         # This can occur if you:
-        # * remove a harvester and it still has sources that are then
-        #   refreshed
-        # * add a new harvester and restart CKAN but not the gather
-        #   queue.
+        # * remove a harvester and it still has sources that are then refreshed
+        # * add a new harvester and restart CKAN but not the gather queue.
         msg = 'System error - No harvester could be found for source type %s' % job.source.type
         err = HarvestGatherError(message=msg,job=job)
         err.save()
@@ -277,6 +274,12 @@ def gather_callback(channel, method, header, body):
     model.Session.remove()
     publisher.close()
     channel.basic_ack(method.delivery_tag)
+
+
+def get_harvester(harvest_source_type):
+    for harvester in PluginImplementations(IHarvester):
+        if harvester.info()['name'] == harvest_source_type:
+            return harvester
 
 
 def gather_stage(harvester, job):

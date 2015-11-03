@@ -58,6 +58,16 @@ def harvest_jobs_run(context, data_dict):
     else:
         return {'success': True}
 
+
+def harvest_job_abort(context, data_dict):
+    '''
+        Authorization check for aborting a running harvest job
+
+        Same permissions as running one
+    '''
+    return harvest_jobs_run(context, data_dict)
+
+
 def harvest_sources_reindex(context, data_dict):
     '''
         Authorization check for reindexing all harvest sources

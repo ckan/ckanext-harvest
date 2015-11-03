@@ -27,7 +27,7 @@ from ckanext.harvest.queue import get_gather_publisher, resubmit_jobs
 
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 from ckanext.harvest.logic import HarvestJobExists, NoNewHarvestJobError
-from ckanext.harvest.logic.schema import harvest_source_show_package_schema
+from ckanext.harvest.logic.dictization import harvest_job_dictize
 
 from ckanext.harvest.logic.action.get import harvest_source_show, harvest_job_list, _get_sources_for_user
 
@@ -83,10 +83,12 @@ def harvest_source_update(context,data_dict):
 
     return source
 
-def harvest_source_clear(context,data_dict):
+
+def harvest_source_clear(context, data_dict):
     '''
-    Clears all datasets, jobs and objects related to a harvest source, but keeps the source itself.
-    This is useful to clean history of long running harvest sources to start again fresh.
+    Clears all datasets, jobs and objects related to a harvest source, but
+    keeps the source itself.  This is useful to clean history of long running
+    harvest sources to start again fresh.
 
     :param id: the id of the harvest source to clear
     :type id: string
@@ -94,7 +96,7 @@ def harvest_source_clear(context,data_dict):
     '''
     check_access('harvest_source_clear',context,data_dict)
 
-    harvest_source_id = data_dict.get('id',None)
+    harvest_source_id = data_dict.get('id', None)
 
     source = HarvestSource.get(harvest_source_id)
     if not source:
@@ -182,6 +184,14 @@ def harvest_source_clear(context,data_dict):
     return {'id': harvest_source_id}
 
 def harvest_source_index_clear(context,data_dict):
+    '''
+    Clears all datasets, jobs and objects related to a harvest source, but
+    keeps the source itself.  This is useful to clean history of long running
+    harvest sources to start again fresh.
+
+    :param id: the id of the harvest source to clear
+    :type id: string
+    '''
 
     check_access('harvest_source_clear',context,data_dict)
     harvest_source_id = data_dict.get('id',None)
@@ -208,14 +218,26 @@ def harvest_source_index_clear(context,data_dict):
 
     return {'id': harvest_source_id}
 
-def harvest_objects_import(context,data_dict):
+
+def harvest_objects_import(context, data_dict):
     '''
-        Reimports the current harvest objects
-        It performs the import stage with the last fetched objects, optionally
-        belonging to a certain source.
-        Please note that no objects will be fetched from the remote server.
-        It will only affect the last fetched objects already present in the
-        database.
+    Reimports the existing harvest objects, specified by either source_id,
+    harvest_object_id or package_id.
+
+    It performs the import stage with the last fetched objects, optionally
+    belonging to a certain source.
+
+    Please note that no objects will be fetched from the remote server.
+
+    It will only affect the last fetched objects already present in the
+    database.
+
+    :param source_id: the id of the harvest source to import
+    :type source_id: string
+    :param harvest_object_id: the id of the harvest object to import
+    :type harvest_object_id: string
+    :param package_id: the id or name of the package to import
+    :type package_id: string
     '''
     log.info('Harvest objects import: %r', data_dict)
     check_access('harvest_objects_import',context,data_dict)
@@ -393,6 +415,64 @@ def harvest_jobs_run(context,data_dict):
     return sent_jobs
 
 
+def harvest_job_abort(context, data_dict):
+    '''
+    Aborts a harvest job. Given a harvest source_id, it looks for the latest
+    one and (assuming it not already Finished) marks it as Finished. It also
+    marks any of that source's harvest objects and (if not complete or error)
+    marks them "ERROR", so any left in limbo are cleaned up. Does not actually
+    stop running any queued harvest fetchs/objects.
+
+    :param source_id: the name or id of the harvest source with a job to abort
+    :type source_id: string
+    '''
+
+    check_access('harvest_job_abort', context, data_dict)
+
+    model = context['model']
+
+    source_id = data_dict.get('source_id', None)
+    source = harvest_source_show(context, {'id': source_id})
+
+    # HarvestJob set status to 'Finished'
+    # Don not use harvest_job_list since it can use a lot of memory
+    last_job = model.Session.query(HarvestJob) \
+                    .filter_by(source_id=source['id']) \
+                    .order_by(HarvestJob.created.desc()).first()
+    if not last_job:
+        raise NotFound('Error: source has no jobs')
+    job = get_action('harvest_job_show')(context,
+                                         {'id': last_job.id})
+
+    if job['status'] != 'Finished':
+        # i.e. New or Running
+        job_obj = HarvestJob.get(job['id'])
+        job_obj.status = new_status = 'Finished'
+        model.repo.commit_and_remove()
+        log.info('Harvest job changed status from "%s" to "%s"',
+                 job['status'], new_status)
+    else:
+        log.info('Harvest job unchanged. Source %s status is: "%s"',
+                 job['id'], job['status'])
+
+    # HarvestObjects set to ERROR
+    job_obj = HarvestJob.get(job['id'])
+    objs = job_obj.objects
+    for obj in objs:
+        if obj.state not in ('COMPLETE', 'ERROR'):
+            old_state = obj.state
+            obj.state = 'ERROR'
+            log.info('Harvest object changed state from "%s" to "%s": %s',
+                     old_state, obj.state, obj.id)
+        else:
+            log.info('Harvest object not changed from "%s": %s',
+                     obj.state, obj.id)
+    model.repo.commit_and_remove()
+
+    job_obj = HarvestJob.get(job['id'])
+    return harvest_job_dictize(job_obj, context)
+
+
 @logic.side_effect_free
 def harvest_sources_reindex(context, data_dict):
     '''
@@ -430,7 +510,8 @@ def harvest_source_reindex(context, data_dict):
     context.update({'ignore_auth': True})
     package_dict = logic.get_action('harvest_source_show')(context,
         {'id': harvest_source_id})
-    log.debug('Updating search index for harvest source {0}'.format(harvest_source_id))
+    log.debug('Updating search index for harvest source: {0}'.format(
+        package_dict.get('name') or harvest_source_id))
 
     # Remove configuration values
     new_dict = {}
