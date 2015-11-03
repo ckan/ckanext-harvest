@@ -91,7 +91,6 @@ def harvest_source_clear(context, data_dict):
 
     :param id: the id of the harvest source to clear
     :type id: string
-
     '''
 
     check_access('harvest_source_clear', context, data_dict)

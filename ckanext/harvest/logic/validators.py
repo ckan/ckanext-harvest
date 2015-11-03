@@ -68,7 +68,6 @@ def harvest_source_url_validator(key, data, errors, context):
         package_id = data.get(key[:-1] + ("id",))
 
     new_url = _normalize_url(data[key])
-    #pkg_id = data.get(('id',),'')
 
     q = model.Session.query(model.Package.url, model.Package.state) \
              .filter(model.Package.type == DATASET_TYPE_NAME)
@@ -89,7 +88,7 @@ def harvest_source_url_validator(key, data, errors, context):
 
 
 def harvest_source_type_exists(value, context):
-    #TODO: use new description interface
+    # TODO: use new description interface
 
     # Get all the registered harvester types
     available_types = []
@@ -153,7 +152,7 @@ def harvest_source_extra_validator(key, data, errors, context):
 
     extra_data, extra_errors = validate(data.get(key, {}), extra_schema)
     for key in extra_data.keys():
-        #only allow keys that appear in at least one harvester
+        # only allow keys that appear in at least one harvester
         if key not in all_extra_fields:
             extra_data.pop(key)
 
