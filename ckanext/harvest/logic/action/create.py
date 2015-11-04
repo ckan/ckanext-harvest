@@ -148,15 +148,15 @@ def _check_for_existing_jobs(context, source_id):
     return exist
 
 def harvest_object_create(context, data_dict):
-    """ Create a new harvest object
+    ''' Create a new harvest object
 
     :type guid: string (optional)
     :type content: string (optional)
-    :type job_id: string 
+    :type job_id: string
     :type source_id: string (optional)
     :type package_id: string (optional)
     :type extras: dict (optional)
-    """
+    '''
     check_access('harvest_object_create', context, data_dict)
     data, errors = _validate(data_dict, harvest_object_create_schema(), context)
 
