@@ -109,7 +109,8 @@ def harvest_source_show_status(context, data_dict):
             .filter(harvest_model.HarvestObject.harvest_source_id==source.id) \
             .filter(harvest_model.HarvestObject.current==True) \
             .filter(model.Package.state==u'active') \
-            .filter(model.Package.private==False)
+            .filter(model.Package.private==False) \
+            .group_by(model.Package.id)
     out['total_datasets'] = packages.count()
 
     return out
