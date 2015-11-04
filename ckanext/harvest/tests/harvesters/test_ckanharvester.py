@@ -99,7 +99,7 @@ class TestCkanHarvester(object):
             harvester=CKANHarvester())
         patched_datasets = copy.deepcopy(mock_ckan.DATASETS)
         patched_datasets[1]['title'] = 'Title CHANGED'
-        patched_datasets[1]['metadata_modified'] = '2015-05-09T22:00:01.486366'
+        patched_datasets[1]['metadata_modified'] = '2050-05-09T22:00:01.486366'
         with mock.patch("ckanext.harvest.tests.harvesters.mock_ckan.DATASETS",
                         patched_datasets):
             results_by_guid = run_harvest(
