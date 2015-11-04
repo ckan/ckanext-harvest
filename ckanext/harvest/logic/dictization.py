@@ -73,6 +73,33 @@ def harvest_job_dictize(job, context):
                           .order_by('error_count desc') \
                           .limit(context.get('error_summmary_limit', 20))
         out['gather_error_summary'] = q.all()
+
+    if context.get('return_dataset_changes', True):
+        # list all the datasets added, updated and deleted by harvest job
+        all_changes = []
+        sql = '''select ho.package_id as ho_package_id, ho.harvest_source_id,
+                     ho.report_status as ho_package_status,
+                     package.title as package_title
+                 from harvest_object ho
+                 inner join package on package.id = ho.package_id
+                 where ho.harvest_job_id = :job_id and
+                     (ho.report_status = 'added' or
+                      ho.report_status = 'updated' or
+                      ho.report_status = 'deleted')
+                 order by ho.report_status ASC;'''
+
+        q = model.Session.execute(sql, {'job_id': job.id})
+
+        for row in q:
+            if row['ho_package_status'] is not None and \
+                    row['ho_package_id'] is not None and \
+                    row['package_title'] is not None:
+                all_changes.append(row['ho_package_status'] + ' , ' +
+                                   row['ho_package_id'] + ', ' +
+                                   row['package_title'])
+
+        out['dataset_changes'] = all_changes
+
     return out
 
 def harvest_object_dictize(obj, context):

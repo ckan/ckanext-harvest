@@ -14,6 +14,15 @@
 
   {% if c.job.status == 'Finished' %}
 
+    {% if c.job.dataset_changes %}
+        <h2>{{ _('Dataset changes') }}</h2>
+        {% for change in c.job.dataset_changes %}
+        <div class="error">
+            {{ change }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
     {% if c.job.object_error_summary|length == 0 and c.job.gather_error_summary|length == 0 %}
       <h2>{{ _('Error Summary') }}</h2>
       <p class="empty">{{ _('No errors for this job') }}</p>
