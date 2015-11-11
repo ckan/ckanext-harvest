@@ -2,7 +2,7 @@ import json
 import copy
 import factories
 import unittest
-from nose.tools import assert_equal, assert_raises
+from nose.tools import assert_equal, assert_raises, ok_
 from nose.plugins.skip import SkipTest
 
 try:
@@ -72,10 +72,10 @@ def call_action_api(action, apikey=None, status=200, **kwargs):
                         status=status)
 
     if status in (200,):
-        assert response.json['success'] is True
+        ok_(response.json['success'] is True)
         return response.json['result']
     else:
-        assert response.json['success'] is False
+        ok_(response.json['success'] is False)
         return response.json['error']
 
 
@@ -165,8 +165,6 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
 
         cls.sysadmin = ckan_factories.Sysadmin()
 
-        cls.default_source_dict = SOURCE_DICT
-
         if not p.plugin_loaded('test_action_harvester'):
             p.load('test_action_harvester')
 
@@ -176,54 +174,63 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
 
         p.unload('test_action_harvester')
 
-    def test_invalid_missing_values(self):
+    def _get_source_dict(self):
+        return {
+            "url": "http://test.action.com",
+            "name": "test-source-action",
+            "title": "Test source action",
+            "notes": "Test source action desc",
+            "source_type": "test-for-action",
+            "frequency": "MANUAL",
+            "config": json.dumps({"custom_option": ["a", "b"]})
+        }
 
+    def test_invalid_missing_values(self):
         source_dict = {}
-        if 'id' in self.default_source_dict:
-            source_dict['id'] = self.default_source_dict['id']
+        test_data = self._get_source_dict()
+        if 'id' in test_data:
+            source_dict['id'] = test_data['id']
 
         result = call_action_api(self.action,
                                  apikey=self.sysadmin['apikey'], status=409,
                                  **source_dict)
 
         for key in ('name', 'title', 'url', 'source_type'):
-            assert result[key] == [u'Missing value']
+            assert_equal(result[key], [u'Missing value'])
 
     def test_invalid_unknown_type(self):
-
-        source_dict = copy.deepcopy(self.default_source_dict)
+        source_dict = self._get_source_dict()
         source_dict['source_type'] = 'unknown'
 
         result = call_action_api(self.action,
                                  apikey=self.sysadmin['apikey'], status=409,
                                  **source_dict)
 
-        assert 'source_type' in result
-        assert u'Unknown harvester type' in result['source_type'][0]
+        ok_('source_type' in result)
+        ok_(u'Unknown harvester type' in result['source_type'][0])
 
     def test_invalid_unknown_frequency(self):
         wrong_frequency = 'ANNUALLY'
-        source_dict = copy.deepcopy(self.default_source_dict)
+        source_dict = self._get_source_dict()
         source_dict['frequency'] = wrong_frequency
 
         result = call_action_api(self.action,
                                  apikey=self.sysadmin['apikey'], status=409,
                                  **source_dict)
 
-        assert 'frequency' in result
-        assert u'Frequency {0} not recognised'.format(wrong_frequency) in result['frequency'][0]
+        ok_('frequency' in result)
+        ok_(u'Frequency {0} not recognised'.format(wrong_frequency) in result['frequency'][0])
 
     def test_invalid_wrong_configuration(self):
-
-        source_dict = copy.deepcopy(self.default_source_dict)
+        source_dict = self._get_source_dict()
         source_dict['config'] = 'not_json'
 
         result = call_action_api(self.action,
                                  apikey=self.sysadmin['apikey'], status=409,
                                  **source_dict)
 
-        assert 'config' in result
-        assert u'Error parsing the configuration options: No JSON object could be decoded' in result['config'][0]
+        ok_('config' in result)
+        ok_(u'Error parsing the configuration options: No JSON object could be decoded' in result['config'][0])
 
         source_dict['config'] = json.dumps({'custom_option': 'not_a_list'})
 
@@ -231,8 +238,8 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
                                  apikey=self.sysadmin['apikey'], status=409,
                                  **source_dict)
 
-        assert 'config' in result
-        assert u'Error parsing the configuration options: custom_option must be a list' in result['config'][0]
+        ok_('config' in result)
+        ok_(u'Error parsing the configuration options: custom_option must be a list' in result['config'][0])
 
 
 class TestHarvestSourceActionCreate(HarvestSourceActionBase):
@@ -242,50 +249,52 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
 
     def test_create(self):
 
-        source_dict = self.default_source_dict
+        source_dict = self._get_source_dict()
 
         result = call_action_api('harvest_source_create',
                                  apikey=self.sysadmin['apikey'], **source_dict)
 
         for key in source_dict.keys():
-            assert source_dict[key] == result[key]
+            assert_equal(source_dict[key], result[key])
 
         # Check that source was actually created
         source = harvest_model.HarvestSource.get(result['id'])
-        assert source.url == source_dict['url']
-        assert source.type == source_dict['source_type']
+        assert_equal(source.url, source_dict['url'])
+        assert_equal(source.type, source_dict['source_type'])
 
         # Trying to create a source with the same URL fails
-        source_dict = copy.deepcopy(self.default_source_dict)
+        source_dict = self._get_source_dict()
         source_dict['name'] = 'test-source-action-new'
 
         result = call_action_api('harvest_source_create',
                                  apikey=self.sysadmin['apikey'], status=409,
                                  **source_dict)
 
-        assert 'url' in result
-        assert u'There already is a Harvest Source for this URL' in result['url'][0]
+        ok_('url' in result)
+        ok_(u'There already is a Harvest Source for this URL' in result['url'][0])
 
+class HarvestSourceFixtureMixin(object):
+    def _get_source_dict(self):
+        template = {
+            "url": "http://test.action.com",
+            "name": "test-source-action",
+            "title": "Test source action",
+            "notes": "Test source action desc",
+            "source_type": "test-for-action",
+            "frequency": "MANUAL",
+            "config": json.dumps({"custom_option": ["a", "b"]})
+        }
+        result = call_action_api('harvest_source_create', 
+                                 apikey=self.sysadmin['apikey'], **template)
+        template['id'] = result['id']
+        return template
 
-class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
-
-    @classmethod
-    def setup_class(cls):
-
-        cls.action = 'harvest_source_update'
-
-        super(TestHarvestSourceActionUpdate, cls).setup_class()
-
-        # Create a source to udpate
-        source_dict = cls.default_source_dict
-        result = call_action_api('harvest_source_create',
-                                 apikey=cls.sysadmin['apikey'], **source_dict)
-
-        cls.default_source_dict['id'] = result['id']
+class TestHarvestSourceActionUpdate(HarvestSourceFixtureMixin, HarvestSourceActionBase):
+    def __init__(self):
+        self.action = 'harvest_source_update'
 
     def test_update(self):
-
-        source_dict = self.default_source_dict
+        source_dict = self._get_source_dict()
         source_dict.update({
             "url": "http://test.action.updated.com",
             "name": "test-source-action-updated",
@@ -300,32 +309,19 @@ class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
                                  apikey=self.sysadmin['apikey'], **source_dict)
 
         for key in source_dict.keys():
-            assert source_dict[key] == result[key]
+            assert_equal(source_dict[key], result[key], "Key: %s" % key)
 
         # Check that source was actually updated
         source = harvest_model.HarvestSource.get(result['id'])
-        assert source.url == source_dict['url']
-        assert source.type == source_dict['source_type']
+        assert_equal(source.url, source_dict['url'])
+        assert_equal(source.type, source_dict['source_type'])
 
 
-class TestHarvestSourceActionPatch(HarvestSourceActionBase):
-
-    @classmethod
-    def setup_class(cls):
-
-        cls.action = 'harvest_source_patch'
-
-        super(TestHarvestSourceActionPatch, cls).setup_class()
-
-        # Create a source to udpate
-        source_dict = cls.default_source_dict
-        result = call_action_api('harvest_source_create',
-                                 apikey=cls.sysadmin['apikey'], **source_dict)
-
-        cls.default_source_dict['id'] = result['id']
+class TestHarvestSourceActionPatch(HarvestSourceFixtureMixin, HarvestSourceActionBase):
+    def __init__(self):
+        self.action = 'harvest_source_patch'
 
     def test_invalid_missing_values(self):
-        # patch should *NOT* return an error about missing values, so skip this test
         pass
 
     def test_patch(self):
@@ -336,8 +332,10 @@ class TestHarvestSourceActionPatch(HarvestSourceActionBase):
             # package_patch is not supported
             raise SkipTest()
 
+        source_dict = self._get_source_dict()
+
         patch_dict = {
-            "id": self.default_source_dict['id'],
+            "id": source_dict['id'],
             "name": "test-source-action-patched",
             "url": "http://test.action.patched.com",
             "config": json.dumps({"custom_option": ["pat", "ched"]})
@@ -346,16 +344,14 @@ class TestHarvestSourceActionPatch(HarvestSourceActionBase):
         result = call_action_api('harvest_source_patch',
                                  apikey=self.sysadmin['apikey'], **patch_dict)
 
-        source_dict = self.default_source_dict
         source_dict.update(patch_dict)
-
         for key in source_dict.keys():
-            assert source_dict[key] == result[key]
+            assert_equal(source_dict[key], result[key], "Key: %s" % key)
 
         # Check that source was actually updated
         source = harvest_model.HarvestSource.get(result['id'])
-        assert source.url == source_dict['url']
-        assert source.type == source_dict['source_type']
+        assert_equal(source.url, source_dict['url'])
+        assert_equal(source.type, source_dict['source_type'])
 
 
 class TestActions(ActionBase):
@@ -373,7 +369,7 @@ class TestActions(ActionBase):
 
         assert_equal(result, {'id': source.id})
         source = harvest_model.HarvestSource.get(source.id)
-        assert source
+        ok_(source)
         assert_equal(harvest_model.HarvestJob.get(job.id), None)
         assert_equal(harvest_model.HarvestObject.get(object_.id), None)
         assert_equal(model.Package.get(dataset['id']), None)
@@ -446,7 +442,7 @@ class TestHarvestObject(unittest.TestCase):
 
         # fetch the object from database to check it was created
         created_object = harvest_model.HarvestObject.get(harvest_object['id'])
-        assert created_object.guid == harvest_object['guid'] == data_dict['guid']
+        ok_(created_object.guid == harvest_object['guid'] == data_dict['guid'])
 
     def test_create_bad_parameters(self):
         source_a = factories.HarvestSourceObj()
