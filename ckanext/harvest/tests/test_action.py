@@ -1,5 +1,6 @@
 import json
 import copy
+import uuid
 import factories
 import unittest
 from nose.tools import assert_equal, assert_raises, ok_
@@ -163,8 +164,6 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
         super(HarvestSourceActionBase, cls).setup_class()
         harvest_model.setup()
 
-        cls.sysadmin = ckan_factories.Sysadmin()
-
         if not p.plugin_loaded('test_action_harvester'):
             p.load('test_action_harvester')
 
@@ -191,8 +190,9 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
         if 'id' in test_data:
             source_dict['id'] = test_data['id']
 
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api(self.action,
-                                 apikey=self.sysadmin['apikey'], status=409,
+                                 apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
         for key in ('name', 'title', 'url', 'source_type'):
@@ -202,8 +202,9 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
         source_dict = self._get_source_dict()
         source_dict['source_type'] = 'unknown'
 
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api(self.action,
-                                 apikey=self.sysadmin['apikey'], status=409,
+                                 apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
         ok_('source_type' in result)
@@ -214,8 +215,9 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
         source_dict = self._get_source_dict()
         source_dict['frequency'] = wrong_frequency
 
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api(self.action,
-                                 apikey=self.sysadmin['apikey'], status=409,
+                                 apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
         ok_('frequency' in result)
@@ -225,8 +227,9 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
         source_dict = self._get_source_dict()
         source_dict['config'] = 'not_json'
 
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api(self.action,
-                                 apikey=self.sysadmin['apikey'], status=409,
+                                 apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
         ok_('config' in result)
@@ -235,7 +238,7 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
         source_dict['config'] = json.dumps({'custom_option': 'not_a_list'})
 
         result = call_action_api(self.action,
-                                 apikey=self.sysadmin['apikey'], status=409,
+                                 apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
         ok_('config' in result)
@@ -251,8 +254,9 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
 
         source_dict = self._get_source_dict()
 
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api('harvest_source_create',
-                                 apikey=self.sysadmin['apikey'], **source_dict)
+                                 apikey=sysadmin['apikey'], **source_dict)
 
         for key in source_dict.keys():
             assert_equal(source_dict[key], result[key])
@@ -267,7 +271,7 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
         source_dict['name'] = 'test-source-action-new'
 
         result = call_action_api('harvest_source_create',
-                                 apikey=self.sysadmin['apikey'], status=409,
+                                 apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
         ok_('url' in result)
@@ -275,17 +279,19 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
 
 class HarvestSourceFixtureMixin(object):
     def _get_source_dict(self):
+        id = uuid.uuid4()
         template = {
-            "url": "http://test.action.com",
-            "name": "test-source-action",
+            "url": "http://test.action.com/%s" % id,
+            "name": "test-source-action%s" % id,
             "title": "Test source action",
             "notes": "Test source action desc",
             "source_type": "test-for-action",
             "frequency": "MANUAL",
             "config": json.dumps({"custom_option": ["a", "b"]})
         }
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api('harvest_source_create', 
-                                 apikey=self.sysadmin['apikey'], **template)
+                                 apikey=sysadmin['apikey'], **template)
         template['id'] = result['id']
         return template
 
@@ -305,8 +311,9 @@ class TestHarvestSourceActionUpdate(HarvestSourceFixtureMixin, HarvestSourceActi
             "config": json.dumps({"custom_option": ["c", "d"]})
         })
 
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api('harvest_source_update',
-                                 apikey=self.sysadmin['apikey'], **source_dict)
+                                 apikey=sysadmin['apikey'], **source_dict)
 
         for key in source_dict.keys():
             assert_equal(source_dict[key], result[key], "Key: %s" % key)
@@ -341,8 +348,9 @@ class TestHarvestSourceActionPatch(HarvestSourceFixtureMixin, HarvestSourceActio
             "config": json.dumps({"custom_option": ["pat", "ched"]})
         }
 
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api('harvest_source_patch',
-                                 apikey=self.sysadmin['apikey'], **patch_dict)
+                                 apikey=sysadmin['apikey'], **patch_dict)
 
         source_dict.update(patch_dict)
         for key in source_dict.keys():
