@@ -3,6 +3,7 @@ import copy
 import factories
 import unittest
 from nose.tools import assert_equal, assert_raises
+from nose.plugins.skip import SkipTest
 
 try:
     from ckan.tests import factories as ckan_factories
@@ -324,19 +325,17 @@ class TestHarvestSourceActionPatch(HarvestSourceActionBase):
         cls.default_source_dict['id'] = result['id']
 
     def test_invalid_missing_values(self):
-        # patch should *NOT* return an error about missing values
-
-        # source_dict = {}
-        # source_dict['id'] = self.default_source_dict['id']
-
-        # result = call_action_api(self.action,
-        #                          apikey=self.sysadmin['apikey'], **source_dict)
-
-        # for key in ('name', 'title', 'url', 'source_type'):
-        #     assert result[key] == self.default_source_dict[key]
+        # patch should *NOT* return an error about missing values, so skip this test
         pass
 
     def test_patch(self):
+        # check if current version of CKAN supports package_patch
+        try:
+            toolkit.get_action('package_patch')
+        except KeyError:
+            # package_patch is not supported
+            raise SkipTest()
+
         patch_dict = {
             "id": self.default_source_dict['id'],
             "name": "test-source-action-patched",

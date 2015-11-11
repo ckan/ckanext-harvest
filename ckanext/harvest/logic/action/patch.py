@@ -52,7 +52,11 @@ def harvest_source_patch(context, data_dict):
     data_dict['type'] = DATASET_TYPE_NAME
 
     context['extras_as_string'] = True
-    source = get_action('package_patch')(context, data_dict)
+    try:
+        source = get_action('package_patch')(context, data_dict)
+    except KeyError:
+        log.warn('This CKAN instance does not support package_patch, using package_update instead')
+        source = get_action('package_update')(context, data_dict)
 
     return source
 
