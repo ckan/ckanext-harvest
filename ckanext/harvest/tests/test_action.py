@@ -307,6 +307,58 @@ class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
         assert source.type == source_dict['source_type']
 
 
+class TestHarvestSourceActionPatch(HarvestSourceActionBase):
+
+    @classmethod
+    def setup_class(cls):
+
+        cls.action = 'harvest_source_patch'
+
+        super(TestHarvestSourceActionPatch, cls).setup_class()
+
+        # Create a source to udpate
+        source_dict = cls.default_source_dict
+        result = call_action_api('harvest_source_create',
+                                 apikey=cls.sysadmin['apikey'], **source_dict)
+
+        cls.default_source_dict['id'] = result['id']
+
+    def test_invalid_missing_values(self):
+        # patch should *NOT* return an error about missing values
+
+        # source_dict = {}
+        # source_dict['id'] = self.default_source_dict['id']
+
+        # result = call_action_api(self.action,
+        #                          apikey=self.sysadmin['apikey'], **source_dict)
+
+        # for key in ('name', 'title', 'url', 'source_type'):
+        #     assert result[key] == self.default_source_dict[key]
+        pass
+
+    def test_patch(self):
+        patch_dict = {
+            "id": self.default_source_dict['id'],
+            "name": "test-source-action-patched",
+            "url": "http://test.action.patched.com",
+            "config": json.dumps({"custom_option": ["pat", "ched"]})
+        }
+
+        result = call_action_api('harvest_source_patch',
+                                 apikey=self.sysadmin['apikey'], **patch_dict)
+
+        source_dict = self.default_source_dict
+        source_dict.update(patch_dict)
+
+        for key in source_dict.keys():
+            assert source_dict[key] == result[key]
+
+        # Check that source was actually updated
+        source = harvest_model.HarvestSource.get(result['id'])
+        assert source.url == source_dict['url']
+        assert source.type == source_dict['source_type']
+
+
 class TestActions(ActionBase):
     def test_harvest_source_clear(self):
         source = factories.HarvestSourceObj(**SOURCE_DICT)
