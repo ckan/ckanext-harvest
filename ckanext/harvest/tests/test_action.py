@@ -68,9 +68,14 @@ def call_action_api(action, apikey=None, status=200, **kwargs):
     '''
     params = json.dumps(kwargs)
     app = _get_test_app()
-    response = app.post('/api/action/{0}'.format(action), params=params,
-                        extra_environ={'Authorization': str(apikey)},
-                        status=status)
+    try:
+        response = app.post('/api/action/{0}'.format(action), params=params,
+                            extra_environ={'Authorization': str(apikey)},
+                            status=status)
+    except ActionError, e:
+        if str(e) == 'The harvest_source_patch action is not available on this version of CKAN':
+            raise SkipTest()
+        raise e
 
     if status in (200,):
         ok_(response.json['success'] is True)
@@ -332,13 +337,6 @@ class TestHarvestSourceActionPatch(HarvestSourceFixtureMixin, HarvestSourceActio
         pass
 
     def test_patch(self):
-        # check if current version of CKAN supports package_patch
-        try:
-            toolkit.get_action('package_patch')
-        except KeyError:
-            # package_patch is not supported
-            raise SkipTest()
-
         source_dict = self._get_source_dict()
 
         patch_dict = {
