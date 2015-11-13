@@ -6,6 +6,7 @@ from ckan.model import Session, Package
 from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
 from ckan.lib.munge import munge_name
+from simplejson.scanner import JSONDecodeError
 
 from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError, \
                                     HarvestObjectError
@@ -204,11 +205,13 @@ class CKANHarvester(HarvesterBase):
             url = base_rest_url + '/package'
             try:
                 content = self._get_content(url)
+                package_ids = json.loads(content)
             except ContentFetchError,e:
                 self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
                 return None
-
-            package_ids = json.loads(content)
+            except JSONDecodeError,e:
+                self._save_gather_error('Unable to decode content for URL: %s: %s' % (url, str(e)),harvest_job)
+                return None
 
         try:
             object_ids = []
