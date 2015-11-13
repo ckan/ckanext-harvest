@@ -2,7 +2,7 @@ import json
 import uuid
 import factories
 import unittest
-from nose.tools import assert_equal, assert_raises, ok_
+from nose.tools import assert_equal, assert_raises
 from nose.plugins.skip import SkipTest
 
 try:
@@ -72,10 +72,10 @@ def call_action_api(action, apikey=None, status=200, **kwargs):
                         status=status)
 
     if status in (200,):
-        ok_(response.json['success'] is True)
+        assert response.json['success'] is True
         return response.json['result']
     else:
-        ok_(response.json['success'] is False)
+        assert response.json['success'] is False
         return response.json['error']
 
 
@@ -189,8 +189,8 @@ class HarvestSourceActionBase(FunctionalTestBase):
                                  apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
-        ok_('source_type' in result)
-        ok_(u'Unknown harvester type' in result['source_type'][0])
+        assert 'source_type' in result
+        assert u'Unknown harvester type' in result['source_type'][0]
 
     def test_invalid_unknown_frequency(self):
         wrong_frequency = 'ANNUALLY'
@@ -202,8 +202,8 @@ class HarvestSourceActionBase(FunctionalTestBase):
                                  apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
-        ok_('frequency' in result)
-        ok_(u'Frequency {0} not recognised'.format(wrong_frequency) in result['frequency'][0])
+        assert 'frequency' in result
+        assert u'Frequency {0} not recognised'.format(wrong_frequency) in result['frequency'][0]
 
     def test_invalid_wrong_configuration(self):
         source_dict = self._get_source_dict()
@@ -214,8 +214,8 @@ class HarvestSourceActionBase(FunctionalTestBase):
                                  apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
-        ok_('config' in result)
-        ok_(u'Error parsing the configuration options: No JSON object could be decoded' in result['config'][0])
+        assert 'config' in result
+        assert u'Error parsing the configuration options: No JSON object could be decoded' in result['config'][0]
 
         source_dict['config'] = json.dumps({'custom_option': 'not_a_list'})
 
@@ -223,8 +223,8 @@ class HarvestSourceActionBase(FunctionalTestBase):
                                  apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
-        ok_('config' in result)
-        ok_(u'Error parsing the configuration options: custom_option must be a list' in result['config'][0])
+        assert 'config' in result
+        assert u'Error parsing the configuration options: custom_option must be a list' in result['config'][0]
 
 
 class TestHarvestSourceActionCreate(HarvestSourceActionBase):
@@ -256,8 +256,8 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
                                  apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
-        ok_('url' in result)
-        ok_(u'There already is a Harvest Source for this URL' in result['url'][0])
+        assert 'url' in result
+        assert u'There already is a Harvest Source for this URL' in result['url'][0]
 
 
 class HarvestSourceFixtureMixin(object):
@@ -356,7 +356,7 @@ class TestActions(ActionBase):
 
         assert_equal(result, {'id': source.id})
         source = harvest_model.HarvestSource.get(source.id)
-        ok_(source)
+        assert source
         assert_equal(harvest_model.HarvestJob.get(job.id), None)
         assert_equal(harvest_model.HarvestObject.get(object_.id), None)
         assert_equal(model.Package.get(dataset['id']), None)
@@ -429,7 +429,7 @@ class TestHarvestObject(unittest.TestCase):
 
         # fetch the object from database to check it was created
         created_object = harvest_model.HarvestObject.get(harvest_object['id'])
-        ok_(created_object.guid == harvest_object['guid'] == data_dict['guid'])
+        assert created_object.guid == harvest_object['guid'] == data_dict['guid']
 
     def test_create_bad_parameters(self):
         source_a = factories.HarvestSourceObj()
