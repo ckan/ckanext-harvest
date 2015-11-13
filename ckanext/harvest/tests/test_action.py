@@ -1,19 +1,20 @@
 import json
-import copy
+import uuid
 import factories
 import unittest
 from nose.tools import assert_equal, assert_raises
+from nose.plugins.skip import SkipTest
 
 try:
     from ckan.tests import factories as ckan_factories
-    from ckan.tests.helpers import _get_test_app, reset_db
+    from ckan.tests.helpers import _get_test_app, reset_db, FunctionalTestBase
 except ImportError:
     from ckan.new_tests import factories as ckan_factories
-    from ckan.new_tests.helpers import _get_test_app, reset_db
+    from ckan.new_tests.helpers import (_get_test_app, reset_db,
+                                        FunctionalTestBase)
 from ckan import plugins as p
 from ckan.plugins import toolkit
 from ckan import model
-import ckan.lib.search as search
 
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.model as harvest_model
@@ -112,23 +113,6 @@ class MockHarvesterForActionTests(p.SingletonPlugin):
         return True
 
 
-class FunctionalTestBaseWithoutClearBetweenTests(object):
-    ''' Functional tests should normally derive from
-    ckan.lib.helpers.FunctionalTestBase, but these are legacy tests so this
-    class is a compromise.  This version doesn't call reset_db before every
-    test, because these tests are designed with fixtures created in
-    setup_class.'''
-
-    @classmethod
-    def setup_class(cls):
-        reset_db()
-        harvest_model.setup()
-
-    @classmethod
-    def teardown_class(cls):
-        pass
-
-
 SOURCE_DICT = {
     "url": "http://test.action.com",
     "name": "test-source-action",
@@ -155,16 +139,12 @@ class ActionBase(object):
         p.unload('test_action_harvester')
 
 
-class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
+class HarvestSourceActionBase(FunctionalTestBase):
 
     @classmethod
     def setup_class(cls):
         super(HarvestSourceActionBase, cls).setup_class()
         harvest_model.setup()
-
-        cls.sysadmin = ckan_factories.Sysadmin()
-
-        cls.default_source_dict = SOURCE_DICT
 
         if not p.plugin_loaded('test_action_harvester'):
             p.load('test_action_harvester')
@@ -175,26 +155,38 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
 
         p.unload('test_action_harvester')
 
+    def _get_source_dict(self):
+        return {
+            "url": "http://test.action.com",
+            "name": "test-source-action",
+            "title": "Test source action",
+            "notes": "Test source action desc",
+            "source_type": "test-for-action",
+            "frequency": "MANUAL",
+            "config": json.dumps({"custom_option": ["a", "b"]})
+        }
+
     def test_invalid_missing_values(self):
-
         source_dict = {}
-        if 'id' in self.default_source_dict:
-            source_dict['id'] = self.default_source_dict['id']
+        test_data = self._get_source_dict()
+        if 'id' in test_data:
+            source_dict['id'] = test_data['id']
 
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api(self.action,
-                                 apikey=self.sysadmin['apikey'], status=409,
+                                 apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
         for key in ('name', 'title', 'url', 'source_type'):
-            assert result[key] == [u'Missing value']
+            assert_equal(result[key], [u'Missing value'])
 
     def test_invalid_unknown_type(self):
-
-        source_dict = copy.deepcopy(self.default_source_dict)
+        source_dict = self._get_source_dict()
         source_dict['source_type'] = 'unknown'
 
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api(self.action,
-                                 apikey=self.sysadmin['apikey'], status=409,
+                                 apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
         assert 'source_type' in result
@@ -202,23 +194,24 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
 
     def test_invalid_unknown_frequency(self):
         wrong_frequency = 'ANNUALLY'
-        source_dict = copy.deepcopy(self.default_source_dict)
+        source_dict = self._get_source_dict()
         source_dict['frequency'] = wrong_frequency
 
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api(self.action,
-                                 apikey=self.sysadmin['apikey'], status=409,
+                                 apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
         assert 'frequency' in result
         assert u'Frequency {0} not recognised'.format(wrong_frequency) in result['frequency'][0]
 
     def test_invalid_wrong_configuration(self):
-
-        source_dict = copy.deepcopy(self.default_source_dict)
+        source_dict = self._get_source_dict()
         source_dict['config'] = 'not_json'
 
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api(self.action,
-                                 apikey=self.sysadmin['apikey'], status=409,
+                                 apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
         assert 'config' in result
@@ -227,7 +220,7 @@ class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
         source_dict['config'] = json.dumps({'custom_option': 'not_a_list'})
 
         result = call_action_api(self.action,
-                                 apikey=self.sysadmin['apikey'], status=409,
+                                 apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
         assert 'config' in result
@@ -241,50 +234,53 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
 
     def test_create(self):
 
-        source_dict = self.default_source_dict
+        source_dict = self._get_source_dict()
 
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api('harvest_source_create',
-                                 apikey=self.sysadmin['apikey'], **source_dict)
+                                 apikey=sysadmin['apikey'], **source_dict)
 
         for key in source_dict.keys():
-            assert source_dict[key] == result[key]
+            assert_equal(source_dict[key], result[key])
 
         # Check that source was actually created
         source = harvest_model.HarvestSource.get(result['id'])
-        assert source.url == source_dict['url']
-        assert source.type == source_dict['source_type']
+        assert_equal(source.url, source_dict['url'])
+        assert_equal(source.type, source_dict['source_type'])
 
         # Trying to create a source with the same URL fails
-        source_dict = copy.deepcopy(self.default_source_dict)
+        source_dict = self._get_source_dict()
         source_dict['name'] = 'test-source-action-new'
 
         result = call_action_api('harvest_source_create',
-                                 apikey=self.sysadmin['apikey'], status=409,
+                                 apikey=sysadmin['apikey'], status=409,
                                  **source_dict)
 
         assert 'url' in result
         assert u'There already is a Harvest Source for this URL' in result['url'][0]
 
 
-class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
+class HarvestSourceFixtureMixin(object):
+    def _get_source_dict(self):
+        '''Not only returns a source_dict, but creates the HarvestSource object
+        as well - suitable for testing update actions.
+        '''
+        source = HarvestSourceActionBase._get_source_dict(self)
+        source = factories.HarvestSource(**source)
+        # delete status because it gets in the way of the status supplied to
+        # call_action_api later on. It is only a generated value, not affecting
+        # the update/patch anyway.
+        del source['status']
+        return source
 
-    @classmethod
-    def setup_class(cls):
 
-        cls.action = 'harvest_source_update'
-
-        super(TestHarvestSourceActionUpdate, cls).setup_class()
-
-        # Create a source to udpate
-        source_dict = cls.default_source_dict
-        result = call_action_api('harvest_source_create',
-                                 apikey=cls.sysadmin['apikey'], **source_dict)
-
-        cls.default_source_dict['id'] = result['id']
+class TestHarvestSourceActionUpdate(HarvestSourceFixtureMixin,
+                                    HarvestSourceActionBase):
+    def __init__(self):
+        self.action = 'harvest_source_update'
 
     def test_update(self):
-
-        source_dict = self.default_source_dict
+        source_dict = self._get_source_dict()
         source_dict.update({
             "url": "http://test.action.updated.com",
             "name": "test-source-action-updated",
@@ -295,16 +291,54 @@ class TestHarvestSourceActionUpdate(HarvestSourceActionBase):
             "config": json.dumps({"custom_option": ["c", "d"]})
         })
 
+        sysadmin = ckan_factories.Sysadmin()
         result = call_action_api('harvest_source_update',
-                                 apikey=self.sysadmin['apikey'], **source_dict)
+                                 apikey=sysadmin['apikey'], **source_dict)
 
-        for key in source_dict.keys():
-            assert source_dict[key] == result[key]
+        for key in set(('url', 'name', 'title', 'notes', 'source_type',
+                        'frequency', 'config')):
+            assert_equal(source_dict[key], result[key], "Key: %s" % key)
 
         # Check that source was actually updated
         source = harvest_model.HarvestSource.get(result['id'])
-        assert source.url == source_dict['url']
-        assert source.type == source_dict['source_type']
+        assert_equal(source.url, source_dict['url'])
+        assert_equal(source.type, source_dict['source_type'])
+
+
+class TestHarvestSourceActionPatch(HarvestSourceFixtureMixin,
+                                   HarvestSourceActionBase):
+    def __init__(self):
+        self.action = 'harvest_source_patch'
+        if toolkit.check_ckan_version(max_version='2.2.99'):
+            # harvest_source_patch only came in with ckan 2.3
+            raise SkipTest()
+
+    def test_invalid_missing_values(self):
+        pass
+
+    def test_patch(self):
+        source_dict = self._get_source_dict()
+
+        patch_dict = {
+            "id": source_dict['id'],
+            "name": "test-source-action-patched",
+            "url": "http://test.action.patched.com",
+            "config": json.dumps({"custom_option": ["pat", "ched"]})
+        }
+
+        sysadmin = ckan_factories.Sysadmin()
+        result = call_action_api('harvest_source_patch',
+                                 apikey=sysadmin['apikey'], **patch_dict)
+
+        source_dict.update(patch_dict)
+        for key in set(('url', 'name', 'title', 'notes', 'source_type',
+                        'frequency', 'config')):
+            assert_equal(source_dict[key], result[key], "Key: %s" % key)
+
+        # Check that source was actually updated
+        source = harvest_model.HarvestSource.get(result['id'])
+        assert_equal(source.url, source_dict['url'])
+        assert_equal(source.type, source_dict['source_type'])
 
 
 class TestActions(ActionBase):
