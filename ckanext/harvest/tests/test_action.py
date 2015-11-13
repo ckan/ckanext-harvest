@@ -309,14 +309,14 @@ class TestHarvestSourceActionUpdate(HarvestSourceFixtureMixin, HarvestSourceActi
 class TestHarvestSourceActionPatch(HarvestSourceFixtureMixin, HarvestSourceActionBase):
     def __init__(self):
         self.action = 'harvest_source_patch'
+        if toolkit.check_ckan_version(max_version='2.2.99'):
+            # harvest_source_patch only came in with ckan 2.3
+            raise SkipTest()
 
     def test_invalid_missing_values(self):
         pass
 
     def test_patch(self):
-        if toolkit.check_ckan_version(max_version='2.2.99'):
-            # harvest_source_patch only came in with ckan 2.3
-            raise SkipTest()
         source_dict = self._get_source_dict()
 
         patch_dict = {
