@@ -11,13 +11,13 @@ def harvest_source_patch(context, data_dict):
     '''
     Patch an existing harvest source
 
-    This method just proxies the request to package_patch,
-    which will update a harvest_source dataset type and the
-    HarvestSource object. All auth checks and validation will
-    be done there. We only make sure to set the dataset type.
+    This method just proxies the request to package_patch, which will update a
+    harvest_source dataset type and the HarvestSource object. All auth checks
+    and validation will be done there. We only make sure to set the dataset
+    type.
 
-    Note that the harvest source type (ckan, waf, csw, etc)
-    is now set via the source_type field.
+    Note that the harvest source type (ckan, waf, csw, etc) is now set via the
+    source_type field.
 
     All fields that are not provided, will be stay as they were before.
 
@@ -55,8 +55,7 @@ def harvest_source_patch(context, data_dict):
     try:
         source = get_action('package_patch')(context, data_dict)
     except KeyError:
-        log.warn('This CKAN instance does not support package_patch, consider upgrading to CKAN >= 2.3 if needed.')
-        raise Exception('The harvest_source_patch action is not available on this version of CKAN')
+        raise Exception('The harvest_source_patch action is not available on '
+                        'this version of CKAN')
 
     return source
-
