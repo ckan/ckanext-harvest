@@ -1,5 +1,4 @@
 import json
-import copy
 import uuid
 import factories
 import unittest
@@ -8,14 +7,14 @@ from nose.plugins.skip import SkipTest
 
 try:
     from ckan.tests import factories as ckan_factories
-    from ckan.tests.helpers import _get_test_app, reset_db
+    from ckan.tests.helpers import _get_test_app, reset_db, FunctionalTestBase
 except ImportError:
     from ckan.new_tests import factories as ckan_factories
-    from ckan.new_tests.helpers import _get_test_app, reset_db
+    from ckan.new_tests.helpers import (_get_test_app, reset_db,
+                                        FunctionalTestBase)
 from ckan import plugins as p
 from ckan.plugins import toolkit
 from ckan import model
-import ckan.lib.search as search
 
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.model as harvest_model
@@ -68,14 +67,9 @@ def call_action_api(action, apikey=None, status=200, **kwargs):
     '''
     params = json.dumps(kwargs)
     app = _get_test_app()
-    try:
-        response = app.post('/api/action/{0}'.format(action), params=params,
-                            extra_environ={'Authorization': str(apikey)},
-                            status=status)
-    except Exception, e:
-        if str(e) == 'The harvest_source_patch action is not available on this version of CKAN':
-            raise SkipTest()
-        raise e
+    response = app.post('/api/action/{0}'.format(action), params=params,
+                        extra_environ={'Authorization': str(apikey)},
+                        status=status)
 
     if status in (200,):
         ok_(response.json['success'] is True)
@@ -119,23 +113,6 @@ class MockHarvesterForActionTests(p.SingletonPlugin):
         return True
 
 
-class FunctionalTestBaseWithoutClearBetweenTests(object):
-    ''' Functional tests should normally derive from
-    ckan.lib.helpers.FunctionalTestBase, but these are legacy tests so this
-    class is a compromise.  This version doesn't call reset_db before every
-    test, because these tests are designed with fixtures created in
-    setup_class.'''
-
-    @classmethod
-    def setup_class(cls):
-        reset_db()
-        harvest_model.setup()
-
-    @classmethod
-    def teardown_class(cls):
-        pass
-
-
 SOURCE_DICT = {
     "url": "http://test.action.com",
     "name": "test-source-action",
@@ -162,7 +139,7 @@ class ActionBase(object):
         p.unload('test_action_harvester')
 
 
-class HarvestSourceActionBase(FunctionalTestBaseWithoutClearBetweenTests):
+class HarvestSourceActionBase(FunctionalTestBase):
 
     @classmethod
     def setup_class(cls):
@@ -295,7 +272,7 @@ class HarvestSourceFixtureMixin(object):
             "config": json.dumps({"custom_option": ["a", "b"]})
         }
         sysadmin = ckan_factories.Sysadmin()
-        result = call_action_api('harvest_source_create', 
+        result = call_action_api('harvest_source_create',
                                  apikey=sysadmin['apikey'], **template)
         template['id'] = result['id']
         return template
@@ -337,6 +314,9 @@ class TestHarvestSourceActionPatch(HarvestSourceFixtureMixin, HarvestSourceActio
         pass
 
     def test_patch(self):
+        if toolkit.check_ckan_version(max_version='2.2.99'):
+            # harvest_source_patch only came in with ckan 2.3
+            raise SkipTest()
         source_dict = self._get_source_dict()
 
         patch_dict = {
