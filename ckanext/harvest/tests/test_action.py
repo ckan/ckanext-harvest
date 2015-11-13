@@ -72,7 +72,7 @@ def call_action_api(action, apikey=None, status=200, **kwargs):
         response = app.post('/api/action/{0}'.format(action), params=params,
                             extra_environ={'Authorization': str(apikey)},
                             status=status)
-    except ActionError, e:
+    except Exception, e:
         if str(e) == 'The harvest_source_patch action is not available on this version of CKAN':
             raise SkipTest()
         raise e

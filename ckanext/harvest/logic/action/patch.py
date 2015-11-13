@@ -1,7 +1,7 @@
 '''API functions for partial updates of existing data in CKAN'''
 
 import logging
-from ckan.logic import ActionError, get_action
+from ckan.logic import get_action
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
 
 log = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ def harvest_source_patch(context, data_dict):
         source = get_action('package_patch')(context, data_dict)
     except KeyError:
         log.warn('This CKAN instance does not support package_patch, consider upgrading to CKAN >= 2.3 if needed.')
-        raise ActionError('The harvest_source_patch action is not available on this version of CKAN')
+        raise Exception('The harvest_source_patch action is not available on this version of CKAN')
 
     return source
 
