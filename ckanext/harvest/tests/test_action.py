@@ -259,25 +259,23 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
         ok_('url' in result)
         ok_(u'There already is a Harvest Source for this URL' in result['url'][0])
 
+
 class HarvestSourceFixtureMixin(object):
     def _get_source_dict(self):
-        id = uuid.uuid4()
-        template = {
-            "url": "http://test.action.com/%s" % id,
-            "name": "test-source-action%s" % id,
-            "title": "Test source action",
-            "notes": "Test source action desc",
-            "source_type": "test-for-action",
-            "frequency": "MANUAL",
-            "config": json.dumps({"custom_option": ["a", "b"]})
-        }
-        sysadmin = ckan_factories.Sysadmin()
-        result = call_action_api('harvest_source_create',
-                                 apikey=sysadmin['apikey'], **template)
-        template['id'] = result['id']
-        return template
+        '''Not only returns a source_dict, but creates the HarvestSource object
+        as well - suitable for testing update actions.
+        '''
+        source = HarvestSourceActionBase._get_source_dict(self)
+        source = factories.HarvestSource(**source)
+        # delete status because it gets in the way of the status supplied to
+        # call_action_api later on. It is only a generated value, not affecting
+        # the update/patch anyway.
+        del source['status']
+        return source
 
-class TestHarvestSourceActionUpdate(HarvestSourceFixtureMixin, HarvestSourceActionBase):
+
+class TestHarvestSourceActionUpdate(HarvestSourceFixtureMixin,
+                                    HarvestSourceActionBase):
     def __init__(self):
         self.action = 'harvest_source_update'
 
@@ -297,7 +295,8 @@ class TestHarvestSourceActionUpdate(HarvestSourceFixtureMixin, HarvestSourceActi
         result = call_action_api('harvest_source_update',
                                  apikey=sysadmin['apikey'], **source_dict)
 
-        for key in source_dict.keys():
+        for key in set(('url', 'name', 'title', 'notes', 'source_type',
+                        'frequency', 'config')):
             assert_equal(source_dict[key], result[key], "Key: %s" % key)
 
         # Check that source was actually updated
@@ -306,7 +305,8 @@ class TestHarvestSourceActionUpdate(HarvestSourceFixtureMixin, HarvestSourceActi
         assert_equal(source.type, source_dict['source_type'])
 
 
-class TestHarvestSourceActionPatch(HarvestSourceFixtureMixin, HarvestSourceActionBase):
+class TestHarvestSourceActionPatch(HarvestSourceFixtureMixin,
+                                   HarvestSourceActionBase):
     def __init__(self):
         self.action = 'harvest_source_patch'
         if toolkit.check_ckan_version(max_version='2.2.99'):
@@ -331,7 +331,8 @@ class TestHarvestSourceActionPatch(HarvestSourceFixtureMixin, HarvestSourceActio
                                  apikey=sysadmin['apikey'], **patch_dict)
 
         source_dict.update(patch_dict)
-        for key in source_dict.keys():
+        for key in set(('url', 'name', 'title', 'notes', 'source_type',
+                        'frequency', 'config')):
             assert_equal(source_dict[key], result[key], "Key: %s" % key)
 
         # Check that source was actually updated

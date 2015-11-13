@@ -89,8 +89,8 @@ def harvest_source_show_package_schema():
         'organization': [],
         'notes': [],
         'revision_id': [],
-        'revision_timestamp': [],
-        'tracking_summary': [],
+        'revision_timestamp': [ignore_missing],
+        'tracking_summary': [ignore_missing],
     })
 
     schema['__extras'] = [ignore]
