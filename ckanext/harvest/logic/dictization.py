@@ -37,7 +37,7 @@ def harvest_job_dictize(job, context):
             func.count(HarvestObject.id).label('total_objects'))\
                 .filter_by(harvest_job_id=job.id)\
                 .group_by(HarvestObject.report_status).all()
-        out['stats'] = {}
+        out['stats'] = {'added': 0, 'updated': 0, 'errors': 0, 'deleted': 0}
         for status, count in stats:
             out['stats'][status] = count
 
