@@ -39,13 +39,13 @@ def harvest_source_update(context, data_dict):
     '''
     Updates an existing harvest source
 
-    This method just proxies the request to package_update,
-    which will create a harvest_source dataset type and the
-    HarvestSource object. All auth checks and validation will
-    be done there .We only make sure to set the dataset type
+    This method just proxies the request to package_update, which will create a
+    harvest_source dataset type and the HarvestSource object. All auth checks
+    and validation will be done there. We only make sure to set the dataset
+    type
 
-    Note that the harvest source type (ckan, waf, csw, etc)
-    is now set via the source_type field.
+    Note that the harvest source type (ckan, waf, csw, etc) is now set via the
+    source_type field.
 
     :param id: the name or id of the harvest source to update
     :type id: string

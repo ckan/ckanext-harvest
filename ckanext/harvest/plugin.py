@@ -287,7 +287,7 @@ def _add_extra(data_dict, key, value):
 
 def _get_logic_functions(module_root, logic_functions = {}):
 
-    for module_name in ['get', 'create', 'update','delete']:
+    for module_name in ['get', 'create', 'update', 'patch', 'delete']:
         module_path = '%s.%s' % (module_root, module_name,)
 
         module = __import__(module_path)
