@@ -70,6 +70,16 @@ below shows the available options and their default values:
         - ``ckan.harvest.mq.virtual_host`` (/)
 
 
+**Note**: it is safe to use the same backend server (either Redis or RabbitMQ)
+for different CKAN instances, as long as they have different site ids. The ``ckan.site_id``
+config option (or ``default``) will be used to namespace the relevant things:
+
+* On RabbitMQ it will be used to name the queues used, eg ``ckan.harvest.site1.gather`` and
+  ``ckan.harvest.site1.fetch``.
+
+* On Redis, it will namespace the keys used, so only the relevant instance gets them, eg
+  ``site1:harvest_job_id``,  ``site1:harvest_object__id:804f114a-8f68-4e7c-b124-3eb00f66202f``
+
 
 Configuration
 =============
