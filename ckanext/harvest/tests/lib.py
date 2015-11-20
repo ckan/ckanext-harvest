@@ -43,7 +43,8 @@ def run_harvest_job(job, harvester):
         if harvest_object.state == 'COMPLETE' and harvest_object.package_id:
             results_by_guid[guid]['dataset'] = \
                 toolkit.get_action('package_show')(
-                    {}, dict(id=harvest_object.package_id))
+                    {'ignore_auth': True},
+                    dict(id=harvest_object.package_id))
         results_by_guid[guid]['errors'] = harvest_object.errors
 
     # Do 'harvest_jobs_run' to change the job status to 'finished'

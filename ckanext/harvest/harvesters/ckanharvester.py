@@ -206,7 +206,7 @@ class CKANHarvester(HarvesterBase):
                             package_ids = revision['packages']
                     else:
                         log.info('No packages have been updated on the remote CKAN instance since the last harvest job')
-                        return None
+                        return []
 
                 except urllib2.HTTPError,e:
                     if e.getcode() == 400:
@@ -427,14 +427,20 @@ class CKANHarvester(HarvesterBase):
 
                         package_dict['extras'][key] = value
 
-            # Clear remote url_type for resources (eg datastore, upload) as we
-            # are only creating normal resources with links to the remote ones
             for resource in package_dict.get('resources', []):
+                # Clear remote url_type for resources (eg datastore, upload) as
+                # we are only creating normal resources with links to the
+                # remote ones
                 resource.pop('url_type', None)
+
+                # Clear revision_id as the revision won't exist on this CKAN
+                # and saving it will cause an IntegrityError with the foreign
+                # key.
+                resource.pop('revision_id', None)
 
             result = self._create_or_update_package(package_dict,harvest_object)
 
-            if result and self.config.get('read_only',False) == True:
+            if result is True and self.config.get('read_only', False) is True:
 
                 package = model.Package.get(package_dict['id'])
 
@@ -451,8 +457,7 @@ class CKANHarvester(HarvesterBase):
                     user = model.User.get(user_name)
                     pkg_role = model.PackageRole(package=package, user=user, role=model.Role.READER)
 
-
-            return True
+            return result
         except ValidationError,e:
             self._save_object_error('Invalid package with GUID %s: %r' % (harvest_object.guid, e.error_dict),
                     harvest_object, 'Import')
