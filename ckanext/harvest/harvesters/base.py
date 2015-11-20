@@ -281,13 +281,8 @@ class HarvesterBase(SingletonPlugin):
                 package_dict['tags'] = tags
 
             # Check if package exists
-            data_dict = {}
-            data_dict['id'] = package_dict['id']
             try:
-                package_show_context = {'model': model, 'session': Session,
-                                        'ignore_auth': True}
-                existing_package_dict = get_action('package_show')(
-                    package_show_context, data_dict)
+                existing_package_dict = self._find_existing_package(package_dict)
 
                 # In case name has been modified when first importing. See issue #101.
                 package_dict['name'] = existing_package_dict['name']
@@ -359,3 +354,10 @@ class HarvesterBase(SingletonPlugin):
             self._save_object_error('%r'%e,harvest_object,'Import')
 
         return None
+
+    def _find_existing_package(self, package_dict):
+        data_dict = {'id': package_dict['id']}
+        package_show_context = {'model': model, 'session': Session,
+                                'ignore_auth': True}
+        return get_action('package_show')(
+            package_show_context, data_dict)
