@@ -1,4 +1,5 @@
 import urllib2
+import httplib
 
 from ckan.lib.base import c
 from ckan import model
@@ -50,7 +51,7 @@ class CKANHarvester(HarvesterBase):
                 'Could not fetch url: %s, error: %s' % 
                 (url, str(e))
             )
-        except Exception, e:
+        except httplib.HTTPException, e:
             raise ContentFetchError(
                 'Could not fetch url: %s, error: %s' %
                 (url, str(e))
