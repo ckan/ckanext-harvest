@@ -50,6 +50,12 @@ class CKANHarvester(HarvesterBase):
                 'Could not fetch url: %s, error: %s' % 
                 (url, str(e))
             )
+        except Exception, e:
+            raise ContentFetchError(
+                'Could not fetch url: %s, error: %s' %
+                (url, str(e))
+            )
+
         return http_response.read()
 
     def _get_group(self, base_url, group_name):
