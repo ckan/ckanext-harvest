@@ -1,7 +1,7 @@
 import copy
+
 from nose.tools import assert_equal
 import json
-
 from mock import patch
 
 try:
