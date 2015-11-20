@@ -53,6 +53,8 @@ class HarvestJob(factory.Factory):
         context = {'user': _get_action_user_name(kwargs)}
         if 'source_id' not in kwargs:
             kwargs['source_id'] = kwargs['source'].id
+        if 'run' not in kwargs:
+            kwargs['run'] = False
         job_dict = toolkit.get_action('harvest_job_create')(
             context, kwargs)
         if cls._return_type == 'dict':

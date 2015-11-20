@@ -128,7 +128,7 @@ The following operations can be run from the command line using the
 
       harvester run
         - starts any harvest jobs that have been created by putting them onto
-          the gather queue. Also checks running jobs and if finished, it
+          the gather queue. Also checks running jobs - if finished it
           changes their status to Finished.
 
       harvester run_test {source-id/name}

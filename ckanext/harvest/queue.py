@@ -92,9 +92,16 @@ def purge_queues():
         log.info('Redis database flushed')
 
 def resubmit_jobs():
+    '''
+    Examines the fetch and gather queues for items that are suspiciously old.
+    These are removed from the queues and placed back on them afresh, to ensure
+    the fetch & gather consumers are triggered to process it.
+    '''
     if config.get('ckan.harvest.mq.type') != 'redis':
         return
     redis = get_connection()
+
+    # fetch queue
     harvest_object_pending = redis.keys('harvest_object_id:*')
     for key in harvest_object_pending:
         date_of_key = datetime.datetime.strptime(redis.get(key),
@@ -105,6 +112,7 @@ def resubmit_jobs():
             )
             redis.delete(key)
 
+    # gather queue
     harvest_jobs_pending = redis.keys('harvest_job_id:*')
     for key in harvest_jobs_pending:
         date_of_key = datetime.datetime.strptime(redis.get(key),

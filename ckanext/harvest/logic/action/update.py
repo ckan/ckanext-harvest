@@ -26,7 +26,7 @@ from ckanext.harvest.plugin import DATASET_TYPE_NAME
 from ckanext.harvest.queue import get_gather_publisher, resubmit_jobs
 
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
-from ckanext.harvest.logic import HarvestJobExists, NoNewHarvestJobError
+from ckanext.harvest.logic import HarvestJobExists
 from ckanext.harvest.logic.dictization import harvest_job_dictize
 
 from ckanext.harvest.logic.action.get import (
@@ -372,17 +372,33 @@ def _make_scheduled_jobs(context, data_dict):
     sources = _get_sources_for_user(context, data_dict)
 
     for source in sources:
-        data_dict = {'source_id': source.id}
+        data_dict = {'source_id': source.id, 'run': True}
         try:
             get_action('harvest_job_create')(context, data_dict)
         except HarvestJobExists:
-            log.info('Trying to rerun job for %s skipping' % source.id)
+            log.info('Trying to rerun job for %s skipping', source.id)
 
         source.next_run = _calculate_next_run(source.frequency)
         source.save()
 
 
 def harvest_jobs_run(context, data_dict):
+    '''
+    Runs scheduled jobs, checks if any jobs need marking as finished, and
+    resubmits queue items if needed.
+
+    This should be called every few minutes (e.g. by a cron), or else jobs
+    will never show as finished.
+
+    This used to also 'run' new jobs created by the web UI, putting them onto
+    the gather queue, but now this is done by default when you create a job. If
+    you need to send do this explicitly, then use
+    ``harvest_send_job_to_gather_queue``.
+
+    :param source_id: the id of the harvest source, if you just want to check
+                      for its finished jobs (optional)
+    :type source_id: string
+    '''
     log.info('Harvest job run: %r', data_dict)
     check_access('harvest_jobs_run', context, data_dict)
 
@@ -390,6 +406,7 @@ def harvest_jobs_run(context, data_dict):
 
     source_id = data_dict.get('source_id')
 
+    # Scheduled jobs
     if not source_id:
         _make_scheduled_jobs(context, data_dict)
 
@@ -422,37 +439,52 @@ def harvest_jobs_run(context, data_dict):
                     else:
                         job_obj.finished = job['gather_finished']
                     job_obj.save()
+                    log.info('Marking job as finished: %s', job_obj)
                     # Reindex the harvest source dataset so it has the latest
                     # status
                     get_action('harvest_source_reindex')(
                         context, {'id': job_obj.source.id})
+                else:
+                    log.debug('Ongoing job:%s source:%s',
+                              job['id'], job['source_id'])
 
     # resubmit old redis tasks
     resubmit_jobs()
 
-    # Check if there are pending harvest jobs
-    jobs = harvest_job_list(
-        context, {'source_id': source_id, 'status': u'New'})
-    if len(jobs) == 0:
-        log.info('No new harvest jobs.')
-        raise NoNewHarvestJobError('There are no new harvesting jobs')
+    return []  # merely for backwards compatibility
 
-    # Send each job to the gather queue
+
+def harvest_send_job_to_gather_queue(context, data_dict):
+    '''
+    Sends a harvest job to the gather queue.
+
+    :param id: the id of the harvest job
+    :type id: string
+    '''
+    log.info('Send job to gather queue: %r', data_dict)
+    check_access('harvest_send_job_to_gather_queue', context, data_dict)
+
+    job_id = logic.get_or_bust(data_dict, 'id')
+
+    # gather queue
     publisher = get_gather_publisher()
-    sent_jobs = []
-    for job in jobs:
-        context['detailed'] = False
-        source = harvest_source_show(context, {'id': job['source_id']})
-        if source['active']:
-            job_obj = HarvestJob.get(job['id'])
-            job_obj.status = job['status'] = u'Running'
-            job_obj.save()
-            publisher.send({'harvest_job_id': job['id']})
-            log.info('Sent job %s to the gather queue' % job['id'])
-            sent_jobs.append(job)
 
-    publisher.close()
-    return sent_jobs
+    job = logic.get_action('harvest_job_show')(
+        context, {'id': job_id})
+
+    # Check the source is active
+    context['detailed'] = False
+    source = harvest_source_show(context, {'id': job['source_id']})
+    if not source['active']:
+        raise toolkit.ValidationError('Source is not active')
+
+    job_obj = HarvestJob.get(job['id'])
+    job_obj.status = job['status'] = u'Running'
+    job_obj.save()
+    publisher.send({'harvest_job_id': job['id']})
+    log.info('Sent job %s to the gather queue', job['id'])
+
+    return harvest_job_dictize(job_obj, context)
 
 
 def harvest_job_abort(context, data_dict):
@@ -552,8 +584,8 @@ def harvest_source_reindex(context, data_dict):
     context.update({'ignore_auth': True})
     package_dict = logic.get_action('harvest_source_show')(
         context, {'id': harvest_source_id})
-    log.debug('Updating search index for harvest source: {0}'.format(
-        package_dict.get('name') or harvest_source_id))
+    log.debug('Updating search index for harvest source: %s',
+              package_dict.get('name') or harvest_source_id)
 
     # Remove configuration values
     new_dict = {}
