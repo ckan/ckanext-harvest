@@ -93,8 +93,10 @@ class TestHarvestQueue(object):
     def test_01_basic_harvester(self):
 
         ### make sure queues/exchanges are created first and are empty
-        consumer = queue.get_consumer('ckan.harvest.test.gather', 'harvest_job_id')
-        consumer_fetch = queue.get_consumer('ckan.harvest.test.fetch', 'harvest_object_id')
+        consumer = queue.get_consumer('ckan.harvest.test.gather',
+                                      queue.get_gather_routing_key())
+        consumer_fetch = queue.get_consumer('ckan.harvest.test.fetch',
+                                            queue.get_fetch_routing_key())
         consumer.queue_purge(queue='ckan.harvest.test.gather')
         consumer_fetch.queue_purge(queue='ckan.harvest.test.fetch')
 
