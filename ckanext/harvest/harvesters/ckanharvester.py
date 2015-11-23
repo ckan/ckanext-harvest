@@ -45,6 +45,17 @@ class CKANHarvester(HarvesterBase):
 
         try:
             http_response = urllib2.urlopen(http_request)
+        except urllib2.HTTPError, e:
+            if e.getcode() == 400:
+                raise ContentNotFoundError(
+                    'Content not found at url: %s, error %s' %
+                    (url, str(e))
+                )
+            else:
+                raise ContentFetchError(
+                    'Could not fetch url: %s, error: %s' %
+                    (url, str(e))
+                )
         except urllib2.URLError, e:
             raise ContentFetchError(
                 'Could not fetch url: %s, error: %s' %
@@ -208,13 +219,12 @@ class CKANHarvester(HarvesterBase):
                         log.info('No packages have been updated on the remote CKAN instance since the last harvest job')
                         return []
 
-                except urllib2.HTTPError,e:
-                    if e.getcode() == 400:
-                        log.info('CKAN instance %s does not suport revision filtering' % base_url)
-                        get_all_packages = True
-                    else:
-                        self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
-                        return None
+                except ContentNotFoundError,e:
+                    log.info('CKAN instance %s does not suport revision filtering' % base_url)
+                    get_all_packages = True
+                except ContentFetchError,e:
+                    self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
+                    return None
 
         if get_all_packages:
             # Request all remote packages
@@ -465,6 +475,9 @@ class CKANHarvester(HarvesterBase):
             self._save_object_error('%r'%e,harvest_object,'Import')
 
 class ContentFetchError(Exception):
+    pass
+
+class ContentNotFoundError(ContentFetchError):
     pass
 
 class RemoteResourceError(Exception):
