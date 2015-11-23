@@ -45,7 +45,10 @@ class CKANHarvester(HarvesterBase):
         try:
             http_response = urllib2.urlopen(http_request)
         except urllib2.HTTPError, e:
-            raise ContentFetchError('HTTP error: %s' % e.code)
+            if e.getcode() == 404:
+                raise ContentNotFoundError('HTTP error: %s' % e.code)
+            else:
+                raise ContentFetchError('HTTP error: %s' % e.code)
         except urllib2.URLError, e:
             raise ContentFetchError('URL error: %s' % e.reason)
         except httplib.HTTPException, e:
@@ -187,11 +190,15 @@ class CKANHarvester(HarvesterBase):
                                 if not package_id in package_ids:
                                     package_ids.append(package_id)
                     else:
-                        log.info('No packages have been updated on the remote CKAN instance since the last harvest job')
-                        return None
+                        log.info('No revisions since last harvest %s',
+                                 last_time)
+                        return []
 
+                except ContentNotFoundError, e:
+                    log.info('No revisions since last harvest %s', last_time)
+                    return []
                 except ContentFetchError, e:
-                    # Any error at all indicates that revision filtering is not
+                    # Any other error indicates that revision filtering is not
                     # working for whatever reason, so fallback to just getting
                     # all the packages, which is expensive but reliable.
                     log.info('CKAN instance %s does not suport revision '
@@ -439,6 +446,9 @@ class CKANHarvester(HarvesterBase):
             self._save_object_error('%r'%e,harvest_object,'Import')
 
 class ContentFetchError(Exception):
+    pass
+
+class ContentNotFoundError(ContentFetchError):
     pass
 
 class RemoteResourceError(Exception):
