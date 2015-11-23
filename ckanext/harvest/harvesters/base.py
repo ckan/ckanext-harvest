@@ -21,7 +21,7 @@ from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError,
 from ckan.plugins.core import SingletonPlugin, implements
 from ckanext.harvest.interfaces import IHarvester
 
-if p.toolkit.check_ckan_version(min_verion='2.3'):
+if p.toolkit.check_ckan_version(min_version='2.3'):
     from ckan.lib.munge import munge_tag
 else:
     # Fallback for older ckan versions which don't have a decent munger
