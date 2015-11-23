@@ -24,11 +24,22 @@ from ckanext.harvest.interfaces import IHarvester
 if p.toolkit.check_ckan_version(min_version='2.3'):
     from ckan.lib.munge import munge_tag
 else:
-    # Fallback for older ckan versions which don't have a decent munger
+    # Fallback munge_tag for older ckan versions which don't have a decent
+    # munger
+    def _munge_to_length(string, min_length, max_length):
+        '''Pad/truncates a string'''
+        if len(string) < min_length:
+            string += '_' * (min_length - len(string))
+        if len(string) > max_length:
+            string = string[:max_length]
+        return string
+
     def munge_tag(tag):
         tag = substitute_ascii_equivalents(tag)
         tag = tag.lower().strip()
-        return re.sub(r'[^a-zA-Z0-9\- ]', '', tag).replace(' ', '-')
+        tag = re.sub(r'[^a-zA-Z0-9\- ]', '', tag).replace(' ', '-')
+        tag = _munge_to_length(tag, model.MIN_TAG_LENGTH, model.MAX_TAG_LENGTH)
+        return tag
 
 log = logging.getLogger(__name__)
 
