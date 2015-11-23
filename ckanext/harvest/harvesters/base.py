@@ -21,14 +21,14 @@ from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError,
 from ckan.plugins.core import SingletonPlugin, implements
 from ckanext.harvest.interfaces import IHarvester
 
-try:
+if p.toolkit.check_ckan_version(min_verion='2.3'):
     from ckan.lib.munge import munge_tag
-except ImportError:
-    # Fallback for older ckan versions which don't have it
+else:
+    # Fallback for older ckan versions which don't have a decent munger
     def munge_tag(tag):
         tag = substitute_ascii_equivalents(tag)
         tag = tag.lower().strip()
-        return re.sub(r'[^a-zA-Z0-9 -]', '', tag).replace(' ', '-')
+        return re.sub(r'[^a-zA-Z0-9\- ]', '', tag).replace(' ', '-')
 
 log = logging.getLogger(__name__)
 
