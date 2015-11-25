@@ -34,6 +34,9 @@ def harvest_job_exists(value, context):
 
 
 def _normalize_url(url):
+    '''Strips off parameters off a URL, and an unnecessary port number, so that
+    simple variations on a URL are ignored, to used to help avoid getting two
+    harvesters for the same URL.'''
     o = urlparse.urlparse(url)
 
     # Normalize port
@@ -118,8 +121,8 @@ def harvest_source_type_exists(value, context):
         available_types.append(info['name'])
 
     if not value in available_types:
-        raise Invalid('Unknown harvester type: %s. Have you registered a '
-                      'harvester for this type?' % value)
+        raise Invalid('Unknown harvester type: %s. Registered types: %r' %
+                      (value, available_types))
 
     return value
 
