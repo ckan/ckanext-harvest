@@ -51,7 +51,7 @@ Example:
   <tr>
     <th>{{ _('Created') }}</th>
     <td>
-        <span class="datetime" data-datetime="{{ h.render_datetime(job.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+        <span class="automatic-local-datetime" data-datetime="{{ h.render_datetime(job.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
             {{ h.render_datetime(job.created, with_hours=True) }}
         </span>
     </td>
@@ -59,7 +59,7 @@ Example:
   <tr>
     <th>{{ _('Started') }}</th>
     <td>
-        <span class="datetime" data-datetime="{{ h.render_datetime(job.gather_started, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+        <span class="automatic-local-datetime" data-datetime="{{ h.render_datetime(job.gather_started, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
             {{ h.render_datetime(job.gather_started, with_hours=True) }}
         </span>
     </td>
@@ -67,7 +67,7 @@ Example:
   <tr>
     <th>{{ _('Finished') }}</th>
     <td>
-        <span class="datetime" data-datetime="{{ h.render_datetime(job.finished, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+        <span class="automatic-local-datetime" data-datetime="{{ h.render_datetime(job.finished, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
             {{ h.render_datetime(job.finished, with_hours=True) }}
         </span>
     </td>
