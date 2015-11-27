@@ -4,7 +4,7 @@ import ckan
 
 from ckan.plugins import toolkit
 
-from ckanext.harvest.logic import HarvestJobExists
+from ckanext.harvest.logic import HarvestJobExists, HarvestSourceInactiveError
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
 from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject,
     HarvestObjectExtra)
@@ -97,7 +97,7 @@ def harvest_job_create(context, data_dict):
     if not source.active:
         log.warn('Harvest job cannot be created for inactive source %s',
                  source_id)
-        raise Exception('Can not create jobs on inactive sources')
+        raise HarvestSourceInactiveError('Can not create jobs on inactive sources')
 
     # Check if there already is an unrun or currently running job for this
     # source
