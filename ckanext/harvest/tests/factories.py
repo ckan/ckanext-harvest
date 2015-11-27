@@ -82,6 +82,9 @@ class HarvestObject(factory.Factory):
         if 'job_id' not in kwargs:
             kwargs['job_id'] = kwargs['job'].id
             kwargs['source_id'] = kwargs['job'].source.id
+        # Remove 'job' to avoid it getting added as a HarvestObjectExtra
+        if 'job' in kwargs:
+            kwargs.pop('job')
         job_dict = toolkit.get_action('harvest_object_create')(
             context, kwargs)
         if cls._return_type == 'dict':
