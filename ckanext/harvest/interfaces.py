@@ -1,5 +1,6 @@
 from ckan.plugins.interfaces import Interface
 
+
 class IHarvester(Interface):
     '''
     Common harvesting interface
@@ -71,7 +72,7 @@ class IHarvester(Interface):
 
     def gather_stage(self, harvest_job):
         '''
-        The gather stage will recieve a HarvestJob object and will be
+        The gather stage will receive a HarvestJob object and will be
         responsible for:
             - gathering all the necessary objects to fetch on a later.
               stage (e.g. for a CSW server, perform a GetRecords request)
@@ -103,7 +104,8 @@ class IHarvester(Interface):
               there were errors.
 
         :param harvest_object: HarvestObject object
-        :returns: True if everything went right, False if errors were found
+        :returns: True if successful, 'unchanged' if nothing to import after
+                  all, False if not successful
         '''
 
     def import_stage(self, harvest_object):
@@ -122,10 +124,11 @@ class IHarvester(Interface):
               objects of this harvest source if the action was successful.
             - creating and storing any suitable HarvestObjectErrors that may
               occur.
+            - creating the HarvestObject - Package relation (if necessary)
             - returning True if the action was done, "unchanged" if the object
               didn't need harvesting after all or False if there were errors.
 
         :param harvest_object: HarvestObject object
-        :returns: True if the action was done, "unchanged" if nothing was
-                  needed doing after all and False if something went wrong.
+        :returns: True if the action was done, "unchanged" if the object didn't
+                  need harvesting after all or False if there were errors.
         '''
