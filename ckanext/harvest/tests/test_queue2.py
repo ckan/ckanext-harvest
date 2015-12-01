@@ -35,6 +35,8 @@ class MockHarvester(p.SingletonPlugin):
         return [obj.id]
 
     def fetch_stage(self, harvest_object):
+        if self._test_params.get('fetch_object_unchanged'):
+            return 'unchanged'
         harvest_object.content = json.dumps({'name': harvest_object.guid})
         harvest_object.save()
         return True
@@ -81,14 +83,13 @@ class MockHarvester(p.SingletonPlugin):
 
         harvest_object.save()
 
-        if self._test_params.get('object_unchanged'):
+        if self._test_params.get('import_object_unchanged'):
             return 'unchanged'
         return True
 
 
 class TestEndStates(object):
-    @classmethod
-    def setup_class(cls):
+    def setup(self):
         reset_db()
         harvest_model.setup()
 
@@ -155,9 +156,22 @@ class TestEndStates(object):
         assert_equal(result['report_status'], 'errored')
         assert_equal(result['errors'], [])
 
-    def test_unchanged(self):
+    def test_fetch_unchanged(self):
         guid = 'obj-error'
-        MockHarvester._set_test_params(guid=guid, object_unchanged=True)
+        MockHarvester._set_test_params(guid=guid, fetch_object_unchanged=True)
+
+        results_by_guid = run_harvest(
+            url='http://some-url.com',
+            harvester=MockHarvester())
+
+        result = results_by_guid[guid]
+        assert_equal(result['state'], 'COMPLETE')
+        assert_equal(result['report_status'], 'not modified')
+        assert_equal(result['errors'], [])
+
+    def test_import_unchanged(self):
+        guid = 'obj-error'
+        MockHarvester._set_test_params(guid=guid, import_object_unchanged=True)
 
         results_by_guid = run_harvest(
             url='http://some-url.com',

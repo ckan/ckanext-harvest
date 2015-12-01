@@ -8,8 +8,8 @@ class IHarvester(Interface):
 
     def info(self):
         '''
-        Harvesting implementations must provide this method, which will return a
-        dictionary containing different descriptors of the harvester. The
+        Harvesting implementations must provide this method, which will return
+        a dictionary containing different descriptors of the harvester. The
         returned dictionary should contain:
 
         * name: machine-readable name. This will be the value stored in the
@@ -17,8 +17,8 @@ class IHarvester(Interface):
           harvester.
         * title: human-readable name. This will appear in the form's select box
           in the WUI.
-        * description: a small description of what the harvester does. This will
-          appear on the form as a guidance to the user.
+        * description: a small description of what the harvester does. This
+          will appear on the form as a guidance to the user.
 
         A complete example may be::
 
@@ -37,9 +37,10 @@ class IHarvester(Interface):
 
         [optional]
 
-        Harvesters can provide this method to validate the configuration entered in the
-        form. It should return a single string, which will be stored in the database.
-        Exceptions raised will be shown in the form's error messages.
+        Harvesters can provide this method to validate the configuration
+        entered in the form. It should return a single string, which will be
+        stored in the database.  Exceptions raised will be shown in the form's
+        error messages.
 
         :param harvest_object_id: Config string coming from the form
         :returns: A string with the validated configuration options
@@ -96,7 +97,10 @@ class IHarvester(Interface):
             - saving the content in the provided HarvestObject.
             - creating and storing any suitable HarvestObjectErrors that may
               occur.
-            - returning True if everything went as expected, False otherwise.
+            - returning True if everything is ok (ie the object should now be
+              imported), "unchanged" if the object didn't need harvesting after
+              all (ie no error, but don't continue to import stage) or False if
+              there were errors.
 
         :param harvest_object: HarvestObject object
         :returns: True if everything went right, False if errors were found
@@ -118,8 +122,8 @@ class IHarvester(Interface):
               objects of this harvest source if the action was successful.
             - creating and storing any suitable HarvestObjectErrors that may
               occur.
-            - returning True if the action was done, "unchanged" if nothing
-              was needed doing after all or False if there were errors.
+            - returning True if the action was done, "unchanged" if the object
+              didn't need harvesting after all or False if there were errors.
 
         :param harvest_object: HarvestObject object
         :returns: True if the action was done, "unchanged" if nothing was
