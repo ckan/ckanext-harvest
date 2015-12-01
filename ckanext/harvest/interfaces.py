@@ -84,6 +84,8 @@ class IHarvester(Interface):
             - creating and storing any suitable HarvestGatherErrors that may
               occur.
             - returning a list with all the ids of the created HarvestObjects.
+            - to abort the harvest, create a HarvestGatherError and raise an
+              exception. Any created HarvestObjects will be deleted.
 
         :param harvest_job: HarvestJob object
         :returns: A list of HarvestObject ids
