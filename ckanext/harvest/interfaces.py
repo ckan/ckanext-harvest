@@ -130,6 +130,8 @@ class IHarvester(Interface):
             - returning True if the action was done, "unchanged" if the object
               didn't need harvesting after all or False if there were errors.
 
+        NB You can run this stage repeatedly using 'paster harvest import'.
+
         :param harvest_object: HarvestObject object
         :returns: True if the action was done, "unchanged" if the object didn't
                   need harvesting after all or False if there were errors.
