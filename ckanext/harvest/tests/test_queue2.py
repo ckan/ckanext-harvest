@@ -28,7 +28,7 @@ class MockHarvester(p.SingletonPlugin):
         cls._test_params = test_params
 
     def info(self):
-        return {'name': 'test', 'title': 'test', 'description': 'test'}
+        return {'name': 'test2', 'title': 'test', 'description': 'test'}
 
     def gather_stage(self, harvest_job):
         obj = HarvestObjectObj(guid=self._guid, job=harvest_job)
