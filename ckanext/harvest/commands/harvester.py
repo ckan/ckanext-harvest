@@ -38,7 +38,7 @@ class Harvester(CkanCommand):
       harvester jobs
         - lists harvest jobs
 
-      harvester job_abort {source-id/name}
+      harvester job_abort {source-id/source-name/obj-id}
         - marks a job as "Aborted" so that the source can be restarted afresh.
           It ensures that the job's harvest objects status are also marked
           finished. You should ensure that neither the job nor its objects are
@@ -358,19 +358,15 @@ class Harvester(CkanCommand):
 
     def job_abort(self):
         if len(self.args) >= 2:
-            source_id_or_name = unicode(self.args[1])
+            job_or_source_id_or_name = unicode(self.args[1])
         else:
-            print 'Please provide a source id'
+            print 'Please provide a job id or source name/id'
             sys.exit(1)
-        context = {'model': model, 'session': model.Session,
-                   'user': self.admin_user['name']}
-        source = get_action('harvest_source_show')(
-            context, {'id': source_id_or_name})
 
         context = {'model': model, 'user': self.admin_user['name'],
                    'session': model.Session}
-        job = get_action('harvest_job_abort')(context,
-                                              {'source_id': source['id']})
+        job = get_action('harvest_job_abort')(
+            context, {'id': job_or_source_id_or_name})
         print 'Job status: {0}'.format(job['status'])
 
     def run_harvester(self):
