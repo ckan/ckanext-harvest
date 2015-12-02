@@ -3,7 +3,6 @@ import re
 import uuid
 
 from sqlalchemy.sql import update,and_, bindparam
-from sqlalchemy.exc import InvalidRequestError
 from pylons import config
 
 from ckan import plugins as p
@@ -136,31 +135,8 @@ class HarvesterBase(SingletonPlugin):
             return ideal_name[:PACKAGE_NAME_MAX_LENGTH-APPEND_MAX_CHARS] + \
                 str(uuid.uuid4())[:APPEND_MAX_CHARS]
 
-
-    def _save_gather_error(self, message, job):
-        err = HarvestGatherError(message=message, job=job)
-        try:
-            err.save()
-        except InvalidRequestError:
-            Session.rollback()
-            err.save()
-        finally:
-            log.error(message)
-
-
-    def _save_object_error(self, message, obj, stage=u'Fetch', line=None):
-        err = HarvestObjectError(message=message,
-                                 object=obj,
-                                 stage=stage,
-                                 line=line)
-        try:
-            err.save()
-        except InvalidRequestError, e:
-            Session.rollback()
-            err.save()
-        finally:
-            log_message = '{0}, line {1}'.format(message,line) if line else message
-            log.debug(log_message)
+    _save_gather_error = HarvestGatherError.create
+    _save_object_error = HarvestObjectError.create
 
     def _get_user_name(self):
         '''
