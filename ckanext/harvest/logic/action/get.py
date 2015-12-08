@@ -128,7 +128,6 @@ def harvest_source_list(context, data_dict):
 
     sources = _get_sources_for_user(context, data_dict)
 
-    context.update({'detailed':False})
     return [harvest_source_dictize(source, context) for source in sources]
 
 
