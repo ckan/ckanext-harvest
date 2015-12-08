@@ -262,6 +262,8 @@ def harvest_objects_import(context, data_dict):
 
     :param source_id: the id of the harvest source to import
     :type source_id: string
+    :param guid: the guid of the harvest object to import
+    :type guid: string
     :param harvest_object_id: the id of the harvest object to import
     :type harvest_object_id: string
     :param package_id: the id or name of the package to import
@@ -273,6 +275,7 @@ def harvest_objects_import(context, data_dict):
     model = context['model']
     session = context['session']
     source_id = data_dict.get('source_id')
+    guid = data_dict.get('guid')
     harvest_object_id = data_dict.get('harvest_object_id')
     package_id_or_name = data_dict.get('package_id')
 
@@ -280,7 +283,13 @@ def harvest_objects_import(context, data_dict):
 
     join_datasets = context.get('join_datasets', True)
 
-    if source_id:
+    if guid:
+        last_objects_ids = \
+            session.query(HarvestObject.id) \
+                   .filter(HarvestObject.guid == guid) \
+                   .filter(HarvestObject.current == True)
+
+    elif source_id:
         source = HarvestSource.get(source_id)
         if not source:
             log.error('Harvest source %s does not exist', source_id)
