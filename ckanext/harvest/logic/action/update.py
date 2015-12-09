@@ -462,15 +462,15 @@ def harvest_send_job_to_gather_queue(context, data_dict):
     :type id: string
     '''
     log.info('Send job to gather queue: %r', data_dict)
-    check_access('harvest_send_job_to_gather_queue', context, data_dict)
 
     job_id = logic.get_or_bust(data_dict, 'id')
+    job = toolkit.get_action('harvest_job_show')(
+        context, {'id': job_id})
+
+    check_access('harvest_send_job_to_gather_queue', context, job)
 
     # gather queue
     publisher = get_gather_publisher()
-
-    job = logic.get_action('harvest_job_show')(
-        context, {'id': job_id})
 
     # Check the source is active
     context['detailed'] = False
