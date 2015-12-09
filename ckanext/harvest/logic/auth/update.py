@@ -66,7 +66,7 @@ def harvest_send_job_to_gather_queue(context, data_dict):
         It forwards the checks to harvest_job_create, ie the user can only run
         the job if she is allowed to create the job.
     '''
-    from ckanext.harvest.auth.create import harvest_job_create
+    from ckanext.harvest.logic.auth.create import harvest_job_create
     return harvest_job_create(context, data_dict)
 
 

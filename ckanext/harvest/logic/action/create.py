@@ -76,8 +76,8 @@ def harvest_job_create(context, data_dict):
     Creates a Harvest Job for a Harvest Source and runs it (by putting it on
     the gather queue)
 
-    :param source_id:
-    :type param: string
+    :param source_id: id of the harvest source to create a job for
+    :type source_id: string
     :param run: whether to also run it or not (default: True)
     :type run: bool
     '''
