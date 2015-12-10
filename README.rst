@@ -8,6 +8,9 @@ ckanext-harvest - Remote harvesting extension
 This extension provides a common harvesting framework for ckan extensions
 and adds a CLI and a WUI to CKAN to manage harvesting sources and jobs.
 
+Requires CKAN 2.0 or later.
+
+
 Installation
 ============
 
@@ -192,8 +195,7 @@ Authorization
 Starting from CKAN 2.0, harvest sources behave exactly the same as datasets
 (they are actually internally implemented as a dataset type). That means they
 can be searched and faceted, and that the same authorization rules can be
-applied to them. The default authorization settings are based on organizations
-(equivalent to the `publisher profile` found in old versions).
+applied to them. The default authorization settings are based on organizations.
 
 Have a look at the `Authorization <http://docs.ckan.org/en/latest/authorization.html>`_
 documentation on CKAN core to see how to configure your instance depending on
@@ -231,7 +233,7 @@ field. The currently supported configuration options are:
     * {dataset_id}
     * {harvest_source_id}
     * {harvest_source_url}   # Will be stripped of trailing forward slashes (/)
-    * {harvest_source_title}   # Requires CKAN 1.6
+    * {harvest_source_title}
     * {harvest_job_id}
     * {harvest_object_id}
 
