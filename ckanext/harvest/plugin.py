@@ -218,11 +218,13 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
         return map
 
     def update_config(self, config):
-        # check if new templates
-        templates = 'templates'
-        if p.toolkit.check_ckan_version(min_version='2.0'):
-            if not p.toolkit.asbool(config.get('ckan.legacy_templates', False)):
-                templates = 'templates_new'
+        if not p.toolkit.check_ckan_version(min_version='2.0'):
+            assert 0, 'CKAN before 2.0 not supported by ckanext-harvest - '\
+                'genshi templates not supported any more'
+        assert not p.toolkit.asbool(config.get('ckan.legacy_templates',
+                                               False)),\
+            'Old genshi templates not supported any more by ckanext-harvest'
+        templates = 'templates_new'
         p.toolkit.add_template_directory(config, templates)
         p.toolkit.add_public_directory(config, 'public')
         p.toolkit.add_resource('fanstatic_library', 'ckanext-harvest')

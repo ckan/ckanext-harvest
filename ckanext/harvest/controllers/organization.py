@@ -58,12 +58,8 @@ class OrganizationController(GroupController):
             q += ' owner_org: "%s"' % c.group_dict.get('id')
         else:
             q += ' groups: "%s"' % c.group_dict.get('name')
-    
-        context['return_query'] = True
 
-        # c.group_admins is used by CKAN's legacy (Genshi) templates only,
-        # if we drop support for those then we can delete this line.
-        c.group_admins = ckan.new_authz.get_group_or_org_admin_ids(c.group.id)
+        context['return_query'] = True
 
         try:
             page = int(request.params.get('page', 1))
