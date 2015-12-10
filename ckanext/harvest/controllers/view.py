@@ -17,6 +17,7 @@ import ckan.lib.helpers as h, json
 from ckan.lib.base import BaseController, c, \
                           request, response, render, abort, redirect
 
+from ckanext.harvest.logic import HarvestJobExists, HarvestSourceInactiveError
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
 
 import logging
@@ -62,13 +63,14 @@ class ViewController(BaseController):
             abort(404,_('Harvest source not found'))
         except p.toolkit.NotAuthorized:
             abort(401,self.not_auth_message)
+        except HarvestSourceInactiveError, e:
+            h.flash_error(_('Cannot create new harvest jobs on inactive '
+                            'sources. First, please change the source status '
+                            'to \'active\'.'))
+        except HarvestJobExists, e:
+            h.flash_notice(_('A harvest job has already been scheduled for '
+                             'this source'))
         except Exception, e:
-            if 'Can not create jobs on inactive sources' in str(e):
-                h.flash_error(_('Cannot create new harvest jobs on inactive sources.'
-                                 + ' First, please change the source status to \'active\'.'))
-            elif 'There already is an unrun job for this source' in str(e):
-                h.flash_notice(_('A harvest job has already been scheduled for this source'))
-            else:
                 msg = 'An error occurred: [%s]' % str(e)
                 h.flash_error(msg)
 

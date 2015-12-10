@@ -2,7 +2,7 @@ import re
 
 from nose.tools import assert_equal
 from ckanext.harvest import model as harvest_model
-from ckanext.harvest.harvesters.base import HarvesterBase
+from ckanext.harvest.harvesters.base import HarvesterBase, munge_tag
 try:
     from ckan.tests import helpers
     from ckan.tests import factories
@@ -96,3 +96,30 @@ class TestEnsureNameIsUnique(object):
         name = _ensure_name_is_unique('trees', append_type='random-hex')
         # e.g. 'trees0b53f'
         assert re.match('trees[\da-f]{5}', name)
+
+
+# taken from ckan/tests/lib/test_munge.py
+class TestMungeTag:
+
+    # (original, expected)
+    munge_list = [
+        ('unchanged', 'unchanged'),
+        ('s', 's_'),  # too short
+        ('some spaces  here', 'some-spaces--here'),
+        ('random:other%characters&_.here', 'randomothercharactershere'),
+        ('river-water-dashes', 'river-water-dashes'),
+    ]
+
+    def test_munge_tag(self):
+        '''Munge a list of tags gives expected results.'''
+        for org, exp in self.munge_list:
+            munge = munge_tag(org)
+            assert_equal(munge, exp)
+
+    def test_munge_tag_multiple_pass(self):
+        '''Munge a list of tags muliple times gives expected results.'''
+        for org, exp in self.munge_list:
+            first_munge = munge_tag(org)
+            assert_equal(first_munge, exp)
+            second_munge = munge_tag(first_munge)
+            assert_equal(second_munge, exp)

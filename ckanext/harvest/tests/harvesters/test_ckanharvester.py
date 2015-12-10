@@ -106,7 +106,7 @@ class TestCkanHarvester(object):
                 harvester=CKANHarvester())
 
         # updated the dataset which has revisions
-        result = results_by_guid[mock_ckan.DATASETS[1]['name']]
+        result = results_by_guid[mock_ckan.DATASETS[1]['id']]
         assert_equal(result['state'], 'COMPLETE')
         assert_equal(result['report_status'], 'updated')
         assert_equal(result['dataset']['name'], mock_ckan.DATASETS[1]['name'])
@@ -155,7 +155,7 @@ class TestCkanHarvester(object):
 
         # The metadata_modified was the same for this dataset so the import
         # would have returned 'unchanged'
-        result = results_by_guid[mock_ckan.DATASETS[1]['name']]
+        result = results_by_guid[mock_ckan.DATASETS[1]['id']]
         assert_equal(result['state'], 'COMPLETE')
         assert_equal(result['report_status'], 'not modified')
         assert 'dataset' not in result

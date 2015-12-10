@@ -254,7 +254,6 @@ class TestHarvestQueue(object):
         )
         assert_equal(harvest_job['stats'], {'added': 0, 'updated': 2, 'not modified': 0, 'errored': 0, 'deleted': 1})
 
-        context['detailed'] = True
         harvest_source_dict = logic.get_action('harvest_source_show')(
             context,
             {'id': harvest_source['id']}

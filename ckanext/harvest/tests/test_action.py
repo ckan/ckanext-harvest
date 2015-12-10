@@ -1,5 +1,4 @@
 import json
-import uuid
 import factories
 import unittest
 from nose.tools import assert_equal, assert_raises
@@ -7,11 +6,12 @@ from nose.plugins.skip import SkipTest
 
 try:
     from ckan.tests import factories as ckan_factories
-    from ckan.tests.helpers import _get_test_app, reset_db, FunctionalTestBase
+    from ckan.tests.helpers import (_get_test_app, reset_db,
+                                    FunctionalTestBase, assert_in)
 except ImportError:
     from ckan.new_tests import factories as ckan_factories
     from ckan.new_tests.helpers import (_get_test_app, reset_db,
-                                        FunctionalTestBase)
+                                        FunctionalTestBase, assert_in)
 from ckan import plugins as p
 from ckan.plugins import toolkit
 from ckan import model
@@ -402,6 +402,44 @@ class TestActions(ActionBase):
         data_dict['config'] = '{"something": "new"}'
         toolkit.get_action('harvest_source_create')(
             {'user': site_user}, data_dict)
+
+    def test_harvest_job_create_as_sysadmin(self):
+        source = factories.HarvestSource(**SOURCE_DICT)
+
+        site_user = toolkit.get_action('get_site_user')(
+            {'model': model, 'ignore_auth': True}, {})['name']
+        data_dict = {
+            'source_id': source['id'],
+            'run': True
+            }
+        job = toolkit.get_action('harvest_job_create')(
+            {'user': site_user}, data_dict)
+
+        assert_equal(job['source_id'], source['id'])
+        assert_equal(job['status'], 'Running')
+        assert_equal(job['gather_started'], None)
+        assert_in('stats', job.keys())
+
+    def test_harvest_job_create_as_admin(self):
+        # as if an admin user presses 'refresh'
+        user = ckan_factories.User()
+        user['capacity'] = 'admin'
+        org = ckan_factories.Organization(users=[user])
+        source_dict = dict(SOURCE_DICT.items() +
+                           [('publisher_id', org['id'])])
+        source = factories.HarvestSource(**source_dict)
+
+        data_dict = {
+            'source_id': source['id'],
+            'run': True
+            }
+        job = toolkit.get_action('harvest_job_create')(
+            {'user': user['name']}, data_dict)
+
+        assert_equal(job['source_id'], source['id'])
+        assert_equal(job['status'], 'Running')
+        assert_equal(job['gather_started'], None)
+        assert_in('stats', job.keys())
 
 
 class TestHarvestObject(unittest.TestCase):

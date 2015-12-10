@@ -2,8 +2,7 @@ import logging
 import re
 import uuid
 
-from sqlalchemy.sql import update,and_, bindparam
-from sqlalchemy.exc import InvalidRequestError
+from sqlalchemy.sql import update, bindparam
 from pylons import config
 
 from ckan import plugins as p
@@ -12,28 +11,45 @@ from ckan.model import Session, Package, PACKAGE_NAME_MAX_LENGTH
 from ckan.logic import ValidationError, NotFound, get_action
 
 from ckan.logic.schema import default_create_package_schema
-from ckan.lib.navl.validators import ignore_missing,ignore
-from ckan.lib.munge import munge_title_to_name,substitute_ascii_equivalents
+from ckan.lib.navl.validators import ignore_missing, ignore
+from ckan.lib.munge import munge_title_to_name, substitute_ascii_equivalents
 
-from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError, \
-                                    HarvestObjectError
+from ckanext.harvest.model import (HarvestObject, HarvestGatherError,
+                                   HarvestObjectError)
 
 from ckan.plugins.core import SingletonPlugin, implements
 from ckanext.harvest.interfaces import IHarvester
 
+if p.toolkit.check_ckan_version(min_version='2.3'):
+    from ckan.lib.munge import munge_tag
+else:
+    # Fallback munge_tag for older ckan versions which don't have a decent
+    # munger
+    def _munge_to_length(string, min_length, max_length):
+        '''Pad/truncates a string'''
+        if len(string) < min_length:
+            string += '_' * (min_length - len(string))
+        if len(string) > max_length:
+            string = string[:max_length]
+        return string
+
+    def munge_tag(tag):
+        tag = substitute_ascii_equivalents(tag)
+        tag = tag.lower().strip()
+        tag = re.sub(r'[^a-zA-Z0-9\- ]', '', tag).replace(' ', '-')
+        tag = _munge_to_length(tag, model.MIN_TAG_LENGTH, model.MAX_TAG_LENGTH)
+        return tag
 
 log = logging.getLogger(__name__)
 
 
-def munge_tag(tag):
-    tag = substitute_ascii_equivalents(tag)
-    tag = tag.lower().strip()
-    return re.sub(r'[^a-zA-Z0-9 -]', '', tag).replace(' ', '-')
-
-
 class HarvesterBase(SingletonPlugin):
     '''
-    Generic class for  harvesters with helper functions
+    Generic base class for harvesters, providing a number of useful functions.
+
+    A harvester doesn't have to derive from this - it could just have:
+
+        implements(IHarvester)
     '''
     implements(IHarvester)
 
@@ -136,31 +152,8 @@ class HarvesterBase(SingletonPlugin):
             return ideal_name[:PACKAGE_NAME_MAX_LENGTH-APPEND_MAX_CHARS] + \
                 str(uuid.uuid4())[:APPEND_MAX_CHARS]
 
-
-    def _save_gather_error(self, message, job):
-        err = HarvestGatherError(message=message, job=job)
-        try:
-            err.save()
-        except InvalidRequestError:
-            Session.rollback()
-            err.save()
-        finally:
-            log.error(message)
-
-
-    def _save_object_error(self, message, obj, stage=u'Fetch', line=None):
-        err = HarvestObjectError(message=message,
-                                 object=obj,
-                                 stage=stage,
-                                 line=line)
-        try:
-            err.save()
-        except InvalidRequestError, e:
-            Session.rollback()
-            err.save()
-        finally:
-            log_message = '{0}, line {1}'.format(message,line) if line else message
-            log.debug(log_message)
+    _save_gather_error = HarvestGatherError.create
+    _save_object_error = HarvestObjectError.create
 
     def _get_user_name(self):
         '''
