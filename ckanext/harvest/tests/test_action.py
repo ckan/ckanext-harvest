@@ -11,7 +11,13 @@ try:
 except ImportError:
     from ckan.new_tests import factories as ckan_factories
     from ckan.new_tests.helpers import (_get_test_app, reset_db,
-                                        FunctionalTestBase, assert_in)
+                                        FunctionalTestBase)
+    try:
+        from ckan.new_tests.helpers import assert_in
+    except ImportError:
+        # ckan 2.2 only has it in the legacy test helpers
+        from ckan.tests.helpers import assert_in
+
 from ckan import plugins as p
 from ckan.plugins import toolkit
 from ckan import model
