@@ -395,7 +395,7 @@ def fetch_and_import_stages(harvester, obj):
     success_fetch = harvester.fetch_stage(obj)
     obj.fetch_finished = datetime.datetime.utcnow()
     obj.save()
-    if success_fetch:
+    if success_fetch is True:
         # If no errors where found, call the import method
         obj.import_started = datetime.datetime.utcnow()
         obj.state = "IMPORT"
@@ -411,6 +411,11 @@ def fetch_and_import_stages(harvester, obj):
         else:
             obj.state = "ERROR"
         obj.save()
+    elif success_fetch == 'unchanged':
+        obj.state = 'COMPLETE'
+        obj.report_status = 'not modified'
+        obj.save()
+        return
     else:
         obj.state = "ERROR"
         obj.save()
