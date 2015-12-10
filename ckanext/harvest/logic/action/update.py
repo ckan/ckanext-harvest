@@ -473,7 +473,6 @@ def harvest_send_job_to_gather_queue(context, data_dict):
     publisher = get_gather_publisher()
 
     # Check the source is active
-    context['detailed'] = False
     source = harvest_source_show(context, {'id': job['source_id']})
     if not source['active']:
         raise toolkit.ValidationError('Source is not active')
