@@ -67,7 +67,7 @@ class Harvester(CkanCommand):
           WARNING: if using Redis, this command purges all data in the current
           Redis database
 
-      harvester [-j] [-o] [--segments={segments}] import [{source-id}]
+      harvester [-j] [-o|-g|-p {id/guid}] [--segments={segments}] import [{source-id}]
         - perform the import stage with the last fetched objects, for a certain
           source or a single harvest object. Please note that no objects will
           be fetched from the remote server. It will only affect the objects
@@ -75,6 +75,7 @@ class Harvester(CkanCommand):
 
           To import a particular harvest source, specify its id as an argument.
           To import a particular harvest object use the -o option.
+          To import a particular guid use the -g option.
           To import a particular package use the -p option.
 
           You will need to specify the -j flag in cases where the datasets are
@@ -111,10 +112,13 @@ class Harvester(CkanCommand):
             action='store_true', default=False, help='Do not join harvest objects to existing datasets')
 
         self.parser.add_option('-o', '--harvest-object-id', dest='harvest_object_id',
-            default=False, help='Id of the harvest object to which perfom the import stage')
+            default=False, help='Id of the harvest object to which perform the import stage')
 
         self.parser.add_option('-p', '--package-id', dest='package_id',
-            default=False, help='Id of the package whose harvest object to perfom the import stage for')
+            default=False, help='Id of the package whose harvest object to perform the import stage for')
+
+        self.parser.add_option('-g', '--guid', dest='guid',
+            default=False, help='Guid of the harvest object to which perform the import stage for')
 
         self.parser.add_option('--segments', dest='segments',
             default=False, help=
@@ -441,6 +445,7 @@ class Harvester(CkanCommand):
                 'source_id': source_id,
                 'harvest_object_id': self.options.harvest_object_id,
                 'package_id': self.options.package_id,
+                'guid': self.options.guid,
                 })
 
         print '%s objects reimported' % objs_count
