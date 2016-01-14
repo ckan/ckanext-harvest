@@ -13,7 +13,9 @@
 {% block primary_content %}
   <section class="module">
     <div class="module-content">
-      {% block form %}{{ c.form | safe }}{% endblock %}
+      {% block form %}
+        {{- h.snippet(form_snippet, c=c, **form_vars) -}}
+      {% endblock %}
     </div>
   </section>
 {% endblock %}
