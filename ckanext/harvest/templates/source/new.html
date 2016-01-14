@@ -1,23 +1,35 @@
-<html xmlns:py="http://genshi.edgewall.org/"
-  xmlns:i18n="http://genshi.edgewall.org/i18n"
-  xmlns:xi="http://www.w3.org/2001/XInclude"
-  py:strip="">
+{% extends "source/admin_base.html" %}
 
-    <py:def function="page_title">New - Harvest Source</py:def>
-    <py:def function="page_heading">New harvest source </py:def>
+{% block breadcrumb_content %}
+  <li>{{ h.nav_named_link(_('Harvest Sources'), '{0}_search'.format(c.dataset_type)) }}</li>
+  <li class="active">{{ h.nav_named_link(_('Create Harvest Source'), '{0}_new'.format(c.dataset_type)) }}</li>
+{% endblock %}
 
-    <py:def function="body_class">hide-sidebar</py:def>
-    <py:def function="optional_head">
-        <link rel="stylesheet" href="${g.site_url}/css/forms.css" type="text/css" media="screen, print" />
-        <link type="text/css" rel="stylesheet" media="all" href="/ckanext/harvest/style.css" />
-    </py:def>
+{% block actions_content %}
+{% endblock %}
 
-    <div py:match="content">
-        <div class="harvest-content">
+{% block subtitle %}{{ _('Create harvest source') }}{% endblock %}
 
-            ${h.literal(c.form)}
-
-        </div>
+{% block primary_content %}
+  <section class="module">
+    <div class="module-content">
+      {% block form %}{{ c.form | safe }}{% endblock %}
     </div>
-    <xi:include href="../layout.html" />
-    </html>
+  </section>
+{% endblock %}
+
+{% block secondary_content %}
+  <section class="module module-narrow">
+    <h2 class="module-heading"><i class="icon-large icon-info-sign"></i> {{ _('Harvest sources') }}</h2>
+    <div class="module-content">
+      <p>
+        {% trans %}
+        Harvest sources allow importing remote metadata into this catalog.
+        Remote sources can be other catalogs such as other CKAN instances, CSW
+        servers or Web Accessible Folders (WAF) (depending on the actual
+        harvesters enabled for this instance).
+        {% endtrans %}
+      </p>
+    </div>
+  </section>
+{% endblock %}

@@ -46,7 +46,7 @@ setup(
             'ckanext': [
                 ('**.py', 'python', None),
                 ('**.js', 'javascript', None),
-                ('**/templates_new/**.html', 'ckan', None),
+                ('**/templates/**.html', 'ckan', None),
             ],
         }
 )
