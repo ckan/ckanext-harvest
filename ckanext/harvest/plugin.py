@@ -87,6 +87,17 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
         return data_dict
 
 
+    def before_search(self, search_params):
+        '''Prevents the harvesters being shown in dataset search results.'''
+
+        fq = search_params.get('fq', '')
+        if 'dataset_type:{0}'.format('harvest') not in fq:
+            fq = "{0} -dataset_type:{1}".format(search_params.get('fq', ''),
+                                                'harvest')
+            search_params.update({'fq': fq})
+
+        return search_params
+
     def after_show(self, context, data_dict):
 
         if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME:
