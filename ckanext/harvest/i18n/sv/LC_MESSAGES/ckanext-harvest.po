@@ -1,0 +1,591 @@
+# Swedish translations for ckanext-harvest.
+# Copyright (C) 2015 ORGANIZATION
+# This file is distributed under the same license as the ckanext-harvest
+# project.
+#
+# Translators:
+# Börje Lewin <borjelewin@gmail.com>, 2015
+msgid ""
+msgstr ""
+"Project-Id-Version:  ckanext-harvest\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2015-12-11 15:21+0000\n"
+"PO-Revision-Date: 2015-06-11 17:28+0000\n"
+"Last-Translator: Börje Lewin <borjelewin@gmail.com>\n"
+"Language: sv\n"
+"Language-Team: Swedish (http://www.transifex.com/projects/p/ckanext-"
+"harvest/language/sv/)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.1.1\n"
+
+#: ckanext/harvest/helpers.py:70
+msgid "title"
+msgstr "rubrik"
+
+#: ckanext/harvest/controllers/organization.py:40
+msgid "Group not found"
+msgstr "Hittar inte grupp"
+
+#: ckanext/harvest/controllers/organization.py:42
+#, python-format
+msgid "Unauthorized to read group %s"
+msgstr "Obehörig att läsa grupp %s"
+
+#: ckanext/harvest/controllers/organization.py:137
+msgid "Groups"
+msgstr "Grupper"
+
+#: ckanext/harvest/controllers/organization.py:138
+msgid "Tags"
+msgstr "Taggar"
+
+#: ckanext/harvest/controllers/organization.py:139
+msgid "Formats"
+msgstr "Format"
+
+#: ckanext/harvest/controllers/organization.py:140
+msgid "Licence"
+msgstr "Licens"
+
+#: ckanext/harvest/controllers/view.py:28
+msgid "Not authorized to see this page"
+msgstr "Obehörig att se denna sida"
+
+#: ckanext/harvest/controllers/view.py:45
+msgid "Harvesting source successfully cleared"
+msgstr "Källan för skördning har raderats"
+
+#: ckanext/harvest/controllers/view.py:47
+msgid "Harvesting source successfully inactivated"
+msgstr "Källan för skördning har avaktiverats"
+
+#: ckanext/harvest/controllers/view.py:51
+#: ckanext/harvest/controllers/view.py:63
+#: ckanext/harvest/controllers/view.py:85
+#: ckanext/harvest/controllers/view.py:146
+#: ckanext/harvest/controllers/view.py:184
+#: ckanext/harvest/controllers/view.py:195
+#: ckanext/harvest/controllers/view.py:221
+#: ckanext/harvest/logic/auth/create.py:34
+#: ckanext/harvest/logic/auth/delete.py:18 ckanext/harvest/logic/auth/get.py:33
+#: ckanext/harvest/logic/auth/update.py:19
+msgid "Harvest source not found"
+msgstr "Hittar inte källan"
+
+#: ckanext/harvest/controllers/view.py:61
+msgid "Harvest will start shortly. Refresh this page for updates."
+msgstr ""
+
+#: ckanext/harvest/controllers/view.py:67
+msgid ""
+"Cannot create new harvest jobs on inactive sources. First, please change "
+"the source status to 'active'."
+msgstr ""
+"Kan inte skapa nya skördningsjobb för inaktiva källor. Ändra först "
+"källans status till 'aktiv'."
+
+#: ckanext/harvest/controllers/view.py:71
+msgid "A harvest job has already been scheduled for this source"
+msgstr "Ett skördningsjobb har redan schemalagts för denna källa"
+
+#: ckanext/harvest/controllers/view.py:83
+msgid "Harvest source cleared"
+msgstr "Skördningskällan har rensats"
+
+#: ckanext/harvest/controllers/view.py:111
+msgid "No content found"
+msgstr "Hittar inget innehåll"
+
+#: ckanext/harvest/controllers/view.py:171
+msgid "Harvest job not found"
+msgstr "Hittar inte skördningsjobbet"
+
+#: ckanext/harvest/controllers/view.py:204
+#: ckanext/harvest/templates/source/admin.html:15
+#: ckanext/harvest/templates/source/job/list.html:13
+msgid "No jobs yet for this source"
+msgstr "Det finns inga jobb för denna källa"
+
+#: ckanext/harvest/logic/auth/create.py:19
+msgid "User {0} not authorized to create harvest sources"
+msgstr "Användaren {0} är inte behörig att skapa källor för skördning"
+
+#: ckanext/harvest/logic/auth/create.py:42
+msgid "User not authorized to create a job for source {0}"
+msgstr "Användaren är inte behörig att skapa jobb för källan {0}"
+
+#: ckanext/harvest/logic/auth/create.py:52
+msgid "Only sysadmins can create harvest jobs for all sources"
+msgstr "Endast systemadministratörer kan skapa skördningsjobb för alla källor"
+
+#: ckanext/harvest/logic/auth/create.py:63
+msgid "Only the sysadmins can create harvest objects"
+msgstr "Endast systemadministratörer kan skapa skördningsobjekt"
+
+#: ckanext/harvest/logic/auth/delete.py:27
+msgid "User {0} not authorized to delete harvest source {1}"
+msgstr "Användaren {0} är inte behörig att ta bort skördningskällan {1}"
+
+#: ckanext/harvest/logic/auth/get.py:42
+msgid "User {0} not authorized to read harvest source {1}"
+msgstr "Användaren {0} är inte behörig att läsa skördningskällan {1}"
+
+#: ckanext/harvest/logic/auth/get.py:82
+msgid "User {0} not authorized to see jobs from source {1}"
+msgstr "Användaren {0} är inte behörig att se jobb från källan {1}"
+
+#: ckanext/harvest/logic/auth/get.py:104
+msgid "User {0} not authorized to list jobs for source {1}"
+msgstr "Användaren {0} är inte behörig att lista jobb för källan {1}"
+
+#: ckanext/harvest/logic/auth/update.py:28
+msgid "User {0} not authorized to update harvest source {1}"
+msgstr "Användaren {0} är inte behörig att uppdater skördingskällan {1}"
+
+#: ckanext/harvest/logic/auth/update.py:45
+msgid "Only sysadmins can reimport all harvest objects"
+msgstr "Endast systemadministratörer kan importera om skördningsobjekt"
+
+#: ckanext/harvest/logic/auth/update.py:57
+msgid "Only sysadmins can run the pending harvest jobs"
+msgstr "Endast systemadministratörer kan köra väntande skördningsjobb"
+
+#: ckanext/harvest/logic/auth/update.py:89
+msgid "Only sysadmins can reindex all harvest sources"
+msgstr "Endast systemadministratörer kan omindexera skördningskällor"
+
+#: ckanext/harvest/templates/snippets/add_source_button.html:6
+#: ckanext/harvest/templates/source/org_source_list.html:11
+msgid "Add Harvest Source"
+msgstr "Lägg till skördningskälla"
+
+#: ckanext/harvest/templates/snippets/job_details.html:26
+#: ckanext/harvest/templates/source/job/list.html:44
+msgid "errors"
+msgstr "fel"
+
+#: ckanext/harvest/templates/snippets/job_details.html:41
+msgid "Details"
+msgstr "Detaljer"
+
+#: ckanext/harvest/templates/snippets/job_details.html:48
+msgid "Id"
+msgstr "Id"
+
+#: ckanext/harvest/templates/snippets/job_details.html:52
+msgid "Created"
+msgstr "Skapad"
+
+#: ckanext/harvest/templates/snippets/job_details.html:60
+msgid "Started"
+msgstr "Påbörjad"
+
+#: ckanext/harvest/templates/snippets/job_details.html:68
+msgid "Finished"
+msgstr "Avslutad"
+
+#: ckanext/harvest/templates/snippets/job_details.html:76
+msgid "Status"
+msgstr "Status"
+
+#: ckanext/harvest/templates/snippets/job_error_summary.html:18
+msgid "Count"
+msgstr "Antal"
+
+#: ckanext/harvest/templates/snippets/job_error_summary.html:19
+msgid "Message"
+msgstr "Meddelande"
+
+#: ckanext/harvest/templates/snippets/package_list_empty.html:1
+msgid "There are no datasets associated to this harvest source."
+msgstr "Det finns inga dataset kopplade till denna skördningskälla"
+
+#: ckanext/harvest/templates/snippets/search_result_text.html:4
+msgid "{number} harvest source found for \"{query}\""
+msgid_plural "{number} harvest sources found for \"{query}\""
+msgstr[0] "{number} skördningskälla hittades för \"{query}\""
+msgstr[1] "{number} skördningskällor hittades för \"{query}\""
+
+#: ckanext/harvest/templates/snippets/search_result_text.html:5
+#: ckanext/harvest/templates/source/org_source_list.html:17
+#: ckanext/harvest/templates/source/search_2.0.html:27
+msgid "Sorry no harvest sources found for \"{query}\""
+msgstr "Hittar inga skördningskällor för \"{query}\""
+
+#: ckanext/harvest/templates/snippets/search_result_text.html:6
+msgid "{number} harvest source found"
+msgid_plural "{number} harvest sources found"
+msgstr[0] "{number} skördningskälla hittades"
+msgstr[1] "{number} skördningskällor hittades"
+
+#: ckanext/harvest/templates/snippets/search_result_text.html:7
+#: ckanext/harvest/templates/source/org_source_list.html:25
+msgid "Sorry no harvest sources found"
+msgstr "Hittade inga skördningskällor"
+
+#: ckanext/harvest/templates/snippets/source_item.html:28
+msgid "Draft"
+msgstr "Utkast"
+
+#: ckanext/harvest/templates/snippets/source_item.html:30
+#: ckanext/harvest/templates/source/new_source_form.html:83
+msgid "Deleted"
+msgstr "Borttagen"
+
+#: ckanext/harvest/templates/snippets/source_item.html:37
+#: ckanext/harvest/templates/source/about.html:9
+#: ckanext/harvest/templates/source/read_base.html:25
+msgid "There is no description for this harvest source"
+msgstr "Det finns ingen beskrivning för denna skördningskälla"
+
+#: ckanext/harvest/templates/snippets/source_item.html:42
+#: ckanext/harvest/templates/source/read.html:5
+#: ckanext/harvest/templates/source/read_base.html:30
+#: ckanext/harvest/templates/source/read_base.html:53
+msgid "Datasets"
+msgstr "Dataset"
+
+#: ckanext/harvest/templates/snippets/source_item.html:45
+#: ckanext/harvest/templates/source/new_source_form.html:63
+msgid "Organization"
+msgstr "Organisation"
+
+#: ckanext/harvest/templates/source/admin.html:5
+msgid "Last Harvest Job"
+msgstr "Sista skördningsjobb"
+
+#: ckanext/harvest/templates/source/admin.html:11
+msgid "View full job report"
+msgstr "Visa fullständig jobbrapport"
+
+#: ckanext/harvest/templates/source/admin_base.html:7
+#: ckanext/harvest/templates/source/read_base.html:4
+msgid "Admin"
+msgstr "Admin"
+
+#: ckanext/harvest/templates/source/admin_base.html:15
+msgid ""
+"This will re-run the harvesting for this source. Any updates at the "
+"source will overwrite the local datasets. Sources with a large number of "
+"datasets may take a significant amount of time to finish harvesting. "
+"Please confirm you would like us to start reharvesting."
+msgstr ""
+"Skördningen kommer att köras igen för denna källa. Alla uppdateringar "
+"från källan kommer att ersätta lokala dataset. Källor med många dataset "
+"kan ta lång tid att skörda. Bekräfta om du vill starta en omskördning."
+
+#: ckanext/harvest/templates/source/admin_base.html:18
+msgid "Start a new harvesting job for this harvest source now"
+msgstr "Starta ett nytt skördningsjobb för denna skördningskälla nu."
+
+#: ckanext/harvest/templates/source/admin_base.html:20
+msgid "Reharvest"
+msgstr "Skörda om"
+
+#: ckanext/harvest/templates/source/admin_base.html:24
+msgid ""
+"Warning: This will remove all datasets for this source, as well as all "
+"previous job reports. Are you sure you want to continue?"
+msgstr ""
+"Varning: Alla dataset för denna källa tas bort, liksom tidigare "
+"jobbrapporter. Vill du fortsätta?"
+
+#: ckanext/harvest/templates/source/admin_base.html:27
+msgid "Delete all harvest jobs and existing datasets from this source"
+msgstr "Ta bort alla skördningsjobb och befintliga dataset från denna källa"
+
+#: ckanext/harvest/templates/source/admin_base.html:28
+msgid "Clear"
+msgstr "Rensa"
+
+#: ckanext/harvest/templates/source/admin_base.html:32
+msgid "View harvest source"
+msgstr "Visa skördningskälla"
+
+#: ckanext/harvest/templates/source/admin_base.html:48
+msgid "Dashboard"
+msgstr "Kontrollpanel"
+
+#: ckanext/harvest/templates/source/admin_base.html:49
+msgid "Jobs"
+msgstr "Jobb"
+
+#: ckanext/harvest/templates/source/admin_base.html:50
+msgid "Edit"
+msgstr "Redigera"
+
+#: ckanext/harvest/templates/source/base.html:17
+msgid "Organizations"
+msgstr "Organisationer"
+
+#: ckanext/harvest/templates/source/base.html:19
+#: ckanext/harvest/templates/source/base.html:22
+#: ckanext/harvest/templates/source/new.html:4
+#: ckanext/harvest/templates/source/org_source_list.html:3
+#: ckanext/harvest/templates/source/org_source_list.html:7
+#: ckanext/harvest/templates/source/org_source_list.html:19
+#: ckanext/harvest/templates/source/search.html:7
+msgid "Harvest Sources"
+msgstr "Skördningskällor"
+
+#: ckanext/harvest/templates/source/edit.html:3
+msgid "Edit harvest source"
+msgstr "Redigera skördningskällo"
+
+#: ckanext/harvest/templates/source/new.html:5
+msgid "Create Harvest Source"
+msgstr "Skapa skördningskälla"
+
+#: ckanext/harvest/templates/source/new.html:11
+msgid "Create harvest source"
+msgstr "Skapa skördningskälla"
+
+#: ckanext/harvest/templates/source/new.html:23
+#: ckanext/harvest/templates/source/search.html:3
+msgid "Harvest sources"
+msgstr "Skördningskällor"
+
+#: ckanext/harvest/templates/source/new.html:26
+msgid ""
+" Harvest sources allow importing remote metadata into this catalog. "
+"Remote sources can be other catalogs such as other CKAN instances, CSW "
+"servers or Web Accessible Folders (WAF) (depending on the actual "
+"harvesters enabled for this instance). "
+msgstr ""
+"Skördningskällor kan användas för att importera metadata till katalogen. "
+"Källor kan vara kataloger (t ex CKAN-instanser), CSW-servrar eller Web "
+"Accessible Folders (WAF), beroende på antalet aktiverade skördningsformat"
+" för instansen. "
+
+#: ckanext/harvest/templates/source/new_source_form.html:8
+msgid "URL"
+msgstr "URL"
+
+#: ckanext/harvest/templates/source/new_source_form.html:10
+msgid "This should include the http:// part of the URL"
+msgstr "Denna URL ska börja med http://"
+
+#: ckanext/harvest/templates/source/new_source_form.html:14
+msgid "Title"
+msgstr "Rubrik"
+
+#: ckanext/harvest/templates/source/new_source_form.html:14
+msgid "eg. A descriptive title"
+msgstr "t ex Beskrivande rubrik"
+
+#: ckanext/harvest/templates/source/new_source_form.html:21
+msgid "Name"
+msgstr "Namn"
+
+#: ckanext/harvest/templates/source/new_source_form.html:21
+msgid "eg. my-dataset"
+msgstr "t ex mitt-dataset"
+
+#: ckanext/harvest/templates/source/new_source_form.html:23
+msgid "Description"
+msgstr "Beskrivning"
+
+#: ckanext/harvest/templates/source/new_source_form.html:43
+msgid "Update frequency"
+msgstr "Uppdateringsfrekvens"
+
+#: ckanext/harvest/templates/source/new_source_form.html:46
+msgid "Configuration"
+msgstr "Konfiguration"
+
+#: ckanext/harvest/templates/source/new_source_form.html:66
+msgid "No organization"
+msgstr "Ingen organisation"
+
+#: ckanext/harvest/templates/source/new_source_form.html:79
+msgid "State"
+msgstr "Status"
+
+#: ckanext/harvest/templates/source/new_source_form.html:82
+msgid "Active"
+msgstr "Aktiv"
+
+#: ckanext/harvest/templates/source/new_source_form.html:92
+msgid ""
+"This will flag the source as deleted but keep all its datasets and "
+"previous jobs. Are you sure you want to delete this harvest source?"
+msgstr ""
+"Källan markeras som borttagen men alla dataset och tidigare jobb sparas. "
+"Vill du markera skördningskällan som borttagen?"
+
+#: ckanext/harvest/templates/source/new_source_form.html:93
+msgid ""
+"Warning: Apart from deleting this source, this command will remove all "
+"its datasets, as well as all previous job reports. Are you sure you want "
+"to continue?"
+msgstr ""
+"Varning. Förutom att källan tas bort, raderas även alla källans dataset "
+"och tidigare jobbrapporter. Vill du fortsätta med raderingen?"
+
+#: ckanext/harvest/templates/source/new_source_form.html:96
+msgid "Delete"
+msgstr "Ta bort"
+
+#: ckanext/harvest/templates/source/new_source_form.html:102
+msgid "Delete source"
+msgstr "Ta bort källa"
+
+#: ckanext/harvest/templates/source/new_source_form.html:107
+msgid "Delete and clear source"
+msgstr "Ta bort och rensa källa"
+
+#: ckanext/harvest/templates/source/old_new_source_form.html:5
+msgid "Return to the harvest sources list"
+msgstr "Återgå till listan med skördningskällor"
+
+#: ckanext/harvest/templates/source/org_source_list.html:15
+#: ckanext/harvest/templates/source/search_2.0.html:25
+msgid " found for \"{query}\""
+msgstr " hittades för \"{query}\""
+
+#: ckanext/harvest/templates/source/org_source_list.html:31
+msgid "Search sources..."
+msgstr "Sök källor..."
+
+#: ckanext/harvest/templates/source/org_source_list.html:32
+#: ckanext/harvest/templates/source/search_2.0.html:8
+msgid "Search"
+msgstr "Sök"
+
+#: ckanext/harvest/templates/source/read_base.html:22
+msgid "read more"
+msgstr "läs mer"
+
+#: ckanext/harvest/templates/source/read_base.html:54
+msgid "About"
+msgstr "Om"
+
+#: ckanext/harvest/templates/source/search.html:44
+msgid "Relevance"
+msgstr "Relevans"
+
+#: ckanext/harvest/templates/source/search.html:45
+msgid "Name Ascending"
+msgstr "Namn (stigande)"
+
+#: ckanext/harvest/templates/source/search.html:46
+msgid "Name Descending"
+msgstr "Namn (fallande)"
+
+#: ckanext/harvest/templates/source/search.html:47
+msgid "Last Modified"
+msgstr "Senast ändrad"
+
+#: ckanext/harvest/templates/source/search.html:48
+msgid "Popular"
+msgstr "Populär"
+
+#: ckanext/harvest/templates/source/search.html:50
+msgid "Search harvest sources..."
+msgstr "Sök skördningskällor..."
+
+#: ckanext/harvest/templates/source/search_2.0.html:7
+msgid "Search..."
+msgstr "Sök..."
+
+#: ckanext/harvest/templates/source/search_2.0.html:29
+msgid "All harvest sources"
+msgstr "Alla skördningskällor"
+
+#: ckanext/harvest/templates/source/search_2.0.html:42
+msgid "Remove"
+msgstr "Radera"
+
+#: ckanext/harvest/templates/source/search_2.0.html:48
+msgid "Try another search term, browse the sources below or "
+msgstr "Försök med en annan sökning, välj bland källorna nedan eller "
+
+#: ckanext/harvest/templates/source/search_2.0.html:49
+msgid "add a new one"
+msgstr "lägg till en ny"
+
+#: ckanext/harvest/templates/source/search_2.0.html:55
+msgid ""
+" <p><strong>There was an error while searching.</strong> Please try "
+"again.</p> "
+msgstr " <p><strong>Fel vid sökning.</strong> Försök igen.</p> "
+
+#: ckanext/harvest/templates/source/job/list.html:5
+#: ckanext/harvest/templates/source/job/list.html:10
+msgid "Harvest Jobs"
+msgstr "Skördningsjobb"
+
+#: ckanext/harvest/templates/source/job/list.html:21
+msgid "Job: "
+msgstr "Jobb:"
+
+#: ckanext/harvest/templates/source/job/list.html:28
+msgid "Started:"
+msgstr "Påbörjade:"
+
+#: ckanext/harvest/templates/source/job/list.html:30
+#: ckanext/harvest/templates/source/job/list.html:35
+msgid "Not yet"
+msgstr "Inte ännu"
+
+#: ckanext/harvest/templates/source/job/list.html:33
+msgid "Finished:"
+msgstr "Avslutade:"
+
+#: ckanext/harvest/templates/source/job/read.html:3
+#: ckanext/harvest/templates/source/job/read.html:12
+msgid "Job Report"
+msgstr "Jobbrapport"
+
+#: ckanext/harvest/templates/source/job/read.html:9
+msgid "Back to job list"
+msgstr "Tillbaka till jobblistan"
+
+#: ckanext/harvest/templates/source/job/read.html:18
+#: ckanext/harvest/templates/source/job/read.html:22
+msgid "Error Summary"
+msgstr "Översikt för felaktigheter"
+
+#: ckanext/harvest/templates/source/job/read.html:19
+msgid "No errors for this job"
+msgstr "Inga felaktigheter för detta jobb"
+
+#: ckanext/harvest/templates/source/job/read.html:23
+msgid "Only the 20 most frequent errors are shown"
+msgstr "Endast de 20 vanligaste felen visas"
+
+#: ckanext/harvest/templates/source/job/read.html:26
+#: ckanext/harvest/templates/source/job/read.html:40
+msgid "Job Errors"
+msgstr "Jobbfel"
+
+#: ckanext/harvest/templates/source/job/read.html:30
+#: ckanext/harvest/templates/source/job/read.html:57
+msgid "Document Errors"
+msgstr "Dokumentfel"
+
+#: ckanext/harvest/templates/source/job/read.html:37
+msgid "Error Report"
+msgstr "Felrapport"
+
+#: ckanext/harvest/templates/source/job/read.html:58
+msgid "documents with errors"
+msgstr "dokument med fel"
+
+#: ckanext/harvest/templates/source/job/read.html:69
+msgid "Remote content"
+msgstr "Fjärrinnehåll"
+
+#: ckanext/harvest/templates/source/job/read.html:73
+msgid "Local content"
+msgstr "Lokalt innehåll"
+
+#~ msgid "Cannot render description"
+#~ msgstr "Kan inte generera beskrivning"
+
+#~ msgid "Refresh requested, harvesting will take place within 15 minutes."
+#~ msgstr "Uppdatering har begärts, skördning sker inom 15 minuter."
+

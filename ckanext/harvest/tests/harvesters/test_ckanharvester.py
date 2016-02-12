@@ -1,5 +1,8 @@
 import copy
+
+from nose.tools import assert_equal
 import json
+from mock import patch
 
 from nose.tools import assert_equal
 import mock
@@ -97,11 +100,12 @@ class TestCkanHarvester(object):
         run_harvest(
             url='http://localhost:%s/' % mock_ckan.PORT,
             harvester=CKANHarvester())
-        patched_datasets = copy.deepcopy(mock_ckan.DATASETS)
-        patched_datasets[1]['title'] = 'Title CHANGED'
-        patched_datasets[1]['metadata_modified'] = '2050-05-09T22:00:01.486366'
-        with mock.patch("ckanext.harvest.tests.harvesters.mock_ckan.DATASETS",
-                        patched_datasets):
+
+        # change the modified date
+        datasets = copy.deepcopy(mock_ckan.DATASETS)
+        datasets[1]['metadata_modified'] = '2050-05-09T22:00:01.486366'
+        with patch('ckanext.harvest.tests.harvesters.mock_ckan.DATASETS',
+                   datasets):
             results_by_guid = run_harvest(
                 url='http://localhost:%s/' % mock_ckan.PORT,
                 harvester=CKANHarvester())
@@ -144,3 +148,20 @@ class TestCkanHarvester(object):
             config=json.dumps(config))
         assert 'dataset1-id' in results_by_guid
         assert mock_ckan.DATASETS[1]['id'] not in results_by_guid
+
+    def test_harvest_not_modified(self):
+        run_harvest(
+            url='http://localhost:%s/' % mock_ckan.PORT,
+            harvester=CKANHarvester())
+
+        results_by_guid = run_harvest(
+            url='http://localhost:%s/' % mock_ckan.PORT,
+            harvester=CKANHarvester())
+
+        # The metadata_modified was the same for this dataset so the import
+        # would have returned 'unchanged'
+        result = results_by_guid[mock_ckan.DATASETS[1]['id']]
+        assert_equal(result['state'], 'COMPLETE')
+        assert_equal(result['report_status'], 'not modified')
+        assert 'dataset' not in result
+        assert_equal(result['errors'], [])

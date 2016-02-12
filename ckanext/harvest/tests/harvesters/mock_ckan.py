@@ -68,6 +68,7 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return self.respond_json(revision_ids)
         if self.path.startswith('/api/rest/revision/'):
             revision_ref = self.path.split('/')[-1]
+            assert api_version == 2
             for rev in REVISIONS:
                 if rev['id'] == revision_ref:
                     return self.respond_json(rev)
@@ -473,7 +474,7 @@ REVISIONS = [
     "approved_timestamp": None,
     "packages":
     [
-        "dataset1"
+        DATASETS[1]['id']
     ],
     "groups": [ ]
     },
@@ -485,7 +486,7 @@ REVISIONS = [
     "approved_timestamp": None,
     "packages":
     [
-        "dataset1"
+        DATASETS[1]['id']
     ],
     "groups": [ ]
     }]

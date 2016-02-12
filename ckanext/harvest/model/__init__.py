@@ -10,6 +10,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import types
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import backref, relation
+from sqlalchemy.exc import InvalidRequestError
 
 from ckan import model
 from ckan import logic
@@ -153,13 +154,43 @@ class HarvestGatherError(HarvestDomainObject):
     '''Gather errors are raised during the **gather** stage of a harvesting
        job.
     '''
-    pass
+    @classmethod
+    def create(cls, message, job):
+        '''
+        Helper function to create an error object and save it.
+        '''
+        err = cls(message=message, job=job)
+        try:
+            err.save()
+        except InvalidRequestError:
+            Session.rollback()
+            err.save()
+        finally:
+            # No need to alert administrator so don't log as an error
+            log.info(message)
+
 
 class HarvestObjectError(HarvestDomainObject):
     '''Object errors are raised during the **fetch** or **import** stage of a
        harvesting job, and are referenced to a specific harvest object.
     '''
-    pass
+    @classmethod
+    def create(cls, message, object, stage=u'Fetch', line=None):
+        '''
+        Helper function to create an error object and save it.
+        '''
+        err = cls(message=message, object=object,
+                  stage=stage, line=line)
+        try:
+            err.save()
+        except InvalidRequestError:
+            Session.rollback()
+            err.save()
+        finally:
+            log_message = '{0}, line {1}'.format(message, line) \
+                          if line else message
+            log.debug(log_message)
+
 
 def harvest_object_before_insert_listener(mapper,connection,target):
     '''
@@ -218,7 +249,7 @@ def define_harvester_tables():
         Column('guid', types.UnicodeText, default=u''),
         # When you harvest a dataset multiple times, only the latest
         # successfully imported harvest_object should be flagged 'current'.
-        # The import_stage reads and writes it.
+        # The import_stage usually reads and writes it.
         Column('current',types.Boolean,default=False),
         Column('gathered', types.DateTime, default=datetime.datetime.utcnow),
         Column('fetch_started', types.DateTime),
@@ -233,6 +264,7 @@ def define_harvester_tables():
         Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
         Column('harvest_source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
         Column('package_id', types.UnicodeText, ForeignKey('package.id', deferrable=True), nullable=True),
+        # report_status: 'added', 'updated', 'not modified', 'deleted', 'errored'
         Column('report_status', types.UnicodeText, nullable=True),
     )
 

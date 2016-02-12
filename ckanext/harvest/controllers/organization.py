@@ -1,5 +1,4 @@
 import logging
-import genshi
 from urllib import urlencode
 
 from ckan import plugins as p
@@ -60,20 +59,7 @@ class OrganizationController(GroupController):
         else:
             q += ' groups: "%s"' % c.group_dict.get('name')
 
-        try:
-            description_formatted = ckan.misc.MarkdownFormat().to_html(
-            c.group_dict.get('description', ''))
-            c.description_formatted = genshi.HTML(description_formatted)
-        except Exception, e:
-            error_msg = "<span class='inline-warning'>%s</span>" %\
-                        p.toolkit._("Cannot render description")
-            c.description_formatted = genshi.HTML(error_msg)
-
         context['return_query'] = True
-
-        # c.group_admins is used by CKAN's legacy (Genshi) templates only,
-        # if we drop support for those then we can delete this line.
-        c.group_admins = ckan.new_authz.get_group_or_org_admin_ids(c.group.id)
 
         try:
             page = int(request.params.get('page', 1))

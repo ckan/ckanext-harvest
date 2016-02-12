@@ -7,9 +7,11 @@ from ckan.model import Package, Session
 from ckan.lib.helpers import url_for,json
 from ckan.lib.base import config
 
-
-from ckan.tests import CreateTestData
 #TODO: remove references to old tests
+try:
+    from ckan.tests import CreateTestData
+except ImportError:
+    from ckan.tests.legacy import CreateTestData
 try:
     from ckan.tests.functional.base import FunctionalTestCase
 except ImportError:

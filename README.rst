@@ -8,6 +8,11 @@ ckanext-harvest - Remote harvesting extension
 This extension provides a common harvesting framework for ckan extensions
 and adds a CLI and a WUI to CKAN to manage harvesting sources and jobs.
 
+<<<<<<< HEAD
+=======
+Requires CKAN 2.0 or later.
+
+>>>>>>> 6354ad5656bd8f5d3ff9f75389f17622a6b32044
 
 Installation
 ============
@@ -75,6 +80,16 @@ below shows the available options and their default values:
         - ``ckan.harvest.mq.virtual_host`` (/)
 
 
+**Note**: it is safe to use the same backend server (either Redis or RabbitMQ)
+for different CKAN instances, as long as they have different site ids. The ``ckan.site_id``
+config option (or ``default``) will be used to namespace the relevant things:
+
+* On RabbitMQ it will be used to name the queues used, eg ``ckan.harvest.site1.gather`` and
+  ``ckan.harvest.site1.fetch``.
+
+* On Redis, it will namespace the keys used, so only the relevant instance gets them, eg
+  ``site1:harvest_job_id``,  ``site1:harvest_object__id:804f114a-8f68-4e7c-b124-3eb00f66202f``
+
 
 Configuration
 =============
@@ -133,7 +148,7 @@ The following operations can be run from the command line using the
 
       harvester run
         - starts any harvest jobs that have been created by putting them onto
-          the gather queue. Also checks running jobs and if finished, it
+          the gather queue. Also checks running jobs - if finished it
           changes their status to Finished.
 
       harvester run_test {source-id/name}
@@ -187,8 +202,7 @@ Authorization
 Starting from CKAN 2.0, harvest sources behave exactly the same as datasets
 (they are actually internally implemented as a dataset type). That means they
 can be searched and faceted, and that the same authorization rules can be
-applied to them. The default authorization settings are based on organizations
-(equivalent to the `publisher profile` found in old versions).
+applied to them. The default authorization settings are based on organizations.
 
 Have a look at the `Authorization <http://docs.ckan.org/en/latest/authorization.html>`_
 documentation on CKAN core to see how to configure your instance depending on
@@ -226,7 +240,7 @@ field. The currently supported configuration options are:
     * {dataset_id}
     * {harvest_source_id}
     * {harvest_source_url}   # Will be stripped of trailing forward slashes (/)
-    * {harvest_source_title}   # Requires CKAN 1.6
+    * {harvest_source_title}
     * {harvest_job_id}
     * {harvest_object_id}
 
@@ -334,11 +348,10 @@ following methods::
     '''
     implements(IHarvester)
 
-
     def info(self):
         '''
-        Harvesting implementations must provide this method, which will return a
-        dictionary containing different descriptors of the harvester. The
+        Harvesting implementations must provide this method, which will return
+        a dictionary containing different descriptors of the harvester. The
         returned dictionary should contain:
 
         * name: machine-readable name. This will be the value stored in the
@@ -346,8 +359,8 @@ following methods::
           harvester.
         * title: human-readable name. This will appear in the form's select box
           in the WUI.
-        * description: a small description of what the harvester does. This will
-          appear on the form as a guidance to the user.
+        * description: a small description of what the harvester does. This
+          will appear on the form as a guidance to the user.
 
         A complete example may be::
 
@@ -366,9 +379,10 @@ following methods::
 
         [optional]
 
-        Harvesters can provide this method to validate the configuration entered in the
-        form. It should return a single string, which will be stored in the database.
-        Exceptions raised will be shown in the form's error messages.
+        Harvesters can provide this method to validate the configuration
+        entered in the form. It should return a single string, which will be
+        stored in the database.  Exceptions raised will be shown in the form's
+        error messages.
 
         :param harvest_object_id: Config string coming from the form
         :returns: A string with the validated configuration options
@@ -399,7 +413,7 @@ following methods::
 
     def gather_stage(self, harvest_job):
         '''
-        The gather stage will recieve a HarvestJob object and will be
+        The gather stage will receive a HarvestJob object and will be
         responsible for:
             - gathering all the necessary objects to fetch on a later.
               stage (e.g. for a CSW server, perform a GetRecords request)
@@ -411,6 +425,8 @@ following methods::
             - creating and storing any suitable HarvestGatherErrors that may
               occur.
             - returning a list with all the ids of the created HarvestObjects.
+            - to abort the harvest, create a HarvestGatherError and raise an
+              exception. Any created HarvestObjects will be deleted.
 
         :param harvest_job: HarvestJob object
         :returns: A list of HarvestObject ids
@@ -425,27 +441,41 @@ following methods::
             - saving the content in the provided HarvestObject.
             - creating and storing any suitable HarvestObjectErrors that may
               occur.
-            - returning True if everything went as expected, False otherwise.
+            - returning True if everything is ok (ie the object should now be
+              imported), "unchanged" if the object didn't need harvesting after
+              all (ie no error, but don't continue to import stage) or False if
+              there were errors.
 
         :param harvest_object: HarvestObject object
-        :returns: True if everything went right, False if errors were found
+        :returns: True if successful, 'unchanged' if nothing to import after
+                  all, False if not successful
         '''
 
     def import_stage(self, harvest_object):
         '''
         The import stage will receive a HarvestObject object and will be
         responsible for:
-            - performing any necessary action with the fetched object (e.g
-              create a CKAN package).
+            - performing any necessary action with the fetched object (e.g.
+              create, update or delete a CKAN package).
               Note: if this stage creates or updates a package, a reference
               to the package should be added to the HarvestObject.
-            - creating the HarvestObject - Package relation (if necessary)
+            - setting the HarvestObject.package (if there is one)
+            - setting the HarvestObject.current for this harvest:
+               - True if successfully created/updated
+               - False if successfully deleted
+            - setting HarvestObject.current to False for previous harvest
+              objects of this harvest source if the action was successful.
             - creating and storing any suitable HarvestObjectErrors that may
               occur.
-            - returning True if everything went as expected, False otherwise.
+            - creating the HarvestObject - Package relation (if necessary)
+            - returning True if the action was done, "unchanged" if the object
+              didn't need harvesting after all or False if there were errors.
+
+        NB You can run this stage repeatedly using 'paster harvest import'.
 
         :param harvest_object: HarvestObject object
-        :returns: True if everything went right, False if errors were found
+        :returns: True if the action was done, "unchanged" if the object didn't
+                  need harvesting after all or False if there were errors.
         '''
 
 

@@ -3,7 +3,6 @@ import re
 import uuid
 
 from sqlalchemy.sql import update, bindparam
-from sqlalchemy.exc import InvalidRequestError
 from pylons import config
 
 from ckan import plugins as p
@@ -12,7 +11,7 @@ from ckan.model import Session, Package, PACKAGE_NAME_MAX_LENGTH
 
 from ckan.logic.schema import default_create_package_schema
 from ckan.lib.navl.validators import ignore_missing, ignore
-from ckan.lib.munge import munge_title_to_name, munge_tag
+from ckan.lib.munge import munge_title_to_name, substitute_ascii_equivalents
 
 from ckanext.harvest.model import (HarvestObject, HarvestGatherError,
                                    HarvestObjectError)
@@ -20,13 +19,36 @@ from ckanext.harvest.model import (HarvestObject, HarvestGatherError,
 from ckan.plugins.core import SingletonPlugin, implements
 from ckanext.harvest.interfaces import IHarvester
 
+if p.toolkit.check_ckan_version(min_version='2.3'):
+    from ckan.lib.munge import munge_tag
+else:
+    # Fallback munge_tag for older ckan versions which don't have a decent
+    # munger
+    def _munge_to_length(string, min_length, max_length):
+        '''Pad/truncates a string'''
+        if len(string) < min_length:
+            string += '_' * (min_length - len(string))
+        if len(string) > max_length:
+            string = string[:max_length]
+        return string
+
+    def munge_tag(tag):
+        tag = substitute_ascii_equivalents(tag)
+        tag = tag.lower().strip()
+        tag = re.sub(r'[^a-zA-Z0-9\- ]', '', tag).replace(' ', '-')
+        tag = _munge_to_length(tag, model.MIN_TAG_LENGTH, model.MAX_TAG_LENGTH)
+        return tag
 
 log = logging.getLogger(__name__)
 
 
 class HarvesterBase(SingletonPlugin):
     '''
-    Generic class for  harvesters with helper functions
+    Generic base class for harvesters, providing a number of useful functions.
+
+    A harvester doesn't have to derive from this - it could just have:
+
+        implements(IHarvester)
     '''
     implements(IHarvester)
 
@@ -129,31 +151,8 @@ class HarvesterBase(SingletonPlugin):
             return ideal_name[:PACKAGE_NAME_MAX_LENGTH-APPEND_MAX_CHARS] + \
                 str(uuid.uuid4())[:APPEND_MAX_CHARS]
 
-
-    def _save_gather_error(self, message, job):
-        err = HarvestGatherError(message=message, job=job)
-        try:
-            err.save()
-        except InvalidRequestError:
-            Session.rollback()
-            err.save()
-        finally:
-            log.error(message)
-
-
-    def _save_object_error(self, message, obj, stage=u'Fetch', line=None):
-        err = HarvestObjectError(message=message,
-                                 object=obj,
-                                 stage=stage,
-                                 line=line)
-        try:
-            err.save()
-        except InvalidRequestError, e:
-            Session.rollback()
-            err.save()
-        finally:
-            log_message = '{0}, line {1}'.format(message,line) if line else message
-            log.debug(log_message)
+    _save_gather_error = HarvestGatherError.create
+    _save_object_error = HarvestObjectError.create
 
     def _get_user_name(self):
         '''
@@ -238,6 +237,7 @@ class HarvesterBase(SingletonPlugin):
         2. 'package_show' form, as provided by the Action API (CKAN v2.0+):
 
                http://datahub.io/api/action/package_show?id=1996_population_census_data_canada
+
            * 'extras' is a list of dicts
                 e.g. [{'key': 'theme', 'value': 'health'},
                         {'key': 'sub-theme', 'value': 'cancer'}]
@@ -251,6 +251,14 @@ class HarvesterBase(SingletonPlugin):
         If the remote server provides the modification date of the remote
         package, add it to package_dict['metadata_modified'].
 
+        :returns: The same as what import_stage should return. i.e. True if the
+                  create or update occurred ok, 'unchanged' if it didn't need
+                  updating or False if there were errors.
+
+
+        TODO: Not sure it is worth keeping this function. If useful it should
+        use the output of package_show logic function (maybe keeping support
+        for rest api based dicts
         '''
         assert package_dict_form in ('rest', 'package_show')
         try:
@@ -285,13 +293,9 @@ class HarvesterBase(SingletonPlugin):
                 package_dict['tags'] = tags
 
             # Check if package exists
-            data_dict = {}
-
-            data_dict['id'] = package_dict['id']
             try:
-                existing_package_dict = p.toolkit.get_action(
-                    'package_show' if package_dict_form == 'package_show'
-                    else 'package_show_rest')(context, data_dict)
+                # _find_existing_package can be overridden if necessary
+                existing_package_dict = self._find_existing_package(package_dict)
 
                 # In case name has been modified when first importing. See issue #101.
                 package_dict['name'] = existing_package_dict['name']
@@ -309,7 +313,8 @@ class HarvesterBase(SingletonPlugin):
 
                 else:
                     log.info('Package with GUID %s not updated, skipping...' % harvest_object.guid)
-                    return
+                    # NB harvest_object.current/package_id are not set
+                    return 'unchanged'
 
                 # Flag the other objects linking to this package as not current anymore
                 from ckanext.harvest.model import harvest_object_table
@@ -365,3 +370,10 @@ class HarvesterBase(SingletonPlugin):
             self._save_object_error('%r'%e,harvest_object,'Import')
 
         return None
+
+    def _find_existing_package(self, package_dict):
+        data_dict = {'id': package_dict['id']}
+        package_show_context = {'model': model, 'session': Session,
+                                'ignore_auth': True}
+        return p.toolkit.get_action('package_show')(
+            package_show_context, data_dict)

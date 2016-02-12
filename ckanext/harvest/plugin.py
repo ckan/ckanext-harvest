@@ -7,6 +7,12 @@ from ckan import logic
 from ckan import model
 import ckan.plugins as p
 from ckan.lib.plugins import DefaultDatasetForm
+try:
+    from ckan.lib.plugins import DefaultTranslation
+except ImportError:
+    class DefaultTranslation():
+        pass
+
 from ckan.lib.navl import dictization_functions
 
 from ckanext.harvest import logic as harvest_logic
@@ -15,12 +21,14 @@ from ckanext.harvest.model import setup as model_setup
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 
 
+
 log = getLogger(__name__)
 assert not log.disabled
 
 DATASET_TYPE_NAME = 'harvest'
 
-class Harvest(p.SingletonPlugin, DefaultDatasetForm):
+
+class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
 
     p.implements(p.IConfigurable)
     p.implements(p.IRoutes, inherit=True)
@@ -31,6 +39,9 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
     p.implements(p.IPackageController, inherit=True)
     p.implements(p.ITemplateHelpers)
     p.implements(p.IFacets, inherit=True)
+    if p.toolkit.check_ckan_version(min_version='2.5.0'):
+        p.implements(p.ITranslation, inherit=True)
+
 
     startup = False
 
@@ -218,12 +229,14 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm):
         return map
 
     def update_config(self, config):
-        # check if new templates
-        templates = 'templates'
-        if p.toolkit.check_ckan_version(min_version='2.0'):
-            if not p.toolkit.asbool(config.get('ckan.legacy_templates', False)):
-                templates = 'templates_new'
-        p.toolkit.add_template_directory(config, templates)
+        if not p.toolkit.check_ckan_version(min_version='2.0'):
+            assert 0, 'CKAN before 2.0 not supported by ckanext-harvest - '\
+                'genshi templates not supported any more'
+        if p.toolkit.asbool(config.get('ckan.legacy_templates', False)):
+            log.warn('Old genshi templates not supported any more by '
+                     'ckanext-harvest so you should set ckan.legacy_templates '
+                     'option to True any more.')
+        p.toolkit.add_template_directory(config, 'templates')
         p.toolkit.add_public_directory(config, 'public')
         p.toolkit.add_resource('fanstatic_library', 'ckanext-harvest')
         p.toolkit.add_resource('public/ckanext/harvest/javascript', 'harvest-extra-field')
@@ -287,7 +300,7 @@ def _add_extra(data_dict, key, value):
 
 def _get_logic_functions(module_root, logic_functions = {}):
 
-    for module_name in ['get', 'create', 'update','delete']:
+    for module_name in ['get', 'create', 'update', 'patch', 'delete']:
         module_path = '%s.%s' % (module_root, module_name,)
 
         module = __import__(module_path)

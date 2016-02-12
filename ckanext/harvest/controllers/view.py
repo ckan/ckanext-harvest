@@ -17,6 +17,7 @@ import ckan.lib.helpers as h, json
 from ckan.lib.base import BaseController, c, \
                           request, response, render, abort, redirect
 
+from ckanext.harvest.logic import HarvestJobExists, HarvestSourceInactiveError
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
 
 import logging
@@ -55,19 +56,21 @@ class ViewController(BaseController):
     def refresh(self, id):
         try:
             context = {'model':model, 'user':c.user, 'session':model.Session}
-            p.toolkit.get_action('harvest_job_create')(context,{'source_id':id})
-            h.flash_success(_('Refresh requested, harvesting will take place within 15 minutes.'))
+            p.toolkit.get_action('harvest_job_create')(
+                context, {'source_id': id, 'run': True})
+            h.flash_success(_('Harvest will start shortly. Refresh this page for updates.'))
         except p.toolkit.ObjectNotFound:
             abort(404,_('Harvest source not found'))
         except p.toolkit.NotAuthorized:
             abort(401,self.not_auth_message)
+        except HarvestSourceInactiveError, e:
+            h.flash_error(_('Cannot create new harvest jobs on inactive '
+                            'sources. First, please change the source status '
+                            'to \'active\'.'))
+        except HarvestJobExists, e:
+            h.flash_notice(_('A harvest job has already been scheduled for '
+                             'this source'))
         except Exception, e:
-            if 'Can not create jobs on inactive sources' in str(e):
-                h.flash_error(_('Cannot create new harvest jobs on inactive sources.'
-                                 + ' First, please change the source status to \'active\'.'))
-            elif 'There already is an unrun job for this source' in str(e):
-                h.flash_notice(_('A harvest job has already been scheduled for this source'))
-            else:
                 msg = 'An error occurred: [%s]' % str(e)
                 h.flash_error(msg)
 

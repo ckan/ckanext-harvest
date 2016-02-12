@@ -3,7 +3,6 @@ from pprint import pprint
 
 from ckan import model
 from ckan.logic import get_action, ValidationError
-from ckanext.harvest.logic import NoNewHarvestJobError
 
 from ckan.lib.cli import CkanCommand
 
@@ -34,12 +33,12 @@ class Harvester(CkanCommand):
           If 'all' is defined, it also shows the Inactive sources
 
       harvester job {source-id/name}
-        - create new harvest job
+        - create new harvest job and runs it (puts it on the gather queue)
 
       harvester jobs
         - lists harvest jobs
 
-      harvester job_abort {source-id/name}
+      harvester job_abort {source-id/source-name/obj-id}
         - marks a job as "Aborted" so that the source can be restarted afresh.
           It ensures that the job's harvest objects status are also marked
           finished. You should ensure that neither the job nor its objects are
@@ -47,7 +46,7 @@ class Harvester(CkanCommand):
 
       harvester run
         - starts any harvest jobs that have been created by putting them onto
-          the gather queue. Also checks running jobs and if finished, it
+          the gather queue. Also checks running jobs - if finished it
           changes their status to Finished.
 
       harvester run_test {source-id/name}
@@ -68,7 +67,7 @@ class Harvester(CkanCommand):
           WARNING: if using Redis, this command purges all data in the current
           Redis database
 
-      harvester [-j] [-o] [--segments={segments}] import [{source-id}]
+      harvester [-j] [-o|-g|-p {id/guid}] [--segments={segments}] import [{source-id}]
         - perform the import stage with the last fetched objects, for a certain
           source or a single harvest object. Please note that no objects will
           be fetched from the remote server. It will only affect the objects
@@ -76,6 +75,7 @@ class Harvester(CkanCommand):
 
           To import a particular harvest source, specify its id as an argument.
           To import a particular harvest object use the -o option.
+          To import a particular guid use the -g option.
           To import a particular package use the -p option.
 
           You will need to specify the -j flag in cases where the datasets are
@@ -112,10 +112,13 @@ class Harvester(CkanCommand):
             action='store_true', default=False, help='Do not join harvest objects to existing datasets')
 
         self.parser.add_option('-o', '--harvest-object-id', dest='harvest_object_id',
-            default=False, help='Id of the harvest object to which perfom the import stage')
+            default=False, help='Id of the harvest object to which perform the import stage')
 
         self.parser.add_option('-p', '--package-id', dest='package_id',
-            default=False, help='Id of the package whose harvest object to perfom the import stage for')
+            default=False, help='Id of the package whose harvest object to perform the import stage for')
+
+        self.parser.add_option('-g', '--guid', dest='guid',
+            default=False, help='Guid of the harvest object to which perform the import stage for')
 
         self.parser.add_option('--segments', dest='segments',
             default=False, help=
@@ -271,7 +274,7 @@ class Harvester(CkanCommand):
             # Create a harvest job for the new source if not regular job.
             if not data_dict['frequency']:
                 get_action('harvest_job_create')(
-                    context, {'source_id': source['id']})
+                    context, {'source_id': source['id'], 'run': True})
                 print 'A new Harvest Job for this source has also been created'
 
         except ValidationError,e:
@@ -342,8 +345,9 @@ class Harvester(CkanCommand):
         source = get_action('harvest_source_show')(
             context, {'id': source_id_or_name})
 
+        context = {'model': model,'session':model.Session, 'user': self.admin_user['name']}
         job = get_action('harvest_job_create')(
-            context, {'source_id': source['id']})
+            context, {'source_id': source['id'], 'run': True})
 
         self.print_harvest_job(job)
         jobs = get_action('harvest_job_list')(context,{'status':u'New'})
@@ -358,27 +362,21 @@ class Harvester(CkanCommand):
 
     def job_abort(self):
         if len(self.args) >= 2:
-            source_id_or_name = unicode(self.args[1])
+            job_or_source_id_or_name = unicode(self.args[1])
         else:
-            print 'Please provide a source id'
+            print 'Please provide a job id or source name/id'
             sys.exit(1)
-        context = {'model': model, 'session': model.Session,
-                   'user': self.admin_user['name']}
-        source = get_action('harvest_source_show')(
-            context, {'id': source_id_or_name})
 
         context = {'model': model, 'user': self.admin_user['name'],
                    'session': model.Session}
-        job = get_action('harvest_job_abort')(context,
-                                              {'source_id': source['id']})
+        job = get_action('harvest_job_abort')(
+            context, {'id': job_or_source_id_or_name})
         print 'Job status: {0}'.format(job['status'])
 
     def run_harvester(self):
-        context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
-        try:
-            jobs = get_action('harvest_jobs_run')(context,{})
-        except NoNewHarvestJobError:
-            print 'There are no new harvest jobs to run.'
+        context = {'model': model, 'user': self.admin_user['name'],
+                   'session': model.Session}
+        get_action('harvest_jobs_run')(context, {})
 
     def run_test_harvest(self):
         from ckanext.harvest import queue
@@ -447,6 +445,7 @@ class Harvester(CkanCommand):
                 'source_id': source_id,
                 'harvest_object_id': self.options.harvest_object_id,
                 'package_id': self.options.package_id,
+                'guid': self.options.guid,
                 })
 
         print '%s objects reimported' % objs_count

@@ -1,9 +1,9 @@
 import factory
 import ckanext.harvest.model as harvest_model
 try:
-    from ckan.tests.factories import _get_action_user_name
-except ImportError:
     from ckan.new_tests.factories import _get_action_user_name
+except ImportError:
+    from ckan.tests.factories import _get_action_user_name
 from ckan.plugins import toolkit
 
 
@@ -53,6 +53,8 @@ class HarvestJob(factory.Factory):
         context = {'user': _get_action_user_name(kwargs)}
         if 'source_id' not in kwargs:
             kwargs['source_id'] = kwargs['source'].id
+        if 'run' not in kwargs:
+            kwargs['run'] = False
         job_dict = toolkit.get_action('harvest_job_create')(
             context, kwargs)
         if cls._return_type == 'dict':
@@ -80,6 +82,9 @@ class HarvestObject(factory.Factory):
         if 'job_id' not in kwargs:
             kwargs['job_id'] = kwargs['job'].id
             kwargs['source_id'] = kwargs['job'].source.id
+        # Remove 'job' to avoid it getting added as a HarvestObjectExtra
+        if 'job' in kwargs:
+            kwargs.pop('job')
         job_dict = toolkit.get_action('harvest_object_create')(
             context, kwargs)
         if cls._return_type == 'dict':

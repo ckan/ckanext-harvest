@@ -1,7 +1,9 @@
 import urllib
 import urllib2
+import httplib
 
 from sqlalchemy import exists
+from simplejson.scanner import JSONDecodeError
 
 from ckan.lib.base import c
 from ckan import model
@@ -36,17 +38,21 @@ class CKANHarvester(HarvesterBase):
     def _get_content(self, url):
         http_request = urllib2.Request(url=url)
 
-        api_key = self.config.get('api_key', None)
+        api_key = self.config.get('api_key')
         if api_key:
             http_request.add_header('Authorization', api_key)
 
         try:
             http_response = urllib2.urlopen(http_request)
+        except urllib2.HTTPError, e:
+            if e.getcode() == 404:
+                raise ContentNotFoundError('HTTP error: %s' % e.code)
+            else:
+                raise ContentFetchError('HTTP error: %s' % e.code)
         except urllib2.URLError, e:
-            raise ContentFetchError(
-                'Could not fetch url: "%s", URL error: %s' %
-                (url, e)
-            )
+            raise ContentFetchError('URL error: %s' % e.reason)
+        except httplib.HTTPException, e:
+            raise ContentFetchError('HTTP Exception: %s' % e)
         return http_response.read()
 
     def _get_group(self, base_url, group_name):
@@ -484,7 +490,7 @@ class CKANHarvester(HarvesterBase):
             result = self._create_or_update_package(
                 package_dict, harvest_object, package_dict_form='package_show')
 
-            return True
+            return result
         except ValidationError, e:
             self._save_object_error('Invalid package with GUID %s: %r' %
                                     (harvest_object.guid, e.error_dict),
@@ -496,6 +502,8 @@ class CKANHarvester(HarvesterBase):
 class ContentFetchError(Exception):
     pass
 
+class ContentNotFoundError(ContentFetchError):
+    pass
 
 class RemoteResourceError(Exception):
     pass
