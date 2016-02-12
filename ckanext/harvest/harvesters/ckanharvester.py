@@ -1,9 +1,9 @@
 import urllib
 import urllib2
 import httplib
+import datetime
 
 from sqlalchemy import exists
-from simplejson.scanner import JSONDecodeError
 
 from ckan.lib.base import c
 from ckan import model
@@ -179,10 +179,12 @@ class CKANHarvester(HarvesterBase):
             get_all_packages = False
 
             # Request only the datasets modified since
-            last_time = last_error_free_job.gather_started.isoformat()
+            last_time = last_error_free_job.gather_started
             # Note: SOLR works in UTC, and gather_started is also UTC, so
             # this should work as long as local and remote clocks are
-            # relatively accurate
+            # relatively accurate. Going back a little earlier, just in case.
+            last_time -= datetime.timedelta(hours=1)
+            last_time = last_time.isoformat()
             log.info('Searching for datasets modified since: %s UTC',
                      last_time)
 
@@ -253,10 +255,29 @@ class CKANHarvester(HarvesterBase):
         '''
         base_search_url = remote_ckan_base_url + self._get_search_api_offset()
         params = {'rows': '100', 'start': '0'}
+        # There is the worry that datasets will be changed whilst we are paging
+        # through them.
+        # * In SOLR 4.7 there is a cursor, but not using that yet
+        #   because few CKANs are running that version yet.
+        # * However we sort, then new names added or removed before the current
+        #   page would cause existing names on the next page to be missed or
+        #   double counted.
+        # * Another approach might be to sort by metadata_modified and always
+        #   ask for changes since (and including) the date of the last item of
+        #   the day before. However if the entire page is of the exact same
+        #   time, then you end up in an infinite loop asking for the same page.
+        # * We choose a balanced approach of sorting by ID, which means
+        #   datasets are only missed if some are removed, which is far less
+        #   likely than any being added. If some are missed then it is assumed
+        #   they will harvested the next time anyway. When datasets are added,
+        #   we are at risk of seeing datasets twice in the paging, so we detect
+        #   and remove any duplicates.
+        params['sort'] = 'id asc'
         if fq_terms:
             params['fq'] = ' '.join(fq_terms)
 
         pkg_dicts = []
+        pkg_ids = set()
         previous_content = None
         while True:
             url = base_search_url + '?' + urllib.urlencode(params)
@@ -282,6 +303,16 @@ class CKANHarvester(HarvesterBase):
             except ValueError:
                 raise SearchError('Response JSON did not contain '
                                   'result/results: %r' % response_dict)
+
+            # Weed out any datasets found on previous pages (should datasets be
+            # changing while we page)
+            ids_in_page = set(p['id'] for p in pkg_dicts_page)
+            duplicate_ids = ids_in_page & pkg_ids
+            if duplicate_ids:
+                pkg_dicts_page = [p for p in pkg_dicts_page
+                                  if p['id'] not in duplicate_ids]
+            pkg_ids |= ids_in_page
+
             pkg_dicts.extend(pkg_dicts_page)
 
             if len(pkg_dicts_page) == 0:

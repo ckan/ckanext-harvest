@@ -165,3 +165,12 @@ class TestCkanHarvester(object):
         assert_equal(result['report_status'], 'not modified')
         assert 'dataset' not in result
         assert_equal(result['errors'], [])
+
+    def test_harvest_whilst_datasets_added(self):
+        results_by_guid = run_harvest(
+            url='http://localhost:%s/datasets_added' % mock_ckan.PORT,
+            harvester=CKANHarvester())
+
+        assert_equal(sorted(results_by_guid.keys()),
+                     [mock_ckan.DATASETS[1]['id'],
+                      mock_ckan.DATASETS[0]['id']])

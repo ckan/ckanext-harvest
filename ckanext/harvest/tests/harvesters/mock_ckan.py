@@ -76,25 +76,45 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # /api/3/action/package_search?fq=metadata_modified:[2015-10-23T14:51:13.282361Z TO *]&rows=1000
         if self.path.startswith('/api/action/package_search'):
             params = self.get_url_params()
-            if params['start'] != '0':
-                datasets = []
-            elif set(params.keys()) == set(['rows', 'start']):
-                datasets = ['dataset1', DATASETS[1]['name']]
-            elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
-                    params['fq'] == '-organization:org1':
-                datasets = [DATASETS[1]['name']]
-            elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
-                    params['fq'] == 'organization:org1':
-                datasets = ['dataset1']
-            elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
-                    'metadata_modified' in params['fq']:
-                assert '+TO+' not in params['fq'], \
-                    'Spaces should not be decoded by now - seeing + means ' \
-                    'they were double encoded and SOLR doesnt like that'
-                datasets = [DATASETS[1]['name']]
+
+            if self.test_name == 'datasets_added':
+                if params['start'] == '0':
+                    # when page 1 is retrieved, the site only has 1 dataset
+                    datasets = [DATASETS[0]['name']]
+                elif params['start'] == '100':
+                    # when page 2 is retrieved, the site now has new datasets,
+                    # and so the second page has the original dataset, pushed
+                    # onto this page now, plus a new one
+                    datasets = [DATASETS[0]['name'],
+                                DATASETS[1]['name']]
+                else:
+                    datasets = []
             else:
-                return self.respond(
-                    'Not implemented search params %s' % params, status=400)
+                # ignore sort param for now
+                if 'sort' in params:
+                    del params['sort']
+                if params['start'] != '0':
+                    datasets = []
+                elif set(params.keys()) == set(['rows', 'start']):
+                    datasets = ['dataset1', DATASETS[1]['name']]
+                elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
+                        params['fq'] == '-organization:org1':
+                    datasets = [DATASETS[1]['name']]
+                elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
+                        params['fq'] == 'organization:org1':
+                    datasets = ['dataset1']
+                elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
+                        'metadata_modified' in params['fq']:
+                    assert '+TO+' not in params['fq'], \
+                        'Spaces should not be decoded by now - seeing + '\
+                        'means they were double encoded and SOLR doesnt like '\
+                        'that'
+                    datasets = [DATASETS[1]['name']]
+                else:
+                    return self.respond(
+                        'Not implemented search params %s' % params,
+                        status=400)
+
             out = {'count': len(datasets),
                    'results': [self.get_dataset(dataset_ref_)
                                for dataset_ref_ in datasets]}
