@@ -61,7 +61,7 @@ class CKANHarvester(HarvesterBase):
             content = self._get_content(url)
             return json.loads(content)
         except (ContentFetchError, ValueError):
-            log.debug('Could not fetch/decode remote group');
+            log.debug('Could not fetch/decode remote group')
             raise RemoteResourceError('Could not fetch/decode remote group')
 
     def _get_organization(self, base_url, org_name):
@@ -71,7 +71,7 @@ class CKANHarvester(HarvesterBase):
             content_dict = json.loads(content)
             return content_dict['result']
         except (ContentFetchError, ValueError, KeyError):
-            log.debug('Could not fetch/decode remote group');
+            log.debug('Could not fetch/decode remote group')
             raise RemoteResourceError('Could not fetch/decode remote organization')
 
     def _set_config(self,config_str):
@@ -201,8 +201,10 @@ class CKANHarvester(HarvesterBase):
                             url = base_rest_url + '/revision/%s' % revision_id
                             try:
                                 content = self._get_content(url)
-                            except ContentFetchError,e:
-                                self._save_gather_error('Unable to get content for URL: %s: %s' % (url, str(e)),harvest_job)
+                            except ContentFetchError, e:
+                                self._save_gather_error(
+                                    'Unable to get content for URL: %s: %s' %
+                                    (url, str(e)), harvest_job)
                                 continue
 
                             revision = json.loads(content)
@@ -332,7 +334,7 @@ class CKANHarvester(HarvesterBase):
                             validated_groups.append(group['name'])
                         else:
                             validated_groups.append(group['id'])
-                    except NotFound, e:
+                    except NotFound:
                         log.info('Group %s is not available' % group_name)
                         if remote_groups == 'create':
                             try:
@@ -376,7 +378,7 @@ class CKANHarvester(HarvesterBase):
                         data_dict = {'id': remote_org}
                         org = get_action('organization_show')(context, data_dict)
                         validated_org = org['id']
-                    except NotFound, e:
+                    except NotFound:
                         log.info('Organization %s is not available' % remote_org)
                         if remote_orgs == 'create':
                             try:
