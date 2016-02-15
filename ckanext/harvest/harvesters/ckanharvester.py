@@ -188,14 +188,13 @@ class CKANHarvester(HarvesterBase):
             # Note: SOLR works in UTC, and gather_started is also UTC, so
             # this should work as long as local and remote clocks are
             # relatively accurate. Going back a little earlier, just in case.
-            last_time -= datetime.timedelta(hours=1)
             get_changes_since = \
                 (last_time - datetime.timedelta(hours=1)).isoformat()
             log.info('Searching for datasets modified since: %s UTC',
                      get_changes_since)
 
-            fq_since_last_time = 'metadata_modified:[{last_check}Z TO *]' \
-                .format(last_check=get_changes_since)
+            fq_since_last_time = 'metadata_modified:[{since}Z TO *]' \
+                .format(since=get_changes_since)
 
             try:
                 pkg_dicts = self._search_for_datasets(
