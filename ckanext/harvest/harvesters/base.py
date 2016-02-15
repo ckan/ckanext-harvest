@@ -312,7 +312,7 @@ class HarvesterBase(SingletonPlugin):
                     new_package = p.toolkit.get_action('package_update')(context, package_dict)
 
                 else:
-                    log.info('Package with GUID %s not updated, skipping...' % harvest_object.guid)
+                    log.info('No changes to package with GUID %s, skipping...' % harvest_object.guid)
                     # NB harvest_object.current/package_id are not set
                     return 'unchanged'
 

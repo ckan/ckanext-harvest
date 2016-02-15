@@ -189,12 +189,13 @@ class CKANHarvester(HarvesterBase):
             # this should work as long as local and remote clocks are
             # relatively accurate. Going back a little earlier, just in case.
             last_time -= datetime.timedelta(hours=1)
-            last_time = last_time.isoformat()
+            get_changes_since = \
+                (last_time - datetime.timedelta(hours=1)).isoformat()
             log.info('Searching for datasets modified since: %s UTC',
-                     last_time)
+                     get_changes_since)
 
             fq_since_last_time = 'metadata_modified:[{last_check}Z TO *]' \
-                .format(last_check=last_time)
+                .format(last_check=get_changes_since)
 
             try:
                 pkg_dicts = self._search_for_datasets(
@@ -349,7 +350,8 @@ class CKANHarvester(HarvesterBase):
         # and lots of jobs)
         for job in jobs:
             for obj in job.objects:
-                if obj.current is False:
+                if obj.current is False and \
+                        obj.report_status != 'not modified':
                     # unsuccessful, so go onto the next job
                     break
             else:
