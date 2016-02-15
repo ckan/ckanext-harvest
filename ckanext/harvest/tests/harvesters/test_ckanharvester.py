@@ -1,8 +1,8 @@
 import copy
 
-from nose.tools import assert_equal, assert_raises
+from nose.tools import assert_equal
 import json
-from mock import patch
+from mock import patch, MagicMock
 
 try:
     from ckan.tests.helpers import reset_db
@@ -16,12 +16,22 @@ from ckanext.harvest.tests.factories import (HarvestSourceObj, HarvestJobObj,
                                              HarvestObjectObj)
 from ckanext.harvest.tests.lib import run_harvest
 import ckanext.harvest.model as harvest_model
-from ckanext.harvest.harvesters.ckanharvester import CKANHarvester, SearchError
+from ckanext.harvest.harvesters.ckanharvester import CKANHarvester
 
 import mock_ckan
 
 # Start CKAN-alike server we can test harvesting against it
 mock_ckan.serve()
+
+
+def was_last_job_considered_error_free():
+    last_job = model.Session.query(harvest_model.HarvestJob) \
+                    .order_by(harvest_model.HarvestJob.created.desc()) \
+                    .first()
+    job = MagicMock()
+    job.source = last_job.source
+    job.id = ''
+    return bool(CKANHarvester._last_error_free_job(job))
 
 
 class TestCkanHarvester(object):
@@ -92,6 +102,7 @@ class TestCkanHarvester(object):
         assert_equal(result['report_status'], 'added')
         assert_equal(result['dataset']['name'], mock_ckan.DATASETS[1]['name'])
         assert_equal(result['errors'], [])
+        assert was_last_job_considered_error_free()
 
     def test_harvest_twice(self):
         run_harvest(
@@ -116,6 +127,7 @@ class TestCkanHarvester(object):
 
         # the other dataset is unchanged and not harvested
         assert mock_ckan.DATASETS[0]['id'] not in result
+        assert was_last_job_considered_error_free()
 
     def test_harvest_invalid_tag(self):
         from nose.plugins.skip import SkipTest; raise SkipTest()
@@ -162,6 +174,7 @@ class TestCkanHarvester(object):
         assert_equal(result['report_status'], 'not modified')
         assert 'dataset' not in result
         assert_equal(result['errors'], [])
+        assert was_last_job_considered_error_free()
 
     def test_harvest_whilst_datasets_added(self):
         results_by_guid = run_harvest(
@@ -177,3 +190,4 @@ class TestCkanHarvester(object):
             url='http://localhost:%s/site_down' % mock_ckan.PORT,
             harvester=CKANHarvester())
         assert not results_by_guid
+        assert not was_last_job_considered_error_free()
