@@ -308,7 +308,7 @@ class HarvesterBase(SingletonPlugin):
                 harvest_object.current = True
                 harvest_object.save()
 
-            except p.toolkit.NotFound:
+            except p.toolkit.ObjectNotFound:
                 # Package needs to be created
 
                 # Get rid of auth audit on the context otherwise we'll get an
