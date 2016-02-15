@@ -1,11 +1,8 @@
 import copy
 
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_raises
 import json
 from mock import patch
-
-from nose.tools import assert_equal
-import mock
 
 try:
     from ckan.tests.helpers import reset_db
@@ -19,7 +16,7 @@ from ckanext.harvest.tests.factories import (HarvestSourceObj, HarvestJobObj,
                                              HarvestObjectObj)
 from ckanext.harvest.tests.lib import run_harvest
 import ckanext.harvest.model as harvest_model
-from ckanext.harvest.harvesters.ckanharvester import CKANHarvester
+from ckanext.harvest.harvesters.ckanharvester import CKANHarvester, SearchError
 
 import mock_ckan
 
@@ -174,3 +171,9 @@ class TestCkanHarvester(object):
         assert_equal(sorted(results_by_guid.keys()),
                      [mock_ckan.DATASETS[1]['id'],
                       mock_ckan.DATASETS[0]['id']])
+
+    def test_harvest_site_down(self):
+        results_by_guid = run_harvest(
+            url='http://localhost:%s/site_down' % mock_ckan.PORT,
+            harvester=CKANHarvester())
+        assert not results_by_guid

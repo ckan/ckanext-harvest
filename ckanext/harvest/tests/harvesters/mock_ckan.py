@@ -23,6 +23,8 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 self.test_name = None
             else:
                 self.path = re.sub('^/([^/]+)/', '/', self.path)
+        if self.test_name == 'site_down':
+            return self.respond('Site is down', status=500)
 
         # The API version is recorded and then removed from the path
         api_version = None

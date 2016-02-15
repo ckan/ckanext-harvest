@@ -2,6 +2,7 @@ import urllib
 import urllib2
 import httplib
 import datetime
+import socket
 
 from sqlalchemy import exists
 
@@ -53,6 +54,10 @@ class CKANHarvester(HarvesterBase):
             raise ContentFetchError('URL error: %s' % e.reason)
         except httplib.HTTPException, e:
             raise ContentFetchError('HTTP Exception: %s' % e)
+        except socket.error, e:
+            raise ContentFetchError('HTTP socket error: %s' % e)
+        except Exception, e:
+            raise ContentFetchError('HTTP general exception: %s' % e)
         return http_response.read()
 
     def _get_group(self, base_url, group_name):
@@ -197,10 +202,10 @@ class CKANHarvester(HarvesterBase):
                     fq_terms + [fq_since_last_time])
             except SearchError, e:
                 log.info('Searching for datasets changed since last time '
-                         'gave an error: s', e)
+                         'gave an error: %s', e)
                 get_all_packages = True
 
-            if not pkg_dicts:
+            if not get_all_packages and pkg_dicts:
                 log.info('No datasets have been updated on the remote '
                          'CKAN instance since the last harvest job %s',
                          last_time)
@@ -213,10 +218,12 @@ class CKANHarvester(HarvesterBase):
                 pkg_dicts = self._search_for_datasets(remote_ckan_base_url,
                                                       fq_terms)
             except SearchError, e:
-                log.info('Searching for all datasets gave an error: s', e)
+                log.info('Searching for all datasets gave an error: %s', e)
                 self._save_gather_error(
-                    'Unable to search remote CKAN for datasets: %s %s' % e,
+                    'Unable to search remote CKAN for datasets:%s url:%s'
+                    'terms:%s' % (e, remote_ckan_base_url, fq_terms),
                     harvest_job)
+                return None
         if not pkg_dicts:
             self._save_gather_error(
                 'No datasets found at CKAN: %s' % remote_ckan_base_url,
@@ -284,10 +291,11 @@ class CKANHarvester(HarvesterBase):
             log.debug('Searching for CKAN datasets: %s', url)
             try:
                 content = self._get_content(url)
-            except urllib2.HTTPError, e:
-                raise SearchError('Remote CKAN instance %s returned HTTP '
-                                  'error %s for search: %s' %
-                                  (remote_ckan_base_url, e.getcode(), url))
+            except ContentFetchError, e:
+                raise SearchError(
+                    'Error sending request to search remote '
+                    'CKAN instance %s using URL %r. Error: %s' %
+                    (remote_ckan_base_url, url, e))
 
             if previous_content and content == previous_content:
                 raise SearchError('The paging doesn\'t seem to work. URL: %s' %

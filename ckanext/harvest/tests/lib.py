@@ -29,6 +29,9 @@ def run_harvest_job(job, harvester):
     # queue.gather_callback, which determines the harvester and then calls
     # gather_stage. We simply call the gather_stage.
     obj_ids = queue.gather_stage(harvester, job)
+    if not isinstance(obj_ids, list):
+        # gather failed
+        return None
 
     # The object ids are put onto the fetch queue, consumed by
     # queue.fetch_callback which calls queue.fetch_and_import_stages
