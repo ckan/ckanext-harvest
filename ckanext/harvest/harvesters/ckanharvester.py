@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 
 from base import HarvesterBase
 
+
 class CKANHarvester(HarvesterBase):
     '''
     A Harvester for CKAN instances
@@ -61,20 +62,22 @@ class CKANHarvester(HarvesterBase):
             content = self._get_content(url)
             return json.loads(content)
         except (ContentFetchError, ValueError):
-            log.debug('Could not fetch/decode remote group');
+            log.debug('Could not fetch/decode remote group')
             raise RemoteResourceError('Could not fetch/decode remote group')
 
     def _get_organization(self, base_url, org_name):
-        url = base_url + self._get_action_api_offset() + '/organization_show?id=' + org_name
+        url = base_url + self._get_action_api_offset() + \
+            '/organization_show?id=' + org_name
         try:
             content = self._get_content(url)
             content_dict = json.loads(content)
             return content_dict['result']
         except (ContentFetchError, ValueError, KeyError):
-            log.debug('Could not fetch/decode remote group');
-            raise RemoteResourceError('Could not fetch/decode remote organization')
+            log.debug('Could not fetch/decode remote group')
+            raise RemoteResourceError(
+                'Could not fetch/decode remote organization')
 
-    def _set_config(self,config_str):
+    def _set_config(self, config_str):
         if config_str:
             self.config = json.loads(config_str)
             if 'api_version' in self.config:
@@ -89,10 +92,10 @@ class CKANHarvester(HarvesterBase):
             'name': 'ckan',
             'title': 'CKAN',
             'description': 'Harvests remote CKAN instances',
-            'form_config_interface':'Text'
+            'form_config_interface': 'Text'
         }
 
-    def validate_config(self,config):
+    def validate_config(self, config):
         if not config:
             return config
 
@@ -106,46 +109,48 @@ class CKANHarvester(HarvesterBase):
                     raise ValueError('api_version must be an integer')
 
             if 'default_tags' in config_obj:
-                if not isinstance(config_obj['default_tags'],list):
+                if not isinstance(config_obj['default_tags'], list):
                     raise ValueError('default_tags must be a list')
 
             if 'default_groups' in config_obj:
-                if not isinstance(config_obj['default_groups'],list):
+                if not isinstance(config_obj['default_groups'], list):
                     raise ValueError('default_groups must be a list')
 
                 # Check if default groups exist
-                context = {'model':model,'user':c.user}
+                context = {'model': model, 'user': c.user}
                 for group_name in config_obj['default_groups']:
                     try:
-                        group = get_action('group_show')(context,{'id':group_name})
-                    except NotFound,e:
+                        group = get_action('group_show')(
+                            context, {'id': group_name})
+                    except NotFound, e:
                         raise ValueError('Default group not found')
 
             if 'default_extras' in config_obj:
-                if not isinstance(config_obj['default_extras'],dict):
+                if not isinstance(config_obj['default_extras'], dict):
                     raise ValueError('default_extras must be a dictionary')
 
             if 'user' in config_obj:
                 # Check if user exists
-                context = {'model':model,'user':c.user}
+                context = {'model': model, 'user': c.user}
                 try:
-                    user = get_action('user_show')(context,{'id':config_obj.get('user')})
-                except NotFound,e:
+                    user = get_action('user_show')(
+                        context, {'id': config_obj.get('user')})
+                except NotFound:
                     raise ValueError('User not found')
 
-            for key in ('read_only','force_all'):
+            for key in ('read_only', 'force_all'):
                 if key in config_obj:
-                    if not isinstance(config_obj[key],bool):
+                    if not isinstance(config_obj[key], bool):
                         raise ValueError('%s must be boolean' % key)
 
-        except ValueError,e:
+        except ValueError, e:
             raise e
 
         return config
 
-
-    def gather_stage(self,harvest_job):
-        log.debug('In CKANHarvester gather_stage (%s)' % harvest_job.source.url)
+    def gather_stage(self, harvest_job):
+        log.debug('In CKANHarvester gather_stage (%s)',
+                  harvest_job.source.url)
         get_all_packages = True
         package_ids = []
 
@@ -284,17 +289,20 @@ class CKANHarvester(HarvesterBase):
         harvest_object.save()
         return True
 
-    def import_stage(self,harvest_object):
+
+    def import_stage(self, harvest_object):
         log.debug('In CKANHarvester import_stage')
 
-        context = {'model': model, 'session': Session, 'user': self._get_user_name()}
+        context = {'model': model, 'session': Session,
+                   'user': self._get_user_name()}
         if not harvest_object:
             log.error('No harvest object received')
             return False
 
         if harvest_object.content is None:
-            self._save_object_error('Empty content for object %s' % harvest_object.id,
-                    harvest_object, 'Import')
+            self._save_object_error('Empty content for object %s' %
+                                    harvest_object.id,
+                                    harvest_object, 'Import')
             return False
 
         self._set_config(harvest_object.job.source.config)
@@ -307,11 +315,12 @@ class CKANHarvester(HarvesterBase):
                 return True
 
             # Set default tags if needed
-            default_tags = self.config.get('default_tags',[])
+            default_tags = self.config.get('default_tags', [])
             if default_tags:
                 if not 'tags' in package_dict:
                     package_dict['tags'] = []
-                package_dict['tags'].extend([t for t in default_tags if t not in package_dict['tags']])
+                package_dict['tags'].extend(
+                    [t for t in default_tags if t not in package_dict['tags']])
 
             remote_groups = self.config.get('remote_groups', None)
             if not remote_groups in ('only_local', 'create'):
@@ -333,19 +342,19 @@ class CKANHarvester(HarvesterBase):
                         else:
                             validated_groups.append(group['id'])
                     except NotFound, e:
-                        log.info('Group %s is not available' % group_name)
+                        log.info('Group %s is not available', group_name)
                         if remote_groups == 'create':
                             try:
                                 group = self._get_group(harvest_object.source.url, group_name)
                             except RemoteResourceError:
-                                log.error('Could not get remote group %s' % group_name)
+                                log.error('Could not get remote group %s', group_name)
                                 continue
 
                             for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name']:
                                 group.pop(key, None)
 
                             get_action('group_create')(context, group)
-                            log.info('Group %s has been newly created' % group_name)
+                            log.info('Group %s has been newly created', group_name)
                             if self.api_version == 1:
                                 validated_groups.append(group['name'])
                             else:
@@ -377,7 +386,7 @@ class CKANHarvester(HarvesterBase):
                         org = get_action('organization_show')(context, data_dict)
                         validated_org = org['id']
                     except NotFound, e:
-                        log.info('Organization %s is not available' % remote_org)
+                        log.info('Organization %s is not available', remote_org)
                         if remote_orgs == 'create':
                             try:
                                 try:
@@ -390,10 +399,10 @@ class CKANHarvester(HarvesterBase):
                                 for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name', 'type']:
                                     org.pop(key, None)
                                 get_action('organization_create')(context, org)
-                                log.info('Organization %s has been newly created' % remote_org)
+                                log.info('Organization %s has been newly created', remote_org)
                                 validated_org = org['id']
                             except (RemoteResourceError, ValidationError):
-                                log.error('Could not get remote org %s' % remote_org)
+                                log.error('Could not get remote org %s', remote_org)
 
                 package_dict['owner_org'] = validated_org or local_org
 
@@ -417,12 +426,12 @@ class CKANHarvester(HarvesterBase):
                         del package_dict['extras'][key]
 
             # Set default extras if needed
-            default_extras = self.config.get('default_extras',{})
+            default_extras = self.config.get('default_extras', {})
             if default_extras:
-                override_extras = self.config.get('override_extras',False)
+                override_extras = self.config.get('override_extras', False)
                 if not 'extras' in package_dict:
                     package_dict['extras'] = {}
-                for key,value in default_extras.iteritems():
+                for key, value in default_extras.iteritems():
                     if not key in package_dict['extras'] or override_extras:
                         # Look for replacement strings
                         if isinstance(value,basestring):
@@ -466,9 +475,10 @@ class CKANHarvester(HarvesterBase):
                     pkg_role = model.PackageRole(package=package, user=user, role=model.Role.READER)
 
             return result
-        except ValidationError,e:
-            self._save_object_error('Invalid package with GUID %s: %r' % (harvest_object.guid, e.error_dict),
-                    harvest_object, 'Import')
+        except ValidationError, e:
+            self._save_object_error('Invalid package with GUID %s: %r' %
+                                    (harvest_object.guid, e.error_dict),
+                                    harvest_object, 'Import')
         except Exception, e:
             self._save_object_error('%r'%e,harvest_object,'Import')
 
