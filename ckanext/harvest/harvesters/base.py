@@ -309,7 +309,9 @@ class HarvesterBase(SingletonPlugin):
                     package_dict.setdefault('name',
                                             existing_package_dict['name'])
 
-                    new_package = p.toolkit.get_action('package_update')(context, package_dict)
+                    new_package = p.toolkit.get_action(
+                        'package_update' if package_dict_form == 'package_show'
+                        else 'package_update_rest')(context, package_dict)
 
                 else:
                     log.info('No changes to package with GUID %s, skipping...' % harvest_object.guid)
