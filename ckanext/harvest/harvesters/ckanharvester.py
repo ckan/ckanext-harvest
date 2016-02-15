@@ -205,7 +205,7 @@ class CKANHarvester(HarvesterBase):
                          'gave an error: %s', e)
                 get_all_packages = True
 
-            if not get_all_packages and pkg_dicts:
+            if not get_all_packages and not pkg_dicts:
                 log.info('No datasets have been updated on the remote '
                          'CKAN instance since the last harvest job %s',
                          last_time)
