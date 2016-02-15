@@ -140,7 +140,7 @@ class CKANHarvester(HarvesterBase):
                 try:
                     user = get_action('user_show')(
                         context, {'id': config_obj.get('user')})
-                except NotFound, e:
+                except NotFound:
                     raise ValueError('User not found')
 
             for key in ('read_only', 'force_all'):
