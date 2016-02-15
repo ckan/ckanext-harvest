@@ -8,7 +8,6 @@ from pylons import config
 from ckan import plugins as p
 from ckan import model
 from ckan.model import Session, Package, PACKAGE_NAME_MAX_LENGTH
-from ckan.logic import ValidationError, NotFound, get_action
 
 from ckan.logic.schema import default_create_package_schema
 from ckan.lib.navl.validators import ignore_missing, ignore
@@ -288,7 +287,7 @@ class HarvesterBase(SingletonPlugin):
                     context.update({'id':package_dict['id']})
                     package_dict.setdefault('name',
                             existing_package_dict['name'])
-                    new_package = get_action('package_update_rest')(context, package_dict)
+                    new_package = p.toolkit.get_action('package_update_rest')(context, package_dict)
 
                 else:
                     log.info('Package with GUID %s not updated, skipping...' % harvest_object.guid)
@@ -309,7 +308,7 @@ class HarvesterBase(SingletonPlugin):
                 harvest_object.current = True
                 harvest_object.save()
 
-            except NotFound:
+            except p.toolkit.ObjectNotFound:
                 # Package needs to be created
 
                 # Get rid of auth audit on the context otherwise we'll get an
@@ -333,13 +332,13 @@ class HarvesterBase(SingletonPlugin):
                 model.Session.execute('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
                 model.Session.flush()
 
-                new_package = get_action('package_create_rest')(context, package_dict)
+                new_package = p.toolkit.get_action('package_create_rest')(context, package_dict)
 
             Session.commit()
 
             return True
 
-        except ValidationError,e:
+        except p.toolkit.ValidationError, e:
             log.exception(e)
             self._save_object_error('Invalid package with GUID %s: %r'%(harvest_object.guid,e.error_dict),harvest_object,'Import')
         except Exception, e:
@@ -352,5 +351,5 @@ class HarvesterBase(SingletonPlugin):
         data_dict = {'id': package_dict['id']}
         package_show_context = {'model': model, 'session': Session,
                                 'ignore_auth': True}
-        return get_action('package_show')(
+        return p.toolkit.get_action('package_show')(
             package_show_context, data_dict)

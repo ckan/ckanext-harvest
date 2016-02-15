@@ -109,16 +109,19 @@ def harvest_source_clear(context, data_dict):
 
     model = context['model']
 
-    sql = '''select id from related where id in (
-              select related_id from related_dataset where dataset_id in (
-                  select package_id from harvest_object
-                  where harvest_source_id = '{harvest_source_id}'));'''.format(
-        harvest_source_id=harvest_source_id)
-    result = model.Session.execute(sql)
-    ids = []
-    for row in result:
-        ids.append(row[0])
-    related_ids = "('" + "','".join(ids) + "')"
+    # CKAN-2.6 or above: related don't exist any more
+    if toolkit.check_ckan_version(max_version='2.5.99'):
+
+        sql = '''select id from related where id in (
+                  select related_id from related_dataset where dataset_id in (
+                      select package_id from harvest_object
+                      where harvest_source_id = '{harvest_source_id}'));'''.format(
+            harvest_source_id=harvest_source_id)
+        result = model.Session.execute(sql)
+        ids = []
+        for row in result:
+            ids.append(row[0])
+        related_ids = "('" + "','".join(ids) + "')"
 
     sql = '''begin;
         update package set state = 'to_delete' where id in (
@@ -194,15 +197,27 @@ def harvest_source_clear(context, data_dict):
         select id from package where state = 'to_delete');
     delete from member where table_id in (
         select id from package where state = 'to_delete');
-    delete from related_dataset where dataset_id in (
-        select id from package where state = 'to_delete');
-    delete from related where id in {related_ids};
-    delete from package where id in (
-        select id from package where state = 'to_delete');
-    commit;
-    '''.format(
-        harvest_source_id=harvest_source_id, related_ids=related_ids)
+     '''.format(
+        harvest_source_id=harvest_source_id)
 
+    if toolkit.check_ckan_version(max_version='2.5.99'):
+        sql += '''
+        delete from related_dataset where dataset_id in (
+            select id from package where state = 'to_delete');
+        delete from related where id in {related_ids};
+        delete from package where id in (
+            select id from package where state = 'to_delete');
+        '''.format(related_ids=related_ids)
+    else:
+        # CKAN-2.6 or above: related don't exist any more
+        sql += '''
+        delete from package where id in (
+            select id from package where state = 'to_delete');
+        '''
+
+    sql += '''
+    commit;
+    '''
     model.Session.execute(sql)
 
     # Refresh the index for this source to update the status object

@@ -585,7 +585,8 @@ following steps with the one you are using.
    describe the tasks that need to be monitored. This configuration files are
    stored in ``/etc/supervisor/conf.d``.
 
-   Create a file named ``/etc/supervisor/conf.d/ckan_harvesting.conf``, and copy the following contents::
+   Create a file named ``/etc/supervisor/conf.d/ckan_harvesting.conf``, and
+   copy the following contents::
 
 
         ; ===============================
@@ -676,10 +677,11 @@ following steps with the one you are using.
 
     sudo crontab -e -u ckan
 
-   Note that we are running this command as the same user we configured the processes to be run with
-   (`ckan` in our example).
+   Note that we are running this command as the same user we configured the
+   processes to be run with (`ckan` in our example).
 
-   Paste this line into your crontab, again replacing the paths to paster and the ini file with yours::
+   Paste this line into your crontab, again replacing the paths to paster and
+   the ini file with yours::
 
     # m  h  dom mon dow   command
     */15 *  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester run --config=/etc/ckan/std/std.ini
