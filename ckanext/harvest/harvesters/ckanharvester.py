@@ -243,8 +243,8 @@ class CKANHarvester(HarvesterBase):
                     continue
                 package_ids.add(pkg_dict['id'])
 
-                log.info('Creating HarvestObject for %s %s',
-                         pkg_dict['name'], pkg_dict['id'])
+                log.debug('Creating HarvestObject for %s %s',
+                          pkg_dict['name'], pkg_dict['id'])
                 obj = HarvestObject(guid=pkg_dict['id'],
                                     job=harvest_job,
                                     content=json.dumps(pkg_dict))
