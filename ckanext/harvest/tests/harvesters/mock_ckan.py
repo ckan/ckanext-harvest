@@ -1,6 +1,7 @@
 import json
 import re
 import copy
+import urllib
 
 import SimpleHTTPServer
 import SocketServer
@@ -22,6 +23,8 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 self.test_name = None
             else:
                 self.path = re.sub('^/([^/]+)/', '/', self.path)
+        if self.test_name == 'site_down':
+            return self.respond('Site is down', status=500)
 
         # The API version is recorded and then removed from the path
         api_version = None
@@ -36,6 +39,9 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             else:
                 dataset_refs = [d['name'] for d in DATASETS]
             return self.respond_json(dataset_refs)
+        if self.path == '/api/action/package_list':
+            dataset_names = [d['name'] for d in DATASETS]
+            return self.respond_action(dataset_names)
         if self.path.startswith('/api/rest/package/'):
             dataset_ref = self.path.split('/')[-1]
             dataset = self.get_dataset(dataset_ref)
@@ -47,7 +53,7 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             dataset_ref = params['id']
             dataset = self.get_dataset(dataset_ref)
             if dataset:
-                return self.respond_json(dataset)
+                return self.respond_action(dataset)
         if self.path.startswith('/api/search/dataset'):
             params = self.get_url_params()
             if params.keys() == ['organization']:
@@ -69,6 +75,52 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 if rev['id'] == revision_ref:
                     return self.respond_json(rev)
             self.respond('Cannot find revision', status=404)
+        # /api/3/action/package_search?fq=metadata_modified:[2015-10-23T14:51:13.282361Z TO *]&rows=1000
+        if self.path.startswith('/api/action/package_search'):
+            params = self.get_url_params()
+
+            if self.test_name == 'datasets_added':
+                if params['start'] == '0':
+                    # when page 1 is retrieved, the site only has 1 dataset
+                    datasets = [DATASETS[0]['name']]
+                elif params['start'] == '100':
+                    # when page 2 is retrieved, the site now has new datasets,
+                    # and so the second page has the original dataset, pushed
+                    # onto this page now, plus a new one
+                    datasets = [DATASETS[0]['name'],
+                                DATASETS[1]['name']]
+                else:
+                    datasets = []
+            else:
+                # ignore sort param for now
+                if 'sort' in params:
+                    del params['sort']
+                if params['start'] != '0':
+                    datasets = []
+                elif set(params.keys()) == set(['rows', 'start']):
+                    datasets = ['dataset1', DATASETS[1]['name']]
+                elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
+                        params['fq'] == '-organization:org1':
+                    datasets = [DATASETS[1]['name']]
+                elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
+                        params['fq'] == 'organization:org1':
+                    datasets = ['dataset1']
+                elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
+                        'metadata_modified' in params['fq']:
+                    assert '+TO+' not in params['fq'], \
+                        'Spaces should not be decoded by now - seeing + '\
+                        'means they were double encoded and SOLR doesnt like '\
+                        'that'
+                    datasets = [DATASETS[1]['name']]
+                else:
+                    return self.respond(
+                        'Not implemented search params %s' % params,
+                        status=400)
+
+            out = {'count': len(datasets),
+                   'results': [self.get_dataset(dataset_ref_)
+                               for dataset_ref_ in datasets]}
+            return self.respond_action(out)
 
         # if we wanted to server a file from disk, then we'd call this:
         #return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
@@ -90,11 +142,13 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 return org
 
     def get_url_params(self):
-        params = self.path.split('?')[-1].split('&')
+        params_str = self.path.split('?')[-1]
+        params_unicode = urllib.unquote_plus(params_str).decode('utf8')
+        params = params_unicode.split('&')
         return dict([param.split('=') for param in params])
 
     def respond_action(self, result_dict, status=200):
-        response_dict = {'result': result_dict}
+        response_dict = {'result': result_dict, 'success': True}
         return self.respond_json(response_dict, status=status)
 
     def respond_json(self, content_dict, status=200):
@@ -141,6 +195,7 @@ DATASETS = [
      'name': 'dataset1',
      'title': 'Test Dataset1',
      'owner_org': 'org1-id',
+     'tags': [{'name': 'test-tag'}],
      'extras': []},
     {
     "id": "1c65c66a-fdec-4138-9c64-0f9bf087bcbb",

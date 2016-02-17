@@ -8,11 +8,13 @@ ckanext-harvest - Remote harvesting extension
 This extension provides a common harvesting framework for ckan extensions
 and adds a CLI and a WUI to CKAN to manage harvesting sources and jobs.
 
-Requires CKAN 2.0 or later.
-
 
 Installation
 ============
+
+This extension requires CKAN v2.0 or later on both the CKAN it is installed
+into and the CKANs it harvests. However you are unlikely to encounter a CKAN
+running a version lower than 2.0.
 
 1. The harvest extension can use two different backends. You can choose whichever
    you prefer depending on your needs, but Redis has been found to be more stable
@@ -689,6 +691,26 @@ following steps with the one you are using.
    This particular example will check for pending jobs every fifteen minutes.
    You can of course modify this periodicity, this `Wikipedia page <http://en.wikipedia.org/wiki/Cron#CRON_expression>`_
    has a good overview of the crontab syntax.
+
+Tests
+=====
+
+You can run the tests like this:
+
+    cd ckanext-harvest
+    nosetests --reset-db --ckan --with-pylons=test-core.ini ckanext/harvest/tests
+
+Here are some common errors and solutions:
+
+* ``(OperationalError) no such table: harvest_object_error u'delete from "harvest_object_error"``
+  The database has got into in a bad state. Run the tests again but with the ``--reset-db`` parameter.
+
+* ``(ProgrammingError) relation "harvest_object_extra" does not exist``
+  The database has got into in a bad state. Run the tests again but *without* the ``--reset-db`` parameter.
+
+* ``(OperationalError) near "SET": syntax error``
+  You are testing with SQLite as the database, but the CKAN Harvester needs PostgreSQL. Specify test-core.ini instead of test.ini.
+
 
 Community
 =========

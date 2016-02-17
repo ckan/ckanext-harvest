@@ -442,17 +442,21 @@ def harvest_jobs_run(context, data_dict):
     if len(jobs):
         for job in jobs:
             if job['gather_finished']:
-                objects = \
+                num_objects_in_progress = \
                     session.query(HarvestObject.id) \
                            .filter(HarvestObject.harvest_job_id == job['id']) \
                            .filter(and_((HarvestObject.state != u'COMPLETE'),
                                         (HarvestObject.state != u'ERROR'))) \
-                           .order_by(HarvestObject.import_finished.desc())
+                           .count()
 
-                if objects.count() == 0:
+                if num_objects_in_progress == 0:
                     job_obj = HarvestJob.get(job['id'])
                     job_obj.status = u'Finished'
+                    log.info('Marking job as finished %s %s',
+                             job_obj.source.url, job_obj.id)
 
+                    # save the time of finish, according to the last running
+                    # object
                     last_object = session.query(HarvestObject) \
                         .filter(HarvestObject.harvest_job_id == job['id']) \
                         .filter(HarvestObject.import_finished != None) \
@@ -463,7 +467,7 @@ def harvest_jobs_run(context, data_dict):
                     else:
                         job_obj.finished = job['gather_finished']
                     job_obj.save()
-                    log.info('Marking job as finished: %s', job_obj)
+
                     # Reindex the harvest source dataset so it has the latest
                     # status
                     get_action('harvest_source_reindex')(
