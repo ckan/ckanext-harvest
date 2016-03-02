@@ -6,7 +6,7 @@
 <div class="module-content">
 
   <p class="pull-right">
-    {{ h.nav_named_link(_('Back to job list'), 'harvest_job_list', source=source.name, class_='btn', icon='arrow-left')}}
+    {{ h.nav_link(_('Back to job list'), named_route='harvest_job_list', source=source.name, class_='btn', icon='arrow-left')}}
   </p>
 
   <h1>{{ _('Job Report') }}</h1>
