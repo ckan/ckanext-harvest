@@ -170,14 +170,16 @@ class HarvesterBase(SingletonPlugin):
         if self._user_name:
             return self._user_name
 
-        config_user_name = config.get('ckanext.harvest.user_name')
-        if config_user_name:
-            self._user_name = config_user_name
-            return self._user_name
-
         context = {'model': model,
                    'ignore_auth': True,
                    }
+
+        config_user_name = self.config.get('user')
+        if config_user_name:
+            user = p.toolkit.get_action('user_show')(context,
+                                                     {'id': config_user_name})
+            self._user_name = user['name']
+            return self._user_name
 
         # Check if 'harvest' user exists and if is a sysadmin
         try:
