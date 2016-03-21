@@ -107,7 +107,14 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
                 log.error('Harvest source not found for dataset {0}'.format(data_dict['id']))
                 return data_dict
 
-            data_dict['status'] = p.toolkit.get_action('harvest_source_show_status')(context, {'id': source.id})
+            st_action_name = 'harvest_source_show_status'
+            try:
+                status_action = p.toolkit.get_action(st_action_name)
+            except KeyError:
+                logic.clear_actions_cache()
+                status_action = p.toolkit.get_action(st_action_name)
+
+            data_dict['status'] = status_action(context, {'id': source.id})
 
         elif not 'type' in data_dict or data_dict['type'] != DATASET_TYPE_NAME:
             # This is a normal dataset, check if it was harvested and if so, add
