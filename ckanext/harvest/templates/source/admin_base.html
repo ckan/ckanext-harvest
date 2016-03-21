@@ -29,7 +29,7 @@
       </a>
     {{ '</li>' if show_li }}
 
-  {{ '<li>' if show_li }}{{ h.nav_named_link(_('View harvest source'), '{0}_read'.format(c.dataset_type), id=source.name, class_='btn', icon='eye-open')}}{{ '</li>' if show_li }}
+  {{ '<li>' if show_li }}{{ h.nav_link(_('View harvest source'), named_route='{0}_read'.format(c.dataset_type), id=source.name, class_='btn', icon='eye-open')}}{{ '</li>' if show_li }}
 {% endblock %}
 
 {# CKAN 2.0 #}
