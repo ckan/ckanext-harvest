@@ -92,7 +92,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
 
         fq = search_params.get('fq', '')
         if 'dataset_type:harvest' not in fq:
-            fq = "{0} -dataset_type:harvest".format(search_params.get('fq', ''))
+            fq = u"{0} -dataset_type:harvest".format(search_params.get('fq', ''))
             search_params.update({'fq': fq})
 
         return search_params
