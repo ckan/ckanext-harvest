@@ -97,6 +97,8 @@ def harvest_object_dictize(obj, context):
 
     return out
 
+def harvest_log_dictize(obj, context):
+    return obj.as_dict()
 
 def _get_source_status(source, context):
     '''
