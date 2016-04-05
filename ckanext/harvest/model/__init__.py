@@ -30,6 +30,7 @@ __all__ = [
     'HarvestObject', 'harvest_object_table',
     'HarvestGatherError', 'harvest_gather_error_table',
     'HarvestObjectError', 'harvest_object_error_table',
+    'HarvestLog', 'harvest_log_table'
 ]
 
 
@@ -39,6 +40,7 @@ harvest_object_table = None
 harvest_gather_error_table = None
 harvest_object_error_table = None
 harvest_object_extra_table = None
+harvest_log_table = None
 
 
 def setup():
@@ -61,6 +63,7 @@ def setup():
         harvest_gather_error_table.create()
         harvest_object_error_table.create()
         harvest_object_extra_table.create()
+        harvest_log_table.create()
 
         log.debug('Harvest tables created')
     else:
@@ -191,6 +194,11 @@ class HarvestObjectError(HarvestDomainObject):
                           if line else message
             log.debug(log_message)
 
+class HarvestLog(HarvestDomainObject):
+    '''HarvestLog objects are created each time something is logged
+       using python's standard logging module
+    '''
+    pass
 
 def harvest_object_before_insert_listener(mapper,connection,target):
     '''
@@ -212,6 +220,7 @@ def define_harvester_tables():
     global harvest_object_extra_table
     global harvest_gather_error_table
     global harvest_object_error_table
+    global harvest_log_table
 
     harvest_source_table = Table('harvest_source', metadata,
         Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
@@ -292,6 +301,13 @@ def define_harvester_tables():
         Column('line', types.Integer),
         Column('created', types.DateTime, default=datetime.datetime.utcnow),
     )
+    # Harvest Log table
+    harvest_log_table = Table('harvest_log', metadata,
+        Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
+        Column('content', types.UnicodeText, nullable=False),
+        Column('level', types.Enum('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', name='log_level')),
+        Column('created', types.DateTime, default=datetime.datetime.utcnow),
+    )
 
     mapper(
         HarvestSource,
@@ -365,6 +381,11 @@ def define_harvester_tables():
                 backref=backref('extras', cascade='all,delete-orphan')
             ),
         },
+    )
+    
+    mapper(
+        HarvestLog,
+        harvest_log_table,
     )
 
     event.listen(HarvestObject, 'before_insert', harvest_object_before_insert_listener)
