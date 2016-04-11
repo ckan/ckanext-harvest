@@ -85,6 +85,33 @@ config option (or ``default``) will be used to namespace the relevant things:
 * On Redis, it will namespace the keys used, so only the relevant instance gets them, eg
   ``site1:harvest_job_id``,  ``site1:harvest_object__id:804f114a-8f68-4e7c-b124-3eb00f66202f``
 
+7. If you want your ckan harvest logs to be exposed to the ckan API you need to add the 
+   following configuration options in your ckan configuriation file:
+
+     [loggers]
+     keys = ckan_harvester
+
+     [handlers]
+     keys = dblog
+
+     [formatters]
+     keys = dblog
+
+     [logger_ckan_harvester]
+     qualname = ckanext.harvest
+     handlers = dblog
+     level = DEBUG
+
+     [handler_dblog]
+     class = ckanext.harvest.log.DBLogHandler
+     args = ()
+     level = DEBUG
+     formatter = dblog
+
+     [formatter_dblog]
+     format = %(message)s
+
+ If you are having troubles configuring ckan logger please refer to ``test-core.ini`` 
 
 Configuration
 =============
