@@ -86,7 +86,7 @@ config option (or ``default``) will be used to namespace the relevant things:
   ``site1:harvest_job_id``,  ``site1:harvest_object__id:804f114a-8f68-4e7c-b124-3eb00f66202f``
 
 7. If you want your ckan harvest logs to be exposed to the ckan API you need to add the 
-   following configuration options in your ckan configuriation file:
+   following configuration options in your ckan configuriation file::
 
      [loggers]
 
