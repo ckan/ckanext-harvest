@@ -89,26 +89,32 @@ config option (or ``default``) will be used to namespace the relevant things:
    following configuration options in your ckan configuriation file:
 
      [loggers]
+
      keys = ckan_harvester
 
      [handlers]
+
      keys = dblog
 
      [formatters]
+
      keys = dblog
 
      [logger_ckan_harvester]
+
      qualname = ckanext.harvest
      handlers = dblog
      level = DEBUG
 
      [handler_dblog]
+
      class = ckanext.harvest.log.DBLogHandler
      args = ()
      level = DEBUG
      formatter = dblog
 
      [formatter_dblog]
+     
      format = %(message)s
 
  If you are having troubles configuring ckan logger please refer to ``test-core.ini`` 
