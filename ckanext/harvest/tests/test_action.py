@@ -253,11 +253,14 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
 
         for key in source_dict.keys():
             assert_equal(source_dict[key], result[key])
-
+            
         # Check that source was actually created
         source = harvest_model.HarvestSource.get(result['id'])
         assert_equal(source.url, source_dict['url'])
         assert_equal(source.type, source_dict['source_type'])
+
+        # New source is created so the harvest_log table should be populated
+        assert model.Session.query(harvest_model.HarvestLog).count() > 0
 
         # Trying to create a source with the same URL fails
         source_dict = self._get_source_dict()
