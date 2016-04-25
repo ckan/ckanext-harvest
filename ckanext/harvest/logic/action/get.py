@@ -314,7 +314,7 @@ def harvesters_info_show(context,data_dict):
 
 @side_effect_free
 def harvest_log_list(context,data_dict):
-    '''Returns a list of harvester log entries grouped by level.
+    '''Returns a list of harvester log entries.
 
     :param per_page: number of logs to be shown default: 100
     :param offset: use with ``per_page`` default: 0
@@ -326,22 +326,26 @@ def harvest_log_list(context,data_dict):
     model = context['model']
     session = context['session']
 
-    per_page = data_dict.get('per_page', 100)
-    offset = data_dict.get('offset', 0)
-    level = data_dict.get('level', False)
+    try:
+        per_page = int(data_dict.get('per_page', 100))
+    except ValueError:
+        per_page = 100
+    try:
+        offset = int(data_dict.get('offset', 0))
+    except ValueError:
+        offset = 0
+    
+    level = data_dict.get('level', None)
 
     query = session.query(HarvestLog)
 
-    if level:
+    if level is not None:
         query = query.filter(HarvestLog.level==level.upper())
 
-    query = query.order_by(HarvestLog.level.desc(), HarvestLog.created.desc())
+    query = query.order_by(HarvestLog.created.desc())
     logs = query.offset(offset).limit(per_page).all()
-
-    out = dict()    
-    for k, g in groupby(logs, lambda l: l.level):
-        out.update({k: [harvest_log_dictize(obj, context) for obj in g]})
-        
+    
+    out = [harvest_log_dictize(obj, context) for obj in logs]        
     return out
 
 def _get_sources_for_user(context,data_dict):

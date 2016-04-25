@@ -12,5 +12,5 @@ class DBLogHandler(Handler, object):
             msg = self.format(record)
             obj = HarvestLog(level=level, content=msg)
             obj.save()
-        except:
+        except Exception as exc:
             pass

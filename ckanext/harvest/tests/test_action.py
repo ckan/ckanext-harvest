@@ -259,9 +259,6 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
         assert_equal(source.url, source_dict['url'])
         assert_equal(source.type, source_dict['source_type'])
 
-        # New source is created so the harvest_log table should be populated
-        assert model.Session.query(harvest_model.HarvestLog).count() > 0
-
         # Trying to create a source with the same URL fails
         source_dict = self._get_source_dict()
         source_dict['name'] = 'test-source-action-new'

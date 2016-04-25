@@ -98,7 +98,10 @@ def harvest_object_dictize(obj, context):
     return out
 
 def harvest_log_dictize(obj, context):
-    return obj.as_dict()
+    out = obj.as_dict()
+    del out['id']
+    
+    return out
 
 def _get_source_status(source, context):
     '''
