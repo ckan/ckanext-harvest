@@ -8,6 +8,7 @@ from sqlalchemy import Table
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import types
+from sqlalchemy import Index
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import backref, relation
 from sqlalchemy.exc import InvalidRequestError
@@ -85,6 +86,12 @@ def setup():
             log.debug('Creating harvest source datasets for %i existing sources', len(sources_to_migrate))
             sources_to_migrate = [s[0] for s in sources_to_migrate]
             migrate_v3_create_datasets(sources_to_migrate)
+
+        # Check if harvest_object has a index
+        index_names = [index['name'] for index in inspector.get_indexes("harvest_object")]
+        if not "harvest_job_id_idx" in index_names:
+            log.debug('Creating index for harvest_object')
+            Index("harvest_job_id_idx", harvest_object_table.c.harvest_job_id).create()
 
 
 class HarvestError(Exception):
@@ -266,6 +273,7 @@ def define_harvester_tables():
         Column('package_id', types.UnicodeText, ForeignKey('package.id', deferrable=True), nullable=True),
         # report_status: 'added', 'updated', 'not modified', 'deleted', 'errored'
         Column('report_status', types.UnicodeText, nullable=True),
+        Index('harvest_job_id_idx', 'harvest_job_id'),
     )
 
     # New table
