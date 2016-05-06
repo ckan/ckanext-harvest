@@ -3,6 +3,7 @@ from pprint import pprint
 
 from ckan import model
 from ckan.logic import get_action, ValidationError
+from ckan.plugins import toolkit
 
 from ckan.lib.cli import CkanCommand
 
@@ -66,6 +67,11 @@ class Harvester(CkanCommand):
         - removes all jobs from fetch and gather queue
           WARNING: if using Redis, this command purges all data in the current
           Redis database
+          
+      harvester clean_harvest_log
+        - Clean-up mechanism for the harvest log table.
+          You can configure the time frame through the configuration
+          parameter `ckan.harvest.log_timeframe`. The default time frame is 30 days
 
       harvester [-j] [-o|-g|-p {id/guid}] [--segments={segments}] import [{source-id}]
         - perform the import stage with the last fetched objects, for a certain
@@ -87,7 +93,7 @@ class Harvester(CkanCommand):
 
       harvester job-all
         - create new harvest jobs for all active sources.
-
+https://www.facebook.com/
       harvester reindex
         - reindexes the harvest source datasets
 
@@ -192,6 +198,8 @@ class Harvester(CkanCommand):
             pprint(harvesters_info)
         elif cmd == 'reindex':
             self.reindex()
+        elif cmd == 'clean_harvest_log':
+            self.clean_harvest_log()
         else:
             print 'Command %s not recognized' % cmd
 
@@ -513,3 +521,14 @@ class Harvester(CkanCommand):
     def is_singular(self, sequence):
         return len(sequence) == 1
 
+    def clean_harvest_log(self):
+        from datetime import datetime, timedelta
+        from pylons import config
+        from ckanext.harvest.model import clean_harvest_log
+        
+        # Log time frame - in days
+        log_timeframe = toolkit.asint(config.get('ckan.harvest.log_timeframe', 30))
+        condition = datetime.utcnow() - timedelta(days=log_timeframe)
+        
+        # Delete logs older then the given date
+        clean_harvest_log(condition=condition)        

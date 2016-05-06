@@ -566,3 +566,14 @@ def migrate_v3_create_datasets(source_ids=None):
             log.info('Created new package for source {0} ({1})'.format(source.id, source.url))
         except logic.ValidationError,e:
             log.error('Validation Error: %s' % str(e.error_summary))
+            
+def clean_harvest_log(condition):
+    Session.query(HarvestLog).filter(HarvestLog.created <= condition)\
+                                .delete(synchronize_session=False)
+    try:
+        Session.commit()
+    except InvalidRequestError:
+        Session.rollback()
+        log.error('An error occurred while trying to clean-up the harvest log table')
+        
+    log.info('Harvest log table clean-up finished successfully')
