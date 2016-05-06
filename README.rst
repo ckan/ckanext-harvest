@@ -197,6 +197,11 @@ The following operations can be run from the command line using the
           WARNING: if using Redis, this command purges all data in the current
           Redis database
 
+      harvester clean_harvest_log
+        - Clean-up mechanism for the harvest log table.
+          You can configure the time frame through the configuration
+          parameter 'ckan.harvest.log_timeframe'. The default time frame is 30 days
+
       harvester [-j] [-o] [--segments={segments}] import [{source-id}]
         - perform the import stage with the last fetched objects, for a certain
           source or a single harvest object. Please note that no objects will
