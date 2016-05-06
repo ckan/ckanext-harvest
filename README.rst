@@ -58,6 +58,12 @@ running a version lower than 2.0.
 
      ckan.harvest.mq.type = redis
 
+7. Setup time frame(in days) for the clean-up mechanism with the following config parameter::
+
+     ckan.harvest.log_timeframe = 10
+
+   If no value is present the default is 30 days.
+
 There are a number of configuration options available for the backends. These don't need to
 be modified at all if you are using the default Redis or RabbitMQ install (step 1). The list
 below shows the available options and their default values:
