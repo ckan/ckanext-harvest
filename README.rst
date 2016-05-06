@@ -725,6 +725,19 @@ following steps with the one you are using.
    You can of course modify this periodicity, this `Wikipedia page <http://en.wikipedia.org/wiki/Cron#CRON_expression>`_
    has a good overview of the crontab syntax.
 
+5. In order to setup clean-up mechanism for the harvest log one more cron job needs to be scheduled::
+
+    sudo crontab -e -u ckan
+
+   Paste this line into your crontab, again replacing the paths to paster and
+   the ini file with yours::
+
+    # m  h  dom mon dow   command
+      0  5  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester clean_harvest_log --config=/etc/ckan/std/std.ini
+
+   This particular example will perform clean-up each day at 05 AM.
+   You can tweak the value according to your needs.
+
 Tests
 =====
 
