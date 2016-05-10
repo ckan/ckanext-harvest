@@ -5,7 +5,6 @@ import logging
 import datetime
 
 from pylons import config
-from paste.deploy.converters import asbool
 from sqlalchemy import and_, or_
 
 from ckan.lib.search.index import PackageSearchIndex
@@ -249,15 +248,26 @@ def harvest_source_index_clear(context, data_dict):
     conn = make_connection()
     query = ''' +%s:"%s" +site_id:"%s" ''' % (
         'harvest_source_id', harvest_source_id, config.get('ckan.site_id'))
-    try:
-        conn.delete_query(query)
-        if asbool(config.get('ckan.search.solr_commit', 'true')):
-            conn.commit()
-    except Exception, e:
-        log.exception(e)
-        raise SearchIndexError(e)
-    finally:
-        conn.close()
+
+    solr_commit = toolkit.asbool(config.get('ckan.search.solr_commit', 'true'))
+    if toolkit.check_ckan_version(max_version='2.5.99'):
+        # conn is solrpy
+        try:
+            conn.delete_query(query)
+            if solr_commit:
+                conn.commit()
+        except Exception, e:
+            log.exception(e)
+            raise SearchIndexError(e)
+        finally:
+            conn.close()
+    else:
+        # conn is pysolr
+        try:
+            conn.delete(q=query, commit=solr_commit)
+        except Exception, e:
+            log.exception(e)
+            raise SearchIndexError(e)
 
     return {'id': harvest_source_id}
 
