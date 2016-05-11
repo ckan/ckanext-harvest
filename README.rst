@@ -58,51 +58,49 @@ running a version lower than 2.0.
 
      ckan.harvest.mq.type = redis
 
-7. If you want your ckan harvest logs to be exposed to the ckan API you need to properly 
-   configure the logger. The default configuration logs everything to the database with 
-   log level ``DEBUG``. If you want to modify the database logger configure the following 
-   parameter::
+7. If you want your ckan harvest logs to be exposed to the CKAN API you need to properly 
+   configure the logger. The default configuration logs everything in the database with 
+   log level ``DEBUG``. If you want to modify the default logging mechanism set the following 
+   parameter in your configuration file::
 
-    ``ckan.harvest.log_scope = 0``
+     ckan.harvest.log_scope = 0
 
-    * Log scope settings:
+ * -1 - Do not log in the database
+ *  0 - Log everything - DEFAULT
+ *  1 - model, logic.action, logic.validators, harvesters
+ *  2 - model, logic.action, logic.validators
+ *  3 - model, logic.action
+ *  4 - logic.action
+ *  5 - model
+ *  6 - plugin
+ *  7 - harvesters
 
-        - ``-1`` Do not log to the database
-        - ``0``  Log everything - Default
-        - ``1``  model, logic.action, logic.validators, harvesters
-        - ``2``  model, logic.action, logic.validators
-        - ``3``  model, logic.action
-        - ``4``  logic.action
-        - ``5``  model
-        - ``6``  plugin
-        - ``7``  harvesters
+Additionally you can configure the logger the following way::
 
-    Additionally you can configure the logger in the following way::
+ [loggers]
+ keys = ckan_harvester
 
-       [loggers]
-       keys = ckan_harvester
+ [handlers]
+ keys = dblog
 
-       [handlers]
-       keys = dblog
+ [formatters]
+ keys = dblog
 
-       [formatters]
-       keys = dblog
+ [logger_ckan_harvester]
+ qualname = ckanext.harvest
+ handlers = dblog
+ level = DEBUG
 
-       [logger_ckan_harvester]
-       qualname = ckanext.harvest
-       handlers = dblog
-       level = DEBUG
+ [handler_dblog]
+ class = ckanext.harvest.log.DBLogHandler
+ args = ()
+ level = DEBUG
+ formatter = dblog
 
-       [handler_dblog]
-       class = ckanext.harvest.log.DBLogHandler
-       args = ()
-       level = DEBUG
-       formatter = dblog
+ [formatter_dblog]
+ format = %(message)s
 
-       [formatter_dblog]
-       format = %(message)s
-
- If you are having troubles configuring ckan logger please refer to ``test-core.ini`` 
+If you are having troubles configuring harvest logger please refer to ``test-core.ini`` 
 
 8. Setup time frame(in days) for the clean-up mechanism with the following config parameter::
 
