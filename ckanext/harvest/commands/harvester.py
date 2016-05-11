@@ -93,7 +93,7 @@ class Harvester(CkanCommand):
 
       harvester job-all
         - create new harvest jobs for all active sources.
-https://www.facebook.com/
+
       harvester reindex
         - reindexes the harvest source datasets
 
@@ -531,4 +531,4 @@ https://www.facebook.com/
         condition = datetime.utcnow() - timedelta(days=log_timeframe)
         
         # Delete logs older then the given date
-        clean_harvest_log(condition=condition)        
+        clean_harvest_log(condition=condition)

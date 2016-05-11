@@ -64,7 +64,7 @@ def setup():
         harvest_object_error_table.create()
         harvest_object_extra_table.create()
         harvest_log_table.create()
-
+        
         log.debug('Harvest tables created')
     else:
         from ckan.model.meta import engine
@@ -88,6 +88,10 @@ def setup():
             log.debug('Creating harvest source datasets for %i existing sources', len(sources_to_migrate))
             sources_to_migrate = [s[0] for s in sources_to_migrate]
             migrate_v3_create_datasets(sources_to_migrate)
+            
+        # Check if harvest_log table exist - needed for existing users
+        if not 'harvest_log' in inspector.get_table_names():
+            harvest_log_table.create()
 
 
 class HarvestError(Exception):

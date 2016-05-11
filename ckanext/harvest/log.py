@@ -1,10 +1,10 @@
-from logging import Handler
+from logging import Handler, NOTSET
 
 from ckanext.harvest.model import HarvestLog
 
-class DBLogHandler(Handler, object):
-    def __init__(self):
-        super(DBLogHandler,self).__init__()
+class DBLogHandler(Handler):
+    def __init__(self, level=NOTSET):
+        super(DBLogHandler,self).__init__(level=level)
 
     def emit(self, record):
         try:
