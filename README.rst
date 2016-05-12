@@ -108,6 +108,12 @@ If you are having troubles configuring harvest logger please refer to ``test-cor
 
    If no value is present the default is 30 days.
 
+9. Setup log level for the database logger::
+
+     ckan.harvest.log_level = info
+
+   If no log level is set the default is ``debug``.
+
 There are a number of configuration options available for the backends. These don't need to
 be modified at all if you are using the default Redis or RabbitMQ install (step 1). The list
 below shows the available options and their default values:
