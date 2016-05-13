@@ -1,7 +1,19 @@
 from setuptools import setup, find_packages
 import sys, os
+import codecs
+import os.path
 
 version = '0.2'
+
+# Read requirements from {pip,dev}-requirements.txt
+HERE = os.path.dirname(__file__)
+PIP_REQUIREMENTS_TXT = os.path.join(HERE, 'pip-requirements.txt')
+DEV_REQUIREMENTS_TXT = os.path.join(HERE, 'dev-requirements.txt')
+with codecs.open(PIP_REQUIREMENTS_TXT, encoding='utf8') as f:
+    install_requires = f.readlines()
+with codecs.open(DEV_REQUIREMENTS_TXT, encoding='utf8') as f:
+    tests_require = f.readlines()
+
 
 setup(
 	name='ckanext-harvest',
@@ -19,14 +31,8 @@ setup(
 	namespace_packages=['ckanext', 'ckanext.harvest'],
 	include_package_data=True,
 	zip_safe=False,
-	install_requires=[
-	        # dependencies are specified in pip-requirements.txt 
-	        # instead of here
-	],
-	tests_require=[
-		'nose',
-		'mock',
-	],
+	install_requires=install_requires,
+	tests_require=tests_require,
 	test_suite = 'nose.collector',
 	entry_points=\
 	"""

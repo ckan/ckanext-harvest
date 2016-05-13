@@ -44,16 +44,12 @@ running a version lower than 2.0.
 
      (pyenv) $ pip install -e git+https://github.com/ckan/ckanext-harvest.git#egg=ckanext-harvest
 
-4. Install the python modules required by the extension::
-
-     (pyenv) $ pip install -r pip-requirements.txt
-
-5. Make sure the CKAN configuration ini file contains the harvest main plugin, as
+4. Make sure the CKAN configuration ini file contains the harvest main plugin, as
    well as the harvester for CKAN instances if you need it (included with the extension)::
 
      ckan.plugins = harvest ckan_harvester
 
-6. If you haven't done it yet on the previous step, define the backend that you
+5. If you haven't done it yet on the previous step, define the backend that you
    are using with the ``ckan.harvest.mq.type`` option (it defaults to ``amqp``)::
 
      ckan.harvest.mq.type = redis
