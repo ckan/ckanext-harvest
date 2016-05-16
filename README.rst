@@ -58,61 +58,6 @@ running a version lower than 2.0.
 
      ckan.harvest.mq.type = redis
 
-7. If you want your ckan harvest logs to be exposed to the CKAN API you need to properly 
-   configure the logger. The default configuration logs everything in the database with 
-   log level ``DEBUG``. If you want to modify the default logging mechanism set the following 
-   parameter in your configuration file::
-
-     ckan.harvest.log_scope = 0
-
- * -1 - Do not log in the database
- *  0 - Log everything - DEFAULT
- *  1 - model, logic.action, logic.validators, harvesters
- *  2 - model, logic.action, logic.validators
- *  3 - model, logic.action
- *  4 - logic.action
- *  5 - model
- *  6 - plugin
- *  7 - harvesters
-
-Additionally you can configure the logger the following way::
-
- [loggers]
- keys = ckan_harvester
-
- [handlers]
- keys = dblog
-
- [formatters]
- keys = dblog
-
- [logger_ckan_harvester]
- qualname = ckanext.harvest
- handlers = dblog
- level = DEBUG
-
- [handler_dblog]
- class = ckanext.harvest.log.DBLogHandler
- args = ()
- level = DEBUG
- formatter = dblog
-
- [formatter_dblog]
- format = %(message)s
-
-If you are having troubles configuring harvest logger please refer to ``test-core.ini`` 
-
-8. Setup time frame(in days) for the clean-up mechanism with the following config parameter::
-
-     ckan.harvest.log_timeframe = 10
-
-   If no value is present the default is 30 days.
-
-9. Setup log level for the database logger::
-
-     ckan.harvest.log_level = info
-
-   If no log level is set the default is ``debug``.
 
 There are a number of configuration options available for the backends. These don't need to
 be modified at all if you are using the default Redis or RabbitMQ install (step 1). The list
@@ -156,6 +101,64 @@ Finally, restart CKAN to have the changes take affect:
 After installation, the harvest source listing should be available under /harvest, eg:
 
     http://localhost:5000/harvest
+
+Database logger configuration(optional)
+=======================================
+
+1. Logging to the database is disabled by default. If you want your ckan harvest logs 
+   to be exposed to the CKAN API you need to properly configure the logger
+   with the following configuration parameter::
+
+     ckan.harvest.log_scope = 0
+
+ * -1 - Do not log in the database - DEFAULT
+ *  0 - Log everything
+ *  1 - model, logic.action, logic.validators, harvesters
+ *  2 - model, logic.action, logic.validators
+ *  3 - model, logic.action
+ *  4 - logic.action
+ *  5 - model
+ *  6 - plugin
+ *  7 - harvesters
+
+Additionally you can configure the logger the following way::
+
+ [loggers]
+ keys = ckan_harvester
+
+ [handlers]
+ keys = dblog
+
+ [formatters]
+ keys = dblog
+
+ [logger_ckan_harvester]
+ qualname = ckanext.harvest
+ handlers = dblog
+ level = DEBUG
+
+ [handler_dblog]
+ class = ckanext.harvest.log.DBLogHandler
+ args = ()
+ level = DEBUG
+ formatter = dblog
+
+ [formatter_dblog]
+ format = %(message)s
+
+If you are having troubles configuring harvest logger please refer to ``test-core.ini`` 
+
+2. Setup time frame(in days) for the clean-up mechanism with the following config parameter::
+
+     ckan.harvest.log_timeframe = 10
+
+   If no value is present the default is 30 days.
+
+3. Setup log level for the database logger::
+
+     ckan.harvest.log_level = info
+
+   If no log level is set the default is ``debug``.
 
 
 Command line interface
