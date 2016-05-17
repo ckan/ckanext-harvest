@@ -1,4 +1,5 @@
 import logging
+from itertools import groupby
 from sqlalchemy import or_
 from ckan.model import User
 import datetime
@@ -12,10 +13,11 @@ from ckan.logic import NotFound, check_access, side_effect_free
 
 from ckanext.harvest import model as harvest_model
 
-from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject)
+from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject, HarvestLog)
 from ckanext.harvest.logic.dictization import (harvest_source_dictize,
                                                harvest_job_dictize,
-                                               harvest_object_dictize)
+                                               harvest_object_dictize,
+                                               harvest_log_dictize)
 
 log = logging.getLogger(__name__)
 
@@ -309,6 +311,42 @@ def harvesters_info_show(context,data_dict):
         available_harvesters.append(info)
 
     return available_harvesters
+
+@side_effect_free
+def harvest_log_list(context,data_dict):
+    '''Returns a list of harvester log entries.
+
+    :param per_page: number of logs to be shown default: 100
+    :param offset: use with ``per_page`` default: 0
+    :param level: filter log entries by level(debug, info, warning, error, critical)
+    '''
+
+    check_access('harvest_log_list', context, data_dict)
+
+    model = context['model']
+    session = context['session']
+
+    try:
+        per_page = int(data_dict.get('per_page', 100))
+    except ValueError:
+        per_page = 100
+    try:
+        offset = int(data_dict.get('offset', 0))
+    except ValueError:
+        offset = 0
+    
+    level = data_dict.get('level', None)
+
+    query = session.query(HarvestLog)
+
+    if level is not None:
+        query = query.filter(HarvestLog.level==level.upper())
+
+    query = query.order_by(HarvestLog.created.desc())
+    logs = query.offset(offset).limit(per_page).all()
+    
+    out = [harvest_log_dictize(obj, context) for obj in logs]        
+    return out
 
 def _get_sources_for_user(context,data_dict):
 

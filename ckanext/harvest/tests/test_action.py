@@ -253,7 +253,7 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
 
         for key in source_dict.keys():
             assert_equal(source_dict[key], result[key])
-
+            
         # Check that source was actually created
         source = harvest_model.HarvestSource.get(result['id'])
         assert_equal(source.url, source_dict['url'])
@@ -502,3 +502,40 @@ class TestHarvestObject(unittest.TestCase):
 
         self.assertRaises(toolkit.ValidationError, harvest_object_create,
                           context, data_dict)
+
+          
+class TestHarvestDBLog(unittest.TestCase):
+    @classmethod
+    def setup_class(cls):
+        reset_db()
+        harvest_model.setup()
+        
+    def test_harvest_db_logger(self):
+        # Create source and check if harvest_log table is populated
+        data_dict = SOURCE_DICT.copy()
+        data_dict['source_type'] = 'test'
+        source = factories.HarvestSourceObj(**data_dict)
+        content = 'Harvest source created: %s' % source.id
+        log = harvest_model.Session.query(harvest_model.HarvestLog).\
+                filter(harvest_model.HarvestLog.content==content).first()
+                
+        self.assertIsNotNone(log)
+        self.assertEqual(log.level, 'INFO')
+        
+        context = {
+            'model': model,
+            'session': model.Session,
+            'ignore_auth': True,
+        }
+
+        data = toolkit.get_action('harvest_log_list')(context, {})
+        self.assertTrue(len(data) > 0)
+        self.assertIn('level', data[0])
+        self.assertIn('content', data[0])
+        self.assertIn('created', data[0])
+        self.assertTrue(data[0]['created'] > data[1]['created'])
+        
+        per_page = 1
+        data = toolkit.get_action('harvest_log_list')(context, {'level': 'info', 'per_page': per_page})
+        self.assertEqual(len(data), per_page)
+        self.assertEqual(data[0]['level'], 'INFO')

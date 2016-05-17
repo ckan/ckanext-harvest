@@ -58,6 +58,7 @@ running a version lower than 2.0.
 
      ckan.harvest.mq.type = redis
 
+
 There are a number of configuration options available for the backends. These don't need to
 be modified at all if you are using the default Redis or RabbitMQ install (step 1). The list
 below shows the available options and their default values:
@@ -100,6 +101,37 @@ Finally, restart CKAN to have the changes take affect:
 After installation, the harvest source listing should be available under /harvest, eg:
 
     http://localhost:5000/harvest
+
+Database logger configuration(optional)
+=======================================
+
+1. Logging to the database is disabled by default. If you want your ckan harvest logs 
+   to be exposed to the CKAN API you need to properly configure the logger
+   with the following configuration parameter::
+
+     ckan.harvest.log_scope = 0
+
+ * -1 - Do not log in the database - DEFAULT
+ *  0 - Log everything
+ *  1 - model, logic.action, logic.validators, harvesters
+ *  2 - model, logic.action, logic.validators
+ *  3 - model, logic.action
+ *  4 - logic.action
+ *  5 - model
+ *  6 - plugin
+ *  7 - harvesters
+
+2. Setup time frame(in days) for the clean-up mechanism with the following config parameter::
+
+     ckan.harvest.log_timeframe = 10
+
+   If no value is present the default is 30 days.
+
+3. Setup log level for the database logger::
+
+     ckan.harvest.log_level = info
+
+   If no log level is set the default is ``debug``.
 
 
 Command line interface
@@ -163,6 +195,11 @@ The following operations can be run from the command line using the
         - removes all jobs from fetch and gather queue
           WARNING: if using Redis, this command purges all data in the current
           Redis database
+
+      harvester clean_harvest_log
+        - Clean-up mechanism for the harvest log table.
+          You can configure the time frame through the configuration
+          parameter 'ckan.harvest.log_timeframe'. The default time frame is 30 days
 
       harvester [-j] [-o] [--segments={segments}] import [{source-id}]
         - perform the import stage with the last fetched objects, for a certain
@@ -691,6 +728,19 @@ following steps with the one you are using.
    This particular example will check for pending jobs every fifteen minutes.
    You can of course modify this periodicity, this `Wikipedia page <http://en.wikipedia.org/wiki/Cron#CRON_expression>`_
    has a good overview of the crontab syntax.
+
+5. In order to setup clean-up mechanism for the harvest log one more cron job needs to be scheduled::
+
+    sudo crontab -e -u ckan
+
+   Paste this line into your crontab, again replacing the paths to paster and
+   the ini file with yours::
+
+    # m  h  dom mon dow   command
+      0  5  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester clean_harvest_log --config=/etc/ckan/std/std.ini
+
+   This particular example will perform clean-up each day at 05 AM.
+   You can tweak the value according to your needs.
 
 Tests
 =====

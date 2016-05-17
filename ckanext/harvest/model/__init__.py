@@ -31,6 +31,7 @@ __all__ = [
     'HarvestObject', 'harvest_object_table',
     'HarvestGatherError', 'harvest_gather_error_table',
     'HarvestObjectError', 'harvest_object_error_table',
+    'HarvestLog', 'harvest_log_table'
 ]
 
 
@@ -40,6 +41,7 @@ harvest_object_table = None
 harvest_gather_error_table = None
 harvest_object_error_table = None
 harvest_object_extra_table = None
+harvest_log_table = None
 
 
 def setup():
@@ -62,7 +64,8 @@ def setup():
         harvest_gather_error_table.create()
         harvest_object_error_table.create()
         harvest_object_extra_table.create()
-
+        harvest_log_table.create()
+        
         log.debug('Harvest tables created')
     else:
         from ckan.model.meta import engine
@@ -86,6 +89,10 @@ def setup():
             log.debug('Creating harvest source datasets for %i existing sources', len(sources_to_migrate))
             sources_to_migrate = [s[0] for s in sources_to_migrate]
             migrate_v3_create_datasets(sources_to_migrate)
+            
+        # Check if harvest_log table exist - needed for existing users
+        if not 'harvest_log' in inspector.get_table_names():
+            harvest_log_table.create()
 
         # Check if harvest_object has a index
         index_names = [index['name'] for index in inspector.get_indexes("harvest_object")]
@@ -198,6 +205,11 @@ class HarvestObjectError(HarvestDomainObject):
                           if line else message
             log.debug(log_message)
 
+class HarvestLog(HarvestDomainObject):
+    '''HarvestLog objects are created each time something is logged
+       using python's standard logging module
+    '''
+    pass
 
 def harvest_object_before_insert_listener(mapper,connection,target):
     '''
@@ -219,6 +231,7 @@ def define_harvester_tables():
     global harvest_object_extra_table
     global harvest_gather_error_table
     global harvest_object_error_table
+    global harvest_log_table
 
     harvest_source_table = Table('harvest_source', metadata,
         Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
@@ -300,6 +313,13 @@ def define_harvester_tables():
         Column('line', types.Integer),
         Column('created', types.DateTime, default=datetime.datetime.utcnow),
     )
+    # Harvest Log table
+    harvest_log_table = Table('harvest_log', metadata,
+        Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
+        Column('content', types.UnicodeText, nullable=False),
+        Column('level', types.Enum('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', name='log_level')),
+        Column('created', types.DateTime, default=datetime.datetime.utcnow),
+    )
 
     mapper(
         HarvestSource,
@@ -373,6 +393,11 @@ def define_harvester_tables():
                 backref=backref('extras', cascade='all,delete-orphan')
             ),
         },
+    )
+    
+    mapper(
+        HarvestLog,
+        harvest_log_table,
     )
 
     event.listen(HarvestObject, 'before_insert', harvest_object_before_insert_listener)
@@ -553,3 +578,14 @@ def migrate_v3_create_datasets(source_ids=None):
             log.info('Created new package for source {0} ({1})'.format(source.id, source.url))
         except logic.ValidationError,e:
             log.error('Validation Error: %s' % str(e.error_summary))
+            
+def clean_harvest_log(condition):
+    Session.query(HarvestLog).filter(HarvestLog.created <= condition)\
+                                .delete(synchronize_session=False)
+    try:
+        Session.commit()
+    except InvalidRequestError:
+        Session.rollback()
+        log.error('An error occurred while trying to clean-up the harvest log table')
+        
+    log.info('Harvest log table clean-up finished successfully')

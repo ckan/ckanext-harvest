@@ -11,3 +11,4 @@ development.ini
 *.sw?
 *~
 node_modules
+*.project

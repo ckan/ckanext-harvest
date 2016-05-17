@@ -19,6 +19,7 @@ from ckanext.harvest import logic as harvest_logic
 
 from ckanext.harvest.model import setup as model_setup
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
+from ckanext.harvest.log import DBLogHandler
 
 
 
@@ -217,6 +218,9 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
 
         # Setup harvest model
         model_setup()
+        
+        # Configure database logger
+        _configure_db_logger(config)
 
         self.startup = False
 
@@ -463,3 +467,57 @@ def _delete_harvest_source_object(context, data_dict):
     log.debug('Harvest source %s deleted', source_id)
 
     return source
+
+def _configure_db_logger(config):
+    # Log scope
+    # 
+    # -1 - do not log to the database
+    #  0 - log everything
+    #  1 - model, logic.action, logic.validators, harvesters
+    #  2 - model, logic.action, logic.validators
+    #  3 - model, logic.action
+    #  4 - logic.action
+    #  5 - model
+    #  6 - plugin
+    #  7 - harvesters
+    #
+    scope = p.toolkit.asint(config.get('ckan.harvest.log_scope', -1))
+    if scope == -1:
+        return
+    
+    parent_logger = 'ckanext.harvest'
+    children = ['plugin', 'model', 'logic.action.create', 'logic.action.delete', 
+                'logic.action.get',  'logic.action.patch', 'logic.action.update', 
+                'logic.validators', 'harvesters.base', 'harvesters.ckanharvester']
+    
+    children_ = {0: children, 1: children[1:], 2: children[1:-2],
+                 3: children[1:-3], 4: children[2:-3], 5: children[1:2],
+                 6: children[:1], 7: children[-2:]}
+    
+    # Get log level from config param - default: DEBUG
+    from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
+    level = config.get('ckan.harvest.log_level', 'debug').upper()
+    if level == 'DEBUG':
+        level = DEBUG
+    elif level == 'INFO':
+        level = INFO
+    elif level == 'WARNING':
+        level = WARNING
+    elif level == 'ERROR':
+        level = ERROR
+    elif level == 'CRITICAL':
+        level = CRITICAL
+    else:
+        level = DEBUG
+
+    loggers = children_.get(scope)
+    
+    # Get root logger and set db handler
+    logger = getLogger(parent_logger)
+    if scope < 1:
+        logger.addHandler(DBLogHandler(level=level))
+
+    # Set db handler to all child loggers
+    for _ in loggers:
+        child_logger = logger.getChild(_)
+        child_logger.addHandler(DBLogHandler(level=level))
