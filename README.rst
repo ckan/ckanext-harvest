@@ -121,33 +121,6 @@ Database logger configuration(optional)
  *  6 - plugin
  *  7 - harvesters
 
-Additionally you can configure the logger the following way::
-
- [loggers]
- keys = ckan_harvester
-
- [handlers]
- keys = dblog
-
- [formatters]
- keys = dblog
-
- [logger_ckan_harvester]
- qualname = ckanext.harvest
- handlers = dblog
- level = DEBUG
-
- [handler_dblog]
- class = ckanext.harvest.log.DBLogHandler
- args = ()
- level = DEBUG
- formatter = dblog
-
- [formatter_dblog]
- format = %(message)s
-
-If you are having troubles configuring harvest logger please refer to ``test-core.ini`` 
-
 2. Setup time frame(in days) for the clean-up mechanism with the following config parameter::
 
      ckan.harvest.log_timeframe = 10
