@@ -1,3 +1,5 @@
 recursive-include ckanext/harvest/templates *
 recursive-include ckanext/harvest/fanstatic_library/styles *
 recursive-include ckanext/harvest/public *
+include pip-requirements.txt
+include dev-requirements.txt
