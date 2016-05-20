@@ -128,10 +128,10 @@ class CKANHarvester(HarvesterBase):
 
                 # Check if default groups exist
                 context = {'model': model, 'user': c.user}
-                for group_ in config_obj['default_groups']:
+                for group_name in config_obj['default_groups']:
                     try:
                         group = get_action('group_show')(
-                            context, {'id': group_['id']})
+                            context, {'id': group_name})
                     except NotFound, e:
                         raise ValueError('Default group not found')
 
