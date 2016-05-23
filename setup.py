@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.2'
+version = '0.0.5'
 
 setup(
 	name='ckanext-harvest',
@@ -20,7 +20,7 @@ setup(
 	include_package_data=True,
 	zip_safe=False,
 	install_requires=[
-	        # dependencies are specified in pip-requirements.txt 
+	        # dependencies are specified in pip-requirements.txt
 	        # instead of here
 	],
 	tests_require=[
