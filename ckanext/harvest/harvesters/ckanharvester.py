@@ -369,8 +369,8 @@ class CKANHarvester(HarvesterBase):
     def import_stage(self, harvest_object):
         log.debug('In CKANHarvester import_stage')
 
-        context = {'model': model, 'session': model.Session,
-                   'user': self._get_user_name()}
+        base_context = {'model': model, 'session': model.Session,
+                        'user': self._get_user_name()}
         if not harvest_object:
             log.error('No harvest object received')
             return False
@@ -412,7 +412,7 @@ class CKANHarvester(HarvesterBase):
                 for group_ in package_dict['groups']:
                     try:
                         data_dict = {'id': group_['id']}
-                        group = get_action('group_show')(context, data_dict)
+                        group = get_action('group_show')(base_context.copy(), data_dict)
                         validated_groups.append({'id': group['id'], 'name': group['name']})
 
                     except NotFound, e:
@@ -427,14 +427,14 @@ class CKANHarvester(HarvesterBase):
                             for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name']:
                                 group.pop(key, None)
 
-                            get_action('group_create')(context, group)
+                            get_action('group_create')(base_context.copy(), group)
                             log.info('Group %s has been newly created', group_)
                             validated_groups.append({'id': group['id'], 'name': group['name']})
 
                 package_dict['groups'] = validated_groups
 
             # Local harvest source organization
-            source_dataset = get_action('package_show')(context, {'id': harvest_object.source.id})
+            source_dataset = get_action('package_show')(base_context.copy(), {'id': harvest_object.source.id})
             local_org = source_dataset.get('owner_org')
 
             remote_orgs = self.config.get('remote_orgs', None)
@@ -453,7 +453,7 @@ class CKANHarvester(HarvesterBase):
                 if remote_org:
                     try:
                         data_dict = {'id': remote_org}
-                        org = get_action('organization_show')(context, data_dict)
+                        org = get_action('organization_show')(base_context.copy(), data_dict)
                         validated_org = org['id']
                     except NotFound, e:
                         log.info('Organization %s is not available', remote_org)
@@ -468,7 +468,7 @@ class CKANHarvester(HarvesterBase):
 
                                 for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name', 'type']:
                                     org.pop(key, None)
-                                get_action('organization_create')(context, org)
+                                get_action('organization_create')(base_context.copy(), org)
                                 log.info('Organization %s has been newly created', remote_org)
                                 validated_org = org['id']
                             except (RemoteResourceError, ValidationError):
