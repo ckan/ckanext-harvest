@@ -60,12 +60,17 @@ class CKANHarvester(HarvesterBase):
             raise ContentFetchError('HTTP general exception: %s' % e)
         return http_response.read()
 
-    def _get_group(self, base_url, group_name):
+    def _get_group(self, base_url, group):
         url = base_url + self._get_action_api_offset() + '/group_show?id=' + \
-            munge_name(group_name)
+            group['id']
         try:
             content = self._get_content(url)
-            return json.loads(content)
+            data = json.loads(content)
+            if self.action_api_version == 3:
+                return data.pop('result')
+            
+            return data
+            
         except (ContentFetchError, ValueError):
             log.debug('Could not fetch/decode remote group')
             raise RemoteResourceError('Could not fetch/decode remote group')
@@ -404,35 +409,29 @@ class CKANHarvester(HarvesterBase):
                 # check if remote groups exist locally, otherwise remove
                 validated_groups = []
 
-                for group_name in package_dict['groups']:
+                for group_ in package_dict['groups']:
                     try:
-                        data_dict = {'id': group_name}
+                        data_dict = {'id': group_['id']}
                         group = get_action('group_show')(context, data_dict)
-                        if self.api_version == 1:
-                            validated_groups.append(group['name'])
-                        else:
-                            validated_groups.append(group['id'])
+                        validated_groups.append({'id': group['id'], 'name': group['name']})
+
                     except NotFound, e:
-                        log.info('Group %s is not available', group_name)
+                        log.info('Group %s is not available', group_)
                         if remote_groups == 'create':
                             try:
-                                group = self._get_group(harvest_object.source.url, group_name)
+                                group = self._get_group(harvest_object.source.url, group_)
                             except RemoteResourceError:
-                                log.error('Could not get remote group %s', group_name)
+                                log.error('Could not get remote group %s', group_)
                                 continue
 
                             for key in ['packages', 'created', 'users', 'groups', 'tags', 'extras', 'display_name']:
                                 group.pop(key, None)
 
                             get_action('group_create')(context, group)
-                            log.info('Group %s has been newly created', group_name)
-                            if self.api_version == 1:
-                                validated_groups.append(group['name'])
-                            else:
-                                validated_groups.append(group['id'])
+                            log.info('Group %s has been newly created', group_)
+                            validated_groups.append({'id': group['id'], 'name': group['name']})
 
                 package_dict['groups'] = validated_groups
-
 
             # Local harvest source organization
             source_dataset = get_action('package_show')(context, {'id': harvest_object.source.id})

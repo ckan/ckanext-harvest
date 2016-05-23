@@ -1,16 +1,17 @@
 import copy
 
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_raises
 import json
 from mock import patch, MagicMock
 
 try:
-    from ckan.tests.helpers import reset_db
-    from ckan.tests.factories import Organization
+    from ckan.tests.helpers import reset_db, call_action
+    from ckan.tests.factories import Organization, Group
 except ImportError:
-    from ckan.new_tests.helpers import reset_db
-    from ckan.new_tests.factories import Organization
+    from ckan.new_tests.helpers import reset_db, call_action
+    from ckan.new_tests.factories import Organization, Group
 from ckan import model
+from ckan.plugins import toolkit
 
 from ckanext.harvest.tests.factories import (HarvestSourceObj, HarvestJobObj,
                                              HarvestObjectObj)
@@ -157,6 +158,35 @@ class TestCkanHarvester(object):
             config=json.dumps(config))
         assert 'dataset1-id' in results_by_guid
         assert mock_ckan.DATASETS[1]['id'] not in results_by_guid
+
+    def test_remote_groups_create(self):
+        config = {'remote_groups': 'create'}
+        results_by_guid = run_harvest(
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
+        assert 'dataset1-id' in results_by_guid
+        # Check that the remote group was created locally
+        call_action('group_show', {}, id=mock_ckan.GROUPS[0]['id'])
+
+    def test_remote_groups_only_local(self):
+        # Create an existing group
+        Group(id='group1-id', name='group1')
+
+        config = {'remote_groups': 'only_local'}
+        results_by_guid = run_harvest(
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
+        assert 'dataset1-id' in results_by_guid
+
+        # Check that the dataset was added to the existing local group
+        dataset = call_action('package_show', {}, id=mock_ckan.DATASETS[0]['id'])
+        assert_equal(dataset['groups'][0]['id'], mock_ckan.DATASETS[0]['groups'][0]['id'])
+
+        # Check that the other remote group was not created locally
+        assert_raises(toolkit.ObjectNotFound, call_action, 'group_show', {},
+                      id='remote-group')
 
     def test_harvest_not_modified(self):
         run_harvest(
