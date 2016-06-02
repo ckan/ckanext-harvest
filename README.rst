@@ -183,6 +183,20 @@ or
 If you don't specify this setting, the default will be number-sequence.
 
 
+Send error mails when harvesting fails (optional)
+================================================
+
+If you want to send Error-Mails when a Harvest-Job fails, you can set it up in production.ini:
+
+    ckan.harvest.status_mail.errored = True
+
+The receiver(s) of the error-mails are configured in production.ini:
+
+    email_to = admin@your-portal.org, error-mails@your-portal.org
+
+If you don't specify this setting, the default will be False.
+
+
 Command line interface
 ======================
 
