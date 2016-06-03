@@ -134,6 +134,37 @@ Database logger configuration(optional)
    If no log level is set the default is ``debug``.
 
 
+**API Usage**
+
+You can access CKAN harvest logs via the API:
+
+    $ curl {ckan_url}/api/3/action/harvest_log_list
+
+Replace {ckan_url} with the url from your CKAN instance.
+
+Allowed parameters are: 
+
+    * level (filter log records by level)
+
+    * per_page (used for pagination)
+
+    * offset (used for pagination)
+
+e.g. Fetch all logs with log level INFO:
+
+    $ curl {ckan_url}/api/3/action/harvest_log_list?level=info
+
+    {
+      "help":"http://127.0.0.1:5000/api/3/action/help_show?name=harvest_log_list",
+
+      "success":true,
+
+      "result": [{"content":"Sent job aa987717-2316-4e47-b0f2-cbddfb4c4dfc to the gather queue","level":"INFO","created":"2016-06-03 10:59:40.961657"}, {"content":"Sent job aa987717-2316-4e47-b0f2-cbddfb4c4dfc to the gather queue","level":"INFO","created":"2016-06-03 10:59:40.951548"}]
+      
+    }
+
+
+
 Command line interface
 ======================
 
