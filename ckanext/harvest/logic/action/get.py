@@ -316,7 +316,7 @@ def harvesters_info_show(context,data_dict):
 def harvest_log_list(context,data_dict):
     '''Returns a list of harvester log entries.
 
-    :param per_page: number of logs to be shown default: 100
+    :param limit: number of logs to be shown default: 100
     :param offset: use with ``per_page`` default: 0
     :param level: filter log entries by level(debug, info, warning, error, critical)
     '''
@@ -327,9 +327,16 @@ def harvest_log_list(context,data_dict):
     session = context['session']
 
     try:
-        per_page = int(data_dict.get('per_page', 100))
+        limit = int(data_dict.get('limit', 100))
     except ValueError:
-        per_page = 100
+        limit = 100
+        
+    if data_dict.get('per_page', False):
+        try:
+            limit = int(data_dict.get('per_page', 100))
+        except ValueError:
+            limit = 100
+    
     try:
         offset = int(data_dict.get('offset', 0))
     except ValueError:
@@ -343,7 +350,7 @@ def harvest_log_list(context,data_dict):
         query = query.filter(HarvestLog.level==level.upper())
 
     query = query.order_by(HarvestLog.created.desc())
-    logs = query.offset(offset).limit(per_page).all()
+    logs = query.offset(offset).limit(limit).all()
     
     out = [harvest_log_dictize(obj, context) for obj in logs]        
     return out
