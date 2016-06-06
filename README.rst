@@ -146,7 +146,7 @@ Allowed parameters are:
 
     * level (filter log records by level)
 
-    * per_page (used for pagination)
+    * limit (used for pagination)
 
     * offset (used for pagination)
 
