@@ -197,8 +197,16 @@ class HarvestObjectError(HarvestDomainObject):
                   stage=stage, line=line)
         try:
             err.save()
-        except InvalidRequestError:
-            Session.rollback()
+        except InvalidRequestError, e:
+            # Clear any in-progress sqlalchemy transactions
+            try:
+                Session.rollback()
+            except:
+                pass
+            try:
+                Session.remove()
+            except:
+                pass
             err.save()
         finally:
             log_message = '{0}, line {1}'.format(message, line) \
@@ -578,7 +586,7 @@ def migrate_v3_create_datasets(source_ids=None):
             log.info('Created new package for source {0} ({1})'.format(source.id, source.url))
         except logic.ValidationError,e:
             log.error('Validation Error: %s' % str(e.error_summary))
-            
+
 def clean_harvest_log(condition):
     Session.query(HarvestLog).filter(HarvestLog.created <= condition)\
                                 .delete(synchronize_session=False)
@@ -587,5 +595,5 @@ def clean_harvest_log(condition):
     except InvalidRequestError:
         Session.rollback()
         log.error('An error occurred while trying to clean-up the harvest log table')
-        
+
     log.info('Harvest log table clean-up finished successfully')

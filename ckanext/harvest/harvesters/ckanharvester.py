@@ -121,6 +121,10 @@ class CKANHarvester(HarvesterBase):
             if 'default_tags' in config_obj:
                 if not isinstance(config_obj['default_tags'], list):
                     raise ValueError('default_tags must be a list')
+                if config_obj['default_tags'] and \
+                        not isinstance(config_obj['default_tags'][0], dict):
+                    raise ValueError('default_tags must be a list of '
+                                     'dictionaries')
 
             if 'default_groups' in config_obj:
                 if not isinstance(config_obj['default_groups'], list):

@@ -221,3 +221,23 @@ class TestCkanHarvester(object):
             harvester=CKANHarvester())
         assert not results_by_guid
         assert not was_last_job_considered_error_free()
+
+    def test_default_tags(self):
+        config = {'default_tags': [{'name': 'geo'}]}
+        results_by_guid = run_harvest(
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
+        tags = results_by_guid['dataset1-id']['dataset']['tags']
+        tag_names = [tag['name'] for tag in tags]
+        assert 'geo' in tag_names
+
+    def test_default_tags_invalid(self):
+        config = {'default_tags': ['geo']}  # should be list of dicts
+        assert_raises(
+            run_harvest,
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
+
+

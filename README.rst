@@ -289,7 +289,8 @@ field. The currently supported configuration options are:
     the CKAN API. Default is 2.
 
 *   default_tags: A list of tags that will be added to all harvested datasets.
-    Tags don't need to previously exist.
+    Tags don't need to previously exist. This field takes a list of tag dicts
+    (see example), which allows you to optinally specify a vocabulary.
 
 *   default_groups: A list of groups to which the harvested datasets will be
     added to. The groups must exist. Note that you must use ids or names to
@@ -367,7 +368,7 @@ the configuration field)::
 
     {
      "api_version": 1,
-     "default_tags":["new-tag-1","new-tag-2"],
+     "default_tags": [{"name": "geo"}, {"name": "namibia"],
      "default_groups":["my-own-group"],
      "default_extras":{"new_extra":"Test","harvest_url":"{harvest_source_url}/dataset/{dataset_id}"},
      "override_extras": true,
