@@ -278,3 +278,37 @@ class TestCkanHarvester(object):
             harvester=CKANHarvester(),
             config=json.dumps(config))
 
+    def test_default_extras(self):
+        config = {
+            'default_extras': {
+                'encoding': 'utf8',
+                'harvest_url': '{harvest_source_url}/dataset/{dataset_id}'
+                }}
+        tmp_c = toolkit.c
+        try:
+            # c.user is used by the validation (annoying),
+            # however patch doesn't work because it's a weird
+            # StackedObjectProxy, so we swap it manually
+            toolkit.c = MagicMock(user='')
+            results_by_guid = run_harvest(
+                url='http://localhost:%s' % mock_ckan.PORT,
+                harvester=CKANHarvester(),
+                config=json.dumps(config))
+        finally:
+            toolkit.c = tmp_c
+        assert_equal(results_by_guid['dataset1-id']['errors'], [])
+        extras = results_by_guid['dataset1-id']['dataset']['extras']
+        extras_dict = dict((e['key'], e['value']) for e in extras)
+        assert_equal(extras_dict['encoding'], 'utf8')
+        assert_equal(extras_dict['harvest_url'],
+                     'http://localhost:8998/dataset/dataset1-id')
+
+    def test_default_extras_invalid(self):
+        config = {
+            'default_extras': 'utf8',  # value should be a dict
+            }
+        assert_raises(
+            run_harvest,
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
