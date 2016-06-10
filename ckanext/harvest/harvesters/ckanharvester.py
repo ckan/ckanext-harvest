@@ -6,7 +6,6 @@ import socket
 
 from sqlalchemy import exists
 
-from ckan.lib.base import c
 from ckan import model
 from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
@@ -68,9 +67,7 @@ class CKANHarvester(HarvesterBase):
             data = json.loads(content)
             if self.action_api_version == 3:
                 return data.pop('result')
-            
             return data
-            
         except (ContentFetchError, ValueError):
             log.debug('Could not fetch/decode remote group')
             raise RemoteResourceError('Could not fetch/decode remote group')
@@ -128,14 +125,21 @@ class CKANHarvester(HarvesterBase):
 
             if 'default_groups' in config_obj:
                 if not isinstance(config_obj['default_groups'], list):
-                    raise ValueError('default_groups must be a list')
+                    raise ValueError('default_groups must be a *list* of group'
+                                     ' names/ids')
+                if config_obj['default_groups'] and \
+                        not isinstance(config_obj['default_groups'][0], str):
+                    raise ValueError('default_groups must be a list of group '
+                                     'names/ids (i.e. strings)')
 
                 # Check if default groups exist
-                context = {'model': model, 'user': c.user}
-                for group_name in config_obj['default_groups']:
+                context = {'model': model, 'user': toolkit.c.user}
+                self.default_group_dicts = []
+                for group_name_or_id in config_obj['default_groups']:
                     try:
                         group = get_action('group_show')(
-                            context, {'id': group_name})
+                            context, {'id': group_name_or_id})
+                        self.default_group_dicts.append(group)
                     except NotFound, e:
                         raise ValueError('Default group not found')
 
@@ -145,7 +149,7 @@ class CKANHarvester(HarvesterBase):
 
             if 'user' in config_obj:
                 # Check if user exists
-                context = {'model': model, 'user': c.user}
+                context = {'model': model, 'user': toolkit.c.user}
                 try:
                     user = get_action('user_show')(
                         context, {'id': config_obj.get('user')})
@@ -485,9 +489,10 @@ class CKANHarvester(HarvesterBase):
             if default_groups:
                 if not 'groups' in package_dict:
                     package_dict['groups'] = []
+                existing_group_ids = [g['id'] for g in package_dict['groups']]
                 package_dict['groups'].extend(
-                    [g for g in default_groups
-                     if g not in package_dict['groups']])
+                    [g for g in self.default_group_dicts
+                     if g['id'] not in existing_group_ids])
 
             # Set default extras if needed
             default_extras = self.config.get('default_extras', {})

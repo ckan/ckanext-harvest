@@ -4,6 +4,7 @@ from nose.tools import assert_equal, assert_raises
 import json
 from mock import patch, MagicMock
 
+
 try:
     from ckan.tests.helpers import reset_db, call_action
     from ckan.tests.factories import Organization, Group
@@ -240,4 +241,40 @@ class TestCkanHarvester(object):
             harvester=CKANHarvester(),
             config=json.dumps(config))
 
+    def test_default_groups(self):
+        Group(id='group1-id', name='group1')
+        Group(id='group2-id', name='group2')
+        Group(id='group3-id', name='group3')
+
+        config = {'default_groups': ['group2-id', 'group3'],
+                  'remote_groups': 'only_local'}
+        tmp_c = toolkit.c
+        try:
+            # c.user is used by the validation (annoying),
+            # however patch doesn't work because it's a weird
+            # StackedObjectProxy, so we swap it manually
+            toolkit.c = MagicMock(user='')
+            results_by_guid = run_harvest(
+                url='http://localhost:%s' % mock_ckan.PORT,
+                harvester=CKANHarvester(),
+                config=json.dumps(config))
+        finally:
+            toolkit.c = tmp_c
+        assert_equal(results_by_guid['dataset1-id']['errors'], [])
+        groups = results_by_guid['dataset1-id']['dataset']['groups']
+        group_names = set(group['name'] for group in groups)
+        # group1 comes from the harvested dataset
+        # group2 & 3 come from the default_groups
+        assert_equal(group_names, set(('group1', 'group2', 'group3')))
+
+    def test_default_groups_invalid(self):
+        Group(id='group2-id', name='group2')
+
+        # should be list of strings
+        config = {'default_tags': [{'name': 'group2'}]}
+        assert_raises(
+            run_harvest,
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
 
