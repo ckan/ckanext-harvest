@@ -147,6 +147,11 @@ class CKANHarvester(HarvesterBase):
                 if not isinstance(config_obj['default_extras'], dict):
                     raise ValueError('default_extras must be a dictionary')
 
+            if 'organizations_filter_include' in config_obj \
+                and 'organizations_filter_exclude' in config_obj:
+                raise ValueError('Harvest configuration cannot contain both '
+                    'organizations_filter_include and organizations_filter_exclude')
+
             if 'user' in config_obj:
                 # Check if user exists
                 context = {'model': model, 'user': toolkit.c.user}
