@@ -128,7 +128,7 @@ class CKANHarvester(HarvesterBase):
                     raise ValueError('default_groups must be a *list* of group'
                                      ' names/ids')
                 if config_obj['default_groups'] and \
-                        not isinstance(config_obj['default_groups'][0], str):
+                        not isinstance(config_obj['default_groups'][0], basestring):
                     raise ValueError('default_groups must be a list of group '
                                      'names/ids (i.e. strings)')
 
@@ -492,9 +492,15 @@ class CKANHarvester(HarvesterBase):
             # Set default groups if needed
             default_groups = self.config.get('default_groups', [])
             if default_groups:
+                context = {'model': model, 'user': toolkit.c.user}
                 if not 'groups' in package_dict:
                     package_dict['groups'] = []
                 existing_group_ids = [g['id'] for g in package_dict['groups']]
+                self.default_group_dicts = []
+                for group_name_or_id in default_groups:
+                        group = get_action('group_show')(
+                            context, {'id': group_name_or_id})
+                        self.default_group_dicts.append(group)
                 package_dict['groups'].extend(
                     [g for g in self.default_group_dicts
                      if g['id'] not in existing_group_ids])
