@@ -134,12 +134,14 @@ def harvest_source_config_validator(key, data, errors, context):
         if info['name'] == harvester_type:
             if hasattr(harvester, 'validate_config'):
                 try:
-                    return harvester.validate_config(data[key])
+                    config = harvester.validate_config(data[key])
                 except Exception, e:
                     raise Invalid('Error parsing the configuration options: %s'
                                   % e)
-            else:
-                return data[key]
+                if config is not None:
+                    # save an edited config, for use during the harvest
+                    data[key] = config
+            # no value is returned for this sort of validator/converter
 
 
 def keep_not_empty_extras(key, data, errors, context):
