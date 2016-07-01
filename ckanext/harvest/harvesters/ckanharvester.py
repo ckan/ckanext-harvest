@@ -128,20 +128,24 @@ class CKANHarvester(HarvesterBase):
                     raise ValueError('default_groups must be a *list* of group'
                                      ' names/ids')
                 if config_obj['default_groups'] and \
-                        not isinstance(config_obj['default_groups'][0], str):
+                        not isinstance(config_obj['default_groups'][0],
+                                       basestring):
                     raise ValueError('default_groups must be a list of group '
                                      'names/ids (i.e. strings)')
 
                 # Check if default groups exist
                 context = {'model': model, 'user': toolkit.c.user}
-                self.default_group_dicts = []
+                config_obj['default_group_dicts'] = []
                 for group_name_or_id in config_obj['default_groups']:
                     try:
                         group = get_action('group_show')(
                             context, {'id': group_name_or_id})
-                        self.default_group_dicts.append(group)
+                        # save the dict to the config object, as we'll need it
+                        # in the import_stage of every dataset
+                        config_obj['default_group_dicts'].append(group)
                     except NotFound, e:
                         raise ValueError('Default group not found')
+                config = json.dumps(config_obj)
 
             if 'default_extras' in config_obj:
                 if not isinstance(config_obj['default_extras'], dict):
@@ -496,7 +500,7 @@ class CKANHarvester(HarvesterBase):
                     package_dict['groups'] = []
                 existing_group_ids = [g['id'] for g in package_dict['groups']]
                 package_dict['groups'].extend(
-                    [g for g in self.default_group_dicts
+                    [g for g in self.config['default_group_dicts']
                      if g['id'] not in existing_group_ids])
 
             # Set default extras if needed
