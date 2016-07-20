@@ -65,9 +65,7 @@ class Harvester(CkanCommand):
 
       harvester purge_queues
         - removes all jobs from fetch and gather queue
-          WARNING: if using Redis, this command purges all data in the current
-          Redis database
-          
+
       harvester clean_harvest_log
         - Clean-up mechanism for the harvest log table.
           You can configure the time frame through the configuration
