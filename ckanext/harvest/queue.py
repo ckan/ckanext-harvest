@@ -76,19 +76,17 @@ def get_fetch_queue_name():
     return 'ckan.harvest.{0}.fetch'.format(config.get('ckan.site_id',
                                                       'default'))
 
-
 def get_gather_routing_key():
-    return '{0}:harvest_job_id'.format(config.get('ckan.site_id',
-                                                  'default'))
+    return 'ckanext-harvest:{0}:harvest_job_id'.format(
+            config.get('ckan.site_id', 'default'))
 
 
 def get_fetch_routing_key():
-    return '{0}:harvest_object_id'.format(config.get('ckan.site_id',
-                                                     'default'))
+    return 'ckanext-harvest:{0}:harvest_object_id'.format(
+            config.get('ckan.site_id', 'default'))
 
 
 def purge_queues():
-
     backend = config.get('ckan.harvest.mq.type', MQ_TYPE)
     connection = get_connection()
     if backend in ('amqp', 'ampq'):
@@ -97,10 +95,12 @@ def purge_queues():
         log.info('AMQP queue purged: %s', get_gather_queue_name())
         channel.queue_purge(queue=get_fetch_queue_name())
         log.info('AMQP queue purged: %s', get_fetch_queue_name())
-        return
-    if backend == 'redis':
-        connection.flushdb()
-        log.info('Redis database flushed')
+    elif backend == 'redis':
+        get_gather_consumer().queue_purge()
+        log.info('Redis gather queue purged')
+        get_fetch_consumer().queue_purge()
+        log.info('Redis fetch queue purged')
+
 
 def resubmit_jobs():
     '''
@@ -205,17 +205,40 @@ class RedisConsumer(object):
             yield (FakeMethod(body), self, body)
 
     def persistance_key(self, message):
-        # Persistance keys are constructed with
-        # {site-id}:{message-key}:{object-id}, eg:
-        # default:harvest_job_id:804f114a-8f68-4e7c-b124-3eb00f66202e
+        # If you change this, make sure to update the script in `queue_purge`
         message = json.loads(message)
         return self.routing_key + ':' + message[self.message_key]
 
     def basic_ack(self, message):
         self.redis.delete(self.persistance_key(message))
 
-    def queue_purge(self, queue):
-        self.redis.flushdb()
+    def queue_purge(self, queue=None):
+        '''
+        Purge the consumer's queue.
+
+        The ``queue`` parameter exists only for compatibility and is
+        ignored.
+        '''
+        # Use a script to make the operation atomic
+        lua_code = b'''
+            local routing_key = KEYS[1]
+            local message_key = ARGV[1]
+            local count = 0
+            while true do
+                local s = redis.call("lpop", routing_key)
+                if s == false then
+                    break
+                end
+                local value = cjson.decode(s)
+                local id = value[message_key]
+                local persistance_key = routing_key .. ":" .. id
+                redis.call("del", persistance_key)
+                count = count + 1
+            end
+            return count
+        '''
+        script = self.redis.register_script(lua_code)
+        return script(keys=[self.routing_key], args=[self.message_key])
 
     def basic_get(self, queue):
         body = self.redis.lpop(self.routing_key)

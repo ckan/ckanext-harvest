@@ -10,7 +10,10 @@ from ckan.plugins.core import SingletonPlugin, implements
 import json
 import ckan.logic as logic
 from ckan import model
-from nose.tools import assert_equal
+from nose.tools import assert_equal, ok_
+from ckan.lib.base import config
+from nose.plugins.skip import SkipTest
+import uuid
 
 
 class MockHarvester(SingletonPlugin):
@@ -93,12 +96,10 @@ class TestHarvestQueue(object):
     def test_01_basic_harvester(self):
 
         ### make sure queues/exchanges are created first and are empty
-        consumer = queue.get_consumer('ckan.harvest.test.gather',
-                                      queue.get_gather_routing_key())
-        consumer_fetch = queue.get_consumer('ckan.harvest.test.fetch',
-                                            queue.get_fetch_routing_key())
-        consumer.queue_purge(queue='ckan.harvest.test.gather')
-        consumer_fetch.queue_purge(queue='ckan.harvest.test.fetch')
+        consumer = queue.get_gather_consumer()
+        consumer_fetch = queue.get_fetch_consumer()
+        consumer.queue_purge(queue=queue.get_gather_queue_name())
+        consumer_fetch.queue_purge(queue=queue.get_fetch_queue_name())
 
 
         user = logic.get_action('get_site_user')(
@@ -262,3 +263,41 @@ class TestHarvestQueue(object):
         assert_equal(harvest_source_dict['status']['last_job']['stats'], {'added': 0, 'updated': 2, 'not modified': 0, 'errored': 0, 'deleted': 1})
         assert_equal(harvest_source_dict['status']['total_datasets'], 2)
         assert_equal(harvest_source_dict['status']['job_count'], 2)
+
+
+    def test_redis_queue_purging(self):
+        '''
+        Test that Redis queue purging doesn't purge the wrong keys.
+        '''
+        if config.get('ckan.harvest.mq.type') != 'redis':
+            raise SkipTest()
+        redis = queue.get_connection()
+        try:
+            redis.set('ckanext-harvest:some-random-key', 'foobar')
+
+            # Create some fake jobs
+            gather_publisher = queue.get_gather_publisher()
+            gather_publisher.send({'harvest_job_id': str(uuid.uuid4())})
+            gather_publisher.send({'harvest_job_id': str(uuid.uuid4())})
+            fetch_publisher = queue.get_fetch_publisher()
+            fetch_publisher.send({'harvest_object_id': str(uuid.uuid4())})
+            fetch_publisher.send({'harvest_object_id': str(uuid.uuid4())})
+            num_keys = redis.dbsize()
+
+            # Create some fake objects
+            gather_consumer = queue.get_gather_consumer()
+            next(gather_consumer.consume(queue.get_gather_queue_name()))
+            fetch_consumer = queue.get_fetch_consumer()
+            next(fetch_consumer.consume(queue.get_fetch_queue_name()))
+
+            ok_(redis.dbsize() > num_keys)
+
+            queue.purge_queues()
+
+            assert_equal(redis.get('ckanext-harvest:some-random-key'),
+                         'foobar')
+            assert_equal(redis.dbsize(), num_keys)
+            assert_equal(redis.llen(queue.get_gather_routing_key()), 0)
+            assert_equal(redis.llen(queue.get_fetch_routing_key()), 0)
+        finally:
+            redis.delete('ckanext-harvest:some-random-key')
