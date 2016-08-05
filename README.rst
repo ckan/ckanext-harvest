@@ -93,7 +93,7 @@ Configuration
 
 Run the following command to create the necessary tables in the database (ensuring the pyenv is activated)::
 
-    (pyenv) $ paster --plugin=ckanext-harvest harvester initdb --config=/etc/ckan/default/ckan.ini
+    (pyenv) $ paster --plugin=ckanext-harvest harvester initdb --config=/etc/ckan/default/production.ini
 
 Finally, restart CKAN to have the changes take affect:
 
@@ -258,7 +258,7 @@ The following operations can be run from the command line as described underneat
 
 The commands should be run with the pyenv activated and refer to your CKAN configuration file::
 
-      (pyenv) $ paster --plugin=ckanext-harvest harvester sources --config=/etc/ckan/default/ckan.ini
+      (pyenv) $ paster --plugin=ckanext-harvest harvester sources --config=/etc/ckan/default/production.ini
 
 Authorization
 =============
@@ -590,16 +590,16 @@ handles the gathering and another one that handles the fetching and importing.
 To start the consumers run the following command (make sure you have your
 python environment activated)::
 
-      (pyenv) $ paster --plugin=ckanext-harvest harvester gather_consumer --config=/etc/ckan/default/ckan.ini
+      (pyenv) $ paster --plugin=ckanext-harvest harvester gather_consumer --config=/etc/ckan/default/production.ini
 
 On another terminal, run the following command::
 
-      (pyenv) $ paster --plugin=ckanext-harvest harvester fetch_consumer --config=/etc/ckan/default/ckan.ini
+      (pyenv) $ paster --plugin=ckanext-harvest harvester fetch_consumer --config=/etc/ckan/default/production.ini
 
 Finally, on a third console, run the following command to start any
 pending harvesting jobs::
 
-      (pyenv) $ paster --plugin=ckanext-harvest harvester run --config=/etc/ckan/default/ckan.ini
+      (pyenv) $ paster --plugin=ckanext-harvest harvester run --config=/etc/ckan/default/production.ini
 
 The ``run`` command not only starts any pending harvesting jobs, but also
 flags those that are finished, allowing new jobs to be created on that particular
@@ -616,7 +616,7 @@ circumstance, ensure that the gather & fetch consumers are running and have
 nothing more to consume, and then run this abort command with the name or id of
 the harvest source::
 
-      (pyenv) $ paster --plugin=ckanext-harvest harvester job_abort {source-id/name} --config=/etc/ckan/default/ckan.ini
+      (pyenv) $ paster --plugin=ckanext-harvest harvester job_abort {source-id/name} --config=/etc/ckan/default/production.ini
 
 
 Setting up the harvesters on a production server
@@ -666,7 +666,7 @@ following steps with the one you are using.
 
         [program:ckan_gather_consumer]
 
-        command=/usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester gather_consumer --config=/etc/ckan/default/ckan.ini
+        command=/usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester gather_consumer --config=/etc/ckan/default/production.ini
 
         ; user that owns virtual environment.
         user=ckan
@@ -680,7 +680,7 @@ following steps with the one you are using.
 
         [program:ckan_fetch_consumer]
 
-        command=/usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester fetch_consumer --config=/etc/ckan/default/ckan.ini
+        command=/usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester fetch_consumer --config=/etc/ckan/default/production.ini
 
         ; user that owns virtual environment.
         user=ckan
@@ -755,7 +755,7 @@ following steps with the one you are using.
    the ini file with yours::
 
     # m  h  dom mon dow   command
-    */15 *  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester run --config=/etc/ckan/default/ckan.ini
+    */15 *  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester run --config=/etc/ckan/default/production.ini
 
    This particular example will check for pending jobs every fifteen minutes.
    You can of course modify this periodicity, this `Wikipedia page <http://en.wikipedia.org/wiki/Cron#CRON_expression>`_
@@ -769,7 +769,7 @@ following steps with the one you are using.
    the ini file with yours::
 
     # m  h  dom mon dow   command
-      0  5  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester clean_harvest_log --config=/etc/ckan/default/ckan.ini
+      0  5  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester clean_harvest_log --config=/etc/ckan/default/production.ini
 
    This particular example will perform clean-up each day at 05 AM.
    You can tweak the value according to your needs.
