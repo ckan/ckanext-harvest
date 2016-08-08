@@ -22,17 +22,19 @@ running a version lower than 2.0.
 
    * `Redis <http://redis.io/>`_ (recommended): To install it, run::
 
+      sudo apt-get update
       sudo apt-get install redis-server
 
-     On your CKAN configuration file, add::
+     On your CKAN configuration file, add in the `[app:main]` section::
 
       ckan.harvest.mq.type = redis
 
    * `RabbitMQ <http://www.rabbitmq.com/>`_: To install it, run::
 
+      sudo apt-get update
       sudo apt-get install rabbitmq-server
 
-     On your CKAN configuration file, add::
+     On your CKAN configuration file, add in the `[app:main]` section::
 
       ckan.harvest.mq.type = amqp
 
@@ -44,8 +46,9 @@ running a version lower than 2.0.
 
      (pyenv) $ pip install -e git+https://github.com/ckan/ckanext-harvest.git#egg=ckanext-harvest
 
-4. Install the python modules required by the extension::
+4. Install the python modules required by the extension (adjusting the path according to where ckanext-harvest was installed in the previous step)::
 
+     (pyenv) $ cd /usr/lib/ckan/default/src/ckanext-harvest/
      (pyenv) $ pip install -r pip-requirements.txt
 
 5. Make sure the CKAN configuration ini file contains the harvest main plugin, as
@@ -54,14 +57,12 @@ running a version lower than 2.0.
      ckan.plugins = harvest ckan_harvester
 
 6. If you haven't done it yet on the previous step, define the backend that you
-   are using with the ``ckan.harvest.mq.type`` option (it defaults to ``amqp``)::
+   are using with the ``ckan.harvest.mq.type`` option in the `[app:main]` section (it defaults to ``amqp``)::
 
      ckan.harvest.mq.type = redis
 
 
-There are a number of configuration options available for the backends. These don't need to
-be modified at all if you are using the default Redis or RabbitMQ install (step 1). The list
-below shows the available options and their default values:
+There are a number of configuration options available for the backends. These don't need to be modified at all if you are using the default Redis or RabbitMQ install (step 1). However you may wish to add them with custom options to the into the CKAN config file the `[app:main]` section. The list below shows the available options and their default values:
 
     * Redis:
         - ``ckan.harvest.mq.hostname`` (localhost)
@@ -90,9 +91,9 @@ config option (or ``default``) will be used to namespace the relevant things:
 Configuration
 =============
 
-Run the following command to create the necessary tables in the database::
+Run the following command to create the necessary tables in the database (ensuring the pyenv is activated)::
 
-    paster --plugin=ckanext-harvest harvester initdb --config=mysite.ini
+    (pyenv) $ paster --plugin=ckanext-harvest harvester initdb --config=/etc/ckan/default/production.ini
 
 Finally, restart CKAN to have the changes take affect:
 
@@ -100,12 +101,13 @@ Finally, restart CKAN to have the changes take affect:
 
 After installation, the harvest source listing should be available under /harvest, eg:
 
-    http://localhost:5000/harvest
+    http://localhost/harvest
+
 
 Database logger configuration(optional)
 =======================================
 
-1. Logging to the database is disabled by default. If you want your ckan harvest logs 
+1. Logging to the database is disabled by default. If you want your ckan harvest logs
    to be exposed to the CKAN API you need to properly configure the logger
    with the following configuration parameter::
 
@@ -121,7 +123,7 @@ Database logger configuration(optional)
  *  6 - plugin
  *  7 - harvesters
 
-2. Setup time frame(in days) for the clean-up mechanism with the following config parameter::
+2. Setup time frame(in days) for the clean-up mechanism with the following config parameter (in the `[app:main]` section)::
 
      ckan.harvest.log_timeframe = 10
 
@@ -142,7 +144,7 @@ You can access CKAN harvest logs via the API:
 
 Replace {ckan_url} with the url from your CKAN instance.
 
-Allowed parameters are: 
+Allowed parameters are:
 
     * level (filter log records by level)
 
@@ -160,7 +162,7 @@ e.g. Fetch all logs with log level INFO:
       "success":true,
 
       "result": [{"content":"Sent job aa987717-2316-4e47-b0f2-cbddfb4c4dfc to the gather queue","level":"INFO","created":"2016-06-03 10:59:40.961657"}, {"content":"Sent job aa987717-2316-4e47-b0f2-cbddfb4c4dfc to the gather queue","level":"INFO","created":"2016-06-03 10:59:40.951548"}]
-      
+
     }
 
 
@@ -168,8 +170,7 @@ e.g. Fetch all logs with log level INFO:
 Command line interface
 ======================
 
-The following operations can be run from the command line using the
-``paster --plugin=ckanext-harvest harvester`` command::
+The following operations can be run from the command line as described underneath::
 
       harvester initdb
         - Creates the necessary tables in the database
@@ -255,9 +256,9 @@ The following operations can be run from the command line using the
       harvester reindex
         - reindexes the harvest source datasets
 
-The commands should be run with the pyenv activated and refer to your sites configuration file (mysite.ini in this example)::
+The commands should be run with the pyenv activated and refer to your CKAN configuration file::
 
-        paster --plugin=ckanext-harvest harvester sources --config=mysite.ini
+      (pyenv) $ paster --plugin=ckanext-harvest harvester sources --config=/etc/ckan/default/production.ini
 
 Authorization
 =============
@@ -589,16 +590,16 @@ handles the gathering and another one that handles the fetching and importing.
 To start the consumers run the following command (make sure you have your
 python environment activated)::
 
-      paster --plugin=ckanext-harvest harvester gather_consumer --config=mysite.ini
+      (pyenv) $ paster --plugin=ckanext-harvest harvester gather_consumer --config=/etc/ckan/default/production.ini
 
 On another terminal, run the following command::
 
-      paster --plugin=ckanext-harvest harvester fetch_consumer --config=mysite.ini
+      (pyenv) $ paster --plugin=ckanext-harvest harvester fetch_consumer --config=/etc/ckan/default/production.ini
 
 Finally, on a third console, run the following command to start any
 pending harvesting jobs::
 
-      paster --plugin=ckanext-harvest harvester run --config=mysite.ini
+      (pyenv) $ paster --plugin=ckanext-harvest harvester run --config=/etc/ckan/default/production.ini
 
 The ``run`` command not only starts any pending harvesting jobs, but also
 flags those that are finished, allowing new jobs to be created on that particular
@@ -615,7 +616,7 @@ circumstance, ensure that the gather & fetch consumers are running and have
 nothing more to consume, and then run this abort command with the name or id of
 the harvest source::
 
-      paster --plugin=ckanext-harvest harvester job_abort {source-id/name} --config=mysite.ini
+      (pyenv) $ paster --plugin=ckanext-harvest harvester job_abort {source-id/name} --config=/etc/ckan/default/production.ini
 
 
 Setting up the harvesters on a production server
@@ -640,6 +641,7 @@ following steps with the one you are using.
 
 1. Install Supervisor::
 
+       sudo apt-get update
        sudo apt-get install supervisor
 
    You can check if it is running with this command::
@@ -664,7 +666,7 @@ following steps with the one you are using.
 
         [program:ckan_gather_consumer]
 
-        command=/usr/lib//ckan/default/bin/paster --plugin=ckanext-harvest harvester gather_consumer --config=/etc/ckan/std/std.ini
+        command=/usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester gather_consumer --config=/etc/ckan/default/production.ini
 
         ; user that owns virtual environment.
         user=ckan
@@ -678,7 +680,7 @@ following steps with the one you are using.
 
         [program:ckan_fetch_consumer]
 
-        command=/usr/lib//ckan/default/bin/paster --plugin=ckanext-harvest harvester fetch_consumer --config=/etc/ckan/std/std.ini
+        command=/usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester fetch_consumer --config=/etc/ckan/default/production.ini
 
         ; user that owns virtual environment.
         user=ckan
@@ -753,7 +755,7 @@ following steps with the one you are using.
    the ini file with yours::
 
     # m  h  dom mon dow   command
-    */15 *  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester run --config=/etc/ckan/std/std.ini
+    */15 *  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester run --config=/etc/ckan/default/production.ini
 
    This particular example will check for pending jobs every fifteen minutes.
    You can of course modify this periodicity, this `Wikipedia page <http://en.wikipedia.org/wiki/Cron#CRON_expression>`_
@@ -767,7 +769,7 @@ following steps with the one you are using.
    the ini file with yours::
 
     # m  h  dom mon dow   command
-      0  5  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester clean_harvest_log --config=/etc/ckan/std/std.ini
+      0  5  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester clean_harvest_log --config=/etc/ckan/default/production.ini
 
    This particular example will perform clean-up each day at 05 AM.
    You can tweak the value according to your needs.
