@@ -1,15 +1,12 @@
 from sqlalchemy import distinct, func
 
 from ckan.model import Package, Group
+from ckan import logic
 from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject,
                                    HarvestGatherError, HarvestObjectError)
 
 
-def harvest_source_dictize(source, context):
-    '''
-    TODO: Deprecated
-    '''
-
+def harvest_source_dictize(source, context, last_job_status=False):
     out = source.as_dict()
 
     out['publisher_title'] = u''
@@ -21,6 +18,10 @@ def harvest_source_dictize(source, context):
             out['publisher_title'] = group.title
 
     out['status'] = _get_source_status(source, context)
+
+    if last_job_status:
+        source_status = logic.get_action('harvest_source_show_status')(context, {'id': source.id})
+        out['last_job_status'] = source_status.get('last_job', {})
 
     return out
 
