@@ -130,7 +130,7 @@ def harvest_source_list(context, data_dict):
 
     sources = _get_sources_for_user(context, data_dict)
 
-    last_job_status = data_dict.get('return_last_job_status', False)
+    last_job_status = p.toolkit.asbool(data_dict.get('return_last_job_status', False))
 
     return [harvest_source_dictize(source, context, last_job_status) for source in sources]
 
