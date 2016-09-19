@@ -15,7 +15,7 @@ from ckan import model
 import ckan.plugins as p
 import ckan.lib.helpers as h, json
 from ckan.lib.base import BaseController, c, \
-                          request, response, render, abort, redirect
+                          request, response, render, abort
 
 from ckanext.harvest.logic import HarvestJobExists, HarvestSourceInactiveError
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
@@ -46,7 +46,7 @@ class ViewController(BaseController):
             else:
                 h.flash_success(_('Harvesting source successfully inactivated'))
 
-            redirect(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
+            h.redirect_to(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
         except p.toolkit.ObjectNotFound:
             abort(404,_('Harvest source not found'))
         except p.toolkit.NotAuthorized:
@@ -74,7 +74,7 @@ class ViewController(BaseController):
                 msg = 'An error occurred: [%s]' % str(e)
                 h.flash_error(msg)
 
-        redirect(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
+        h.redirect_to(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
 
     def clear(self, id):
         try:
@@ -89,7 +89,7 @@ class ViewController(BaseController):
             msg = 'An error occurred: [%s]' % str(e)
             h.flash_error(msg)
 
-        redirect(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
+        h.redirect_to(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
 
     def show_object(self, id, ref_type='object'):
 
