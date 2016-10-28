@@ -29,6 +29,12 @@ class Harvester(CkanCommand):
         - clears all datasets, jobs and objects related to a harvest source,
           but keeps the source itself
 
+      harvester clearsource_history [{source-id}]
+        - If no source id is given the history for all harvest sources will be cleared.
+          Clears all jobs and objects related to a harvest source, but keeps the source itself.
+          The datasets imported from the harvest source will NOT be deleted!!!
+          If a source id is given, it only clears the history of the harvest source with the given source id.
+
       harvester sources [all]
         - lists harvest sources
           If 'all' is defined, it also shows the Inactive sources
@@ -153,6 +159,8 @@ class Harvester(CkanCommand):
             self.remove_harvest_source()
         elif cmd == 'clearsource':
             self.clear_harvest_source()
+        elif cmd == 'clearsource_history':
+            self.clear_harvest_source_history()
         elif cmd == 'sources':
             self.list_harvest_sources()
         elif cmd == 'job':
@@ -182,8 +190,7 @@ class Harvester(CkanCommand):
             for method, header, body in consumer.consume(queue=get_fetch_queue_name()):
                fetch_callback(consumer, method, header, body)
         elif cmd == 'purge_queues':
-            from ckanext.harvest.queue import purge_queues
-            purge_queues()
+            self.purge_queues()
         elif cmd == 'initdb':
             self.initdb()
         elif cmd == 'import':
@@ -287,6 +294,29 @@ class Harvester(CkanCommand):
            print 'An error occurred:'
            print str(e.error_dict)
            raise e
+
+    def clear_harvest_source_history(self):
+        source_id = None
+        if len(self.args) >= 2:
+            source_id = unicode(self.args[1])
+
+        context = {
+            'model': model,
+            'user': self.admin_user['name'],
+            'session': model.Session
+        }
+        if source_id is not None:
+            get_action('harvest_source_job_history_clear')(context,{'id':source_id})
+            print 'Cleared job history of harvest source: %s' % source_id
+        else:
+            '''
+            Purge queues, because we clean all harvest jobs and
+            objects in the database.
+            '''
+            self.purge_queues()
+            cleared_sources_dicts = get_action('harvest_sources_job_history_clear')(context,{})
+            print 'Cleared job history for all harvest sources: %s source(s)' % len(cleared_sources_dicts)
+
 
     def show_harvest_source(self):
 
@@ -465,6 +495,9 @@ class Harvester(CkanCommand):
         context = {'model': model, 'user': self.admin_user['name']}
         get_action('harvest_sources_reindex')(context,{})
 
+    def purge_queues(self):
+        from ckanext.harvest.queue import purge_queues
+        purge_queues()
 
     def print_harvest_sources(self, sources):
         if sources:
