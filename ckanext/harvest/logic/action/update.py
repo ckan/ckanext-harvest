@@ -237,7 +237,7 @@ def harvest_sources_job_history_clear(context, data_dict):
 
     job_history_clear_results = []
     # We assume that the maximum of 1000 (hard limit) rows should be enough
-    result = logic.get_action('package_search')(context, {'fq': '+type:"harvest"', 'rows': 1000})
+    result = logic.get_action('package_search')(context, {'fq': '+dataset_type:harvest', 'rows': 1000})
     harvest_packages = result['results']
     if harvest_packages:
         for data_dict in harvest_packages:
