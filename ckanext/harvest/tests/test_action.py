@@ -398,12 +398,15 @@ class TestActions(ActionBase):
         
     def test_harvest_sources_job_history_clear(self):
         # prepare
-        source_1 = factories.HarvestSourceObj(**SOURCE_DICT)
+        data_dict = SOURCE_DICT
+        source_1 = factories.HarvestSourceObj(data_dict)
         job_1 = factories.HarvestJobObj(source=source_1)
         dataset_1 = ckan_factories.Dataset()
         object_1_ = factories.HarvestObjectObj(job=job_1, source=source_1,
                                              package_id=dataset_1['id'])
-        source_2 = factories.HarvestSourceObj(**SOURCE_DICT)
+        data_dict['name'] = 'another-source1'
+        data_dict['url'] = 'http://another-url'
+        source_2 = factories.HarvestSourceObj(data_dict)
         job_2 = factories.HarvestJobObj(source=source_2)
         dataset_2 = ckan_factories.Dataset()
         object_2_ = factories.HarvestObjectObj(job=job_2, source=source_2,
@@ -423,7 +426,7 @@ class TestActions(ActionBase):
         assert_equal(harvest_model.HarvestObject.get(object_1_.id), None)
         dataset_from_db_1 = model.Package.get(dataset_1['id'])
         assert dataset_from_db_1, 'is None'
-        assert_equal(dataset_from_db_1['id'], dataset_1['id'])
+        assert_equal(dataset_from_db_1.id, dataset_1['id'])
         source_2 = harvest_model.HarvestSource.get(source_1.id)
         assert source_2
         assert_equal(harvest_model.HarvestJob.get(job_2.id), None)
