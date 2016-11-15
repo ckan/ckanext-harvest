@@ -431,7 +431,9 @@ class TestActions(ActionBase):
             context, {})
 
         # verify
-        assert_equal(result, [{'id': source_1.id}, {'id': source_2.id}])
+        assert_equal(
+            sorted(result),
+            sorted([{'id': source_1.id}, {'id': source_2.id}]))
         source_1 = harvest_model.HarvestSource.get(source_1.id)
         assert source_1
         assert_equal(harvest_model.HarvestJob.get(job_1.id), None)
