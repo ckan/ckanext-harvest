@@ -394,7 +394,7 @@ class TestActions(ActionBase):
         assert_equal(harvest_model.HarvestObject.get(object_.id), None)
         dataset_from_db = model.Package.get(dataset['id'])
         assert dataset_from_db, 'is None'
-        assert_equal(dataset_from_db['id'], dataset['id'])
+        assert_equal(dataset_from_db.id, dataset['id'])
         
     def test_harvest_sources_job_history_clear(self):
         # prepare
@@ -430,7 +430,7 @@ class TestActions(ActionBase):
         assert_equal(harvest_model.HarvestObject.get(object_2_.id), None)
         dataset_from_db_1 = model.Package.get(dataset_2['id'])
         assert dataset_from_db_2, 'is None'
-        assert_equal(dataset_from_db_2['id'], dataset_2['id'])
+        assert_equal(dataset_from_db_2.id, dataset_2['id'])
 
     def test_harvest_source_create_twice_with_unique_url(self):
         # don't use factory because it looks for the existing source
