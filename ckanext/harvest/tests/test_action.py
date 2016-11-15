@@ -400,6 +400,8 @@ class TestActions(ActionBase):
         # prepare
         # don't use factory because it looks for the existing source
         data_dict = SOURCE_DICT
+        data_dict['name'] = 'job-history-clear-source'
+        data_dict['url'] = 'http://job-history-clear-url'
         site_user = toolkit.get_action('get_site_user')(
             {'model': model, 'ignore_auth': True}, {})['name']
 
@@ -407,8 +409,8 @@ class TestActions(ActionBase):
             {'user': site_user}, data_dict)
         source_1 = harvest_model.HarvestSource.get(source_1_dict['id'])
 
-        data_dict['name'] = 'another-source1'
-        data_dict['url'] = 'http://another-url'
+        data_dict['name'] = 'another-job-history-clear-source'
+        data_dict['url'] = 'http://another-job-history-clear-url'
         source_2_dict = toolkit.get_action('harvest_source_create')(
             {'user': site_user}, data_dict)
         source_2 = harvest_model.HarvestSource.get(source_2_dict['id'])
