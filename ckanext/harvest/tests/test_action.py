@@ -371,6 +371,66 @@ class TestActions(ActionBase):
         assert_equal(harvest_model.HarvestJob.get(job.id), None)
         assert_equal(harvest_model.HarvestObject.get(object_.id), None)
         assert_equal(model.Package.get(dataset['id']), None)
+        
+    def test_harvest_source_job_history_clear(self):
+        # prepare
+        source = factories.HarvestSourceObj(**SOURCE_DICT)
+        job = factories.HarvestJobObj(source=source)
+        dataset = ckan_factories.Dataset()
+        object_ = factories.HarvestObjectObj(job=job, source=source,
+                                             package_id=dataset['id'])
+
+        # execute
+        context = {'model': model, 'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+        result = toolkit.get_action('harvest_source_job_history_clear')(
+            context, {'id': source.id})
+
+        # verify
+        assert_equal(result, {'id': source.id})
+        source = harvest_model.HarvestSource.get(source.id)
+        assert source
+        assert_equal(harvest_model.HarvestJob.get(job.id), None)
+        assert_equal(harvest_model.HarvestObject.get(object_.id), None)
+        dataset_from_db = model.Package.get(dataset['id'])
+        assert dataset_from_db, 'is None'
+        assert_equal(dataset_from_db['id'], dataset['id'])
+        
+    def test_harvest_sources_job_history_clear(self):
+        # prepare
+        source_1 = factories.HarvestSourceObj(**SOURCE_DICT)
+        job_1 = factories.HarvestJobObj(source=source_1)
+        dataset_1 = ckan_factories.Dataset()
+        object_1_ = factories.HarvestObjectObj(job=job_1, source=source_1,
+                                             package_id=dataset_1['id'])
+        source_2 = factories.HarvestSourceObj(**SOURCE_DICT)
+        job_2 = factories.HarvestJobObj(source=source_2)
+        dataset_2 = ckan_factories.Dataset()
+        object_2_ = factories.HarvestObjectObj(job=job_2, source=source_2,
+                                             package_id=dataset_2['id'])
+
+        # execute
+        context = {'model': model, 'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+        result = toolkit.get_action('harvest_sources_job_history_clear')(
+            context, {})
+
+        # verify
+        assert_equal(result, [{'id': source_1.id}, {'id': source_2.id}])
+        source_1 = harvest_model.HarvestSource.get(source_1.id)
+        assert source_1
+        assert_equal(harvest_model.HarvestJob.get(job_1.id), None)
+        assert_equal(harvest_model.HarvestObject.get(object_1_.id), None)
+        dataset_from_db_1 = model.Package.get(dataset_1['id'])
+        assert dataset_from_db_1, 'is None'
+        assert_equal(dataset_from_db_1['id'], dataset_1['id'])
+        source_2 = harvest_model.HarvestSource.get(source_1.id)
+        assert source_2
+        assert_equal(harvest_model.HarvestJob.get(job_2.id), None)
+        assert_equal(harvest_model.HarvestObject.get(object_2_.id), None)
+        dataset_from_db_1 = model.Package.get(dataset_2['id'])
+        assert dataset_from_db_2, 'is None'
+        assert_equal(dataset_from_db_2['id'], dataset_2['id'])
 
     def test_harvest_source_create_twice_with_unique_url(self):
         # don't use factory because it looks for the existing source
