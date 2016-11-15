@@ -445,7 +445,7 @@ class TestActions(ActionBase):
         assert source_2
         assert_equal(harvest_model.HarvestJob.get(job_2.id), None)
         assert_equal(harvest_model.HarvestObject.get(object_2_.id), None)
-        dataset_from_db_1 = model.Package.get(dataset_2['id'])
+        dataset_from_db_2 = model.Package.get(dataset_2['id'])
         assert dataset_from_db_2, 'is None'
         assert_equal(dataset_from_db_2.id, dataset_2['id'])
 
