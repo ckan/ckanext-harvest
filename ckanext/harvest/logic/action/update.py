@@ -241,8 +241,13 @@ def harvest_sources_job_history_clear(context, data_dict):
     harvest_packages = result['results']
     if harvest_packages:
         for data_dict in harvest_packages:
-            clear_result = get_action('harvest_source_job_history_clear')(context, {'id': data_dict['id']})
-            job_history_clear_results.append(clear_result)
+            try:
+                clear_result = get_action('harvest_source_job_history_clear')(context, {'id': data_dict['id']})
+                job_history_clear_results.append(clear_result)
+            except NotFound:
+                # Ignoring not existent harvest sources because of a possibly corrupt search index
+                # Logging was already done in called function
+                pass
 
     return job_history_clear_results
 
