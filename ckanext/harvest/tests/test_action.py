@@ -398,15 +398,25 @@ class TestActions(ActionBase):
         
     def test_harvest_sources_job_history_clear(self):
         # prepare
+        # don't use factory because it looks for the existing source
         data_dict = SOURCE_DICT
-        source_1 = factories.HarvestSourceObj(**data_dict)
+        site_user = toolkit.get_action('get_site_user')(
+            {'model': model, 'ignore_auth': True}, {})['name']
+
+        source_1_dict = toolkit.get_action('harvest_source_create')(
+            {'user': site_user}, data_dict)
+        source_1 = harvest_model.HarvestSource.get(source_1_dict['id'])
+
+        data_dict['name'] = 'another-source1'
+        data_dict['url'] = 'http://another-url'
+        source_2_dict = toolkit.get_action('harvest_source_create')(
+            {'user': site_user}, data_dict)
+        source_2 = harvest_model.HarvestSource.get(source_2_dict['id'])
+        
         job_1 = factories.HarvestJobObj(source=source_1)
         dataset_1 = ckan_factories.Dataset()
         object_1_ = factories.HarvestObjectObj(job=job_1, source=source_1,
                                              package_id=dataset_1['id'])
-        data_dict['name'] = 'another-source1'
-        data_dict['url'] = 'http://another-url'
-        source_2 = factories.HarvestSourceObj(**data_dict)
         job_2 = factories.HarvestJobObj(source=source_2)
         dataset_2 = ckan_factories.Dataset()
         object_2_ = factories.HarvestObjectObj(job=job_2, source=source_2,
