@@ -354,7 +354,7 @@ class TestHarvestSourceActionPatch(HarvestSourceFixtureMixin,
 
 class TestActions(ActionBase):
     def test_harvest_source_clear(self):
-        source = factories.HarvestSourceObj(**SOURCE_DICT)
+        source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
         job = factories.HarvestJobObj(source=source)
         dataset = ckan_factories.Dataset()
         object_ = factories.HarvestObjectObj(job=job, source=source,
@@ -371,10 +371,10 @@ class TestActions(ActionBase):
         assert_equal(harvest_model.HarvestJob.get(job.id), None)
         assert_equal(harvest_model.HarvestObject.get(object_.id), None)
         assert_equal(model.Package.get(dataset['id']), None)
-        
+
     def test_harvest_source_job_history_clear(self):
         # prepare
-        source = factories.HarvestSourceObj(**SOURCE_DICT)
+        source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
         job = factories.HarvestJobObj(source=source)
         dataset = ckan_factories.Dataset()
         object_ = factories.HarvestObjectObj(job=job, source=source,
@@ -395,26 +395,15 @@ class TestActions(ActionBase):
         dataset_from_db = model.Package.get(dataset['id'])
         assert dataset_from_db, 'is None'
         assert_equal(dataset_from_db.id, dataset['id'])
-        
+
     def test_harvest_sources_job_history_clear(self):
         # prepare
-        # don't use factory because it looks for the existing source
-        data_dict = SOURCE_DICT
-        data_dict['name'] = 'job-history-clear-source'
-        data_dict['url'] = 'http://job-history-clear-url'
-        site_user = toolkit.get_action('get_site_user')(
-            {'model': model, 'ignore_auth': True}, {})['name']
+        data_dict = SOURCE_DICT.copy()
+        source_1 = factories.HarvestSourceObj(**data_dict)
+        data_dict['name'] = 'another-source'
+        data_dict['url'] = 'http://another-url'
+        source_2 = factories.HarvestSourceObj(**data_dict)
 
-        source_1_dict = toolkit.get_action('harvest_source_create')(
-            {'user': site_user}, data_dict)
-        source_1 = harvest_model.HarvestSource.get(source_1_dict['id'])
-
-        data_dict['name'] = 'another-job-history-clear-source'
-        data_dict['url'] = 'http://another-job-history-clear-url'
-        source_2_dict = toolkit.get_action('harvest_source_create')(
-            {'user': site_user}, data_dict)
-        source_2 = harvest_model.HarvestSource.get(source_2_dict['id'])
-        
         job_1 = factories.HarvestJobObj(source=source_1)
         dataset_1 = ckan_factories.Dataset()
         object_1_ = factories.HarvestObjectObj(job=job_1, source=source_1,
@@ -450,49 +439,39 @@ class TestActions(ActionBase):
         assert_equal(dataset_from_db_2.id, dataset_2['id'])
 
     def test_harvest_source_create_twice_with_unique_url(self):
-        # don't use factory because it looks for the existing source
-        data_dict = SOURCE_DICT
+        data_dict = SOURCE_DICT.copy()
+        factories.HarvestSourceObj(**data_dict)
         site_user = toolkit.get_action('get_site_user')(
             {'model': model, 'ignore_auth': True}, {})['name']
-
-        toolkit.get_action('harvest_source_create')(
-            {'user': site_user}, data_dict)
-
-        data_dict['name'] = 'another-source1'
+        data_dict['name'] = 'another-source'
         data_dict['url'] = 'http://another-url'
         toolkit.get_action('harvest_source_create')(
             {'user': site_user}, data_dict)
 
     def test_harvest_source_create_twice_with_same_url(self):
-        # don't use factory because it looks for the existing source
-        data_dict = SOURCE_DICT
+        data_dict = SOURCE_DICT.copy()
+        factories.HarvestSourceObj(**data_dict)
+
         site_user = toolkit.get_action('get_site_user')(
             {'model': model, 'ignore_auth': True}, {})['name']
-
-        toolkit.get_action('harvest_source_create')(
-            {'user': site_user}, data_dict)
-
-        data_dict['name'] = 'another-source2'
+        data_dict['name'] = 'another-source'
         assert_raises(toolkit.ValidationError,
                       toolkit.get_action('harvest_source_create'),
                       {'user': site_user}, data_dict)
 
     def test_harvest_source_create_twice_with_unique_url_and_config(self):
-        # don't use factory because it looks for the existing source
-        data_dict = SOURCE_DICT
+        data_dict = SOURCE_DICT.copy()
+        factories.HarvestSourceObj(**data_dict)
+
         site_user = toolkit.get_action('get_site_user')(
             {'model': model, 'ignore_auth': True}, {})['name']
-
-        toolkit.get_action('harvest_source_create')(
-            {'user': site_user}, data_dict)
-
-        data_dict['name'] = 'another-source3'
+        data_dict['name'] = 'another-source'
         data_dict['config'] = '{"something": "new"}'
         toolkit.get_action('harvest_source_create')(
             {'user': site_user}, data_dict)
 
     def test_harvest_job_create_as_sysadmin(self):
-        source = factories.HarvestSource(**SOURCE_DICT)
+        source = factories.HarvestSource(**SOURCE_DICT.copy())
 
         site_user = toolkit.get_action('get_site_user')(
             {'model': model, 'ignore_auth': True}, {})['name']
