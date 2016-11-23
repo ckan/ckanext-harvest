@@ -27,6 +27,17 @@ def harvest_source_update(context, data_dict):
         return {'success': False,
                 'msg': pt._('User {0} not authorized to update harvest source {1}').format(user, source_id)}
 
+def harvest_sources_clear(context, data_dict):
+    '''
+        Authorization check for clearing history for all harvest sources
+
+        Only sysadmins can do it
+    '''
+    if not user_is_sysadmin(context):
+        return {'success': False, 'msg': pt._('Only sysadmins can clear history for all harvest jobs')}
+    else:
+        return {'success': True}
+
 def harvest_source_clear(context, data_dict):
     '''
         Authorization check for clearing a harvest source

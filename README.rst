@@ -189,6 +189,14 @@ The following operations can be run from the command line as described underneat
         - clears all datasets, jobs and objects related to a harvest source,
           but keeps the source itself
 
+      harvester clearsource_history [{source-id}]
+        - If no source id is given the history for all harvest sources (maximum is 1000)
+          will be cleared.
+          Clears all jobs and objects related to a harvest source, but keeps the source
+          itself. The datasets imported from the harvest source will **NOT** be deleted!!!
+          If a source id is given, it only clears the history of the harvest source with
+          the given source id.
+
       harvester sources [all]
         - lists harvest sources
           If 'all' is defined, it also shows the Inactive sources

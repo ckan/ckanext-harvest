@@ -225,6 +225,73 @@ def harvest_source_clear(context, data_dict):
     return {'id': harvest_source_id}
 
 
+def harvest_sources_job_history_clear(context, data_dict):
+    '''
+    Clears the history for all active harvest sources. All jobs and objects related to a harvest source will
+    be cleared, but keeps the source itself.
+    This is useful to clean history of long running harvest sources to start again fresh.
+    The datasets imported from the harvest source will NOT be deleted!!!
+
+    '''
+    check_access('harvest_sources_clear', context, data_dict)
+
+    job_history_clear_results = []
+    # We assume that the maximum of 1000 (hard limit) rows should be enough
+    result = logic.get_action('package_search')(context, {'fq': '+dataset_type:harvest', 'rows': 1000})
+    harvest_packages = result['results']
+    if harvest_packages:
+        for data_dict in harvest_packages:
+            try:
+                clear_result = get_action('harvest_source_job_history_clear')(context, {'id': data_dict['id']})
+                job_history_clear_results.append(clear_result)
+            except NotFound:
+                # Ignoring not existent harvest sources because of a possibly corrupt search index
+                # Logging was already done in called function
+                pass
+
+    return job_history_clear_results
+
+
+def harvest_source_job_history_clear(context, data_dict):
+    '''
+    Clears all jobs and objects related to a harvest source, but keeps the source itself.
+    This is useful to clean history of long running harvest sources to start again fresh.
+    The datasets imported from the harvest source will NOT be deleted!!!
+
+    :param id: the id of the harvest source to clear
+    :type id: string
+
+    '''
+    check_access('harvest_source_clear', context, data_dict)
+
+    harvest_source_id = data_dict.get('id', None)
+
+    source = HarvestSource.get(harvest_source_id)
+    if not source:
+        log.error('Harvest source %s does not exist', harvest_source_id)
+        raise NotFound('Harvest source %s does not exist' % harvest_source_id)
+
+    harvest_source_id = source.id
+
+    model = context['model']
+
+    sql = '''begin;
+    delete from harvest_object_error where harvest_object_id in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
+    delete from harvest_object_extra where harvest_object_id in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
+    delete from harvest_object where harvest_source_id = '{harvest_source_id}';
+    delete from harvest_gather_error where harvest_job_id in (select id from harvest_job where source_id = '{harvest_source_id}');
+    delete from harvest_job where source_id = '{harvest_source_id}';
+    commit;
+    '''.format(harvest_source_id=harvest_source_id)
+
+    model.Session.execute(sql)
+
+    # Refresh the index for this source to update the status object
+    get_action('harvest_source_reindex')(context, {'id': harvest_source_id})
+
+    return {'id': harvest_source_id}
+
+
 def harvest_source_index_clear(context, data_dict):
     '''
     Clears all datasets, jobs and objects related to a harvest source, but
