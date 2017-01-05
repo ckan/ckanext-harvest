@@ -375,7 +375,7 @@ the configuration field)::
 
     {
      "api_version": 1,
-     "default_tags": [{"name": "geo"}, {"name": "namibia"],
+     "default_tags": [{"name": "geo"}, {"name": "namibia"}],
      "default_groups": ["science", "spend-data"],
      "default_extras": {"encoding":"utf8", "harvest_url": "{harvest_source_url}/dataset/{dataset_id}"},
      "override_extras": true,
