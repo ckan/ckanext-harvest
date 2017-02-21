@@ -231,7 +231,7 @@ class CKANHarvester(HarvesterBase):
                 log.info('No datasets have been updated on the remote '
                          'CKAN instance since the last harvest job %s',
                          last_time)
-                return None
+                return []
 
         # Fall-back option - request all the datasets from the remote CKAN
         if get_all_packages:
@@ -250,7 +250,7 @@ class CKANHarvester(HarvesterBase):
             self._save_gather_error(
                 'No datasets found at CKAN: %s' % remote_ckan_base_url,
                 harvest_job)
-            return None
+            return []
 
         # Create harvest objects for each dataset
         try:
