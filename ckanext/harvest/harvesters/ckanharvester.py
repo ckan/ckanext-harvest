@@ -428,8 +428,20 @@ class CKANHarvester(HarvesterBase):
 
                 for group_ in package_dict['groups']:
                     try:
-                        data_dict = {'id': group_['id']}
-                        group = get_action('group_show')(base_context.copy(), data_dict)
+                        try:
+                            if 'id' in group_:
+                                data_dict = {'id': group_['id']}
+                                group = get_action('group_show')(base_context.copy(), data_dict)
+                            else:
+                                raise NotFound
+
+                        except NotFound, e:
+                            if 'name' in group_:
+                                data_dict = {'id': group_['name']}
+                                group = get_action('group_show')(base_context.copy(), data_dict)
+                            else:
+                                raise NotFound
+                        # Found local group
                         validated_groups.append({'id': group['id'], 'name': group['name']})
 
                     except NotFound, e:
