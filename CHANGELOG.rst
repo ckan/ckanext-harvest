@@ -13,7 +13,7 @@ Unreleased_
 Added
 -----
 - Includes i18n directory in package.
-- Adds a new `clearsource_history` command/operation.
+- Adds a new ``clearsource_history`` command/operation.
 
 *******************
 0.0.5_ - 2016-05-23
@@ -27,6 +27,59 @@ Removed
 -------
 - This release removes support for CKAN <= 2.0
 
+*******************
+0.0.4_ - 2015-12-11
+*******************
+Added
+-----
+- Adds ``_find_existing_package`` method to allow harvesters extending the ``HarvesterBase`` to implement their own logic to find an existing package
+- Adds support for ``ITranslation`` interface
+- Adds special CSS class to datetimes in frontend to enable localisation to the users timezone
+
+Changed
+-------
+- Make statistics keys consistent across all actions
+
+Removed
+-------
+- Remove ``harvest_source_for_a_dataset`` action
+
+*******************
+0.0.3_ - 2015-11-20
+*******************
+Added
+-----
+
+Changed
+-------
+
+Removed
+-------
+
+*******************
+0.0.2_ - 2015-11-20
+*******************
+Added
+-----
+
+Changed
+-------
+
+Removed
+-------
+
+*******************
+0.0.1_ - 2015-11-20
+*******************
+Added
+-----
+- Adds clear source as a command
+- Adds specific exceptions instead of having only the generic ``Exception``
+
+Fixed
+-----
+- Catch 'no harvest job' exception
+
 **********
 Categories
 **********
@@ -39,3 +92,7 @@ Categories
 
 .. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v0.0.5...HEAD
 .. _0.0.5: https://github.com/ckan/ckanext-harvest/compare/v0.0.4...v0.0.5
+.. _0.0.4: https://github.com/ckan/ckanext-harvest/compare/v0.0.3...v0.0.4
+.. _0.0.3: https://github.com/ckan/ckanext-harvest/compare/v0.0.2...v0.0.3
+.. _0.0.2: https://github.com/ckan/ckanext-harvest/compare/v0.0.1...v0.0.2
+.. _0.0.1: https://github.com/ckan/ckanext-harvest/compare/ckan-1.6...v0.0.1
