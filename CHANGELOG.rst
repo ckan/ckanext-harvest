@@ -47,26 +47,18 @@ Removed
 *******************
 0.0.3_ - 2015-11-20
 *******************
-Added
+Fixed
 -----
+- Fixed queues tests
 
-Changed
--------
-
-Removed
--------
 
 *******************
 0.0.2_ - 2015-11-20
 *******************
-Added
------
-
 Changed
 -------
+- Namespace redis keys to avoid conflicts between CKAN instances
 
-Removed
--------
 
 *******************
 0.0.1_ - 2015-11-20
