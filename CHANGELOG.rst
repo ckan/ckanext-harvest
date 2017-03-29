@@ -14,6 +14,19 @@ Added
 -----
 - Includes i18n directory in package.
 - Adds a new ``clearsource_history`` command/operation.
+- Adds new parameter ``return_last_job_status`` to ``harvest_source_list``
+- Documentation for logs API
+
+Changed
+-------
+- ``gather_stage`` return empty list instead of None if errors occured 
+- Change ``redirect`` calls to ``h.redirect_to``
+
+Fixed
+-----
+- Fix namespace package declarations
+- Only purge own data when calling ``queue_purge`` with redis
+- Fix ``default_groups`` behavior
 
 *******************
 0.0.5_ - 2016-05-23
