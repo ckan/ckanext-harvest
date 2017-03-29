@@ -210,6 +210,16 @@ class Harvester(CkanCommand):
 
     def _load_config(self):
         super(Harvester, self)._load_config()
+        import pylons
+        c = pylons.util.AttribSafeContextObj()
+
+        self.registry.register(pylons.c, c)
+
+        self.site_user = get_action('get_site_user')({'ignore_auth': True}, {})
+
+        pylons.c.user = self.site_user['name']
+        pylons.c.userobj = model.User.get(self.site_user['name'])
+
 
     def initdb(self):
         from ckanext.harvest.model import setup as db_setup
