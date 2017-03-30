@@ -2,6 +2,8 @@
 How to contribute to ckanext-harvest
 ####################################
 
+For contributing to ckanext-harvest or its documentation, follow the same guidelines that apply to CKAN core, described in the `contributing guidelines <http://docs.ckan.org/en/latest/contributing>`_.
+
 **Did you find a bug?**
 -----------------------
 

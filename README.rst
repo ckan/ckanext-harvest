@@ -813,9 +813,8 @@ Community
 Contributing
 ============
 
-For contributing to ckanext-spatial or its documentation, follow the same
-guidelines that apply to CKAN core, described in
-`CONTRIBUTING <https://github.com/ckan/ckan/blob/master/CONTRIBUTING.rst>`_.
+For contributing to ckanext-harvest or its documentation, follow the guidelines described in
+`CONTRIBUTING <https://github.com/ckan/ckanext-harvest/blob/master/CONTRIBUTING.rst>`_.
 
 
 License
