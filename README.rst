@@ -802,6 +802,17 @@ Here are some common errors and solutions:
   You are testing with SQLite as the database, but the CKAN Harvester needs PostgreSQL. Specify test-core.ini instead of test.ini.
 
 
+Releases
+========
+
+To create a new release, follow the following steps:
+
+* Determine new release number based on the rules of `semantic versioning <http://semver.org>`_
+* Update the CHANGELOG, especially the link for the "Unreleased" section
+* Update the version number in `setup.py`
+* Create a new release on GitHub and add the CHANGELOG of this release as release notes
+
+
 Community
 =========
 
