@@ -524,7 +524,7 @@ class CKANHarvester(HarvesterBase):
             if default_extras:
                 override_extras = self.config.get('override_extras', False)
                 if not 'extras' in package_dict:
-                    package_dict['extras'] = {}
+                    package_dict['extras'] = []
                 for key, value in default_extras.iteritems():
                     existing_extra = get_extra(key, package_dict)
                     if existing_extra and not override_extras:
