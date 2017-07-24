@@ -1,6 +1,6 @@
 import copy
 
-from nose.tools import assert_equal, assert_raises
+from nose.tools import assert_equal, assert_raises, assert_in
 import json
 from mock import patch, MagicMock
 
@@ -235,11 +235,13 @@ class TestCkanHarvester(object):
 
     def test_default_tags_invalid(self):
         config = {'default_tags': ['geo']}  # should be list of dicts
-        assert_raises(
-            run_harvest,
-            url='http://localhost:%s' % mock_ckan.PORT,
-            harvester=CKANHarvester(),
-            config=json.dumps(config))
+        with assert_raises(toolkit.ValidationError) as harvest_context:
+            run_harvest(
+                url='http://localhost:%s' % mock_ckan.PORT,
+                harvester=CKANHarvester(),
+                config=json.dumps(config))
+        assert_in('default_tags must be a list of dictionaries',
+                  str(harvest_context.exception))
 
     def test_default_groups(self):
         Group(id='group1-id', name='group1')
@@ -271,12 +273,14 @@ class TestCkanHarvester(object):
         Group(id='group2-id', name='group2')
 
         # should be list of strings
-        config = {'default_tags': [{'name': 'group2'}]}
-        assert_raises(
-            run_harvest,
-            url='http://localhost:%s' % mock_ckan.PORT,
-            harvester=CKANHarvester(),
-            config=json.dumps(config))
+        config = {'default_groups': [{'name': 'group2'}]}
+        with assert_raises(toolkit.ValidationError) as harvest_context:
+            run_harvest(
+                url='http://localhost:%s' % mock_ckan.PORT,
+                harvester=CKANHarvester(),
+                config=json.dumps(config))
+        assert_in('default_groups must be a list of group names/ids',
+                  str(harvest_context.exception))
 
     def test_default_extras(self):
         config = {
@@ -307,8 +311,10 @@ class TestCkanHarvester(object):
         config = {
             'default_extras': 'utf8',  # value should be a dict
             }
-        assert_raises(
-            run_harvest,
-            url='http://localhost:%s' % mock_ckan.PORT,
-            harvester=CKANHarvester(),
-            config=json.dumps(config))
+        with assert_raises(toolkit.ValidationError) as harvest_context:
+            run_harvest(
+                url='http://localhost:%s' % mock_ckan.PORT,
+                harvester=CKANHarvester(),
+                config=json.dumps(config))
+        assert_in('default_extras must be a dictionary',
+                  str(harvest_context.exception))

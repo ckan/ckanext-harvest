@@ -189,6 +189,14 @@ The following operations can be run from the command line as described underneat
         - clears all datasets, jobs and objects related to a harvest source,
           but keeps the source itself
 
+      harvester clearsource_history [{source-id}]
+        - If no source id is given the history for all harvest sources (maximum is 1000)
+          will be cleared.
+          Clears all jobs and objects related to a harvest source, but keeps the source
+          itself. The datasets imported from the harvest source will **NOT** be deleted!!!
+          If a source id is given, it only clears the history of the harvest source with
+          the given source id.
+
       harvester sources [all]
         - lists harvest sources
           If 'all' is defined, it also shows the Inactive sources
@@ -367,7 +375,7 @@ the configuration field)::
 
     {
      "api_version": 1,
-     "default_tags": [{"name": "geo"}, {"name": "namibia"],
+     "default_tags": [{"name": "geo"}, {"name": "namibia"}],
      "default_groups": ["science", "spend-data"],
      "default_extras": {"encoding":"utf8", "harvest_url": "{harvest_source_url}/dataset/{dataset_id}"},
      "override_extras": true,
@@ -794,6 +802,17 @@ Here are some common errors and solutions:
   You are testing with SQLite as the database, but the CKAN Harvester needs PostgreSQL. Specify test-core.ini instead of test.ini.
 
 
+Releases
+========
+
+To create a new release, follow the following steps:
+
+* Determine new release number based on the rules of `semantic versioning <http://semver.org>`_
+* Update the CHANGELOG, especially the link for the "Unreleased" section
+* Update the version number in `setup.py`
+* Create a new release on GitHub and add the CHANGELOG of this release as release notes
+
+
 Community
 =========
 
@@ -805,9 +824,8 @@ Community
 Contributing
 ============
 
-For contributing to ckanext-spatial or its documentation, follow the same
-guidelines that apply to CKAN core, described in
-`CONTRIBUTING <https://github.com/ckan/ckan/blob/master/CONTRIBUTING.rst>`_.
+For contributing to ckanext-harvest or its documentation, follow the guidelines described in
+`CONTRIBUTING <https://github.com/ckan/ckanext-harvest/blob/master/CONTRIBUTING.rst>`_.
 
 
 License

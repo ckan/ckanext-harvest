@@ -231,7 +231,7 @@ class CKANHarvester(HarvesterBase):
                 log.info('No datasets have been updated on the remote '
                          'CKAN instance since the last harvest job %s',
                          last_time)
-                return None
+                return []
 
         # Fall-back option - request all the datasets from the remote CKAN
         if get_all_packages:
@@ -250,7 +250,7 @@ class CKANHarvester(HarvesterBase):
             self._save_gather_error(
                 'No datasets found at CKAN: %s' % remote_ckan_base_url,
                 harvest_job)
-            return None
+            return []
 
         # Create harvest objects for each dataset
         try:
@@ -428,8 +428,20 @@ class CKANHarvester(HarvesterBase):
 
                 for group_ in package_dict['groups']:
                     try:
-                        data_dict = {'id': group_['id']}
-                        group = get_action('group_show')(base_context.copy(), data_dict)
+                        try:
+                            if 'id' in group_:
+                                data_dict = {'id': group_['id']}
+                                group = get_action('group_show')(base_context.copy(), data_dict)
+                            else:
+                                raise NotFound
+
+                        except NotFound, e:
+                            if 'name' in group_:
+                                data_dict = {'id': group_['name']}
+                                group = get_action('group_show')(base_context.copy(), data_dict)
+                            else:
+                                raise NotFound
+                        # Found local group
                         validated_groups.append({'id': group['id'], 'name': group['name']})
 
                     except NotFound, e:
@@ -512,7 +524,7 @@ class CKANHarvester(HarvesterBase):
             if default_extras:
                 override_extras = self.config.get('override_extras', False)
                 if not 'extras' in package_dict:
-                    package_dict['extras'] = {}
+                    package_dict['extras'] = []
                 for key, value in default_extras.iteritems():
                     existing_extra = get_extra(key, package_dict)
                     if existing_extra and not override_extras:

@@ -6,7 +6,6 @@ from ckan.lib.base import c, model, request, render, h, g
 from ckan.lib.base import abort
 import ckan.lib.maintain as maintain
 import ckan.lib.search as search
-import ckan.new_authz
 
 from ckan.controllers.group import GroupController
 

@@ -219,7 +219,7 @@ class HarvesterBase(SingletonPlugin):
     def _create_or_update_package(self, package_dict, harvest_object,
                                   package_dict_form='rest'):
         '''
-        Creates a new package or updates an exisiting one according to the
+        Creates a new package or updates an existing one according to the
         package dictionary provided.
 
         The package dictionary can be in one of two forms:
