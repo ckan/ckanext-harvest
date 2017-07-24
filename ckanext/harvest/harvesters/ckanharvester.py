@@ -1,5 +1,6 @@
 import urllib
 import urllib2
+import requests
 import httplib
 import datetime
 import socket
@@ -36,12 +37,17 @@ class CKANHarvester(HarvesterBase):
         return '%s/package_search' % self._get_action_api_offset()
 
     def _get_content(self, url):
-        http_request = urllib2.Request(url=url)
+        http_request = None
 
         api_key = self.config.get('api_key')
         if api_key:
-            http_request.add_header('Authorization', api_key)
+            headers = {'Authorization': api_key, 'User-Agent': 'Mozilla/5.0'}
+            http_request = requests.get(url, headers=headers)
 
+        try:
+            http_request = requests.get(url)
+
+        # TODO errors statements for requests
         try:
             http_response = urllib2.urlopen(http_request)
         except urllib2.HTTPError, e:
@@ -57,7 +63,7 @@ class CKANHarvester(HarvesterBase):
             raise ContentFetchError('HTTP socket error: %s' % e)
         except Exception, e:
             raise ContentFetchError('HTTP general exception: %s' % e)
-        return http_response.read()
+        return http_request.text
 
     def _get_group(self, base_url, group):
         url = base_url + self._get_action_api_offset() + '/group_show?id=' + \
