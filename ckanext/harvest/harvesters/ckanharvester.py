@@ -1,5 +1,4 @@
 import urllib
-import urllib2
 import requests
 import httplib
 import datetime
@@ -17,6 +16,13 @@ from ckanext.harvest.model import HarvestJob, HarvestObject, HarvestGatherError
 
 import logging
 log = logging.getLogger(__name__)
+
+# urllib3 and certifi integration
+import urllib3.contrib.pyopenssl
+urllib3.contrib.pyopenssl.inject_into_urllib3()
+import certifi
+import urllib3
+logging.getLogger("urllib3").setLevel(logging.INFO)
 
 from base import HarvesterBase
 
@@ -37,33 +43,27 @@ class CKANHarvester(HarvesterBase):
         return '%s/package_search' % self._get_action_api_offset()
 
     def _get_content(self, url):
-        http_request = None
+        http = urllib3.PoolManager(
+                    cert_reqs='CERT_REQUIRED',
+                    ca_certs='/usr/lib/ckan/default/src/ckanext-harvest/ca-custom/all.pem')
 
         api_key = self.config.get('api_key')
-        if api_key:
-            headers = {'Authorization': api_key, 'User-Agent': 'Mozilla/5.0'}
-            http_request = requests.get(url, headers=headers)
 
+        http_request = None
         try:
-            http_request = requests.get(url)
+            if api_key:
+                headers = {'Authorization': api_key, 'User-Agent': 'Mozilla/5.0'}
+                http_request = http.request('GET', url, retries=3, headers=headers)
+            else:
+                http_request = http.request('GET', url, retries=3)
+            print("HARVEST DEBUG", http_request.status)
 
         # TODO errors statements for requests
-        try:
-            http_response = urllib2.urlopen(http_request)
-        except urllib2.HTTPError, e:
-            if e.getcode() == 404:
-                raise ContentNotFoundError('HTTP error: %s' % e.code)
-            else:
-                raise ContentFetchError('HTTP error: %s' % e.code)
-        except urllib2.URLError, e:
-            raise ContentFetchError('URL error: %s' % e.reason)
-        except httplib.HTTPException, e:
-            raise ContentFetchError('HTTP Exception: %s' % e)
-        except socket.error, e:
-            raise ContentFetchError('HTTP socket error: %s' % e)
         except Exception, e:
+            print(e)
             raise ContentFetchError('HTTP general exception: %s' % e)
-        return http_request.text
+
+        return http_request.data
 
     def _get_group(self, base_url, group):
         url = base_url + self._get_action_api_offset() + '/group_show?id=' + \
