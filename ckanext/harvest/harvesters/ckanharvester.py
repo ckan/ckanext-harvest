@@ -45,7 +45,7 @@ class CKANHarvester(HarvesterBase):
     def _get_content(self, url):
         http = urllib3.PoolManager(
                     cert_reqs='CERT_REQUIRED',
-                    ca_certs='/usr/lib/ckan/default/src/ckanext-harvest/ca-custom/all.pem')
+                    ca_certs=certifi.where())
 
         api_key = self.config.get('api_key')
 
