@@ -31,6 +31,9 @@ from ckanext.harvest.logic.dictization import harvest_job_dictize
 from ckanext.harvest.logic.action.get import (
     harvest_source_show, harvest_job_list, _get_sources_for_user)
 
+from ckanext.harvest.logic.action.notify import send_error_mail
+
+
 log = logging.getLogger(__name__)
 
 
@@ -549,6 +552,9 @@ def harvest_jobs_run(context, data_dict):
                     # status
                     get_action('harvest_source_reindex')(
                         context, {'id': job_obj.source.id})
+
+                    if toolkit.asbool(config.get('ckan.harvest.status_mail.errored')):
+                        send_error_mail(context, job_obj)
                 else:
                     log.debug('Ongoing job:%s source:%s',
                               job['id'], job['source_id'])
