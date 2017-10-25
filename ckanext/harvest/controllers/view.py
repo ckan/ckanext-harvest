@@ -195,6 +195,23 @@ class ViewController(BaseController):
             abort(404,_('Harvest source not found'))
         except p.toolkit.NotAuthorized:
             abort(401,self.not_auth_message)
+                
+    def abort_job(self, source, id):
+        try:
+            context = {'model':model, 'user':c.user}
+            c.job = p.toolkit.get_action('harvest_job_abort')(context, {'id': id})
+            c.harvest_source = p.toolkit.get_action('harvest_source_show')(context, {'id': source})
+            h.flash_success(_('Harvest job stopped'))
+            
+        except p.toolkit.ObjectNotFound:
+            abort(404,_('Harvest job not found'))
+        except p.toolkit.NotAuthorized:
+            abort(401,self.not_auth_message)
+        except Exception, e:
+            msg = 'An error occurred: [%s]' % str(e)
+            abort(500,msg)
+            
+        h.redirect_to(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=source))
 
     def show_last_job(self, source):
 
