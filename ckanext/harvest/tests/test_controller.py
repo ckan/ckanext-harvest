@@ -37,9 +37,13 @@ class TestController(helpers.FunctionalTestBase):
 
     def test_new_form_is_rendered(self):
 
-        url = url_for('harvest_new')
-
         app = self._get_test_app()
+
+        if hasattr(app, 'flask_app'):
+            with app.flask_app.test_request_context():
+                url = url_for('harvest_new')
+        else:
+            url = url_for('harvest_new')
 
         response = app.get(url, extra_environ=self.extra_environ)
 
@@ -49,9 +53,13 @@ class TestController(helpers.FunctionalTestBase):
 
         source = harvest_factories.HarvestSource()
 
-        url = url_for('harvest_edit', id=source['id'])
-
         app = self._get_test_app()
+
+        if hasattr(app, 'flask_app'):
+            with app.flask_app.test_request_context():
+                url = url_for('harvest_edit', id=source['id'])
+        else:
+            url = url_for('harvest_edit', id=source['id'])
 
         response = app.get(url, extra_environ=self.extra_environ)
 
