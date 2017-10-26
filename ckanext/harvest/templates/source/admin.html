@@ -6,12 +6,6 @@
     {% if source.status and source.status.last_job %}
       {% snippet "snippets/job_details.html", job=source.status.last_job %}
       <div class="form-actions">
-        {% if source.status and source.status.last_job and (source.status.last_job.status == 'Running') %}
-        <a href="{{ h.url_for('harvest_job_abort', source=source.name, id=source.status.last_job.id) }}" class="btn" title="Stop this Job">
-          <i class="icon-ban-circle"></i>
-          {{ _('Stop') }}
-        </a>
-        {% endif %}
         <a href="{{ h.url_for(controller='ckanext.harvest.controllers.view:ViewController', action='show_last_job', source=source.name) }}" class="btn pull-right">
           <i class="icon-briefcase"></i>
           {{ _('View full job report')  }}
