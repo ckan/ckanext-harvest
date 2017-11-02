@@ -61,6 +61,17 @@ def package_list_for_source(source_id):
 
     return out
 
+def package_count_for_source(source_id):
+    '''
+    Returns the current package count for datasets associated with the given
+    source id
+    '''
+    fq = 'harvest_source_id:"{0}"'.format(source_id)
+    search_dict = {'fq': fq}
+    context = {'model': model, 'session': model.Session}
+    result = logic.get_action('package_search')(context, search_dict)
+    return result.get('count', 0)
+
 def harvesters_info():
     context = {'model': model, 'user': p.toolkit.c.user or p.toolkit.c.author}
     return logic.get_action('harvesters_info_show')(context,{})

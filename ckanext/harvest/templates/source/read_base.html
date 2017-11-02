@@ -26,10 +26,8 @@
       {% endif %}
       <div class="nums">
         <dl>
-        {% if c.harvest_source.status %}
             <dt>{{ _('Datasets') }}</dt>
-            <dd>{{ c.harvest_source.status.total_datasets }}</dd>
-        {% endif %}
+            <dd>{{ h.package_count_for_source(c.harvest_source.id) }}</dd>
         </dl>
       </div>
     </section>
