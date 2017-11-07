@@ -10,6 +10,10 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_.
 ***********
 Unreleased_
 ***********
+
+*******************
+1.1.0_ - 2017-11-07
+*******************
 Added
 -----
 - Button on harvest admin page to abort running jobs #296
@@ -113,7 +117,8 @@ Categories
 - ``Fixed`` for any bug fixes.
 - ``Security`` to invite users to upgrade in case of vulnerabilities.
 
-.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.0.0...HEAD
+.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.1.0...HEAD
+.. _1.1.0: https://github.com/ckan/ckanext-harvest/compare/v1.0.0...v1.1.0
 .. _1.0.0: https://github.com/ckan/ckanext-harvest/compare/v0.0.5...v1.0.0
 .. _0.0.5: https://github.com/ckan/ckanext-harvest/compare/v0.0.4...v0.0.5
 .. _0.0.4: https://github.com/ckan/ckanext-harvest/compare/v0.0.3...v0.0.4
