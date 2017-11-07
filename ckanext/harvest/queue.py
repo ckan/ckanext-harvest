@@ -274,12 +274,11 @@ def gather_callback(channel, method, header, body):
 
     try:
         job = HarvestJob.get(id)
-    except sqlalchemy.exc.OperationalError, e:
+    except sqlalchemy.exc.DatabaseError:
         # Occasionally we see: sqlalchemy.exc.OperationalError
         # "SSL connection has been closed unexpectedly"
-        log.exception(e)
-        log.error('Connection Error during gather of job %s: %r %r',
-                  id, e, e.args)
+        # or DatabaseError "connection timed out"
+        log.exception('Connection Error during gather of job %s', id)
         # By not sending the ack, it will be retried later.
         # Try to clear the issue with a remove.
         model.Session.remove()
@@ -376,12 +375,11 @@ def fetch_callback(channel, method, header, body):
 
     try:
         obj = HarvestObject.get(id)
-    except sqlalchemy.exc.OperationalError, e:
+    except sqlalchemy.exc.DatabaseError:
         # Occasionally we see: sqlalchemy.exc.OperationalError
         # "SSL connection has been closed unexpectedly"
-        log.exception(e)
-        log.error('Connection Error during gather of harvest object %s: %r %r',
-                  id, e, e.args)
+        # or DatabaseError "connection timed out"
+        log.exception('Connection Error during fetch of job %s', id)
         # By not sending the ack, it will be retried later.
         # Try to clear the issue with a remove.
         model.Session.remove()
