@@ -10,6 +10,20 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_.
 ***********
 Unreleased_
 ***********
+Added
+-----
+- Button on harvest admin page to abort running jobs #296
+
+Changed
+-------
+- Test improvements for harvester config #288
+- Use package_search API for count of datasets #298
+- Catch sqlalchemy.exc.DatabaseError instead of sqlalchemy.exc.OperationalError in `gather_callback` #301
+
+Fixed
+-------
+- Fix default_extras initialization #290
+- Travis build (postgres service, checkout of correct CKAN branch, libcommons-fileupload) #297
 
 *******************
 1.0.0_ - 2017-03-30
