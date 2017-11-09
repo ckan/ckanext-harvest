@@ -288,9 +288,7 @@ class HarvesterBase(SingletonPlugin):
 
             if self.config and self.config.get('clean_tags', False):
                 tags = package_dict.get('tags', [])
-                tags = [munge_tag(t) for t in tags if munge_tag(t) != '']
-                tags = list(set(tags))
-                package_dict['tags'] = tags
+                package_dict['tags'] = self._clean_tags(tags)
 
             # Check if package exists
             try:
@@ -379,3 +377,22 @@ class HarvesterBase(SingletonPlugin):
                                 'ignore_auth': True}
         return p.toolkit.get_action('package_show')(
             package_show_context, data_dict)
+
+    def _clean_tags(self, tags):
+        try:
+            def _update_tag(tag_dict, key, newvalue):
+                # update the dict and return it
+                tag_dict[key] = newvalue
+                return tag_dict
+                                
+            # assume it's in the package_show form                    
+            tags = [_update_tag(t, 'name', munge_tag(t['name'])) for t in tags if munge_tag(t['name']) != '']
+
+        except TypeError: # a TypeError is raised if `t` above is a string
+           # REST format: 'tags' is a list of strings
+           tags = [munge_tag(t) for t in tags if munge_tag(t) != '']                
+           tags = list(set(tags))
+           return tags
+           
+        return tags      
+

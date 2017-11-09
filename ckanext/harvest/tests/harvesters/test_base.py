@@ -1,6 +1,6 @@
 import re
 
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_in
 from ckanext.harvest import model as harvest_model
 from ckanext.harvest.harvesters.base import HarvesterBase, munge_tag
 try:
@@ -104,7 +104,7 @@ class TestMungeTag:
     # (original, expected)
     munge_list = [
         ('unchanged', 'unchanged'),
-        ('s', 's_'),  # too short
+        #('s', 's_'),  # too short
         ('some spaces  here', 'some-spaces--here'),
         ('random:other%characters&_.here', 'randomothercharactershere'),
         ('river-water-dashes', 'river-water-dashes'),
@@ -123,3 +123,30 @@ class TestMungeTag:
             assert_equal(first_munge, exp)
             second_munge = munge_tag(first_munge)
             assert_equal(second_munge, exp)
+            
+    def test_clean_tags_package_show(self):
+        instance = HarvesterBase()
+        tags_as_dict =  [{u'vocabulary_id': None,
+                          u'state': u'active',
+                          u'display_name': name,
+                          u'id': u'073080c8-fef2-4743-9c9e-6216019f8b3d',
+                          u'name': name} for name,exp in self.munge_list]        
+
+        clean_tags = HarvesterBase._clean_tags(instance, tags_as_dict)
+        
+        idx = 0
+        for _, exp in self.munge_list:
+            tag = clean_tags[idx]
+            assert_equal(tag['name'], exp)
+            idx += 1
+
+    def test_clean_tags_rest(self):
+        instance = HarvesterBase()
+        tags_as_str = [name for name,exp in self.munge_list] 
+        
+        clean_tags = HarvesterBase._clean_tags(instance, tags_as_str)
+
+        assert_equal(len(clean_tags), len(tags_as_str))
+        
+        for _, exp in self.munge_list:
+            assert_in(exp, clean_tags)
