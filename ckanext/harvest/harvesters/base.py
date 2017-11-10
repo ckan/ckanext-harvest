@@ -2,7 +2,9 @@ import logging
 import re
 import uuid
 
+from sqlalchemy import exists
 from sqlalchemy.sql import update, bindparam
+
 from pylons import config
 
 from ckan import plugins as p
@@ -14,7 +16,7 @@ from ckan.lib.navl.validators import ignore_missing, ignore
 from ckan.lib.munge import munge_title_to_name, substitute_ascii_equivalents
 
 from ckanext.harvest.model import (HarvestObject, HarvestGatherError,
-                                   HarvestObjectError)
+                                   HarvestObjectError, HarvestJob)
 
 from ckan.plugins.core import SingletonPlugin, implements
 from ckanext.harvest.interfaces import IHarvester
@@ -395,4 +397,30 @@ class HarvesterBase(SingletonPlugin):
            return tags
            
         return tags      
+
+    @classmethod
+    def last_error_free_job(cls, harvest_job):
+        # TODO weed out cancelled jobs somehow.
+        # look for jobs with no gather errors
+        jobs = \
+            model.Session.query(HarvestJob) \
+                 .filter(HarvestJob.source == harvest_job.source) \
+                 .filter(HarvestJob.gather_started != None) \
+                 .filter(HarvestJob.status == 'Finished') \
+                 .filter(HarvestJob.id != harvest_job.id) \
+                 .filter(
+                     ~exists().where(
+                         HarvestGatherError.harvest_job_id == HarvestJob.id)) \
+                 .order_by(HarvestJob.gather_started.desc())
+        # now check them until we find one with no fetch/import errors
+        # (looping rather than doing sql, in case there are lots of objects
+        # and lots of jobs)
+        for job in jobs:
+            for obj in job.objects:
+                if obj.current is False and \
+                        obj.report_status != 'not modified':
+                    # unsuccessful, so go onto the next job
+                    break
+            else:
+                return job
 
