@@ -10,6 +10,10 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_.
 ***********
 Unreleased_
 ***********
+Added
+-----
+- Move CKANHarvester._last_error_free_job to HarvesterBase.last_error_free_job #305
+
 Fixed
 -----
 - Fix handling of `clean_tags` options for tag lists and dicts #304
