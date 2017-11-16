@@ -18,6 +18,7 @@ from ckanext.harvest.tests.factories import (HarvestSourceObj, HarvestJobObj,
                                              HarvestObjectObj)
 from ckanext.harvest.tests.lib import run_harvest
 import ckanext.harvest.model as harvest_model
+from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.harvest.harvesters.ckanharvester import CKANHarvester
 
 import mock_ckan
@@ -33,7 +34,7 @@ def was_last_job_considered_error_free():
     job = MagicMock()
     job.source = last_job.source
     job.id = ''
-    return bool(CKANHarvester._last_error_free_job(job))
+    return bool(HarvesterBase.last_error_free_job(job))
 
 
 class TestCkanHarvester(object):
