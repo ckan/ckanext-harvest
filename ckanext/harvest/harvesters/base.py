@@ -169,9 +169,6 @@ class HarvesterBase(SingletonPlugin):
            ckanext.harvest.user_name = harvest
 
         '''
-        if self._user_name:
-            return self._user_name
-
         config_user_name = config.get('ckanext.harvest.user_name')
         if config_user_name:
             self._user_name = config_user_name
