@@ -9,6 +9,7 @@ from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
 from ckan.lib.munge import munge_name
 from ckan.plugins import toolkit
+import ckan.lib.plugins as lib_plugins
 
 from ckanext.harvest.model import HarvestObject
 
@@ -527,6 +528,17 @@ class CKANHarvester(HarvesterBase):
                 # and saving it will cause an IntegrityError with the foreign
                 # key.
                 resource.pop('revision_id', None)
+
+
+            package_plugin = lib_plugins.lookup_package_plugin('dataset')
+            schema = package_plugin.create_package_schema()
+
+            context = {}
+            data, errors = lib_plugins.plugin_validate(
+                package_plugin, context, package_dict, schema, 'package_create')
+
+            if errors:
+                raise ValidationError(errors)
 
             result = self._create_or_update_package(
                 package_dict, harvest_object, package_dict_form='package_show')
