@@ -164,7 +164,7 @@ class CKANHarvester(HarvesterBase):
                 except NotFound:
                     raise ValueError('User not found')
 
-            for key in ('read_only', 'force_all'):
+            for key in ('read_only', 'force_all', 'validate_packages'):
                 if key in config_obj:
                     if not isinstance(config_obj[key], bool):
                         raise ValueError('%s must be boolean' % key)
@@ -530,15 +530,31 @@ class CKANHarvester(HarvesterBase):
                 resource.pop('revision_id', None)
 
 
-            package_plugin = lib_plugins.lookup_package_plugin('dataset')
-            schema = package_plugin.create_package_schema()
+            # validate packages if needed
+            validate_packages = self.config.get('validate_packages', {})
+            if validate_packages:
+                if 'type' not in package_dict:
+                    package_plugin = lib_plugins.lookup_package_plugin()
+                    try:
+                        # use first type as default if user didn't provide type
+                        package_type = package_plugin.package_types()[0]
+                    except (AttributeError, IndexError):
+                        package_type = 'dataset'
+                        # in case a 'dataset' plugin was registered w/o fallback
+                        package_plugin = lib_plugins.lookup_package_plugin(package_type)
+                    package_dict['type'] = package_type
+                else:
+                    package_plugin = lib_plugins.lookup_package_plugin(package_dict['type'])
 
-            context = {}
-            data, errors = lib_plugins.plugin_validate(
-                package_plugin, context, package_dict, schema, 'package_create')
 
-            if errors:
-                raise ValidationError(errors)
+                schema = package_plugin.create_package_schema()
+
+
+                data, errors = lib_plugins.plugin_validate(
+                    package_plugin, base_context, package_dict, schema, 'package_create')
+
+                if errors:
+                    raise ValidationError(errors)
 
             result = self._create_or_update_package(
                 package_dict, harvest_object, package_dict_form='package_show')
