@@ -336,6 +336,10 @@ field. The currently supported configuration options are:
     Setting this property to true will force the harvester to gather all remote
     packages regardless of the modification date. Default is False.
 
+*   validate_packages: By default, packages are not validated against instance
+    schema. Setting this property will enable validation against schema before
+    creating local packages.
+    
 *   remote_groups: By default, remote groups are ignored. Setting this property
     enables the harvester to import the remote groups. There are two alternatives.
     Setting it to 'only_local' will just import groups which name/id is already
