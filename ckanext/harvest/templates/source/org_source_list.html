@@ -7,7 +7,7 @@
     <h1 class="hide-heading">{{ _('Harvest Sources') }}</h1>
     <div class="primary">
       <a href="{{ h.url_for('harvest_new', group=c.group_dict.id) }}" class="btn pull-right">
-        <i class="icon-plus-sign-alt"></i>
+        <i class="fa fa-plus-square icon-plus-sign-alt"></i>
         {{ _('Add Harvest Source') }}
       </a>
       <h3 class="results page-heading">
@@ -29,7 +29,7 @@
       <form method="GET">
         <span class="control-group search-normal">
           <input type="text" class="search" name="q" value="{{ c.q }}" autocomplete="off" placeholder="{{ _('Search sources...') }}" />
-          <button type="submit"><i class="icon-search"></i> <span>{{ _('Search') }}</span></button>
+          <button type="submit"><i class="fa fa-search icon-search"></i> <span>{{ _('Search') }}</span></button>
         </span>
       </form>
       {% for facet in c.facet_titles %}
