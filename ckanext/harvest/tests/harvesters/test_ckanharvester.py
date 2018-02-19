@@ -319,3 +319,39 @@ class TestCkanHarvester(object):
                 config=json.dumps(config))
         assert_in('default_extras must be a dictionary',
                   str(harvest_context.exception))
+
+    def test_validate_packages_valid_package(self):
+        config = {
+            'validate_packages': True
+        }
+
+        results_by_guid = run_harvest(
+            url='http://localhost:%s/' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
+
+        result = results_by_guid['dataset1-id']
+        assert_equal(result['state'], 'COMPLETE')
+        assert_equal(result['report_status'], 'added')
+        assert_equal(result['dataset']['name'], mock_ckan.DATASETS[0]['name'])
+        assert_equal(result['errors'], [])
+
+    def test_validate_packages_invalid_package(self):
+        config = {
+            'validate_packages': True
+        }
+
+        results_by_guid = run_harvest(
+            url='http://localhost:%s/' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
+
+        result = results_by_guid['dataset1-id']
+        assert_equal(result['state'], 'COMPLETE')
+        assert_equal(result['report_status'], 'added')
+        assert_equal(result['dataset']['name'], mock_ckan.DATASETS[0]['name'])
+        assert_equal(result['errors'], [])
+
+        result = results_by_guid[mock_ckan.DATASETS[1]['id']]
+        assert_equal(result['state'], 'ERROR')
+        assert_equal(result['report_status'], 'errored')
