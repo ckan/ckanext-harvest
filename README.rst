@@ -553,7 +553,7 @@ following methods::
 See the CKAN harvester for an example of how to implement the harvesting
 interface:
 
- ckanext-harvest/ckanext/harvest/harvesters/ckanharvester.py
+* ckanext-harvest/ckanext/harvest/harvesters/ckanharvester.py
 
 Here you can also find other examples of custom harvesters:
 
@@ -565,8 +565,8 @@ Running the harvest jobs
 
 There are two ways to run a harvest:
 
-    1. ``harvester run_test`` for the command-line, suitable for testing
-    2. ``harvester run`` used by the Web UI and scheduled runs
+1. ``harvester run_test`` for the command-line, suitable for testing
+2. ``harvester run`` used by the Web UI and scheduled runs
 
 harvester run_test
 ------------------
