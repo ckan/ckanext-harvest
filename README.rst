@@ -785,7 +785,7 @@ following steps with the one you are using.
 Tests
 =====
 
-You can run the tests like this:
+You can run the tests like this::
 
     cd ckanext-harvest
     nosetests --reset-db --ckan --with-pylons=test-core.ini ckanext/harvest/tests
@@ -797,6 +797,7 @@ Here are some common errors and solutions:
 
 * ``(ProgrammingError) relation "harvest_object_extra" does not exist``
   The database has got into in a bad state. Run the tests again but *without* the ``--reset-db`` parameter.
+  Alternatively it's because you forgot to use the ``--ckan`` parameter.
 
 * ``(OperationalError) near "SET": syntax error``
   You are testing with SQLite as the database, but the CKAN Harvester needs PostgreSQL. Specify test-core.ini instead of test.ini.
