@@ -166,6 +166,22 @@ e.g. Fetch all logs with log level INFO:
     }
 
 
+Dataset name generation configuration (optional)
+================================================
+
+If the dataset name is created based on the title, duplicate names may occur.
+To avoid this, a suffix is appended to the name if it already exists.
+
+You can configure the default behaviour in your production.ini:
+
+    ckanext.harvest.default_dataset_name_append = number-sequence
+
+or
+
+    ckanext.harvest.default_dataset_name_append = random-hex
+
+If you don't specify this setting, the default will be number-sequence.
+
 
 Command line interface
 ======================

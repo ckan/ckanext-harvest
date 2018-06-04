@@ -3,6 +3,7 @@ import re
 from nose.tools import assert_equal, assert_in
 from ckanext.harvest import model as harvest_model
 from ckanext.harvest.harvesters.base import HarvesterBase, munge_tag
+from mock import patch
 try:
     from ckan.tests import helpers
     from ckan.tests import factories
@@ -15,8 +16,7 @@ _ensure_name_is_unique = HarvesterBase._ensure_name_is_unique
 
 
 class TestGenNewName(object):
-    @classmethod
-    def setup_class(cls):
+    def setup(self):
         helpers.reset_db()
         harvest_model.setup()
 
@@ -27,6 +27,40 @@ class TestGenNewName(object):
         assert_equal(
             HarvesterBase._gen_new_name('Trees and branches - survey.'),
             'trees-and-branches-survey')
+
+    @patch.dict('ckanext.harvest.harvesters.base.config',
+                {'ckanext.harvest.some_other_config': 'value'})
+    def test_without_config(self):
+        '''Tests if the number suffix is used when no config is set.'''
+        factories.Dataset(name='trees')
+        assert_equal(
+            HarvesterBase._gen_new_name('Trees'),
+            'trees1')
+
+    @patch.dict('ckanext.harvest.harvesters.base.config',
+                {'ckanext.harvest.default_dataset_name_append': 'number-sequence'})
+    def test_number_config(self):
+        factories.Dataset(name='trees')
+        assert_equal(
+            HarvesterBase._gen_new_name('Trees'),
+            'trees1')
+    
+    @patch.dict('ckanext.harvest.harvesters.base.config',
+                {'ckanext.harvest.default_dataset_name_append': 'random-hex'})
+    def test_random_config(self):
+        factories.Dataset(name='trees')
+        new_name =  HarvesterBase._gen_new_name('Trees')
+        
+        assert re.match('trees[\da-f]{5}', new_name)
+    
+    @patch.dict('ckanext.harvest.harvesters.base.config',
+                {'ckanext.harvest.default_dataset_name_append': 'random-hex'})
+    def test_config_override(self):
+        '''Tests if a parameter has precedence over a config value.'''
+        factories.Dataset(name='trees')
+        assert_equal(
+            HarvesterBase._gen_new_name('Trees', append_type='number-sequence'),
+            'trees1')
 
 
 class TestEnsureNameIsUnique(object):
