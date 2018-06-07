@@ -95,11 +95,11 @@ Run the following command to create the necessary tables in the database (ensuri
 
     (pyenv) $ paster --plugin=ckanext-harvest harvester initdb --config=/etc/ckan/default/production.ini
 
-Finally, restart CKAN to have the changes take affect:
+Finally, restart CKAN to have the changes take effect::
 
     sudo service apache2 restart
 
-After installation, the harvest source listing should be available under /harvest, eg:
+After installation, the harvest source listing should be available under /harvest, eg::
 
     http://localhost/harvest
 
@@ -113,17 +113,17 @@ Database logger configuration(optional)
 
      ckan.harvest.log_scope = 0
 
- * -1 - Do not log in the database - DEFAULT
- *  0 - Log everything
- *  1 - model, logic.action, logic.validators, harvesters
- *  2 - model, logic.action, logic.validators
- *  3 - model, logic.action
- *  4 - logic.action
- *  5 - model
- *  6 - plugin
- *  7 - harvesters
+   * -1 - Do not log in the database - DEFAULT
+   *  0 - Log everything
+   *  1 - model, logic.action, logic.validators, harvesters
+   *  2 - model, logic.action, logic.validators
+   *  3 - model, logic.action
+   *  4 - logic.action
+   *  5 - model
+   *  6 - plugin
+   *  7 - harvesters
 
-2. Setup time frame(in days) for the clean-up mechanism with the following config parameter (in the `[app:main]` section)::
+2. Setup time frame (in days) for the clean-up mechanism with the following config parameter (in the `[app:main]` section)::
 
      ckan.harvest.log_timeframe = 10
 
@@ -138,7 +138,7 @@ Database logger configuration(optional)
 
 **API Usage**
 
-You can access CKAN harvest logs via the API:
+You can access CKAN harvest logs via the API::
 
     $ curl {ckan_url}/api/3/action/harvest_log_list
 
@@ -146,13 +146,13 @@ Replace {ckan_url} with the url from your CKAN instance.
 
 Allowed parameters are:
 
-    * level (filter log records by level)
+* ``level`` (filter log records by level)
 
-    * limit (used for pagination)
+* ``limit`` (used for pagination)
 
-    * offset (used for pagination)
+* ``offset`` (used for pagination)
 
-e.g. Fetch all logs with log level INFO:
+e.g. Fetch all logs with log level INFO::
 
     $ curl {ckan_url}/api/3/action/harvest_log_list?level=info
 
@@ -569,7 +569,7 @@ following methods::
 See the CKAN harvester for an example of how to implement the harvesting
 interface:
 
- ckanext-harvest/ckanext/harvest/harvesters/ckanharvester.py
+* ckanext-harvest/ckanext/harvest/harvesters/ckanharvester.py
 
 Here you can also find other examples of custom harvesters:
 
@@ -579,10 +579,10 @@ Here you can also find other examples of custom harvesters:
 Running the harvest jobs
 ========================
 
-There are two ways to run a harvest::
+There are two ways to run a harvest:
 
-    1. ``harvester run_test`` for the command-line, suitable for testing
-    2. ``harvester run`` used by the Web UI and scheduled runs
+1. ``harvester run_test`` for the command-line, suitable for testing
+2. ``harvester run`` used by the Web UI and scheduled runs
 
 harvester run_test
 ------------------
@@ -801,7 +801,7 @@ following steps with the one you are using.
 Tests
 =====
 
-You can run the tests like this:
+You can run the tests like this::
 
     cd ckanext-harvest
     nosetests --reset-db --ckan --with-pylons=test-core.ini ckanext/harvest/tests
@@ -813,6 +813,7 @@ Here are some common errors and solutions:
 
 * ``(ProgrammingError) relation "harvest_object_extra" does not exist``
   The database has got into in a bad state. Run the tests again but *without* the ``--reset-db`` parameter.
+  Alternatively it's because you forgot to use the ``--ckan`` parameter.
 
 * ``(OperationalError) near "SET": syntax error``
   You are testing with SQLite as the database, but the CKAN Harvester needs PostgreSQL. Specify test-core.ini instead of test.ini.
