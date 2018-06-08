@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 from pprint import pprint
 
@@ -6,6 +8,7 @@ from ckan.logic import get_action, ValidationError
 from ckan.plugins import toolkit
 
 from ckan.lib.cli import CkanCommand
+
 
 class Harvester(CkanCommand):
     '''Harvests remotely mastered metadata
@@ -114,9 +117,9 @@ class Harvester(CkanCommand):
     max_args = 9
     min_args = 0
 
-    def __init__(self,name):
+    def __init__(self, name):
 
-        super(Harvester,self).__init__(name)
+        super(Harvester, self).__init__(name)
 
         self.parser.add_option('-j', '--no-join-datasets', dest='no_join_datasets',
             action='store_true', default=False, help='Do not join harvest objects to existing datasets')
@@ -140,11 +143,10 @@ class Harvester(CkanCommand):
 
         # We'll need a sysadmin user to perform most of the actions
         # We will use the sysadmin site user (named as the site_id)
-        context = {'model':model,'session':model.Session,'ignore_auth':True}
-        self.admin_user = get_action('get_site_user')(context,{})
+        context = {'model': model, 'session': model.Session, 'ignore_auth': True}
+        self.admin_user = get_action('get_site_user')(context, {})
 
-
-        print ''
+        print('')
 
         if len(self.args) == 0:
             self.parser.print_usage()
@@ -206,7 +208,7 @@ class Harvester(CkanCommand):
         elif cmd == 'clean_harvest_log':
             self.clean_harvest_log()
         else:
-            print 'Command %s not recognized' % cmd
+            print('Command {0} not recognized'.format(cmd))
 
     def _load_config(self):
         super(Harvester, self)._load_config()
@@ -215,24 +217,24 @@ class Harvester(CkanCommand):
         from ckanext.harvest.model import setup as db_setup
         db_setup()
 
-        print 'DB tables created'
+        print('DB tables created')
 
     def create_harvest_source(self):
 
         if len(self.args) >= 2:
             name = unicode(self.args[1])
         else:
-            print 'Please provide a source name'
+            print('Please provide a source name')
             sys.exit(1)
         if len(self.args) >= 3:
             url = unicode(self.args[2])
         else:
-            print 'Please provide a source URL'
+            print('Please provide a source URL')
             sys.exit(1)
         if len(self.args) >= 4:
             type = unicode(self.args[3])
         else:
-            print 'Please provide a source type'
+            print('Please provide a source type')
             sys.exit(1)
 
         if len(self.args) >= 5:
@@ -265,34 +267,34 @@ class Harvester(CkanCommand):
                     'url': url,
                     'source_type': type,
                     'title': title,
-                    'active':active,
+                    'active': active,
                     'owner_org': owner_org,
                     'frequency': frequency,
                     'config': config,
                     }
 
             context = {
-                'model':model,
-                'session':model.Session,
+                'model': model,
+                'session': model.Session,
                 'user': self.admin_user['name'],
                 'ignore_auth': True,
             }
-            source = get_action('harvest_source_create')(context,data_dict)
-            print 'Created new harvest source:'
+            source = get_action('harvest_source_create')(context, data_dict)
+            print('Created new harvest source:')
             self.print_harvest_source(source)
 
-            sources = get_action('harvest_source_list')(context,{})
+            sources = get_action('harvest_source_list')(context, {})
             self.print_there_are('harvest source', sources)
 
             # Create a harvest job for the new source if not regular job.
             if not data_dict['frequency']:
                 get_action('harvest_job_create')(
                     context, {'source_id': source['id'], 'run': True})
-                print 'A new Harvest Job for this source has also been created'
+                print('A new Harvest Job for this source has also been created')
 
-        except ValidationError,e:
-           print 'An error occurred:'
-           print str(e.error_dict)
+        except ValidationError as e:
+           print('An error occurred:')
+           print(str(e.error_dict))
            raise e
 
     def clear_harvest_source_history(self):
@@ -306,16 +308,16 @@ class Harvester(CkanCommand):
             'session': model.Session
         }
         if source_id is not None:
-            get_action('harvest_source_job_history_clear')(context,{'id':source_id})
-            print 'Cleared job history of harvest source: %s' % source_id
+            get_action('harvest_source_job_history_clear')(context, {'id': source_id})
+            print('Cleared job history of harvest source: {0}'.format(source_id))
         else:
             '''
             Purge queues, because we clean all harvest jobs and
             objects in the database.
             '''
             self.purge_queues()
-            cleared_sources_dicts = get_action('harvest_sources_job_history_clear')(context,{})
-            print 'Cleared job history for all harvest sources: %s source(s)' % len(cleared_sources_dicts)
+            cleared_sources_dicts = get_action('harvest_sources_job_history_clear')(context, {})
+            print('Cleared job history for all harvest sources: {0} source(s)'.format(len(cleared_sources_dicts)))
 
 
     def show_harvest_source(self):
@@ -323,7 +325,7 @@ class Harvester(CkanCommand):
         if len(self.args) >= 2:
             source_id_or_name = unicode(self.args[1])
         else:
-            print 'Please provide a source name'
+            print('Please provide a source name')
             sys.exit(1)
         context = {'model': model, 'session': model.Session,
                    'user': self.admin_user['name']}
@@ -335,38 +337,38 @@ class Harvester(CkanCommand):
         if len(self.args) >= 2:
             source_id_or_name = unicode(self.args[1])
         else:
-            print 'Please provide a source id'
+            print('Please provide a source id')
             sys.exit(1)
         context = {'model': model, 'session': model.Session,
                    'user': self.admin_user['name']}
         source = get_action('harvest_source_show')(
             context, {'id': source_id_or_name})
         get_action('harvest_source_delete')(context, {'id': source['id']})
-        print 'Removed harvest source: %s' % source_id_or_name
+        print('Removed harvest source: {0}'.format(source_id_or_name))
 
     def clear_harvest_source(self):
         if len(self.args) >= 2:
             source_id_or_name = unicode(self.args[1])
         else:
-            print 'Please provide a source id'
+            print('Please provide a source id')
             sys.exit(1)
         context = {'model': model, 'session': model.Session,
                    'user': self.admin_user['name']}
         source = get_action('harvest_source_show')(
             context, {'id': source_id_or_name})
         get_action('harvest_source_clear')(context, {'id': source['id']})
-        print 'Cleared harvest source: %s' % source_id_or_name
+        print('Cleared harvest source: {0}'.format(source_id_or_name))
 
     def list_harvest_sources(self):
         if len(self.args) >= 2 and self.args[1] == 'all':
             data_dict = {}
             what = 'harvest source'
         else:
-            data_dict = {'only_active':True}
+            data_dict = {'only_active': True}
             what = 'active harvest source'
 
-        context = {'model': model,'session':model.Session, 'user': self.admin_user['name']}
-        sources = get_action('harvest_source_list')(context,data_dict)
+        context = {'model': model, 'session': model.Session, 'user': self.admin_user['name']}
+        sources = get_action('harvest_source_list')(context, data_dict)
         self.print_harvest_sources(sources)
         self.print_there_are(what=what, sequence=sources)
 
@@ -374,24 +376,24 @@ class Harvester(CkanCommand):
         if len(self.args) >= 2:
             source_id_or_name = unicode(self.args[1])
         else:
-            print 'Please provide a source id'
+            print('Please provide a source id')
             sys.exit(1)
         context = {'model': model, 'session': model.Session,
                    'user': self.admin_user['name']}
         source = get_action('harvest_source_show')(
             context, {'id': source_id_or_name})
 
-        context = {'model': model,'session':model.Session, 'user': self.admin_user['name']}
+        context = {'model': model, 'session': model.Session, 'user': self.admin_user['name']}
         job = get_action('harvest_job_create')(
             context, {'source_id': source['id'], 'run': True})
 
         self.print_harvest_job(job)
-        jobs = get_action('harvest_job_list')(context,{'status':u'New'})
+        jobs = get_action('harvest_job_list')(context, {'status': u'New'})
         self.print_there_are('harvest job', jobs, condition=u'New')
 
     def list_harvest_jobs(self):
-        context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
-        jobs = get_action('harvest_job_list')(context,{})
+        context = {'model': model, 'user': self.admin_user['name'], 'session': model.Session}
+        jobs = get_action('harvest_job_list')(context, {})
 
         self.print_harvest_jobs(jobs)
         self.print_there_are(what='harvest job', sequence=jobs)
@@ -400,14 +402,14 @@ class Harvester(CkanCommand):
         if len(self.args) >= 2:
             job_or_source_id_or_name = unicode(self.args[1])
         else:
-            print 'Please provide a job id or source name/id'
+            print('Please provide a job id or source name/id')
             sys.exit(1)
 
         context = {'model': model, 'user': self.admin_user['name'],
                    'session': model.Session}
         job = get_action('harvest_job_abort')(
             context, {'id': job_or_source_id_or_name})
-        print 'Job status: {0}'.format(job['status'])
+        print('Job status: {0}'.format(job['status']))
 
     def run_harvester(self):
         context = {'model': model, 'user': self.admin_user['name'],
@@ -424,7 +426,7 @@ class Harvester(CkanCommand):
         if len(self.args) >= 2:
             source_id_or_name = unicode(self.args[1])
         else:
-            print 'Please provide a source id'
+            print('Please provide a source id')
             sys.exit(1)
         context = {'model': model, 'session': model.Session,
                    'user': self.admin_user['name']}
@@ -439,25 +441,25 @@ class Harvester(CkanCommand):
             running_jobs = get_action('harvest_job_list')(
                 context, {'source_id': source['id'], 'status': 'Running'})
             if running_jobs:
-                print '\nSource "%s" apparently has a "Running" job:\n%r' \
-                    % (source.get('name') or source['id'], running_jobs)
+                print('\nSource "{0}" apparently has a "Running" job:\n{1}'
+                    .format(source.get('name') or source['id'], running_jobs))
                 resp = raw_input('Abort it? (y/n)')
                 if not resp.lower().startswith('y'):
                     sys.exit(1)
                 job_dict = get_action('harvest_job_abort')(
                     context, {'source_id': source['id']})
             else:
-                print 'Reusing existing harvest job'
+                print('Reusing existing harvest job')
                 jobs = get_action('harvest_job_list')(
                     context, {'source_id': source['id'], 'status': 'New'})
                 assert len(jobs) == 1, \
-                    'Multiple "New" jobs for this source! %r' % jobs
+                    'Multiple "New" jobs for this source! {0}'.format(jobs)
                 job_dict = jobs[0]
         job_obj = HarvestJob.get(job_dict['id'])
 
         harvester = queue.get_harvester(source['source_type'])
         assert harvester, \
-            'No harvester found for type: %s' % source['source_type']
+            'No harvester found for type: {0}'.format(source['source_type'])
         lib.run_harvest_job(job_obj, harvester)
 
     def import_stage(self):
@@ -477,23 +479,23 @@ class Harvester(CkanCommand):
                    'join_datasets': not self.options.no_join_datasets,
                    'segments': self.options.segments}
 
-        objs_count = get_action('harvest_objects_import')(context,{
+        objs_count = get_action('harvest_objects_import')(context, {
                 'source_id': source_id,
                 'harvest_object_id': self.options.harvest_object_id,
                 'package_id': self.options.package_id,
                 'guid': self.options.guid,
                 })
 
-        print '%s objects reimported' % objs_count
+        print('{0} objects reimported'.format(objs_count))
 
     def create_harvest_job_all(self):
-        context = {'model': model, 'user': self.admin_user['name'], 'session':model.Session}
-        jobs = get_action('harvest_job_create_all')(context,{})
-        print 'Created %s new harvest jobs' % len(jobs)
+        context = {'model': model, 'user': self.admin_user['name'], 'session': model.Session}
+        jobs = get_action('harvest_job_create_all')(context, {})
+        print('Created {0} new harvest jobs'.format(len(jobs)))
 
     def reindex(self):
         context = {'model': model, 'user': self.admin_user['name']}
-        get_action('harvest_sources_reindex')(context,{})
+        get_action('harvest_sources_reindex')(context, {})
 
     def purge_queues(self):
         from ckanext.harvest.queue import purge_queues
@@ -501,53 +503,53 @@ class Harvester(CkanCommand):
 
     def print_harvest_sources(self, sources):
         if sources:
-            print ''
+            print('')
         for source in sources:
             self.print_harvest_source(source)
 
     def print_harvest_source(self, source):
-        print 'Source id: %s' % source.get('id')
+        print('Source id: {0}'.format(source.get('id')))
         if 'name' in source:
             # 'name' is only there if the source comes from the Package
-            print '     name: %s' % source.get('name')
-        print '      url: %s' % source.get('url')
+            print('     name: {0}'.format(source.get('name')))
+        print('      url: {0}'.format(source.get('url')))
         # 'type' if source comes from HarvestSource, 'source_type' if it comes
         # from the Package
-        print '     type: %s' % (source.get('source_type') or
-                                 source.get('type'))
-        print '   active: %s' % (source.get('active',
-                                            source.get('state') == 'active'))
-        print 'frequency: %s' % source.get('frequency')
-        print '     jobs: %s' % source.get('status').get('job_count')
-        print ''
+        print('     type: {0}'.format(source.get('source_type') or
+                                 source.get('type')))
+        print('   active: {0}'.format(source.get('active',
+                                            source.get('state') == 'active')))
+        print('frequency: {0}'.format(source.get('frequency')))
+        print('     jobs: {0}'.format(source.get('status').get('job_count')))
+        print('')
 
     def print_harvest_jobs(self, jobs):
         if jobs:
-            print ''
+            print('')
         for job in jobs:
             self.print_harvest_job(job)
 
     def print_harvest_job(self, job):
-        print '       Job id: %s' % job.get('id')
-        print '       status: %s' % job.get('status')
-        print '       source: %s' % job.get('source_id')
-        print '      objects: %s' % len(job.get('objects', []))
+        print('       Job id: {0}'.format(job.get('id')))
+        print('       status: {0}'.format(job.get('status')))
+        print('       source: {0}'.format(job.get('source_id')))
+        print('      objects: {0}'.format(len(job.get('objects', []))))
 
-        print 'gather_errors: %s' % len(job.get('gather_errors', []))
+        print('gather_errors: {0}'.format(len(job.get('gather_errors', []))))
         for error in job.get('gather_errors', []):
-            print '               %s' % error['message']
+            print('               {0}'.format(error['message']))
 
-        print ''
+        print('')
 
     def print_there_are(self, what, sequence, condition=''):
         is_singular = self.is_singular(sequence)
-        print 'There %s %s %s%s%s' % (
+        print('There {0} {1} {2}{3}{4}'.format(
             is_singular and 'is' or 'are',
             len(sequence),
-            condition and ('%s ' % condition.lower()) or '',
+            condition and ('{0} '.format(condition.lower())) or '',
             what,
             not is_singular and 's' or '',
-        )
+        ))
 
     def is_singular(self, sequence):
         return len(sequence) == 1
@@ -556,10 +558,10 @@ class Harvester(CkanCommand):
         from datetime import datetime, timedelta
         from pylons import config
         from ckanext.harvest.model import clean_harvest_log
-        
+
         # Log time frame - in days
         log_timeframe = toolkit.asint(config.get('ckan.harvest.log_timeframe', 30))
         condition = datetime.utcnow() - timedelta(days=log_timeframe)
-        
+
         # Delete logs older then the given date
         clean_harvest_log(condition=condition)
