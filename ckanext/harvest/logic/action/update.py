@@ -24,7 +24,7 @@ from ckan.logic import NotFound, check_access
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
 from ckanext.harvest.queue import get_gather_publisher, resubmit_jobs
 
-from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject, HarvestObjectError, HarvestGatherError
+from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 from ckanext.harvest.logic import HarvestJobExists
 from ckanext.harvest.logic.dictization import harvest_job_dictize
 
@@ -32,6 +32,7 @@ from ckanext.harvest.logic.action.get import (
     harvest_source_show, harvest_job_list, _get_sources_for_user)
 
 import ckan.lib.mailer as mailer
+from itertools import islice
 
 log = logging.getLogger(__name__)
 
@@ -552,8 +553,10 @@ def harvest_jobs_run(context, data_dict):
                     get_action('harvest_source_reindex')(
                         context, {'id': job_obj.source.id})
 
-                    if toolkit.asbool(config.get('ckan.harvest.status_mail.errored')) and has_job_errors(context, job_obj):
-                        send_error_mail(context, job_obj)
+                    status = get_action('harvest_source_show_status')(context, {'id': job_obj.source.id})
+
+                    if toolkit.asbool(config.get('ckan.harvest.status_mail.errored')) and (status['last_job']['stats']['errored']):
+                        send_error_mail(context, job_obj.source.id, status)
                 else:
                     log.debug('Ongoing job:%s source:%s',
                               job['id'], job['source_id'])
@@ -564,85 +567,47 @@ def harvest_jobs_run(context, data_dict):
     return []  # merely for backwards compatibility
 
 
-def has_job_errors(context, job_obj):
-    model = context['model']
+def send_error_mail(context, source_id, status):
 
-    harvest_object_error_count = model.Session.query(HarvestObjectError) \
-        .join(HarvestObject, HarvestObjectError.harvest_object_id == HarvestObject.harvest_job_id) \
-        .filter(HarvestObject.harvest_job_id == job_obj.id) \
-        .count()
-
-    harvest_gather_error_count = model.Session.query(HarvestGatherError) \
-        .filter(HarvestGatherError.harvest_job_id == job_obj.id) \
-        .count()
-
-    # if no error occurred we do not create the error-mail
-    if harvest_object_error_count == 0 and harvest_gather_error_count == 0:
-        return False
-
-    return True
-
-
-def send_error_mail(context, job_obj):
-    model = context['model']
-
-    for row in model.Session\
-            .query(model.Package)\
-            .filter(model.Package.id == job_obj.source.id):
-        pkg = row.as_dict()
-        harvest_name = str(pkg['name'])
+    last_job = status['last_job']
+    source = get_action('harvest_source_show')(context, {'id': source_id})
 
     ckan_site_url = config.get('ckan.site_url')
-    job_url = ckan_site_url + '/harvest/' + harvest_name + '/job/' + job_obj.id
+    job_url = toolkit.url_for('harvest_job_show', source=source['id'], id=last_job['id'])
 
     msg = toolkit._('This is a failure-notification of the latest harvest job ({0}) set-up in {1}.').format(job_url, ckan_site_url)
     msg += '\n\n'
 
-    for org, job in model.Session\
-            .query(model.Group, HarvestSource)\
-            .outerjoin(model.Member, model.Group) \
-            .join(HarvestSource, HarvestSource.id == model.Member.table_id) \
-            .filter(model.Member.table_id == job_obj.source.id):
+    msg += toolkit._('Harvest Source: {0}').format(source['title']) + '\n'
+    if source.get('config'):
+        msg += toolkit._('Harvester-Configuration: {0}').format(source['config']) + '\n'
+    msg += '\n\n'
 
-        if org:
-            org_dict = org.as_dict()
-            msg += toolkit._('Organization: {0}').format(org_dict['title'])
-            msg += '\n\n'
-
-        job_dict = job.as_dict()
-        msg += toolkit._('Harvest Job Title: {0}').format(job_dict['title'])
+    if source['organization']:
+        msg += toolkit._('Organization: {0}').format(source['organization']['name'])
         msg += '\n\n'
 
-    msg += toolkit._('Date of Harvest: {0}').format(str(job_obj.created))
-    msg += ' UTC\n\n'
+    msg += toolkit._('Harvest Job Id: {0}').format(last_job['id']) + '\n'
+    msg += toolkit._('Created: {0}').format(last_job['created']) + '\n'
+    msg += toolkit._('Finished: {0}').format(last_job['finished']) + '\n\n'
 
-    out = {
-        'last_job': None,
-    }
+    report = get_action('harvest_job_report')(context, {'id': status['last_job']['id']})
 
-    out['last_job'] = harvest_job_dictize(job_obj, context)
-
-    msg += toolkit._('Records in Error: {0}').format(str(out['last_job']['stats'].get('errored', 0)))
+    msg += toolkit._('Records in Error: {0}').format(str(last_job['stats'].get('errored', 0)))
     msg += '\n'
 
     obj_error = ''
     job_error = ''
 
+    for harvest_object_error in islice(report.get('object_errors'), 0, 20):
+        obj_error += harvest_object_error['message'] + '\n'
 
-    for harvest_object_error in model.Session.query(HarvestObjectError) \
-            .join(HarvestObject, HarvestObjectError.harvest_object_id == HarvestObject.harvest_job_id) \
-            .filter(HarvestObject.harvest_job_id == job_obj.id).limit(20).all():
-        error_dict = harvest_object_error.as_dict()
-        obj_error += error_dict['msg'] + '\n'
-
-    for harvest_gather_error in model.Session.query(HarvestGatherError) \
-        .filter(HarvestGatherError.harvest_job_id == job_obj.id):
-        harvest_gather_error_dict = harvest_gather_error.as_dict()
-        job_error += harvest_gather_error_dict['message'] + '\n'
+    for harvest_gather_error in islice(report.get('gather_errors'), 0, 20):
+        job_error += harvest_gather_error['message'] + '\n'
 
     if (obj_error != '' or job_error != ''):
         msg += toolkit._('Error Summary')
-        msg += '\n\n'
+        msg += '\n'
 
     if (obj_error != ''):
         msg += toolkit._('Document Error')
@@ -670,8 +635,13 @@ def send_error_mail(context, job_obj):
 
             try:
                 mailer.mail_recipient(**email)
-            except:
+                return True
+            except mailer.MailerException:
                 log.error('Sending Harvest-Notification-Mail failed. Message: ' + msg)
+            except:
+                return False
+
+    return False
 
 
 def harvest_send_job_to_gather_queue(context, data_dict):
