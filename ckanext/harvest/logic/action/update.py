@@ -621,15 +621,16 @@ def send_error_mail(context, source_id, status):
         msg += '\n--\n'
         msg += toolkit._('You are receiving this email because you are currently set-up as Administrator for {0}. Please do not reply to this email as it was sent from a non-monitored address.').format(config.get('ckan.site_title'))
 
-        # get recipients
-        email_recipients = config.get('email_to').split(',')
-        emails = {}
+        model = context['model']
 
-        for recipient in email_recipients:
+        sysadmins = model.Session.query(model.User).filter(model.User.sysadmin == True).all()
+
+        # for recipient in email_recipients:
+        for recipient in sysadmins:
             email = {'recipient_name': recipient,
-                      'recipient_email': recipient,
-                      'subject': config.get('ckan.site_title') + ' - Harvesting Job - Error Notification',
-                      'body': msg}
+                     'recipient_email': recipient,
+                     'subject': config.get('ckan.site_title') + ' - Harvesting Job - Error Notification',
+                     'body': msg}
 
             log.debug(msg)
 
