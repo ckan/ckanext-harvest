@@ -556,10 +556,7 @@ def harvest_jobs_run(context, data_dict):
                     status = get_action('harvest_source_show_status')(context, {'id': job_obj.source.id})
 
                     if toolkit.asbool(config.get('ckan.harvest.status_mail.errored')) and (status['last_job']['stats']['errored']):
-                        try:
-                            send_error_mail(context, job_obj.source.id, status)
-                        except mailer.MailerException:
-                            pass
+                        send_error_mail(context, job_obj.source.id, status)
                 else:
                     log.debug('Ongoing job:%s source:%s',
                               job['id'], job['source_id'])
@@ -637,15 +634,11 @@ def send_error_mail(context, source_id, status):
 
             try:
                 mailer.mail_recipient(**email)
-                return True
             except mailer.MailerException:
                 log.error('Sending Harvest-Notification-Mail failed. Message: ' + msg)
-                raise mailer.MailerException
             except Exception as e:
                 log.error(e)
                 raise
-
-    return False
 
 
 def harvest_send_job_to_gather_queue(context, data_dict):

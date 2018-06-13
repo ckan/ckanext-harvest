@@ -1,6 +1,7 @@
 import json
 import factories
 import unittest
+from mock import patch
 from nose.tools import assert_equal, assert_raises
 from nose.plugins.skip import SkipTest
 
@@ -32,7 +33,6 @@ import ckanext.harvest.model as harvest_model
 from ckanext.harvest.model import HarvestGatherError, HarvestJob
 from ckanext.harvest.logic import HarvestJobExists
 from ckanext.harvest.logic.action.update import send_error_mail
-import ckan.lib.mailer as mailer
 
 
 def call_action_api(action, apikey=None, status=200, **kwargs):
@@ -611,20 +611,22 @@ class TestHarvestErrorMail(unittest.TestCase):
         toolkit.get_action('harvest_source_reindex')(context, {'id': harvest_source['id']})
         return context, harvest_source, job
 
-    def test_error_mail_not_sent(self):
+    @patch('ckan.lib.mailer.mail_recipient')
+    def test_error_mail_not_sent(self, mock_mailer_mail_recipient):
         context, harvest_source, job = self._create_harvest_source_and_job_if_not_existing()
 
         status = toolkit.get_action('harvest_source_show_status')(context, {'id': harvest_source['id']})
 
-        error_mail_sent = send_error_mail(
+        send_error_mail(
             context,
             harvest_source['id'],
             status
         )
         assert_equal(0, status['last_job']['stats']['errored'])
-        assert_equal(False, error_mail_sent)
+        assert mock_mailer_mail_recipient.not_called
 
-    def test_error_mail_sent(self):
+    @patch('ckan.lib.mailer.mail_recipient')
+    def test_error_mail_sent(self, mock_mailer_mail_recipient):
         context, harvest_source, job = self._create_harvest_source_and_job_if_not_existing()
 
         # create a HarvestGatherError
@@ -635,18 +637,14 @@ class TestHarvestErrorMail(unittest.TestCase):
 
         status = toolkit.get_action('harvest_source_show_status')(context, {'id': harvest_source['id']})
 
-        # if we receive a Mailer-Exception we mark this test as skipped
-        try:
-            error_mail_sent = send_error_mail(
-                context,
-                harvest_source['id'],
-                status
-            )
-        except mailer.MailerException:
-            raise SkipTest()
+        send_error_mail(
+            context,
+            harvest_source['id'],
+            status
+        )
 
         assert_equal(1, status['last_job']['stats']['errored'])
-        assert_equal(True, error_mail_sent)
+        assert mock_mailer_mail_recipient.called
 
 
 class TestHarvestDBLog(unittest.TestCase):
