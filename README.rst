@@ -190,9 +190,7 @@ If you want to send Error-Mails when a Harvest-Job fails, you can set it up in p
 
     ckan.harvest.status_mail.errored = True
 
-The receiver(s) of the error-mails are configured in production.ini:
-
-    email_to = admin@your-portal.org, error-mails@your-portal.org
+That way, all CKAN-Users who are declared as Admins will receive the Error-Mails at their configured E-Mail-Address.
 
 If you don't specify this setting, the default will be False.
 
