@@ -1,6 +1,7 @@
 import json
 import factories
 import unittest
+from mock import patch
 from nose.tools import assert_equal, assert_raises
 from nose.plugins.skip import SkipTest
 
@@ -29,6 +30,9 @@ from ckan import model
 
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.model as harvest_model
+from ckanext.harvest.model import HarvestGatherError, HarvestJob
+from ckanext.harvest.logic import HarvestJobExists
+from ckanext.harvest.logic.action.update import send_error_mail
 
 
 def call_action_api(action, apikey=None, status=200, **kwargs):
@@ -559,7 +563,96 @@ class TestHarvestObject(unittest.TestCase):
         self.assertRaises(toolkit.ValidationError, harvest_object_create,
                           context, data_dict)
 
-          
+
+class TestHarvestErrorMail(FunctionalTestBase):
+    @classmethod
+    def setup_class(cls):
+        super(TestHarvestErrorMail, cls).setup_class()
+        reset_db()
+        harvest_model.setup()
+
+    @classmethod
+    def teardown_class(cls):
+        super(TestHarvestErrorMail, cls).teardown_class()
+        reset_db()
+
+    def _create_harvest_source_and_job_if_not_existing(self):
+        site_user = toolkit.get_action('get_site_user')(
+            {'model': model, 'ignore_auth': True}, {})['name']
+
+        context = {
+            'user': site_user,
+            'model': model,
+            'session': model.Session,
+            'ignore_auth': True,
+        }
+        source_dict = {
+            'title': 'Test Source',
+            'name': 'test-source',
+            'url': 'basic_test',
+            'source_type': 'test',
+        }
+
+        try:
+            harvest_source = toolkit.get_action('harvest_source_create')(
+                context,
+                source_dict
+            )
+        except toolkit.ValidationError:
+            harvest_source = toolkit.get_action('harvest_source_show')(
+                context,
+                {'id': source_dict['name']}
+            )
+            pass
+
+        try:
+            job = toolkit.get_action('harvest_job_create')(context, {
+                'source_id': harvest_source['id'], 'run': True})
+        except HarvestJobExists:
+            job = toolkit.get_action('harvest_job_show')(context, {
+                'id': harvest_source['status']['last_job']['id']})
+            pass
+
+        toolkit.get_action('harvest_jobs_run')(context, {})
+        toolkit.get_action('harvest_source_reindex')(context, {'id': harvest_source['id']})
+        return context, harvest_source, job
+
+    @patch('ckan.lib.mailer.mail_recipient')
+    def test_error_mail_not_sent(self, mock_mailer_mail_recipient):
+        context, harvest_source, job = self._create_harvest_source_and_job_if_not_existing()
+
+        status = toolkit.get_action('harvest_source_show_status')(context, {'id': harvest_source['id']})
+
+        send_error_mail(
+            context,
+            harvest_source['id'],
+            status
+        )
+        assert_equal(0, status['last_job']['stats']['errored'])
+        assert mock_mailer_mail_recipient.not_called
+
+    @patch('ckan.lib.mailer.mail_recipient')
+    def test_error_mail_sent(self, mock_mailer_mail_recipient):
+        context, harvest_source, job = self._create_harvest_source_and_job_if_not_existing()
+
+        # create a HarvestGatherError
+        job_model = HarvestJob.get(job['id'])
+        msg = 'System error - No harvester could be found for source type %s' % job_model.source.type
+        err = HarvestGatherError(message=msg, job=job_model)
+        err.save()
+
+        status = toolkit.get_action('harvest_source_show_status')(context, {'id': harvest_source['id']})
+
+        send_error_mail(
+            context,
+            harvest_source['id'],
+            status
+        )
+
+        assert_equal(1, status['last_job']['stats']['errored'])
+        assert mock_mailer_mail_recipient.called
+
+
 class TestHarvestDBLog(unittest.TestCase):
     @classmethod
     def setup_class(cls):
