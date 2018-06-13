@@ -564,11 +564,17 @@ class TestHarvestObject(unittest.TestCase):
                           context, data_dict)
 
 
-class TestHarvestErrorMail(unittest.TestCase):
+class TestHarvestErrorMail(FunctionalTestBase):
     @classmethod
     def setup_class(cls):
+        super(TestHarvestErrorMail, cls).setup_class()
         reset_db()
         harvest_model.setup()
+
+    @classmethod
+    def teardown_class(cls):
+        super(TestHarvestErrorMail, cls).teardown_class()
+        reset_db()
 
     def _create_harvest_source_and_job_if_not_existing(self):
         site_user = toolkit.get_action('get_site_user')(
