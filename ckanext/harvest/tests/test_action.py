@@ -617,6 +617,83 @@ class TestHarvestErrorMail(FunctionalTestBase):
         toolkit.get_action('harvest_source_reindex')(context, {'id': harvest_source['id']})
         return context, harvest_source, job
 
+    def _create_harvest_source_with_owner_org_and_job_if_not_existing(self):
+        site_user = toolkit.get_action('get_site_user')(
+            {'model': model, 'ignore_auth': True}, {})['name']
+
+        context = {
+            'user': site_user,
+            'model': model,
+            'session': model.Session,
+            'ignore_auth': True,
+        }
+
+        test_org = ckan_factories.Organization()
+        test_other_org = ckan_factories.Organization()
+        org_admin_user = ckan_factories.User()
+        org_member_user = ckan_factories.User()
+        other_org_admin_user = ckan_factories.User()
+
+        toolkit.get_action('organization_member_create')(
+            context.copy(),
+            {
+                'id': test_org['id'],
+                'username': org_admin_user['name'],
+                'role': 'admin'
+            }
+        )
+
+        toolkit.get_action('organization_member_create')(
+            context.copy(),
+            {
+                'id': test_org['id'],
+                'username': org_member_user['name'],
+                'role': 'member'
+            }
+        )
+
+        toolkit.get_action('organization_member_create')(
+            context.copy(),
+            {
+                'id': test_other_org['id'],
+                'username': other_org_admin_user['name'],
+                'role': 'admin'
+            }
+        )
+
+        source_dict = {
+            'title': 'Test Source',
+            'name': 'test-source',
+            'url': 'basic_test',
+            'source_type': 'test',
+            'owner_org': test_org['id'],
+            'run': True
+        }
+
+        try:
+            harvest_source = toolkit.get_action('harvest_source_create')(
+                context.copy(),
+                source_dict
+            )
+        except toolkit.ValidationError:
+            harvest_source = toolkit.get_action('harvest_source_show')(
+                context.copy(),
+                {'id': source_dict['name']}
+            )
+            pass
+
+        try:
+            job = toolkit.get_action('harvest_job_create')(context.copy(), {
+                'source_id': harvest_source['id'], 'run': True})
+        except HarvestJobExists:
+            job = toolkit.get_action('harvest_job_show')(context.copy(), {
+                'id': harvest_source['status']['last_job']['id']})
+            pass
+
+        toolkit.get_action('harvest_jobs_run')(context.copy(), {})
+        toolkit.get_action('harvest_source_reindex')(context.copy(), {'id': harvest_source['id']})
+        return context, harvest_source, job
+
     @patch('ckan.lib.mailer.mail_recipient')
     def test_error_mail_not_sent(self, mock_mailer_mail_recipient):
         context, harvest_source, job = self._create_harvest_source_and_job_if_not_existing()
@@ -651,6 +728,28 @@ class TestHarvestErrorMail(FunctionalTestBase):
 
         assert_equal(1, status['last_job']['stats']['errored'])
         assert mock_mailer_mail_recipient.called
+
+    @patch('ckan.lib.mailer.mail_recipient')
+    def test_error_mail_sent_with_org(self, mock_mailer_mail_recipient):
+        context, harvest_source, job = self._create_harvest_source_with_owner_org_and_job_if_not_existing()
+
+        # create a HarvestGatherError
+        job_model = HarvestJob.get(job['id'])
+        msg = 'System error - No harvester could be found for source type %s' % job_model.source.type
+        err = HarvestGatherError(message=msg, job=job_model)
+        err.save()
+
+        status = toolkit.get_action('harvest_source_show_status')(context, {'id': harvest_source['id']})
+
+        send_error_mail(
+            context,
+            harvest_source['id'],
+            status
+        )
+
+        assert_equal(1, status['last_job']['stats']['errored'])
+        assert mock_mailer_mail_recipient.called
+        assert_equal(2, mock_mailer_mail_recipient.call_count)
 
 
 class TestHarvestDBLog(unittest.TestCase):
