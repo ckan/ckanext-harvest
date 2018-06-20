@@ -1,2 +1,5 @@
 pika==0.9.8
 redis==2.10.1
+urllib3
+certifi
+requests[security]
