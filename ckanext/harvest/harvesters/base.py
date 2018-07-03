@@ -60,7 +60,7 @@ class HarvesterBase(SingletonPlugin):
 
     @classmethod
     def _gen_new_name(cls, title, existing_name=None,
-                      append_type='number-sequence'):
+                      append_type=None):
         '''
         Returns a 'name' for the dataset (URL friendly), based on the title.
 
@@ -79,11 +79,19 @@ class HarvesterBase(SingletonPlugin):
         :type append_type: string
         '''
 
+        # If append_type was given, use it. Otherwise, use the configured default.
+        # If nothing was given and no defaults were set, use 'number-sequence'.
+        if append_type:
+            append_type_param = append_type
+        else:
+            append_type_param = config.get('ckanext.harvest.default_dataset_name_append',
+                                           'number-sequence')
+
         ideal_name = munge_title_to_name(title)
         ideal_name = re.sub('-+', '-', ideal_name)  # collapse multiple dashes
         return cls._ensure_name_is_unique(ideal_name,
                                           existing_name=existing_name,
-                                          append_type=append_type)
+                                          append_type=append_type_param)
 
     @staticmethod
     def _ensure_name_is_unique(ideal_name, existing_name=None,

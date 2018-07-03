@@ -7,7 +7,7 @@
       {% snippet "snippets/job_details.html", job=source.status.last_job %}
       <div class="form-actions">
         <a href="{{ h.url_for(controller='ckanext.harvest.controllers.view:ViewController', action='show_last_job', source=source.name) }}" class="btn pull-right">
-          <i class="icon-briefcase"></i>
+          <i class="fa fa-briefcase icon-briefcase"></i>
           {{ _('View full job report')  }}
         </a>
       </div>

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import json
 import re
 import copy
@@ -188,7 +190,7 @@ def serve(port=PORT):
 
     httpd = TestServer(("", PORT), MockCkanHandler)
 
-    print 'Serving test HTTP server at port', PORT
+    print('Serving test HTTP server at port {}'.format(PORT))
 
     httpd_thread = Thread(target=httpd.serve_forever)
     httpd_thread.setDaemon(True)
