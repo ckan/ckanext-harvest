@@ -1,2 +1,8 @@
 pika==0.9.8
 redis==2.10.1
+idna==2.7
+ndg-httpsclient==0.5.1
+pyasn1==0.4.4
+pyOpenSSL==18.0.0
+urllib3==1.2.3
+enum34==0.4.7

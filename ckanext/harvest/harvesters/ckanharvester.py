@@ -1,8 +1,9 @@
 import urllib
-import urllib2
 import httplib
 import datetime
 import socket
+import requests
+import urllib3.contrib.pyopenssl
 
 from ckan import model
 from ckan.logic import ValidationError, NotFound, get_action
@@ -34,20 +35,21 @@ class CKANHarvester(HarvesterBase):
         return '%s/package_search' % self._get_action_api_offset()
 
     def _get_content(self, url):
-        http_request = urllib2.Request(url=url)
 
         api_key = self.config.get('api_key')
+        headers = {}
         if api_key:
-            http_request.add_header('Authorization', api_key)
+            headers['Authorization'] = api_key
 
+        urllib3.contrib.pyopenssl.inject_into_urllib3()
         try:
-            http_response = urllib2.urlopen(http_request)
-        except urllib2.HTTPError, e:
-            if e.getcode() == 404:
-                raise ContentNotFoundError('HTTP error: %s' % e.code)
+            http_request = requests.get(url, headers=headers)
+        except HTTPError, e:
+            if e.response.status_code == 404:
+                raise ContentNotFoundError('HTTP error: %s' % e.response.status_code)
             else:
-                raise ContentFetchError('HTTP error: %s' % e.code)
-        except urllib2.URLError, e:
+                raise ContentFetchError('HTTP error: %s' % e.response.status_code)
+        except URLError, e:
             raise ContentFetchError('URL error: %s' % e.reason)
         except httplib.HTTPException, e:
             raise ContentFetchError('HTTP Exception: %s' % e)
@@ -55,7 +57,7 @@ class CKANHarvester(HarvesterBase):
             raise ContentFetchError('HTTP socket error: %s' % e)
         except Exception, e:
             raise ContentFetchError('HTTP general exception: %s' % e)
-        return http_response.read()
+        return http_request.text
 
     def _get_group(self, base_url, group):
         url = base_url + self._get_action_api_offset() + '/group_show?id=' + \
