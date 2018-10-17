@@ -15,7 +15,7 @@
   {% if source.organization %}
     {% set org = source.organization %}
     <li>{{ h.nav_link(_('Organizations'), named_route='organizations_index') }}</li>
-    <li>{{ h.nav_link(org.title or org.name|truncate(10), named_route='organization_read', id=org.name) }}</li>
+    <li>{{ h.nav_link(org.title or org.name|truncate(10), named_route='organization.read', id=org.name) }}</li>
     <li>{{ h.nav_link(_('Harvest Sources'), named_route='{0}_search'.format(c.dataset_type)) }}</li>
     <li{{ self.breadcrumb_content_root_selected() }}>{{ h.nav_link(c.harvest_source.title|truncate(10), named_route='{0}_read'.format(c.dataset_type), id=c.harvest_source.name) }}</li>
   {% else %}
