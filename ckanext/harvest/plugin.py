@@ -1,6 +1,7 @@
-import types
+import json
 from logging import getLogger
 
+from six import string_types
 from sqlalchemy.util import OrderedDict
 
 from ckan import logic
@@ -175,11 +176,10 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
         return 'source/edit.html'
 
     def setup_template_variables(self, context, data_dict):
-
-        p.toolkit.c.harvest_source = p.toolkit.c.pkg_dict
+        if hasattr(p.toolkit.c, 'pkg'):
+            p.toolkit.c.harvest_source = p.toolkit.c.pkg
 
         p.toolkit.c.dataset_type = DATASET_TYPE_NAME
-
 
     def create_package_schema(self):
         '''
@@ -245,9 +245,6 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
         map.connect('harvest_object_show', '/' + DATASET_TYPE_NAME + '/object/:id', controller=controller, action='show_object')
         map.connect('harvest_object_for_dataset_show', '/dataset/harvest_object/:id', controller=controller, action='show_object', ref_type='dataset')
 
-        org_controller = 'ckanext.harvest.controllers.organization:OrganizationController'
-        map.connect('{0}_org_list'.format(DATASET_TYPE_NAME), '/organization/' + DATASET_TYPE_NAME + '/' + '{id}', controller=org_controller, action='source_list')
-
         return map
 
     def update_config(self, config):
@@ -262,6 +259,18 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
         p.toolkit.add_public_directory(config, 'public')
         p.toolkit.add_resource('fanstatic_library', 'ckanext-harvest')
         p.toolkit.add_resource('public/ckanext/harvest/javascript', 'harvest-extra-field')
+
+        if p.toolkit.check_ckan_version(min_version='2.9.0'):
+            mappings = config.get('ckan.legacy_route_mappings', {})
+            if isinstance(mappings, string_types):
+                mappings = json.loads(mappings)
+
+            mappings.update({
+                'harvest_read': 'harvest.read',
+                'harvest_edit': 'harvest.edit',
+            })
+            # https://github.com/ckan/ckan/pull/4521
+            config['ckan.legacy_route_mappings'] = json.dumps(mappings)
 
     ## IActions
 

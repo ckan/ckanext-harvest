@@ -1,5 +1,4 @@
 
-from pylons import request
 from ckan import logic
 from ckan import model
 import ckan.lib.helpers as h
@@ -8,6 +7,9 @@ import ckan.plugins as p
 from ckanext.harvest.model import UPDATE_FREQUENCIES
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
 from ckanext.harvest.interfaces import IHarvester
+
+request = p.toolkit.request
+
 
 def package_list_for_source(source_id):
     '''
