@@ -64,17 +64,18 @@ running a version lower than 2.0.
 
 There are a number of configuration options available for the backends. These don't need to be modified at all if you are using the default Redis or RabbitMQ install (step 1). However you may wish to add them with custom options to the into the CKAN config file the `[app:main]` section. The list below shows the available options and their default values:
 
-    * Redis:
-        - ``ckan.harvest.mq.hostname`` (localhost)
-        - ``ckan.harvest.mq.port`` (6379)
-        - ``ckan.harvest.mq.redis_db`` (0)
+* Redis:
+    - ``ckan.harvest.mq.hostname`` (localhost)
+    - ``ckan.harvest.mq.port`` (6379)
+    - ``ckan.harvest.mq.redis_db`` (0)
+    - ``ckan.harvest.mq.password`` (None)
 
-    * RabbitMQ:
-        - ``ckan.harvest.mq.user_id`` (guest)
-        - ``ckan.harvest.mq.password`` (guest)
-        - ``ckan.harvest.mq.hostname`` (localhost)
-        - ``ckan.harvest.mq.port`` (5672)
-        - ``ckan.harvest.mq.virtual_host`` (/)
+* RabbitMQ:
+    - ``ckan.harvest.mq.user_id`` (guest)
+    - ``ckan.harvest.mq.password`` (guest)
+    - ``ckan.harvest.mq.hostname`` (localhost)
+    - ``ckan.harvest.mq.port`` (5672)
+    - ``ckan.harvest.mq.virtual_host`` (/)
 
 
 **Note**: it is safe to use the same backend server (either Redis or RabbitMQ)
