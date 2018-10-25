@@ -14,7 +14,7 @@
   {% else %}
     {% set locale = h.dump_json({'content': _('This will re-run the harvesting for this source. Any updates at the source will overwrite the local datasets. Sources with a large number of datasets may take a significant amount of time to finish harvesting. Please confirm you would like us to start reharvesting.')}) %}
     {{ '<li>' if show_li }}
-      <a href="{{ h.url_for('harvest_refresh', id=source.id) }}" class="btn" data-module="confirm-action" data-module-i18n="{{ locale }}"
+      <a href="{{ h.url_for('harvest_refresh', id=source.id) }}" class="btn btn-default" data-module="confirm-action" data-module-i18n="{{ locale }}"
          title="{{ _('Start a new harvesting job for this harvest source now') }}">
         <i class="fa fa-refresh icon-refresh"></i>
         {{ _('Reharvest') }}
@@ -23,7 +23,7 @@
   {% endif %}
   {% if source.status and source.status.last_job and (source.status.last_job.status == 'Running') %}
     {{ '<li>' if show_li }}
-      <a href="{{ h.url_for('harvest_job_abort', source=source.name, id=source.status.last_job.id) }}" class="btn" title="Stop this Job">
+      <a href="{{ h.url_for('harvest_job_abort', source=source.name, id=source.status.last_job.id) }}" class="btn btn-default" title="Stop this Job">
         <i class="fa fa-ban icon-ban-circle"></i>
         {{ _('Stop') }}
       </a>
@@ -31,13 +31,19 @@
   {% endif %}
     {% set locale = h.dump_json({'content': _('Warning: This will remove all datasets for this source, as well as all previous job reports. Are you sure you want to continue?')}) %}
     {{ '<li>' if show_li }}
-      <a href="{{ h.url_for('harvest_clear', id=source.id) }}" class="btn" data-module="confirm-action" data-module-i18n="{{ locale }}"
+      <a href="{{ h.url_for('harvest_clear', id=source.id) }}" class="btn btn-default" data-module="confirm-action" data-module-i18n="{{ locale }}"
          title="{{ _('Delete all harvest jobs and existing datasets from this source') }}">
         {{ _('Clear') }}
       </a>
     {{ '</li>' if show_li }}
 
-  {{ '<li>' if show_li }}{{ h.nav_link(_('View harvest source'), named_route='{0}_read'.format(c.dataset_type), id=source.name, class_='btn', icon='eye-open')}}{{ '</li>' if show_li }}
+  {{ '<li>' if show_li }}
+       <a href="{{ h.url_for('{0}_read'.format(c.dataset_type), id=source.id) }}" class="btn btn-default">
+        <i class="fa fa-eye eye-open"></i>
+        {{ _('View harvest source') }}
+      </a>
+      
+  {{ '</li>' if show_li }}
 {% endblock %}
 
 {# CKAN 2.0 #}

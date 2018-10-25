@@ -1,7 +1,7 @@
 {% import 'macros/form.html' as form %}
 {% resource 'harvest-extra-field/main' %}
 
-<form id="source-new" class="form-horizontal" method="post" >
+<form id="source-new" class="form-horizontal dataset-form {{ h.bootstrap_version() }}" method="post" >
 
   {% block errors %}{{ form.errors(error_summary) }}{% endblock %}
 
@@ -22,7 +22,7 @@
 
   {{ form.markdown('notes', id='field-notes', label=_('Description'), value=data.notes, error=errors.notes) }}
 
-  <div class="harvest-types control-group">
+  <div class="harvest-types form-group control-group">
     <label class="control-label">Source type</label>
     <div class="controls">
       {% for harvester in h.harvesters_info() %}
@@ -59,7 +59,7 @@
 
   {% if show_organizations_selector %}
     {% set existing_org = data.owner_org %}
-    <div class="control-group">
+    <div class="control-group form-group">
       <label for="field-organizations" class="control-label">{{ _('Organization') }}</label>
       <div class="controls">
         <select id="field-organizations" name="owner_org" data-module="autocomplete">

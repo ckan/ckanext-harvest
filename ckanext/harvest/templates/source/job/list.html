@@ -40,7 +40,7 @@
             <ul class="dataset-resources unstyled">
               {% if 'errored' in job.stats and job.stats['errored'] > 0 %}
                 <li>
-                  <span class="label label-important">
+                  <span class="label label-important" data-diff="error">
                     {{ job.stats['errored'] }} {{ _('errors') }}
                   </span>
                 </li>

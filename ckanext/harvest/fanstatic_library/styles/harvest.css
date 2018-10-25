@@ -11,6 +11,9 @@ header.with-filter h1 {
   text-shadow: none;
   font-weight: normal;
 }
+[data-diff="error"] {
+  background-color: #b55457;
+}
 [data-diff="added"] {
   background-color: #9ee592;
 }
@@ -36,9 +39,8 @@ header.with-filter h1 {
 .harvest-types label.radio input {
   top: 3px;
 }
-#source-new .controls {
-  margin-left: 135px;
-}
-#source-new .control-label {
+
+#source-new.bs2 .control-label {
   width: 125px;
-}
+-}
+
