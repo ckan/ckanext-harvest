@@ -46,7 +46,7 @@ class ViewController(BaseController):
             else:
                 h.flash_success(_('Harvesting source successfully inactivated'))
 
-            h.redirect_to(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
+            h.redirect_to(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id, __ckan_no_root=True))
         except p.toolkit.ObjectNotFound:
             abort(404,_('Harvest source not found'))
         except p.toolkit.NotAuthorized:
@@ -74,7 +74,7 @@ class ViewController(BaseController):
                 msg = 'An error occurred: [%s]' % str(e)
                 h.flash_error(msg)
 
-        h.redirect_to(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
+        h.redirect_to(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id, __ckan_no_root=True))
 
     def clear(self, id):
         try:
@@ -89,7 +89,7 @@ class ViewController(BaseController):
             msg = 'An error occurred: [%s]' % str(e)
             h.flash_error(msg)
 
-        h.redirect_to(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
+        h.redirect_to(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id, __ckan_no_root=True))
 
     def show_object(self, id, ref_type='object'):
 
@@ -211,7 +211,7 @@ class ViewController(BaseController):
             msg = 'An error occurred: [%s]' % str(e)
             abort(500,msg)
             
-        h.redirect_to(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=source))
+        h.redirect_to(h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=source, __ckan_no_root=True))
 
     def show_last_job(self, source):
 
