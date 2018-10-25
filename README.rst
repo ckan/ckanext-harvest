@@ -399,6 +399,13 @@ field. The currently supported configuration options are:
     organizations_filter_exclude or organizations_filter_include should be
     configured.
 
+*   groups_filter_include: Exactly the same as organizations_filter_include but for
+    groups.
+
+*   groups_filter_exclude: Exactly the same as organizations_filter_exclude but for
+    groups.
+
+
 Here is an example of a configuration object (the one that must be entered in
 the configuration field)::
 

@@ -115,6 +115,12 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                         params['fq'] == 'organization:org1':
                     datasets = ['dataset1']
                 elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
+                        params['fq'] == '-groups:group1':
+                    datasets = [DATASETS[1]['name']]
+                elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
+                        params['fq'] == 'groups:group1':
+                    datasets = ['dataset1']
+                elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
                         'metadata_modified' in params['fq']:
                     assert '+TO+' not in params['fq'], \
                         'Spaces should not be decoded by now - seeing + '\

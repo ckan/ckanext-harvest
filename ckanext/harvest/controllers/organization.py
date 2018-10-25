@@ -2,7 +2,7 @@ import logging
 from urllib import urlencode
 
 from ckan import plugins as p
-from ckan.lib.base import c, model, request, render, h, g
+from ckan.lib.base import c, model, request, render, h
 from ckan.lib.base import abort
 import ckan.lib.maintain as maintain
 import ckan.lib.search as search
@@ -33,7 +33,7 @@ class OrganizationController(GroupController):
         q = c.q = request.params.get('q', '')
 
         try:
-            c.group_dict = self._action('group_show')(context, data_dict)
+            c.group_dict = self._action('organization_show')(context, data_dict)
             c.group = context['group']
         except p.toolkit.ObjectNotFound:
             abort(404, p.toolkit._('Group not found'))
@@ -138,7 +138,7 @@ class OrganizationController(GroupController):
                               'res_format': p.toolkit._('Formats'),
                               'license': p.toolkit._('Licence'), }
 
-            for facet in g.facets:
+            for facet in facets:
                 if facet in default_facet_titles:
                     facets[facet] = default_facet_titles[facet]
                 else:
