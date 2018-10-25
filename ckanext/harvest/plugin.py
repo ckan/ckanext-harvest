@@ -245,9 +245,6 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
         map.connect('harvest_object_show', '/' + DATASET_TYPE_NAME + '/object/:id', controller=controller, action='show_object')
         map.connect('harvest_object_for_dataset_show', '/dataset/harvest_object/:id', controller=controller, action='show_object', ref_type='dataset')
 
-        org_controller = 'ckanext.harvest.controllers.organization:OrganizationController'
-        map.connect('{0}_org_list'.format(DATASET_TYPE_NAME), '/organization/' + DATASET_TYPE_NAME + '/' + '{id}', controller=org_controller, action='source_list')
-
         return map
 
     def update_config(self, config):
