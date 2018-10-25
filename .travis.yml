@@ -9,6 +9,7 @@ env:
     - CKANVERSION=2.5
     - CKANVERSION=2.6
     - CKANVERSION=2.7
+    - CKANVERSION=2.8
 services:
     - redis-server
     - postgresql
