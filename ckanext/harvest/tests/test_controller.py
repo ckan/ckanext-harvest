@@ -118,3 +118,24 @@ class TestController(helpers.FunctionalTestBase):
         response = app.get(url, extra_environ=self.extra_environ)
 
         assert_in(job['id'], response.unicode_body)
+
+    def test_job_show_last_page_rendered(self):
+
+        job = harvest_factories.HarvestJob()
+        app = self._get_test_app()
+        url = url_for('harvest_job_show_last', source=job['source_id'])
+
+        response = app.get(url, extra_environ=self.extra_environ)
+
+        assert_in(job['id'], response.unicode_body)
+
+    def test_job_show_page_rendered(self):
+
+        job = harvest_factories.HarvestJob()
+        app = self._get_test_app()
+        url = url_for(
+            'harvest_job_show', source=job['source_id'], id=job['id'])
+
+        response = app.get(url, extra_environ=self.extra_environ)
+
+        assert_in(job['id'], response.unicode_body)
