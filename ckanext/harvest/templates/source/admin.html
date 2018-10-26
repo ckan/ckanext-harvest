@@ -3,10 +3,10 @@
 {% block primary_content_inner %}
   <section class="module-content">
     <h1>{{ _('Last Harvest Job') }}</h1>
-    {% if source.status and source.status.last_job %}
-      {% snippet "snippets/job_details.html", job=source.status.last_job %}
+    {% if harvest_source.status and harvest_source.status.last_job %}
+      {% snippet "snippets/job_details.html", job=harvest_source.status.last_job %}
       <div class="form-actions">
-        <a href="{{ h.url_for(controller='ckanext.harvest.controllers.view:ViewController', action='show_last_job', source=source.name) }}" class="btn pull-right btn-default">
+        <a href="{{ h.url_for(controller='ckanext.harvest.controllers.view:ViewController', action='show_last_job', source=harvest_source.name) }}" class="btn pull-right btn-default">
           <i class="fa fa-briefcase icon-briefcase"></i>
           {{ _('View full job report')  }}
         </a>
