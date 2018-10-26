@@ -176,8 +176,6 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
         return 'source/edit.html'
 
     def setup_template_variables(self, context, data_dict):
-        if hasattr(p.toolkit.c, 'pkg'):
-            p.toolkit.c.harvest_source = p.toolkit.c.pkg
 
         p.toolkit.c.dataset_type = DATASET_TYPE_NAME
 
@@ -303,6 +301,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
                 'link_for_harvest_object': harvest_helpers.link_for_harvest_object,
                 'harvest_source_extra_fields': harvest_helpers.harvest_source_extra_fields,
                 'bootstrap_version': harvest_helpers.bootstrap_version,
+                'get_harvest_source': harvest_helpers.get_harvest_source,
                 }
 
     def dataset_facets(self, facets_dict, package_type):

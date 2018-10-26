@@ -8,7 +8,22 @@ from ckanext.harvest.model import UPDATE_FREQUENCIES
 from ckanext.harvest.plugin import DATASET_TYPE_NAME
 from ckanext.harvest.interfaces import IHarvester
 
+
+c = p.toolkit.c
 request = p.toolkit.request
+
+
+def get_harvest_source(source_id=None):
+
+    context = {'model': model, 'session': model.Session}
+    if source_id:
+        return p.toolkit.get_action('harvest_source_show')(context, {'id': source_id})
+    elif hasattr(c, 'pkg_dict'):
+        return c.pkg_dict
+    elif hasattr(c, 'pkg'):
+        return p.toolkit.get_action('harvest_source_show')(context, {'id': c.pkg.id})
+
+    return None
 
 
 def package_list_for_source(source_id):
@@ -29,12 +44,12 @@ def package_list_for_source(source_id):
     }
 
     context = {'model': model, 'session': model.Session}
-
-    owner_org =  p.toolkit.c.harvest_source.get('owner_org', '')
+    harvest_source = get_harvest_source(source_id)
+    owner_org = harvest_source.get('owner_org', '')
     if owner_org:
         user_member_of_orgs = [org['id'] for org
                    in h.organizations_available('read')]
-        if (p.toolkit.c.harvest_source and owner_org in user_member_of_orgs):
+        if (harvest_source and owner_org in user_member_of_orgs):
             context['ignore_capacity_check'] = True
 
     query = logic.get_action('package_search')(context, search_dict)

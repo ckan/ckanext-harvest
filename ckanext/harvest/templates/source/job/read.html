@@ -10,11 +10,11 @@
   </p>
 
   <h1>{{ _('Job Report') }}</h1>
-  {% snippet 'snippets/job_details.html', job=c.job %}
+  {% snippet 'snippets/job_details.html', job=job %}
 
-  {% if c.job.status == 'Finished' %}
+  {% if job.status == 'Finished' %}
 
-    {% if c.job.object_error_summary|length == 0 and c.job.gather_error_summary|length == 0 %}
+    {% if job.object_error_summary|length == 0 and job.gather_error_summary|length == 0 %}
       <h2>{{ _('Error Summary') }}</h2>
       <p class="empty">{{ _('No errors for this job') }}</p>
     {% else %}
@@ -22,25 +22,25 @@
         {{ _('Error Summary') }}
         <small>{{ _('Only the 20 most frequent errors are shown') }}</small>
       </h2>
-      {% if c.job.gather_error_summary|length > 0 %}
+      {% if job.gather_error_summary|length > 0 %}
         <h3>{{ _('Job Errors') }}</h3>
-        {% snippet 'snippets/job_error_summary.html', summary=c.job.gather_error_summary %}
+        {% snippet 'snippets/job_error_summary.html', summary=job.gather_error_summary %}
       {% endif %}
-      {% if c.job.object_error_summary|length > 0 %}
+      {% if job.object_error_summary|length > 0 %}
         <h3>{{ _('Document Errors') }}</h3>
-        {% snippet 'snippets/job_error_summary.html', summary=c.job.object_error_summary %}
+        {% snippet 'snippets/job_error_summary.html', summary=job.object_error_summary %}
       {% endif %}
     {% endif %}
 
-    {% if c.job_report.gather_errors|length > 0 or c.job_report.object_errors.keys()|length > 0 %}
+    {% if job_report.gather_errors|length > 0 or job_report.object_errors.keys()|length > 0 %}
       <h2>
         {{ _('Error Report') }}
       </h2>
-      {% if c.job_report.gather_errors|length > 0 %}
+      {% if job_report.gather_errors|length > 0 %}
         <h3>{{ _('Job Errors') }}</h3>
         <table class="table table-bordered table-hover harvest-error-list">
           <tbody>
-            {% for error  in c.job_report.gather_errors %}
+            {% for error  in job_report.gather_errors %}
             <tr>
               <td>
                   <div class="error">
@@ -53,14 +53,14 @@
         </table>
       {% endif %}
 
-      {% if c.job_report.object_errors.keys()|length > 0 %}
+      {% if job_report.object_errors.keys()|length > 0 %}
         <h3>{{ _('Document Errors') }}
-          <small>{{ c.job_report.object_errors.keys()|length}} {{ _('documents with errors') }}</small>
+          <small>{{ job_report.object_errors.keys()|length}} {{ _('documents with errors') }}</small>
         </h3>
         <table class="table table-bordered table-hover harvest-error-list">
           <tbody>
-            {% for harvest_object_id in c.job_report.object_errors.keys() %}
-            {% set object = c.job_report.object_errors[harvest_object_id] %}
+            {% for harvest_object_id in job_report.object_errors.keys() %}
+            {% set object = job_report.object_errors[harvest_object_id] %}
             <tr>
               <td>
                 <span class="btn-group pull-right">
