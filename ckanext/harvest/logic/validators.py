@@ -113,7 +113,10 @@ def harvest_source_type_exists(value, context):
     # Get all the registered harvester types
     available_types = []
     for harvester in PluginImplementations(IHarvester):
-        info = harvester.info()
+        try:
+            info = harvester.info()
+        except AttributeError:
+            continue
         if not info or 'name' not in info:
             log.error('Harvester %s does not provide the harvester name in '
                       'the info response' % harvester)
