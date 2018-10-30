@@ -1,16 +1,12 @@
 import requests
-from requests.exceptions import HTTPError
-from requests.exceptions import InvalidURL
+from requests.exceptions import RequestException
 
-import httplib
 import datetime
-import socket
 from urllib3.contrib import pyopenssl
 
 from ckan import model
 from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
-from ckan.lib.munge import munge_name
 from ckan.plugins import toolkit
 
 from ckanext.harvest.model import HarvestObject
@@ -46,17 +42,8 @@ class CKANHarvester(HarvesterBase):
 
         try:
             http_request = requests.get(url, headers=headers)
-        except HTTPError as e:
-            if e.response.status_code == 404:
-                raise ContentNotFoundError('HTTP error: %s' % e.code)
-            else:
-                raise ContentFetchError('HTTP error: %s' % e.code)
-        except InvalidURL as e:
-            raise ContentFetchError('URL error: %s' % e.reason)
-        except httplib.HTTPException as e:
-            raise ContentFetchError('HTTP Exception: %s' % e)
-        except socket.error as e:
-            raise ContentFetchError('HTTP socket error: %s' % e)
+        except RequestException as e:
+            raise ContentFetchError('HTTP error: %s' % e.code)
         except Exception as e:
             raise ContentFetchError('HTTP general exception: %s' % e)
         return http_request.text
