@@ -1,21 +1,19 @@
-import urllib
-import urllib2
-import httplib
+import requests
+from requests.exceptions import RequestException
+
 import datetime
-import socket
+from urllib3.contrib import pyopenssl
 
 from ckan import model
 from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
-from ckan.lib.munge import munge_name
 from ckan.plugins import toolkit
 
 from ckanext.harvest.model import HarvestObject
+from base import HarvesterBase
 
 import logging
 log = logging.getLogger(__name__)
-
-from base import HarvesterBase
 
 
 class CKANHarvester(HarvesterBase):
@@ -34,28 +32,21 @@ class CKANHarvester(HarvesterBase):
         return '%s/package_search' % self._get_action_api_offset()
 
     def _get_content(self, url):
-        http_request = urllib2.Request(url=url)
 
+        headers = {}
         api_key = self.config.get('api_key')
         if api_key:
-            http_request.add_header('Authorization', api_key)
+            headers['Authorization'] = api_key
+
+        pyopenssl.inject_into_urllib3()
 
         try:
-            http_response = urllib2.urlopen(http_request)
-        except urllib2.HTTPError, e:
-            if e.getcode() == 404:
-                raise ContentNotFoundError('HTTP error: %s' % e.code)
-            else:
-                raise ContentFetchError('HTTP error: %s' % e.code)
-        except urllib2.URLError, e:
-            raise ContentFetchError('URL error: %s' % e.reason)
-        except httplib.HTTPException, e:
-            raise ContentFetchError('HTTP Exception: %s' % e)
-        except socket.error, e:
-            raise ContentFetchError('HTTP socket error: %s' % e)
-        except Exception, e:
+            http_request = requests.get(url, headers=headers)
+        except RequestException as e:
+            raise ContentFetchError('HTTP error: %s' % e.code)
+        except Exception as e:
             raise ContentFetchError('HTTP general exception: %s' % e)
-        return http_response.read()
+        return http_request.text
 
     def _get_group(self, base_url, group):
         url = base_url + self._get_action_api_offset() + '/group_show?id=' + \
