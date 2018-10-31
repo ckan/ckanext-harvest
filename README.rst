@@ -1,5 +1,5 @@
 =============================================
-ggua-ckanext-harvest - Remote harvesting extension
+dgua-ckanext-harvest - Remote harvesting extension
 =============================================
 
 .. image:: https://travis-ci.org/ckan/ckanext-harvest.svg?branch=master
