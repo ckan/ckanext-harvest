@@ -3,6 +3,7 @@ from requests.exceptions import RequestException
 
 import datetime
 from urllib3.contrib import pyopenssl
+import urllib
 
 from ckan import model
 from ckan.logic import ValidationError, NotFound, get_action
