@@ -10,13 +10,58 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_.
 ***********
 Unreleased_
 ***********
+Fixed
+-----
+- harvest_source_type_exists validator should not fail if Harvester has no ``info()`` method #338
+
+*******************
+1.1.4_ - 2018-10-26
+*******************
+Fixed
+-----
+- Fix nav link
+
+*******************
+1.1.3_ - 2018-10-26
+*******************
+Fixed
+-----
+- Reduce usage of c vars (CKAN 2.9)
+
+*******************
+1.1.2_ - 2018-10-25
+*******************
 Added
 -----
-- Move CKANHarvester._last_error_free_job to HarvesterBase.last_error_free_job #305
+- Send harvest-error-mails to organization-admins #329
+- CKAN Harvester option to include/exclude groups #323
+- Use Redis password from configuration when present #332
+- Support for CKAN 2.9
 
 Fixed
 -----
-- Fix handling of `clean_tags` options for tag lists and dicts #304
+- Ensures the AND operator for fq in solr #335
+- Fix styling issues on Bootstrap 3
+
+*******************
+1.1.1_ - 2018-06-13
+*******************
+Added
+-----
+- Move CKANHarvester._last_error_free_job to HarvesterBase.last_error_free_job #305
+- Add the CSS classes for FontAwesome 4.x #313
+- Add config option for dataset name append type #327
+- Send error mail to admin when harvesting fails #244
+
+Changed
+-------
+- Readme test tip ckan parameter #318
+
+Fixed
+-----
+- Fix handling of ``clean_tags`` options for tag lists and dicts #304
+- Don't delete all solr documents/fail to index harvesters when harvest config blank #315
+- Fix print statements to be Py3 friendly #328
 
 *******************
 1.1.0_ - 2017-11-07
@@ -29,7 +74,7 @@ Changed
 -------
 - Test improvements for harvester config #288
 - Use package_search API for count of datasets #298
-- Catch sqlalchemy.exc.DatabaseError instead of sqlalchemy.exc.OperationalError in `gather_callback` #301
+- Catch sqlalchemy.exc.DatabaseError instead of sqlalchemy.exc.OperationalError in ``gather_callback`` #301
 
 Fixed
 -------
@@ -124,7 +169,11 @@ Categories
 - ``Fixed`` for any bug fixes.
 - ``Security`` to invite users to upgrade in case of vulnerabilities.
 
-.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.1.0...HEAD
+.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.1.4...HEAD
+.. _1.1.4: https://github.com/ckan/ckanext-harvest/compare/v1.1.3...v1.1.4
+.. _1.1.3: https://github.com/ckan/ckanext-harvest/compare/v1.1.2...v1.1.3
+.. _1.1.2: https://github.com/ckan/ckanext-harvest/compare/v1.1.1...v1.1.2
+.. _1.1.1: https://github.com/ckan/ckanext-harvest/compare/v1.1.0...v1.1.1
 .. _1.1.0: https://github.com/ckan/ckanext-harvest/compare/v1.0.0...v1.1.0
 .. _1.0.0: https://github.com/ckan/ckanext-harvest/compare/v0.0.5...v1.0.0
 .. _0.0.5: https://github.com/ckan/ckanext-harvest/compare/v0.0.4...v0.0.5
