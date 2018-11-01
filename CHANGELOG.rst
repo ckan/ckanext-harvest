@@ -10,6 +10,9 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_.
 ***********
 Unreleased_
 ***********
+Fixed
+-----
+- harvest_source_type_exists validator should not fail if Harvester has no ``info()`` method #338
 
 *******************
 1.1.4_ - 2018-10-26
