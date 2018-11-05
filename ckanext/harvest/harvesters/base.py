@@ -11,9 +11,10 @@ from ckan import plugins as p
 from ckan import model
 from ckan.model import Session, Package, PACKAGE_NAME_MAX_LENGTH
 
-from ckan.logic.schema import default_create_package_schema
 from ckan.lib.navl.validators import ignore_missing, ignore
 from ckan.lib.munge import munge_title_to_name, substitute_ascii_equivalents
+
+import ckan.lib.plugins as lib_plugins
 
 from ckanext.harvest.model import (HarvestObject, HarvestGatherError,
                                    HarvestObjectError, HarvestJob)
@@ -273,7 +274,9 @@ class HarvesterBase(SingletonPlugin):
         assert package_dict_form in ('rest', 'package_show')
         try:
             # Change default schema
-            schema = default_create_package_schema()
+            # schema = default_create_package_schema()
+            package_plugin = lib_plugins.lookup_package_plugin(None)
+            schema = package_plugin.create_package_schema()
             schema['id'] = [ignore_missing, unicode]
             schema['__junk'] = [ignore]
 
