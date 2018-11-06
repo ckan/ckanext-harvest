@@ -13,6 +13,7 @@ from ckan.model import Session, Package, PACKAGE_NAME_MAX_LENGTH
 
 from ckan.lib.navl.validators import ignore_missing, ignore
 from ckan.lib.munge import munge_title_to_name, substitute_ascii_equivalents
+from ckan.logic.schema import default_create_package_schema
 
 import ckan.lib.plugins as lib_plugins
 

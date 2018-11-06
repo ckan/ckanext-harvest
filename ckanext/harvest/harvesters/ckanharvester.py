@@ -448,6 +448,10 @@ class CKANHarvester(HarvesterBase):
 
                 package_dict['groups'] = validated_groups
 
+            # Set new harvested package default values
+            package_dict['private'] = True
+            package_dict['is_harvested'] = True
+
             # Local harvest source organization
             source_dataset = get_action('package_show')(base_context.copy(), {'id': harvest_object.source.id})
             local_org = source_dataset.get('owner_org')
@@ -493,6 +497,7 @@ class CKANHarvester(HarvesterBase):
 
             # Set default groups if needed
             default_groups = self.config.get('default_groups', [])
+            # TODO: Get extras from DB
             if default_groups:
                 if not 'groups' in package_dict:
                     package_dict['groups'] = []
