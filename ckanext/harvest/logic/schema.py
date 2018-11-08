@@ -63,16 +63,16 @@ def harvest_source_schema():
 
     return schema
 
-# def dgua_tags_schema():
-#     schema = default_tags_schema()
-#     schema.update({
-#         'name': [toolkit.get_validator('not_missing'),
-#                  toolkit.get_validator('not_empty'),
-#                  unicode,
-#                  toolkit.get_validator('tag_length_validator'),
-#                  dgua_tag_name_validator]
-#     })
-#     return schema
+def dgua_tags_schema():
+    schema = default_tags_schema()
+    schema.update({
+        'name': [toolkit.get_validator('not_missing'),
+                 toolkit.get_validator('not_empty'),
+                 unicode,
+                 toolkit.get_validator('tag_length_validator'),
+                 dgua_tag_name_validator]
+    })
+    return schema
 
 def harvest_source_create_package_schema():
 
@@ -80,16 +80,16 @@ def harvest_source_create_package_schema():
     schema['__extras'] = [harvest_source_extra_validator]
     schema['save'] = [ignore]
     schema.pop("id")
-    # schema.update({
-    #     'title': [not_empty],
-    #     'notes': [not_empty],
-    #     'update_frequency': [not_empty, convert_to_extras],
-    #     'purpose_of_collecting_information': [not_empty, toolkit.get_validator('max_length')(512), convert_to_extras],
-    #     'tag_string': [not_empty, dgua_tag_string_convert],
-    #     'tags': dgua_tags_schema(),
-    #     'language': [not_empty, convert_to_extras],
-    #     'is_datapackage': [ignore_missing, convert_to_extras]
-    # })
+    schema.update({
+        'title': [not_empty],
+        'notes': [not_empty],
+        'update_frequency': [not_empty, convert_to_extras],
+        'purpose_of_collecting_information': [not_empty, toolkit.get_validator('max_length')(512), convert_to_extras],
+        'tag_string': [not_empty, convert_to_extras],
+        'tags': dgua_tags_schema(),
+        'language': [not_empty, convert_to_extras],
+        'is_datapackage': [ignore_missing, convert_to_extras]
+    })
 
     return schema
 
@@ -128,7 +128,7 @@ def harvest_source_show_package_schema():
         'is_datapackage': [
             toolkit.get_converter('convert_from_extras'),
             toolkit.get_validator('ignore_missing')],
-        'tag_string': [dgua_tags_to_string_convert,
+        'tag_string': [convert_from_extras,
             toolkit.get_validator('not_empty')
         ],
     })

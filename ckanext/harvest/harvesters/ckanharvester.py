@@ -448,9 +448,6 @@ class CKANHarvester(HarvesterBase):
 
                 package_dict['groups'] = validated_groups
 
-            # Set new harvested package default values
-            package_dict['private'] = True
-            package_dict['is_harvested'] = True
 
             # Local harvest source organization
             source_dataset = get_action('package_show')(base_context.copy(), {'id': harvest_object.source.id})
@@ -546,6 +543,27 @@ class CKANHarvester(HarvesterBase):
                 # and saving it will cause an IntegrityError with the foreign
                 # key.
                 resource.pop('revision_id', None)
+
+            # Setting new harvested package default values
+
+            package_dict['private'] = True
+
+            if not 'tag_string' in package_dict or not package_dict['tag_string']:
+                package_dict['tag_string'] = source_dataset.get('tag_string', '')
+
+            if not 'purpose_of_collecting_information' in package_dict or \
+                    not package_dict['purpose_of_collecting_information']:
+                package_dict['purpose_of_collecting_information'] = \
+                    source_dataset.get('purpose_of_collecting_information', 'Not specified')
+
+            if not 'update_frequency' in package_dict or not package_dict['update_frequency']:
+                package_dict['update_frequency'] = source_dataset.get('update_frequency', 'More then a day')
+
+            if not 'language' in package_dict or not package_dict['language']:
+                package_dict['language'] = source_dataset.get('language', 'ua')
+
+            if not 'notes' in package_dict or not package_dict['notes']:
+                package_dict['notes'] = source_dataset.get('notes', '')
 
             result = self._create_or_update_package(
                 package_dict, harvest_object, package_dict_form='package_show')
