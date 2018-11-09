@@ -30,6 +30,9 @@
             <dd>{{ h.package_count_for_source(harvest_source.id) }}</dd>
         </dl>
       </div>
+      <div class="module module-narrow module-shallow">
+          <a href="/harvest"><i class="fa fa-arrow-left"></i> {% trans %}Back To Harvest Sources Page{% endtrans %}</a>
+      </div>
     </section>
   </div>
 {% endblock %}
@@ -38,11 +41,13 @@
   <article class="module prose">
     {% block page_header %}
       <header class="module-content page-header">
+      {% if c.userobj %}
         {% block content_action %}
           <div class="content_action">
             {{ self.admin_link() }}
           </div>
         {% endblock %}
+      {% endif %}
         <ul class="nav nav-tabs">
           {% block page_header_tabs %}
             {{ h.build_nav_icon('{0}_read'.format(c.dataset_type), _('Datasets'), id=harvest_source.name, icon='sitemap') }}
