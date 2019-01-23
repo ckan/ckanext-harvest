@@ -19,4 +19,5 @@ script: sh bin/travis-run.sh
 
 # the new trusty images of Travis cause build errors with psycopg2, see https://github.com/travis-ci/travis-ci/issues/8897
 dist: trusty
+
 group: deprecated-2017Q4
