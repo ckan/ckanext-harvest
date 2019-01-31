@@ -42,8 +42,10 @@ class CKANHarvester(HarvesterBase):
 
         try:
             http_request = requests.get(url, headers=headers)
+        except HTTPError as e:
+            raise ContentFetchError('HTTP error: %s %s' % (e.response.status_code, e.request.url))
         except RequestException as e:
-            raise ContentFetchError('HTTP error: %s' % e.code)
+            raise ContentFetchError('Request error: %s' % e)
         except Exception as e:
             raise ContentFetchError('HTTP general exception: %s' % e)
         return http_request.text
