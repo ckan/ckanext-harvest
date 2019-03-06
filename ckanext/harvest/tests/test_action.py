@@ -257,7 +257,7 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
 
         for key in source_dict.keys():
             assert_equal(source_dict[key], result[key])
-            
+
         # Check that source was actually created
         source = harvest_model.HarvestSource.get(result['id'])
         assert_equal(source.url, source_dict['url'])
@@ -411,11 +411,11 @@ class TestActions(ActionBase):
         job_1 = factories.HarvestJobObj(source=source_1)
         dataset_1 = ckan_factories.Dataset()
         object_1_ = factories.HarvestObjectObj(job=job_1, source=source_1,
-                                             package_id=dataset_1['id'])
+                                               package_id=dataset_1['id'])
         job_2 = factories.HarvestJobObj(source=source_2)
         dataset_2 = ckan_factories.Dataset()
         object_2_ = factories.HarvestObjectObj(job=job_2, source=source_2,
-                                             package_id=dataset_2['id'])
+                                               package_id=dataset_2['id'])
 
         # execute
         context = {'model': model, 'session': model.Session,
@@ -757,7 +757,7 @@ class TestHarvestDBLog(unittest.TestCase):
     def setup_class(cls):
         reset_db()
         harvest_model.setup()
-        
+
     def test_harvest_db_logger(self):
         # Create source and check if harvest_log table is populated
         data_dict = SOURCE_DICT.copy()
@@ -765,11 +765,11 @@ class TestHarvestDBLog(unittest.TestCase):
         source = factories.HarvestSourceObj(**data_dict)
         content = 'Harvest source created: %s' % source.id
         log = harvest_model.Session.query(harvest_model.HarvestLog).\
-                filter(harvest_model.HarvestLog.content==content).first()
-                
+            filter(harvest_model.HarvestLog.content == content).first()
+
         self.assertIsNotNone(log)
         self.assertEqual(log.level, 'INFO')
-        
+
         context = {
             'model': model,
             'session': model.Session,
@@ -782,7 +782,7 @@ class TestHarvestDBLog(unittest.TestCase):
         self.assertIn('content', data[0])
         self.assertIn('created', data[0])
         self.assertTrue(data[0]['created'] > data[1]['created'])
-        
+
         per_page = 1
         data = toolkit.get_action('harvest_log_list')(context, {'level': 'info', 'per_page': per_page})
         self.assertEqual(len(data), per_page)

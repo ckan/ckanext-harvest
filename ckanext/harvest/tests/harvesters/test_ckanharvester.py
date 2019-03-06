@@ -133,7 +133,8 @@ class TestCkanHarvester(object):
         assert was_last_job_considered_error_free()
 
     def test_harvest_invalid_tag(self):
-        from nose.plugins.skip import SkipTest; raise SkipTest()
+        from nose.plugins.skip import SkipTest
+        raise SkipTest()
         results_by_guid = run_harvest(
             url='http://localhost:%s/invalid_tag' % mock_ckan.PORT,
             harvester=CKANHarvester())

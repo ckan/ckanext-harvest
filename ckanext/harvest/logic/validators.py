@@ -10,8 +10,6 @@ from ckanext.harvest.plugin import DATASET_TYPE_NAME
 from ckanext.harvest.model import HarvestSource, UPDATE_FREQUENCIES, HarvestJob
 from ckanext.harvest.interfaces import IHarvester
 
-from ckan.lib.navl.validators import keep_extras
-
 log = logging.getLogger(__name__)
 
 
@@ -77,7 +75,7 @@ def harvest_source_url_validator(key, data, errors, context):
 
     try:
         new_config = data.get(key[:-1] + ('config',))
-    except:
+    except Exception:
         new_config = None
 
     new_url = _normalize_url(data[key])
@@ -123,7 +121,7 @@ def harvest_source_type_exists(value, context):
             continue
         available_types.append(info['name'])
 
-    if not value in available_types:
+    if value not in available_types:
         raise Invalid('Unknown harvester type: %s. Registered types: %r' %
                       (value, available_types))
 

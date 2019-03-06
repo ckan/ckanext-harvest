@@ -32,6 +32,7 @@ REDIS_DB = 0
 EXCHANGE_TYPE = 'direct'
 EXCHANGE_NAME = 'ckan.harvest'
 
+
 def get_connection():
     backend = config.get('ckan.harvest.mq.type', MQ_TYPE)
     if backend in ('amqp', 'ampq'):  # "ampq" is for compat with old typo
@@ -39,6 +40,7 @@ def get_connection():
     if backend == 'redis':
         return get_connection_redis()
     raise Exception('not a valid queue type %s' % backend)
+
 
 def get_connection_amqp():
     try:
@@ -60,12 +62,13 @@ def get_connection_amqp():
 
     return pika.BlockingConnection(parameters)
 
+
 def get_connection_redis():
     import redis
     return redis.StrictRedis(host=config.get('ckan.harvest.mq.hostname', HOSTNAME),
-                          port=int(config.get('ckan.harvest.mq.port', REDIS_PORT)),
-                          password=config.get('ckan.harvest.mq.password', None),
-                          db=int(config.get('ckan.harvest.mq.redis_db', REDIS_DB)))
+                             port=int(config.get('ckan.harvest.mq.port', REDIS_PORT)),
+                             password=config.get('ckan.harvest.mq.password', None),
+                             db=int(config.get('ckan.harvest.mq.redis_db', REDIS_DB)))
 
 
 def get_gather_queue_name():
@@ -76,6 +79,7 @@ def get_gather_queue_name():
 def get_fetch_queue_name():
     return 'ckan.harvest.{0}.fetch'.format(config.get('ckan.site_id',
                                                       'default'))
+
 
 def get_gather_routing_key():
     return 'ckanext-harvest:{0}:harvest_job_id'.format(
@@ -121,8 +125,8 @@ def resubmit_jobs():
         # 3 minutes for fetch and import max
         if (datetime.datetime.now() - date_of_key).seconds > 180:
             redis.rpush(get_fetch_routing_key(),
-                json.dumps({'harvest_object_id': key.split(':')[-1]})
-            )
+                        json.dumps({'harvest_object_id': key.split(':')[-1]})
+                        )
             redis.delete(key)
 
     # gather queue
@@ -133,9 +137,10 @@ def resubmit_jobs():
         # 3 hours for a gather
         if (datetime.datetime.now() - date_of_key).seconds > 7200:
             redis.rpush(get_gather_routing_key(),
-                json.dumps({'harvest_job_id': key.split(':')[-1]})
-            )
+                        json.dumps({'harvest_job_id': key.split(':')[-1]})
+                        )
             redis.delete(key)
+
 
 class Publisher(object):
     def __init__(self, connection, channel, exchange, routing_key):
@@ -143,21 +148,25 @@ class Publisher(object):
         self.channel = channel
         self.exchange = exchange
         self.routing_key = routing_key
+
     def send(self, body, **kw):
         return self.channel.basic_publish(self.exchange,
                                           self.routing_key,
                                           json.dumps(body),
                                           properties=pika.BasicProperties(
-                                             delivery_mode = 2, # make message persistent
+                                             delivery_mode=2,  # make message persistent
                                           ),
                                           **kw)
+
     def close(self):
         self.connection.close()
 
+
 class RedisPublisher(object):
     def __init__(self, redis, routing_key):
-        self.redis = redis ## not used
+        self.redis = redis  # not used
         self.routing_key = routing_key
+
     def send(self, body, **kw):
         value = json.dumps(body)
         # remove if already there
@@ -167,6 +176,7 @@ class RedisPublisher(object):
 
     def close(self):
         return
+
 
 def get_publisher(routing_key):
     connection = get_connection()
@@ -317,7 +327,7 @@ def gather_callback(channel, method, header, body):
                     len(harvest_object_ids), harvest_object_ids[:1], harvest_object_ids[-1:]))
         for id in harvest_object_ids:
             # Send the id to the fetch queue
-            publisher.send({'harvest_object_id':id})
+            publisher.send({'harvest_object_id': id})
         log.debug('Sent {0} objects to the fetch queue'.format(len(harvest_object_ids)))
 
     else:
@@ -325,7 +335,7 @@ def gather_callback(channel, method, header, body):
         # * remove a harvester and it still has sources that are then refreshed
         # * add a new harvester and restart CKAN but not the gather queue.
         msg = 'System error - No harvester could be found for source type %s' % job.source.type
-        err = HarvestGatherError(message=msg,job=job)
+        err = HarvestGatherError(message=msg, job=job)
         err.save()
         log.error(msg)
 
@@ -410,6 +420,7 @@ def fetch_callback(channel, method, header, body):
     model.Session.remove()
     channel.basic_ack(method.delivery_tag)
 
+
 def fetch_and_import_stages(harvester, obj):
     obj.fetch_started = datetime.datetime.utcnow()
     obj.state = "FETCH"
@@ -443,12 +454,14 @@ def fetch_and_import_stages(harvester, obj):
         obj.save()
     if obj.state == 'ERROR':
         obj.report_status = 'errored'
-    elif obj.current == False:
+    elif obj.current is False:
         obj.report_status = 'deleted'
-    elif len(model.Session.query(HarvestObject)
-           .filter_by(package_id = obj.package_id)
-           .limit(2)
-           .all()) == 2:
+    elif len(
+        model.Session.query(HarvestObject)
+            .filter_by(package_id=obj.package_id)
+            .limit(2)
+            .all()
+    ) == 2:
         obj.report_status = 'updated'
     else:
         obj.report_status = 'added'
