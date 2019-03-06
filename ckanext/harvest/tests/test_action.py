@@ -8,11 +8,14 @@ from nose.plugins.skip import SkipTest
 try:
     from ckan.tests import factories as ckan_factories
     from ckan.tests.helpers import (_get_test_app, reset_db,
-                                    FunctionalTestBase, assert_in)
+                                    FunctionalTestBase)
 except ImportError:
     from ckan.new_tests import factories as ckan_factories
     from ckan.new_tests.helpers import (_get_test_app, reset_db,
                                         FunctionalTestBase)
+try:
+    from ckan.tests.helpers import assert_in
+except ImportError:
     try:
         from ckan.new_tests.helpers import assert_in
     except ImportError:
