@@ -21,7 +21,7 @@ script: sh bin/travis-run.sh
 dist: trusty
 group: deprecated-2017Q4
 
-tages:
+stages:
   - Flake8
   - test
 
