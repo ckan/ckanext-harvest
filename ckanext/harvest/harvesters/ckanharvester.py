@@ -1,5 +1,5 @@
 import requests
-from requests.exceptions import RequestException
+from requests.exceptions import HTTPError, RequestException
 
 import datetime
 from urllib3.contrib import pyopenssl
