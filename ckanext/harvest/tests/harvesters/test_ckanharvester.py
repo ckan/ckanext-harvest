@@ -2,8 +2,9 @@ import copy
 
 from nose.tools import assert_equal, assert_raises, assert_in
 import json
-from mock import patch, MagicMock
-
+from mock import patch, MagicMock, Mock
+from requests.exceptions import HTTPError, RequestException
+import unittest
 
 try:
     from ckan.tests.helpers import reset_db, call_action
@@ -14,6 +15,7 @@ except ImportError:
 from ckan import model
 from ckan.plugins import toolkit
 
+from ckanext.harvest.harvesters.ckanharvester import ContentFetchError
 from ckanext.harvest.tests.factories import (HarvestSourceObj, HarvestJobObj,
                                              HarvestObjectObj)
 from ckanext.harvest.tests.lib import run_harvest
@@ -338,3 +340,41 @@ class TestCkanHarvester(object):
                 config=json.dumps(config))
         assert_in('default_extras must be a dictionary',
                   str(harvest_context.exception))
+
+
+    @patch('ckanext.harvest.harvesters.ckanharvester.pyopenssl.inject_into_urllib3')
+    @patch('ckanext.harvest.harvesters.ckanharvester.CKANHarvester.config')
+    @patch('ckanext.harvest.harvesters.ckanharvester.requests.get', side_effect=RequestException('Test exception'))
+    def test_get_content_handles_request_exception(
+        self, mock_requests_get, mock_config, mock_pyopenssl_inject
+    ):
+        mock_config.return_value = {}
+
+        harvester = CKANHarvester()
+
+        with assert_raises(ContentFetchError) as context:
+            harvester._get_content("http://test.example.gov.uk")
+
+        assert str(context.exception) == 'Request error: Test exception'
+
+    class MockHTTPError(HTTPError):
+        def __init__(self):
+            self.response = Mock()
+            self.response.status_code = 404
+            self.request = Mock()
+            self.request.url = "http://test.example.gov.uk"
+
+    @patch('ckanext.harvest.harvesters.ckanharvester.pyopenssl.inject_into_urllib3')
+    @patch('ckanext.harvest.harvesters.ckanharvester.CKANHarvester.config')
+    @patch('ckanext.harvest.harvesters.ckanharvester.requests.get', side_effect=MockHTTPError())
+    def test_get_content_handles_http_error(
+        self, mock_requests_get, mock_config, mock_pyopenssl_inject
+    ):
+        mock_config.return_value = {}
+
+        harvester = CKANHarvester()
+
+        with assert_raises(ContentFetchError) as context:
+            harvester._get_content("http://test.example.gov.uk")
+
+        assert str(context.exception) == 'HTTP error: 404 http://test.example.gov.uk'
