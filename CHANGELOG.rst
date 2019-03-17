@@ -13,6 +13,7 @@ Unreleased_
 Changed
 -------
 - Apply flake8 to be PEP-8 compliant #354
+- Use ckantoolkit to clean up imports #358
 
 Fixed
 -----
