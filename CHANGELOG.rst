@@ -10,6 +10,10 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_.
 ***********
 Unreleased_
 ***********
+Changed
+-------
+- Apply flake8 to be PEP-8 compliant #354
+
 Fixed
 -----
 - harvest_source_type_exists validator should not fail if Harvester has no ``info()`` method #338
