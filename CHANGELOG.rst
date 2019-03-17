@@ -14,6 +14,7 @@ Fixed
 -----
 - harvest_source_type_exists validator should not fail if Harvester has no ``info()`` method #338
 - Fix SSL problems for old versions of Python 2.7.x #344
+- Add an 'owner_org' to the v3 package migration #348
 
 *******************
 1.1.4_ - 2018-10-26
