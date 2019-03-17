@@ -71,7 +71,7 @@ class HarvestObject(factory.Factory):
     FACTORY_FOR = harvest_model.HarvestObject
     _return_type = 'dict'
 
-    #source = factory.SubFactory(HarvestSourceObj)
+    # source = factory.SubFactory(HarvestSourceObj)
     job = factory.SubFactory(HarvestJobObj)
 
     @classmethod

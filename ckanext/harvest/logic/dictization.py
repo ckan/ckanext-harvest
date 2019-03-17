@@ -98,11 +98,13 @@ def harvest_object_dictize(obj, context):
 
     return out
 
+
 def harvest_log_dictize(obj, context):
     out = obj.as_dict()
     del out['id']
-    
+
     return out
+
 
 def _get_source_status(source, context):
     '''
@@ -140,7 +142,7 @@ def _get_source_status(source, context):
         .order_by(HarvestJob.created.desc()).first()
 
     if last_job:
-        #TODO: Should we encode the dates as strings?
+        # TODO: Should we encode the dates as strings?
         out['last_harvest_request'] = str(last_job.gather_finished)
 
         # Overall statistics
@@ -148,8 +150,9 @@ def _get_source_status(source, context):
                                        Package.name) \
             .join(Package).join(HarvestSource) \
             .filter(HarvestObject.source == source) \
-            .filter(HarvestObject.current == True) \
-            .filter(Package.state == u'active')
+            .filter(
+            HarvestObject.current == True  # noqa: E711
+        ).filter(Package.state == u'active')
 
         out['overall_statistics']['added'] = packages.count()
 

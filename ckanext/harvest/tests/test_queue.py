@@ -18,34 +18,35 @@ import uuid
 
 class MockHarvester(SingletonPlugin):
     implements(IHarvester)
+
     def info(self):
         return {'name': 'test', 'title': 'test', 'description': 'test'}
 
     def gather_stage(self, harvest_job):
 
         if harvest_job.source.url.startswith('basic_test'):
-            obj = HarvestObject(guid = 'test1', job = harvest_job)
+            obj = HarvestObject(guid='test1', job=harvest_job)
             obj.extras.append(HarvestObjectExtra(key='key', value='value'))
-            obj2 = HarvestObject(guid = 'test2', job = harvest_job)
-            obj3 = HarvestObject(guid = 'test_to_delete', job = harvest_job)
+            obj2 = HarvestObject(guid='test2', job=harvest_job)
+            obj3 = HarvestObject(guid='test_to_delete', job=harvest_job)
             obj.add()
             obj2.add()
-            obj3.save() # this will commit both
+            obj3.save()  # this will commit both
             return [obj.id, obj2.id, obj3.id]
 
         return []
 
     def fetch_stage(self, harvest_object):
         assert_equal(harvest_object.state, "FETCH")
-        assert harvest_object.fetch_started != None
+        assert harvest_object.fetch_started is not None
         harvest_object.content = json.dumps({'name': harvest_object.guid})
         harvest_object.save()
         return True
 
     def import_stage(self, harvest_object):
         assert_equal(harvest_object.state, "IMPORT")
-        assert harvest_object.fetch_finished != None
-        assert harvest_object.import_started != None
+        assert harvest_object.fetch_finished is not None
+        assert harvest_object.import_started is not None
 
         user = logic.get_action('get_site_user')(
             {'model': model, 'ignore_auth': True}, {}
@@ -68,9 +69,10 @@ class MockHarvester(SingletonPlugin):
 
         # set previous objects to not current
         previous_object = model.Session.query(HarvestObject) \
-                          .filter(HarvestObject.guid==harvest_object.guid) \
-                          .filter(HarvestObject.current==True) \
-                          .first()
+            .filter(HarvestObject.guid == harvest_object.guid) \
+            .filter(
+            HarvestObject.current == True  # noqa: E712
+        ).first()
         if previous_object:
             previous_object.current = False
             previous_object.save()
@@ -95,12 +97,11 @@ class TestHarvestQueue(object):
 
     def test_01_basic_harvester(self):
 
-        ### make sure queues/exchanges are created first and are empty
+        # make sure queues/exchanges are created first and are empty
         consumer = queue.get_gather_consumer()
         consumer_fetch = queue.get_fetch_consumer()
         consumer.queue_purge(queue=queue.get_gather_queue_name())
         consumer_fetch.queue_purge(queue=queue.get_fetch_queue_name())
-
 
         user = logic.get_action('get_site_user')(
             {'model': model, 'ignore_auth': True}, {}
@@ -140,7 +141,7 @@ class TestHarvestQueue(object):
             {'id': job_id}
         )['status'] == u'Running'
 
-        ## pop on item off the queue and run the callback
+        # pop on item off the queue and run the callback
         reply = consumer.basic_get(queue='ckan.harvest.gather')
 
         queue.gather_callback(consumer, *reply)
@@ -152,11 +153,10 @@ class TestHarvestQueue(object):
         assert all_objects[1].state == 'WAITING'
         assert all_objects[2].state == 'WAITING'
 
-
         assert len(model.Session.query(HarvestObject).all()) == 3
         assert len(model.Session.query(HarvestObjectExtra).all()) == 1
 
-        ## do three times as three harvest objects
+        # do three times as three harvest objects
         reply = consumer_fetch.basic_get(queue='ckan.harvest.fetch')
         queue.fetch_callback(consumer_fetch, *reply)
         reply = consumer_fetch.basic_get(queue='ckan.harvest.fetch')
@@ -165,8 +165,8 @@ class TestHarvestQueue(object):
         queue.fetch_callback(consumer_fetch, *reply)
 
         count = model.Session.query(model.Package) \
-                .filter(model.Package.type=='dataset') \
-                .count()
+            .filter(model.Package.type == 'dataset') \
+            .count()
         assert count == 3
         all_objects = model.Session.query(HarvestObject).filter_by(current=True).all()
 
@@ -178,10 +178,10 @@ class TestHarvestQueue(object):
         assert_equal(all_objects[2].state, 'COMPLETE')
         assert_equal(all_objects[2].report_status, 'added')
 
-        ## fire run again to check if job is set to Finished
+        # fire run again to check if job is set to Finished
         logic.get_action('harvest_jobs_run')(
             context,
-            {'source_id':harvest_source['id']}
+            {'source_id': harvest_source['id']}
         )
 
         harvest_job = logic.get_action('harvest_job_show')(
@@ -197,12 +197,12 @@ class TestHarvestQueue(object):
             {'id': harvest_source['id']}
         )
 
-        assert_equal(harvest_source_dict['status']['last_job']['stats'], {'added': 3, 'updated': 0, 'not modified': 0, 'errored': 0, 'deleted': 0})
+        assert_equal(harvest_source_dict['status']['last_job']['stats'], {'added': 3, 'updated': 0,
+                                                                          'not modified': 0, 'errored': 0, 'deleted': 0})
         assert_equal(harvest_source_dict['status']['total_datasets'], 3)
         assert_equal(harvest_source_dict['status']['job_count'], 1)
 
-
-        ########### Second run ########################
+        # Second run
         harvest_job = logic.get_action('harvest_job_create')(
             context,
             {'source_id': harvest_source['id'], 'run': True}
@@ -214,7 +214,7 @@ class TestHarvestQueue(object):
             {'id': job_id}
         )['status'] == u'Running'
 
-        ## pop on item off the queue and run the callback
+        # pop on item off the queue and run the callback
         reply = consumer.basic_get(queue='ckan.harvest.gather')
         queue.gather_callback(consumer, *reply)
 
@@ -230,8 +230,8 @@ class TestHarvestQueue(object):
         queue.fetch_callback(consumer_fetch, *reply)
 
         count = model.Session.query(model.Package) \
-                .filter(model.Package.type=='dataset') \
-                .count()
+            .filter(model.Package.type == 'dataset') \
+            .count()
         assert_equal(count, 3)
 
         all_objects = model.Session.query(HarvestObject).filter_by(report_status='added').all()
@@ -246,7 +246,7 @@ class TestHarvestQueue(object):
         # run to make sure job is marked as finshed
         logic.get_action('harvest_jobs_run')(
             context,
-            {'source_id':harvest_source['id']}
+            {'source_id': harvest_source['id']}
         )
 
         harvest_job = logic.get_action('harvest_job_show')(
@@ -260,10 +260,10 @@ class TestHarvestQueue(object):
             {'id': harvest_source['id']}
         )
 
-        assert_equal(harvest_source_dict['status']['last_job']['stats'], {'added': 0, 'updated': 2, 'not modified': 0, 'errored': 0, 'deleted': 1})
+        assert_equal(harvest_source_dict['status']['last_job']['stats'], {'added': 0, 'updated': 2,
+                                                                          'not modified': 0, 'errored': 0, 'deleted': 1})
         assert_equal(harvest_source_dict['status']['total_datasets'], 2)
         assert_equal(harvest_source_dict['status']['job_count'], 2)
-
 
     def test_redis_queue_purging(self):
         '''

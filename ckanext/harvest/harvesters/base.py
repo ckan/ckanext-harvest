@@ -217,12 +217,12 @@ class HarvesterBase(SingletonPlugin):
             if len(remote_ids):
                 for remote_id in remote_ids:
                     # Create a new HarvestObject for this identifier
-                    obj = HarvestObject(guid = remote_id, job = harvest_job)
+                    obj = HarvestObject(guid=remote_id, job=harvest_job)
                     obj.save()
                     object_ids.append(obj.id)
                 return object_ids
             else:
-               self._save_gather_error('No remote datasets could be identified', harvest_job)
+                self._save_gather_error('No remote datasets could be identified', harvest_job)
         except Exception, e:
             self._save_gather_error('%r' % e.message, harvest_job)
 
@@ -309,11 +309,11 @@ class HarvesterBase(SingletonPlugin):
                 package_dict['name'] = existing_package_dict['name']
 
                 # Check modified date
-                if not 'metadata_modified' in package_dict or \
+                if 'metadata_modified' not in package_dict or \
                    package_dict['metadata_modified'] > existing_package_dict.get('metadata_modified'):
                     log.info('Package with GUID %s exists and needs to be updated' % harvest_object.guid)
                     # Update package
-                    context.update({'id':package_dict['id']})
+                    context.update({'id': package_dict['id']})
                     package_dict.setdefault('name',
                                             existing_package_dict['name'])
 
@@ -329,9 +329,9 @@ class HarvesterBase(SingletonPlugin):
                 # Flag the other objects linking to this package as not current anymore
                 from ckanext.harvest.model import harvest_object_table
                 conn = Session.connection()
-                u = update(harvest_object_table) \
-                        .where(harvest_object_table.c.package_id==bindparam('b_package_id')) \
-                        .values(current=False)
+                u = update(harvest_object_table)\
+                    .where(harvest_object_table.c.package_id == bindparam('b_package_id')) \
+                    .values(current=False)
                 conn.execute(u, b_package_id=new_package['id'])
 
                 # Flag this as the current harvest object
@@ -374,10 +374,11 @@ class HarvesterBase(SingletonPlugin):
 
         except p.toolkit.ValidationError, e:
             log.exception(e)
-            self._save_object_error('Invalid package with GUID %s: %r'%(harvest_object.guid,e.error_dict),harvest_object,'Import')
+            self._save_object_error('Invalid package with GUID %s: %r' % (harvest_object.guid, e.error_dict),
+                                    harvest_object, 'Import')
         except Exception, e:
             log.exception(e)
-            self._save_object_error('%r'%e,harvest_object,'Import')
+            self._save_object_error('%r' % e, harvest_object, 'Import')
 
         return None
 
@@ -394,17 +395,17 @@ class HarvesterBase(SingletonPlugin):
                 # update the dict and return it
                 tag_dict[key] = newvalue
                 return tag_dict
-                                
-            # assume it's in the package_show form                    
+
+            # assume it's in the package_show form
             tags = [_update_tag(t, 'name', munge_tag(t['name'])) for t in tags if munge_tag(t['name']) != '']
 
-        except TypeError: # a TypeError is raised if `t` above is a string
-           # REST format: 'tags' is a list of strings
-           tags = [munge_tag(t) for t in tags if munge_tag(t) != '']                
-           tags = list(set(tags))
-           return tags
-           
-        return tags      
+        except TypeError:  # a TypeError is raised if `t` above is a string
+            # REST format: 'tags' is a list of strings
+            tags = [munge_tag(t) for t in tags if munge_tag(t) != '']
+            tags = list(set(tags))
+            return tags
+
+        return tags
 
     @classmethod
     def last_error_free_job(cls, harvest_job):
@@ -413,8 +414,9 @@ class HarvesterBase(SingletonPlugin):
         jobs = \
             model.Session.query(HarvestJob) \
                  .filter(HarvestJob.source == harvest_job.source) \
-                 .filter(HarvestJob.gather_started != None) \
-                 .filter(HarvestJob.status == 'Finished') \
+                 .filter(
+                HarvestJob.gather_started != None  # noqa: E711
+            ).filter(HarvestJob.status == 'Finished') \
                  .filter(HarvestJob.id != harvest_job.id) \
                  .filter(
                      ~exists().where(
@@ -431,4 +433,3 @@ class HarvesterBase(SingletonPlugin):
                     break
             else:
                 return job
-
