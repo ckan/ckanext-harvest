@@ -4,13 +4,7 @@ from nose.tools import assert_equal, assert_in
 from ckanext.harvest import model as harvest_model
 from ckanext.harvest.harvesters.base import HarvesterBase, munge_tag
 from mock import patch
-try:
-    from ckan.tests import helpers
-    from ckan.tests import factories
-except ImportError:
-    from ckan.new_tests import helpers
-    from ckan.new_tests import factories
-
+from ckantoolkit.tests import helpers, factories
 
 _ensure_name_is_unique = HarvesterBase._ensure_name_is_unique
 

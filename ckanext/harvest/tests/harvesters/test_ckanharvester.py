@@ -5,12 +5,8 @@ import json
 from mock import patch, MagicMock, Mock
 from requests.exceptions import HTTPError, RequestException
 
-try:
-    from ckan.tests.helpers import reset_db, call_action
-    from ckan.tests.factories import Organization, Group
-except ImportError:
-    from ckan.new_tests.helpers import reset_db, call_action
-    from ckan.new_tests.factories import Organization, Group
+from ckantoolkit.tests.helpers import reset_db, call_action
+from ckantoolkit.tests.factories import Organization, Group
 from ckan import model
 from ckan.plugins import toolkit
 

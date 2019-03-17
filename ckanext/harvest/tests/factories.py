@@ -1,9 +1,6 @@
 import factory
 import ckanext.harvest.model as harvest_model
-try:
-    from ckan.new_tests.factories import _get_action_user_name
-except ImportError:
-    from ckan.tests.factories import _get_action_user_name
+from ckantoolkit.tests.factories import _get_action_user_name
 from ckan.plugins import toolkit
 
 

@@ -1,23 +1,8 @@
 from ckan.lib.helpers import url_for
 
-try:
-    from ckan.tests import helpers, factories
-except ImportError:
-    from ckan.new_tests import helpers, factories
-
+from ckantoolkit.tests import helpers, factories
 from ckanext.harvest.tests import factories as harvest_factories
-
-try:
-    from ckan.tests.helpers import assert_in
-except ImportError:
-    # for ckan 2.2
-    try:
-        from nose.tools import assert_in
-    except ImportError:
-        # Python 2.6 doesn't have it
-        def assert_in(a, b, msg=None):
-            assert a in b, msg or '%r was not in %r' % (a, b)
-
+from nose.tools import assert_in
 import ckanext.harvest.model as harvest_model
 
 

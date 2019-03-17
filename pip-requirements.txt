@@ -2,3 +2,4 @@ pika==0.9.8
 redis==2.10.1
 requests==2.20.0
 pyOpenSSL==18.0.0
+ckantoolkit==0.0.3
