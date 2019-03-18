@@ -4,7 +4,6 @@ from nose.tools import assert_equal, assert_raises, assert_in
 import json
 from mock import patch, MagicMock, Mock
 from requests.exceptions import HTTPError, RequestException
-import unittest
 
 try:
     from ckan.tests.helpers import reset_db, call_action
@@ -340,7 +339,6 @@ class TestCkanHarvester(object):
                 config=json.dumps(config))
         assert_in('default_extras must be a dictionary',
                   str(harvest_context.exception))
-
 
     @patch('ckanext.harvest.harvesters.ckanharvester.pyopenssl.inject_into_urllib3')
     @patch('ckanext.harvest.harvesters.ckanharvester.CKANHarvester.config')
