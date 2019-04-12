@@ -436,7 +436,7 @@ class Harvester(CkanCommand):
         # Determine the job
         try:
             job_dict = get_action('harvest_job_create')(
-                context, {'source_id': source['id']})
+                context, {'source_id': source['id'], 'run': False})
         except HarvestJobExists:
             running_jobs = get_action('harvest_job_list')(
                 context, {'source_id': source['id'], 'status': 'Running'})
