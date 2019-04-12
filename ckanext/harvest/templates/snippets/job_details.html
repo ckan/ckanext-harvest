@@ -25,7 +25,7 @@ Example:
       {% endif %}
       {{ _('errors') }}
     </span>
-    {% for action in ['added', 'updated', 'deleted'] %}
+    {% for action in ['added', 'updated', 'deleted', 'not modified'] %}
       <span class="label" data-diff="{{ action }}">
         {% if action in stats and stats[action] > 0 %}
           {{ stats[action] }}
