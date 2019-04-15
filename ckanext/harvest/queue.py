@@ -437,7 +437,7 @@ def fetch_and_import_stages(harvester, obj):
         obj.import_finished = datetime.datetime.utcnow()
         if success_import:
             obj.state = "COMPLETE"
-            if success_import is 'unchanged':
+            if success_import == 'unchanged':
                 obj.report_status = 'not modified'
                 obj.save()
                 return
