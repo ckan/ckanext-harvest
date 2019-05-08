@@ -344,7 +344,7 @@ class TestHarvestCorruptRedis(object):
 
             assert mock_log_error.call_count == 1
             args, _ = mock_log_error.call_args_list[0]
-            assert "TypeError: cannot concatenate 'str' and 'NoneType' objects" in args[2]
+            assert "cannot concatenate 'str' and 'NoneType' objects" in args[1]
 
         finally:
             redis.delete('ckanext-harvest:some-random-key-2')
