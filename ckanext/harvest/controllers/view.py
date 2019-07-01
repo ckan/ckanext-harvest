@@ -233,6 +233,8 @@ class ViewController(BaseController):
 
     def abort_job(self, source, id):
         try:
+            context = {'model': model, 'user': c.user}
+            p.toolkit.get_action('harvest_job_abort')(context, {'id': id})
             h.flash_success(_('Harvest job stopped'))
 
         except p.toolkit.ObjectNotFound:
