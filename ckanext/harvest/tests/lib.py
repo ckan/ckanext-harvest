@@ -3,12 +3,16 @@ import ckanext.harvest.model as harvest_model
 from ckanext.harvest import queue
 from ckan.plugins import toolkit
 
+import logging
+log = logging.getLogger(__name__)
+
 
 def run_harvest(url, harvester, config=''):
     '''Runs a harvest and returns the results.
     This allows you to test a harvester.
     Queues are avoided as they are a pain in tests.
     '''
+    log.debug('Run %s harvester with URL %s' (harvester.info()['name'], url))
     # User creates a harvest source
     source = HarvestSourceObj(url=url, config=config,
                               source_type=harvester.info()['name'])
@@ -39,6 +43,7 @@ def run_harvest_job(job, harvester):
     # queue.fetch_callback which calls queue.fetch_and_import_stages
     results_by_guid = {}
     for obj_id in obj_ids:
+        log.debug('Process harvest object: %s' % obj_id)
         harvest_object = harvest_model.HarvestObject.get(obj_id)
         guid = harvest_object.guid
         results_by_guid[guid] = {'obj_id': obj_id}
@@ -52,6 +57,7 @@ def run_harvest_job(job, harvester):
                     {'ignore_auth': True},
                     dict(id=harvest_object.package_id))
         results_by_guid[guid]['errors'] = harvest_object.errors
+        log.debug('harvest_object: %s (%s / %s / %s / %s)' % (harvest_object, harvest_object.guid, harvest_object.state, harvest_object.report_status, harvest_object.errors))
 
     # Do 'harvest_jobs_run' to change the job status to 'finished'
     toolkit.get_action('harvest_jobs_run')({'ignore_auth': True}, {})
