@@ -58,15 +58,15 @@ def run_harvest_job(job, harvester):
                     dict(id=harvest_object.package_id))
         results_by_guid[guid]['errors'] = harvest_object.errors
         log.debug(
-			'harvest_object: %s (%s / %s / %s / %s)'
-			% (
-				harvest_object,
-				harvest_object.guid,
-				harvest_object.state,
-				harvest_object.report_status,
-				harvest_object.errors
-			)
-		)
+            'harvest_object: %s (%s / %s / %s / %s)'
+            % (
+                harvest_object,
+                harvest_object.guid,
+                harvest_object.state,
+                harvest_object.report_status,
+                harvest_object.errors
+            )
+        )
 
     # Do 'harvest_jobs_run' to change the job status to 'finished'
     toolkit.get_action('harvest_jobs_run')({'ignore_auth': True}, {})
