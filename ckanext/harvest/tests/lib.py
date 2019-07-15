@@ -12,7 +12,7 @@ def run_harvest(url, harvester, config=''):
     This allows you to test a harvester.
     Queues are avoided as they are a pain in tests.
     '''
-    log.debug('Run %s harvester with URL %s' (harvester.info()['name'], url))
+    log.debug('Run %s harvester with URL %s' % (harvester.info()['name'], url))
     # User creates a harvest source
     source = HarvestSourceObj(url=url, config=config,
                               source_type=harvester.info()['name'])
