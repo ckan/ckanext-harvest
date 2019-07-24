@@ -1,7 +1,11 @@
+import logging
+
 from ckanext.harvest.tests.factories import HarvestSourceObj, HarvestJobObj
 import ckanext.harvest.model as harvest_model
 from ckanext.harvest import queue
 from ckan.plugins import toolkit
+
+log = logging.getLogger(__name__)
 
 
 def run_harvest(url, harvester, config=''):
@@ -41,6 +45,15 @@ def run_harvest_job(job, harvester):
     for obj_id in obj_ids:
         harvest_object = harvest_model.HarvestObject.get(obj_id)
         guid = harvest_object.guid
+
+        # force reimport of datasets
+        if hasattr(job, 'force_import'):
+            if guid in job.force_import:
+                harvest_object.force_import = True
+            else:
+                log.info('Skipping: %s', guid)
+                continue
+
         results_by_guid[guid] = {'obj_id': obj_id}
 
         queue.fetch_and_import_stages(harvester, harvest_object)

@@ -455,6 +455,9 @@ class Harvester(CkanCommand):
                 job_dict = jobs[0]
         job_obj = HarvestJob.get(job_dict['id'])
 
+        if len(self.args) >= 3 and self.args[2].startswith('force-import='):
+            job_obj.force_import = self.args[2].split('=')[-1]
+
         harvester = queue.get_harvester(source['source_type'])
         assert harvester, \
             'No harvester found for type: {0}'.format(source['source_type'])
