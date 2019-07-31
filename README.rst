@@ -610,7 +610,10 @@ harvester run_test
 You can run a harvester simply using the ``run_test`` command. This is handy
 for running a harvest with one command in the console and see all the output
 in-line. It runs the gather, fetch and import stages all in the same process.
-
+You must ensure that you have pip installed ``dev-requirements.txt`` 
+in ``/home/ckan/ckan/lib/default/src/ckanext-harvest`` before using the
+``run_test`` command.
+  
 This is useful for developing a harvester because you can insert break-points
 in your harvester, and rerun a harvest without having to restart the
 gather_consumer and fetch_consumer processes each time. In addition, because it
