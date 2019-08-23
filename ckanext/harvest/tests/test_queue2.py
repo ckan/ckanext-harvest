@@ -4,11 +4,8 @@
 import json
 
 from nose.tools import assert_equal
+from ckantoolkit.tests.helpers import reset_db
 
-try:
-    from ckan.tests.helpers import reset_db
-except ImportError:
-    from ckan.new_tests.helpers import reset_db
 from ckan import model
 from ckan import plugins as p
 from ckan.plugins import toolkit

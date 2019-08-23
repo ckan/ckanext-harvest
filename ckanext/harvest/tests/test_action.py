@@ -2,30 +2,12 @@ import json
 import factories
 import unittest
 from mock import patch
-from nose.tools import assert_equal, assert_raises
+from nose.tools import assert_equal, assert_raises, assert_in
 from nose.plugins.skip import SkipTest
 
-try:
-    from ckan.tests import factories as ckan_factories
-    from ckan.tests.helpers import (_get_test_app, reset_db,
-                                    FunctionalTestBase)
-except ImportError:
-    from ckan.new_tests import factories as ckan_factories
-    from ckan.new_tests.helpers import (_get_test_app, reset_db,
-                                        FunctionalTestBase)
-try:
-    from ckan.tests.helpers import assert_in
-except ImportError:
-    try:
-        from ckan.new_tests.helpers import assert_in
-    except ImportError:
-        # for ckan 2.2
-        try:
-            from nose.tools import assert_in
-        except ImportError:
-            # Python 2.6 doesn't have it
-            def assert_in(a, b, msg=None):
-                assert a in b, msg or '%r was not in %r' % (a, b)
+
+from ckantoolkit.tests import factories as ckan_factories
+from ckantoolkit.tests.helpers import _get_test_app, reset_db, FunctionalTestBase
 
 from ckan import plugins as p
 from ckan.plugins import toolkit
