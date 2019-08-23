@@ -1,9 +1,6 @@
 import factory
 import ckanext.harvest.model as harvest_model
-try:
-    from ckan.new_tests.factories import _get_action_user_name
-except ImportError:
-    from ckan.tests.factories import _get_action_user_name
+from ckantoolkit.tests.factories import _get_action_user_name
 from ckan.plugins import toolkit
 
 
@@ -71,7 +68,7 @@ class HarvestObject(factory.Factory):
     FACTORY_FOR = harvest_model.HarvestObject
     _return_type = 'dict'
 
-    #source = factory.SubFactory(HarvestSourceObj)
+    # source = factory.SubFactory(HarvestSourceObj)
     job = factory.SubFactory(HarvestJobObj)
 
     @classmethod

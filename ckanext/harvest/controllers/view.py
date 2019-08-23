@@ -15,7 +15,8 @@ from pylons.i18n import _
 from ckan import model
 
 import ckan.plugins as p
-import ckan.lib.helpers as h, json
+import ckan.lib.helpers as h
+import json
 from ckan.lib.base import BaseController, c, request, response, render, abort
 
 from ckanext.harvest.logic import HarvestJobExists, HarvestSourceInactiveError
@@ -131,7 +132,7 @@ class ViewController(BaseController):
                         re.sub('<\?xml(.*)\?>', '', content.encode('utf-8'))
                     )
                 response.content_type = 'application/xml; charset=utf-8'
-                if not '<?xml' in content.split('\n')[0]:
+                if '<?xml' not in content.split('\n')[0]:
                     content = u'<?xml version="1.0" encoding="UTF-8"?>\n' + content
 
             except xml_parser_exception:
@@ -232,6 +233,8 @@ class ViewController(BaseController):
 
     def abort_job(self, source, id):
         try:
+            context = {'model': model, 'user': c.user}
+            p.toolkit.get_action('harvest_job_abort')(context, {'id': id})
             h.flash_success(_('Harvest job stopped'))
 
         except p.toolkit.ObjectNotFound:

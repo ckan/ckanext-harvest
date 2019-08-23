@@ -1,13 +1,11 @@
 import logging
-from pprint import pprint
-from nose.plugins.skip import SkipTest;
+from nose.plugins.skip import SkipTest
 
 from ckan import model
-from ckan.model import Package, Session
-from ckan.lib.helpers import url_for,json
+from ckan.model import Session
 from ckan.lib.base import config
 
-#TODO: remove references to old tests
+# TODO: remove references to old tests
 try:
     from ckan.tests import CreateTestData
 except ImportError:
@@ -17,7 +15,6 @@ try:
 except ImportError:
     from ckan.tests.legacy.functional.base import FunctionalTestCase
 
-from ckanext.harvest.plugin import Harvest
 from ckanext.harvest.model import HarvestSource, HarvestJob, setup as harvest_model_setup
 
 log = logging.getLogger(__name__)
@@ -33,11 +30,11 @@ class HarvestAuthBaseCase():
     def teardown_class(cls):
         pass
 
-    def _test_auth_not_allowed(self,user_name = None, source = None, status = 401):
+    def _test_auth_not_allowed(self, user_name=None, source=None, status=401):
 
         if not source:
             # Create harvest source
-            source = HarvestSource(url=u'http://test-source.com',type='ckan')
+            source = HarvestSource(url=u'http://test-source.com', type='ckan')
             Session.add(source)
             Session.commit()
 
@@ -47,19 +44,19 @@ class HarvestAuthBaseCase():
             extra_environ = {}
 
         # List
-        res = self.app.get('/harvest', status=status, extra_environ=extra_environ)
+        self.app.get('/harvest', status=status, extra_environ=extra_environ)
         # Create
-        res = self.app.get('/harvest/new', status=status, extra_environ=extra_environ)
+        self.app.get('/harvest/new', status=status, extra_environ=extra_environ)
         # Read
-        res = self.app.get('/harvest/%s' % source.id, status=status, extra_environ=extra_environ)
+        self.app.get('/harvest/%s' % source.id, status=status, extra_environ=extra_environ)
         # Edit
-        res = self.app.get('/harvest/edit/%s' % source.id, status=status, extra_environ=extra_environ)
+        self.app.get('/harvest/edit/%s' % source.id, status=status, extra_environ=extra_environ)
         # Refresh
-        res = self.app.get('/harvest/refresh/%s' % source.id, status=status, extra_environ=extra_environ)
+        self.app.get('/harvest/refresh/%s' % source.id, status=status, extra_environ=extra_environ)
 
-    def _test_auth_allowed(self,user_name,auth_profile=None):
+    def _test_auth_allowed(self, user_name, auth_profile=None):
 
-        extra_environ={'REMOTE_USER': user_name.encode('utf8')}
+        extra_environ = {'REMOTE_USER': user_name.encode('utf8')}
 
         # List
         res = self.app.get('/harvest', extra_environ=extra_environ)
@@ -71,7 +68,7 @@ class HarvestAuthBaseCase():
         if auth_profile == 'publisher':
             assert 'publisher_id' in res
         else:
-            assert not 'publisher_id' in res
+            assert 'publisher_id' not in res
 
         fv = res.forms['source-new']
         fv['url'] = u'http://test-source.com'
@@ -84,7 +81,7 @@ class HarvestAuthBaseCase():
             fv['publisher_id'] = self.publisher1.id
 
         res = fv.submit('save', extra_environ=extra_environ)
-        assert not 'Error' in res, res
+        assert 'Error' not in res, res
 
         source = Session.query(HarvestSource).first()
         assert source.url == u'http://test-source.com'
@@ -102,13 +99,13 @@ class HarvestAuthBaseCase():
         if auth_profile == 'publisher':
             assert 'publisher_id' in res
         else:
-            assert not 'publisher_id' in res
+            assert 'publisher_id' not in res
 
         fv = res.forms['source-new']
         fv['title'] = u'Test harvest source Updated'
 
         res = fv.submit('save', extra_environ=extra_environ)
-        assert not 'Error' in res, res
+        assert 'Error' not in res, res
 
         source = Session.query(HarvestSource).first()
         assert source.title == u'Test harvest source Updated'
@@ -120,16 +117,14 @@ class HarvestAuthBaseCase():
         assert job.source_id == source.id
 
 
-
-
-class TestAuthDefaultProfile(FunctionalTestCase,HarvestAuthBaseCase):
+class TestAuthDefaultProfile(FunctionalTestCase, HarvestAuthBaseCase):
 
     @classmethod
     def setup_class(cls):
-        if (config.get('ckan.harvest.auth.profile','') != ''):
+        if (config.get('ckan.harvest.auth.profile', '') != ''):
             raise SkipTest('Skipping default auth profile tests. Set ckan.harvest.auth.profile = \'\' to run them')
 
-        super(TestAuthDefaultProfile,cls).setup_class()
+        super(TestAuthDefaultProfile, cls).setup_class()
 
     def setup(self):
         CreateTestData.create()
@@ -148,40 +143,41 @@ class TestAuthDefaultProfile(FunctionalTestCase,HarvestAuthBaseCase):
     def test_auth_default_profile_notloggedin(self):
         self._test_auth_not_allowed(status=302)
 
-class TestAuthPublisherProfile(FunctionalTestCase,HarvestAuthBaseCase):
+
+class TestAuthPublisherProfile(FunctionalTestCase, HarvestAuthBaseCase):
 
     @classmethod
     def setup_class(cls):
         if (config.get('ckan.harvest.auth.profile') != 'publisher'):
             raise SkipTest('Skipping publisher auth profile tests. Set ckan.harvest.auth.profile = \'publisher\' to run them')
 
-        super(TestAuthPublisherProfile,cls).setup_class()
+        super(TestAuthPublisherProfile, cls).setup_class()
 
     def setup(self):
 
         model.Session.remove()
         CreateTestData.create(auth_profile='publisher')
         self.sysadmin_user = model.User.get('testsysadmin')
-        self.normal_user = model.User.get('annafan') # Does not belong to a publisher
+        self.normal_user = model.User.get('annafan')  # Does not belong to a publisher
         self.publisher1_user = model.User.by_name('russianfan')
         self.publisher2_user = model.User.by_name('tester')
 
         # Create two Publishers
-        rev = model.repo.new_revision()
-        self.publisher1 = model.Group(name=u'test-publisher1',title=u'Test Publihser 1',type=u'publisher')
+        model.repo.new_revision()
+        self.publisher1 = model.Group(name=u'test-publisher1', title=u'Test Publihser 1', type=u'publisher')
         Session.add(self.publisher1)
-        self.publisher2 = model.Group(name=u'test-publisher2',title=u'Test Publihser 2',type=u'publisher')
+        self.publisher2 = model.Group(name=u'test-publisher2', title=u'Test Publihser 2', type=u'publisher')
         Session.add(self.publisher2)
 
-        member1 = model.Member(table_name = 'user',
-                         table_id = self.publisher1_user.id,
-                         group=self.publisher1,
-                         capacity='admin')
+        member1 = model.Member(table_name='user',
+                               table_id=self.publisher1_user.id,
+                               group=self.publisher1,
+                               capacity='admin')
         Session.add(member1)
-        member2 = model.Member(table_name = 'user',
-                         table_id = self.publisher2_user.id,
-                         group=self.publisher2,
-                         capacity='admin')
+        member2 = model.Member(table_name='user',
+                               table_id=self.publisher2_user.id,
+                               group=self.publisher2,
+                               capacity='admin')
         Session.add(member2)
 
         Session.commit()
@@ -196,15 +192,15 @@ class TestAuthPublisherProfile(FunctionalTestCase,HarvestAuthBaseCase):
         self._test_auth_not_allowed(status=302)
 
     def test_auth_publisher_profile_sysadmin(self):
-        self._test_auth_allowed(self.sysadmin_user.name,auth_profile='publisher')
+        self._test_auth_allowed(self.sysadmin_user.name, auth_profile='publisher')
 
     def test_auth_publisher_profile_publisher(self):
-        self._test_auth_allowed(self.publisher1_user.name,auth_profile='publisher')
+        self._test_auth_allowed(self.publisher1_user.name, auth_profile='publisher')
 
     def test_auth_publisher_profile_different_publisher(self):
 
         # Create a source for publisher 1
-        source = HarvestSource(url=u'http://test-source.com',type='ckan',
+        source = HarvestSource(url=u'http://test-source.com', type='ckan',
                                publisher_id=self.publisher1.id)
         Session.add(source)
         Session.commit()
@@ -227,4 +223,3 @@ class TestAuthPublisherProfile(FunctionalTestCase,HarvestAuthBaseCase):
         res = self.app.get('/harvest/edit/%s' % source.id, status=status, extra_environ=extra_environ)
         # Refresh
         res = self.app.get('/harvest/refresh/%s' % source.id, status=status, extra_environ=extra_environ)
-

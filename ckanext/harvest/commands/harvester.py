@@ -122,20 +122,19 @@ class Harvester(CkanCommand):
         super(Harvester, self).__init__(name)
 
         self.parser.add_option('-j', '--no-join-datasets', dest='no_join_datasets',
-            action='store_true', default=False, help='Do not join harvest objects to existing datasets')
+                               action='store_true', default=False, help='Do not join harvest objects to existing datasets')
 
         self.parser.add_option('-o', '--harvest-object-id', dest='harvest_object_id',
-            default=False, help='Id of the harvest object to which perform the import stage')
+                               default=False, help='Id of the harvest object to which perform the import stage')
 
         self.parser.add_option('-p', '--package-id', dest='package_id',
-            default=False, help='Id of the package whose harvest object to perform the import stage for')
+                               default=False, help='Id of the package whose harvest object to perform the import stage for')
 
         self.parser.add_option('-g', '--guid', dest='guid',
-            default=False, help='Guid of the harvest object to which perform the import stage for')
+                               default=False, help='Guid of the harvest object to which perform the import stage for')
 
         self.parser.add_option('--segments', dest='segments',
-            default=False, help=
-'''A string containing hex digits that represent which of
+                               default=False, help='''A string containing hex digits that represent which of
  the 16 harvest object segments to import. e.g. 15af will run segments 1,5,a,f''')
 
     def command(self):
@@ -178,7 +177,7 @@ class Harvester(CkanCommand):
         elif cmd == 'gather_consumer':
             import logging
             from ckanext.harvest.queue import (get_gather_consumer,
-                gather_callback, get_gather_queue_name)
+                                               gather_callback, get_gather_queue_name)
             logging.getLogger('amqplib').setLevel(logging.INFO)
             consumer = get_gather_consumer()
             for method, header, body in consumer.consume(queue=get_gather_queue_name()):
@@ -187,10 +186,10 @@ class Harvester(CkanCommand):
             import logging
             logging.getLogger('amqplib').setLevel(logging.INFO)
             from ckanext.harvest.queue import (get_fetch_consumer, fetch_callback,
-                get_fetch_queue_name)
+                                               get_fetch_queue_name)
             consumer = get_fetch_consumer()
             for method, header, body in consumer.consume(queue=get_fetch_queue_name()):
-               fetch_callback(consumer, method, header, body)
+                fetch_callback(consumer, method, header, body)
         elif cmd == 'purge_queues':
             self.purge_queues()
         elif cmd == 'initdb':
@@ -242,8 +241,8 @@ class Harvester(CkanCommand):
         else:
             title = None
         if len(self.args) >= 6:
-            active = not(self.args[5].lower() == 'false' or \
-                    self.args[5] == '0')
+            active = not(self.args[5].lower() == 'false' or
+                         self.args[5] == '0')
         else:
             active = True
         if len(self.args) >= 7:
@@ -293,9 +292,9 @@ class Harvester(CkanCommand):
                 print('A new Harvest Job for this source has also been created')
 
         except ValidationError as e:
-           print('An error occurred:')
-           print(str(e.error_dict))
-           raise e
+            print('An error occurred:')
+            print(str(e.error_dict))
+            raise e
 
     def clear_harvest_source_history(self):
         source_id = None
@@ -318,7 +317,6 @@ class Harvester(CkanCommand):
             self.purge_queues()
             cleared_sources_dicts = get_action('harvest_sources_job_history_clear')(context, {})
             print('Cleared job history for all harvest sources: {0} source(s)'.format(len(cleared_sources_dicts)))
-
 
     def show_harvest_source(self):
 
@@ -442,7 +440,7 @@ class Harvester(CkanCommand):
                 context, {'source_id': source['id'], 'status': 'Running'})
             if running_jobs:
                 print('\nSource "{0}" apparently has a "Running" job:\n{1}'
-                    .format(source.get('name') or source['id'], running_jobs))
+                      .format(source.get('name') or source['id'], running_jobs))
                 resp = raw_input('Abort it? (y/n)')
                 if not resp.lower().startswith('y'):
                     sys.exit(1)
@@ -516,9 +514,9 @@ class Harvester(CkanCommand):
         # 'type' if source comes from HarvestSource, 'source_type' if it comes
         # from the Package
         print('     type: {0}'.format(source.get('source_type') or
-                                 source.get('type')))
+                                      source.get('type')))
         print('   active: {0}'.format(source.get('active',
-                                            source.get('state') == 'active')))
+                                                 source.get('state') == 'active')))
         print('frequency: {0}'.format(source.get('frequency')))
         print('     jobs: {0}'.format(source.get('status').get('job_count')))
         print('')

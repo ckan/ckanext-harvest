@@ -5,7 +5,6 @@ from ckan.logic.validators import (package_id_exists,
                                    name_validator,
                                    owner_org_validator,
                                    package_name_validator,
-                                   ignore_not_package_admin,
                                    boolean_validator,
                                    )
 from ckan.logic.converters import convert_to_extras, convert_from_extras
@@ -27,6 +26,7 @@ from ckanext.harvest.logic.validators import (harvest_source_url_validator,
                                               harvest_job_exists,
                                               harvest_object_extras_validator,
                                               )
+
 
 def harvest_source_schema():
 
@@ -56,8 +56,8 @@ def harvest_source_schema():
         from ckan.logic.validators import datasets_with_no_organization_cannot_be_private
         schema['private'].append(datasets_with_no_organization_cannot_be_private)
 
-
     return schema
+
 
 def harvest_source_create_package_schema():
 
@@ -68,12 +68,14 @@ def harvest_source_create_package_schema():
 
     return schema
 
+
 def harvest_source_update_package_schema():
 
     schema = harvest_source_create_package_schema()
     schema['owner_org'] = [ignore_missing, owner_org_validator, unicode]
 
     return schema
+
 
 def harvest_source_show_package_schema():
 
@@ -97,6 +99,7 @@ def harvest_source_show_package_schema():
 
     return schema
 
+
 def harvest_object_create_schema():
     schema = {
         'guid': [ignore_missing, unicode],
@@ -108,4 +111,3 @@ def harvest_object_create_schema():
         'extras': [ignore_missing, harvest_object_extras_validator],
     }
     return schema
-

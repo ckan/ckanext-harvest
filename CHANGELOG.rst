@@ -10,10 +10,17 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_.
 ***********
 Unreleased_
 ***********
+Changed
+-------
+- Apply flake8 to be PEP-8 compliant #354
+- Use ckantoolkit to clean up imports #358
+
 Fixed
 -----
 - harvest_source_type_exists validator should not fail if Harvester has no ``info()`` method #338
 - Fix SSL problems for old versions of Python 2.7.x #344
+- Add an 'owner_org' to the v3 package migration #348
+- Fix harvest request exceptions #357
 
 *******************
 1.1.4_ - 2018-10-26
