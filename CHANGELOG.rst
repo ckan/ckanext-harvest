@@ -14,6 +14,8 @@ Changed
 -------
 - Apply flake8 to be PEP-8 compliant #354
 - Use ckantoolkit to clean up imports #358
+- Add hook to extend the package dict in CKAN harvester
+- Use CKAN core ckan.redis.url setting if present
 
 Fixed
 -----
