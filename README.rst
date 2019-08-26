@@ -437,7 +437,7 @@ This is a simple example::
 
     from ckanext.harvester.harvesters.ckanharvester import CKANHarvester
 
-    class MyCustomCKANHarvester(CKANHarvester):
+    class MySiteCKANHarvester(CKANHarvester):
 
         def modify_package_dict(self, package_dict, harvest_object):
 
@@ -449,6 +449,20 @@ This is a simple example::
             package_dict['tags'].append({'name': 'sdi'})
 
             return package_dict
+
+Remember to register your custom harvester plugin in your extension ``setup.py`` file, and load the plugin in the config in file afterwards::
+
+        # setup.py
+
+        entry_points='''
+            [ckan.plugins]
+            my_site=ckanext.my_site.plugin:MySitePlugin
+            my_site_ckan_harvester=ckanext.my_site.harvesters:MySiteCKANHarvester
+        '''
+
+
+        # ini file
+        ckan.plugins = ... my_site my_site_ckan_harvester
 
 
 The harvesting interface
