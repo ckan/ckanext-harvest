@@ -2,6 +2,7 @@
 ckanext-harvest - Remote harvesting extension
 =============================================
 
+
 .. image:: https://travis-ci.org/ckan/ckanext-harvest.svg?branch=master
     :target: https://travis-ci.org/ckan/ckanext-harvest
 
