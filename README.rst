@@ -6,6 +6,7 @@ ckanext-harvest - Remote harvesting extension
 .. image:: https://travis-ci.org/ckan/ckanext-harvest.svg?branch=master
     :target: https://travis-ci.org/ckan/ckanext-harvest
 
+
 This extension provides a common harvesting framework for ckan extensions
 and adds a CLI and a WUI to CKAN to manage harvesting sources and jobs.
 
