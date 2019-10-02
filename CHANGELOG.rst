@@ -16,6 +16,10 @@ Changed
 - Use ckantoolkit to clean up imports #358
 - Add hook to extend the package dict in CKAN harvester
 - Use CKAN core ckan.redis.url setting if present
+- Remove database migration code targeting ancient versions #376
+    (In the unlikely event that you need to upgrade from one
+     of the previous DB versions just apply the changes removed
+     on the linked PR manually)
 
 Fixed
 -----
