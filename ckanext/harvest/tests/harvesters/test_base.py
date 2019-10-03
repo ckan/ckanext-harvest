@@ -45,7 +45,7 @@ class TestGenNewName(object):
         factories.Dataset(name='trees')
         new_name = HarvesterBase._gen_new_name('Trees')
 
-        assert re.match('trees[\da-f]{5}', new_name)
+        assert re.match(r'trees[\da-f]{5}', new_name)
 
     @patch.dict('ckanext.harvest.harvesters.base.config',
                 {'ckanext.harvest.default_dataset_name_append': 'random-hex'})
@@ -123,7 +123,7 @@ class TestEnsureNameIsUnique(object):
         factories.Dataset(name='trees')
         name = _ensure_name_is_unique('trees', append_type='random-hex')
         # e.g. 'trees0b53f'
-        assert re.match('trees[\da-f]{5}', name)
+        assert re.match(r'trees[\da-f]{5}', name)
 
 
 # taken from ckan/tests/lib/test_munge.py

@@ -69,10 +69,11 @@ def get_connection_redis():
     if not config.get('ckan.harvest.mq.hostname') and config.get('ckan.redis.url'):
         return redis.StrictRedis.from_url(config['ckan.redis.url'])
     else:
-        return redis.StrictRedis(host=config.get('ckan.harvest.mq.hostname', HOSTNAME),
-                           port=int(config.get('ckan.harvest.mq.port', REDIS_PORT)),
-                           password=config.get('ckan.harvest.mq.password', None),
-                           db=int(config.get('ckan.harvest.mq.redis_db', REDIS_DB)))
+        return redis.StrictRedis(
+            host=config.get('ckan.harvest.mq.hostname', HOSTNAME),
+            port=int(config.get('ckan.harvest.mq.port', REDIS_PORT)),
+            password=config.get('ckan.harvest.mq.password', None),
+            db=int(config.get('ckan.harvest.mq.redis_db', REDIS_DB)))
 
 
 def get_gather_queue_name():
@@ -87,12 +88,12 @@ def get_fetch_queue_name():
 
 def get_gather_routing_key():
     return 'ckanext-harvest:{0}:harvest_job_id'.format(
-            config.get('ckan.site_id', 'default'))
+        config.get('ckan.site_id', 'default'))
 
 
 def get_fetch_routing_key():
     return 'ckanext-harvest:{0}:harvest_object_id'.format(
-            config.get('ckan.site_id', 'default'))
+        config.get('ckan.site_id', 'default'))
 
 
 def purge_queues():
@@ -173,13 +174,14 @@ class Publisher(object):
         self.routing_key = routing_key
 
     def send(self, body, **kw):
-        return self.channel.basic_publish(self.exchange,
-                                          self.routing_key,
-                                          json.dumps(body),
-                                          properties=pika.BasicProperties(
-                                             delivery_mode=2,  # make message persistent
-                                          ),
-                                          **kw)
+        return self.channel.basic_publish(
+            self.exchange,
+            self.routing_key,
+            json.dumps(body),
+            properties=pika.BasicProperties(
+                delivery_mode=2,  # make message persistent
+            ),
+            **kw)
 
     def close(self):
         self.connection.close()
@@ -295,6 +297,7 @@ def get_consumer(queue_name, routing_key):
 
 
 def gather_callback(channel, method, header, body):
+
     try:
         id = json.loads(body)['harvest_job_id']
         log.debug('Received harvest job id: %s' % id)
@@ -326,7 +329,6 @@ def gather_callback(channel, method, header, body):
     # the Harvester interface, only if the source type
     # matches
     harvester = get_harvester(job.source.type)
-
     if harvester:
         try:
             harvest_object_ids = gather_stage(harvester, job)
@@ -347,7 +349,7 @@ def gather_callback(channel, method, header, body):
             return False
 
         log.debug('Received from plugin gather_stage: {0} objects (first: {1} last: {2})'.format(
-                    len(harvest_object_ids), harvest_object_ids[:1], harvest_object_ids[-1:]))
+            len(harvest_object_ids), harvest_object_ids[:1], harvest_object_ids[-1:]))
         for id in harvest_object_ids:
             # Send the id to the fetch queue
             publisher.send({'harvest_object_id': id})
@@ -365,7 +367,6 @@ def gather_callback(channel, method, header, body):
         job.save()
         log.info('Marking job as finished due to error: %s %s',
                  job.source.url, job.id)
-
 
     model.Session.remove()
     publisher.close()
@@ -465,7 +466,7 @@ def fetch_and_import_stages(harvester, obj):
         obj.import_finished = datetime.datetime.utcnow()
         if success_import:
             obj.state = "COMPLETE"
-            if success_import is 'unchanged':
+            if success_import == 'unchanged':
                 obj.report_status = 'not modified'
                 obj.save()
                 return
