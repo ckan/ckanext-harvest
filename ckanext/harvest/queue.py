@@ -342,6 +342,11 @@ def gather_callback(channel, method, header, body):
         err = HarvestGatherError(message=msg, job=job)
         err.save()
         log.error(msg)
+        job.status = u'Finished'
+        job.save()
+        log.info('Marking job as finished due to error: %s %s',
+                 job.source.url, job.id)
+
 
     model.Session.remove()
     publisher.close()
