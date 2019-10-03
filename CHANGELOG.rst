@@ -27,6 +27,9 @@ Fixed
 - Fix SSL problems for old versions of Python 2.7.x #344
 - Add an 'owner_org' to the v3 package migration #348
 - Fix harvest request exceptions #357
+- Fix wrong toolkit reference 8e862c8
+- Mark early errored jobs as finished 5ad6d86
+- Resubmit awaiting objects in the DB not on Redis 5ffe6d4
 
 *******************
 1.1.4_ - 2018-10-26
@@ -107,7 +110,7 @@ Added
 
 Changed
 -------
-- ``gather_stage`` return empty list instead of None if errors occured 
+- ``gather_stage`` return empty list instead of None if errors occured
 - Change ``redirect`` calls to ``h.redirect_to``
 
 Fixed
