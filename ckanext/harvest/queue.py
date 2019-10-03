@@ -146,6 +146,25 @@ def resubmit_jobs():
             redis.delete(key)
 
 
+def resubmit_objects():
+    '''
+    Resubmit all WAITING objects on the DB that are not present in Redis
+    '''
+    if config.get('ckan.harvest.mq.type') != 'redis':
+        return
+    redis = get_connection()
+    publisher = get_fetch_publisher()
+
+    waiting_objects = model.Session.query(HarvestObject.id) \
+        .filter_by(state='WAITING') \
+        .all()
+
+    for object_id in waiting_objects:
+        if not redis.get(object_id):
+            log.debug('Re-sent object {} to the fetch queue'.format(object_id[0]))
+            publisher.send({'harvest_object_id': object_id[0]})
+
+
 class Publisher(object):
     def __init__(self, connection, channel, exchange, routing_key):
         self.connection = connection
