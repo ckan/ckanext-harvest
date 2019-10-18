@@ -126,10 +126,10 @@ class ViewController(BaseController):
                 else:
                     abort(404, _('No content found'))
                 try:
-                    etree.fromstring(re.sub('<\?xml(.*)\?>', '', content))
+                    etree.fromstring(re.sub(r'<\?xml(.*)\?>', '', content))
                 except UnicodeEncodeError:
                     etree.fromstring(
-                        re.sub('<\?xml(.*)\?>', '', content.encode('utf-8'))
+                        re.sub(r'<\?xml(.*)\?>', '', content.encode('utf-8'))
                     )
                 response.content_type = 'application/xml; charset=utf-8'
                 if '<?xml' not in content.split('\n')[0]:

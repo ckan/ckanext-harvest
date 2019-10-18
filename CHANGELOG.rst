@@ -14,6 +14,12 @@ Changed
 -------
 - Apply flake8 to be PEP-8 compliant #354
 - Use ckantoolkit to clean up imports #358
+- Add hook to extend the package dict in CKAN harvester
+- Use CKAN core ckan.redis.url setting if present
+- Remove database migration code targeting ancient versions #376
+    (In the unlikely event that you need to upgrade from one
+     of the previous DB versions just apply the changes removed
+     on the linked PR manually)
 
 Fixed
 -----
@@ -21,6 +27,9 @@ Fixed
 - Fix SSL problems for old versions of Python 2.7.x #344
 - Add an 'owner_org' to the v3 package migration #348
 - Fix harvest request exceptions #357
+- Fix wrong toolkit reference 8e862c8
+- Mark early errored jobs as finished 5ad6d86
+- Resubmit awaiting objects in the DB not on Redis 5ffe6d4
 
 *******************
 1.1.4_ - 2018-10-26
@@ -101,7 +110,7 @@ Added
 
 Changed
 -------
-- ``gather_stage`` return empty list instead of None if errors occured 
+- ``gather_stage`` return empty list instead of None if errors occured
 - Change ``redirect`` calls to ``h.redirect_to``
 
 Fixed
