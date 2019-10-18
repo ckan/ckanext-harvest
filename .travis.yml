@@ -3,6 +3,7 @@ python:
     - "2.7"
 env:
     - CKANVERSION=master
+    - CKANVERSION=2.8
 services:
     - redis-server
     - postgresql
