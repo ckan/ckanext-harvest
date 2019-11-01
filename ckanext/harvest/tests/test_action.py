@@ -743,7 +743,7 @@ class XXTestHarvestDBLog(unittest.TestCase):
         reset_db()
         harvest_model.setup()
 
-    def test_harvest_db_logger(self):
+    def xxtest_harvest_db_logger(self):
         # Create source and check if harvest_log table is populated
         data_dict = SOURCE_DICT.copy()
         data_dict['source_type'] = 'test'
