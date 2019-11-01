@@ -7,9 +7,10 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog <http://keepachangelog.com>`_
 and this project adheres to `Semantic Versioning <http://semver.org/>`_.
 
-***********
-Unreleased_
-***********
+*******************
+1.2.0_ - 2019-11-01
+*******************
+
 Changed
 -------
 - Apply flake8 to be PEP-8 compliant #354
@@ -186,7 +187,8 @@ Categories
 - ``Fixed`` for any bug fixes.
 - ``Security`` to invite users to upgrade in case of vulnerabilities.
 
-.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.1.4...HEAD
+.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.2.0...HEAD
+.. _1.2.0: https://github.com/ckan/ckanext-harvest/compare/v1.1.4...v1.2.0
 .. _1.1.4: https://github.com/ckan/ckanext-harvest/compare/v1.1.3...v1.1.4
 .. _1.1.3: https://github.com/ckan/ckanext-harvest/compare/v1.1.2...v1.1.3
 .. _1.1.2: https://github.com/ckan/ckanext-harvest/compare/v1.1.1...v1.1.2
