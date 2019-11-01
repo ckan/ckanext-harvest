@@ -4,6 +4,8 @@ python:
 env:
     - CKANVERSION=master
     - CKANVERSION=2.8
+    - CKANVERSION=2.7
+    - CKANVERSION=2.6
 services:
     - redis-server
     - postgresql
