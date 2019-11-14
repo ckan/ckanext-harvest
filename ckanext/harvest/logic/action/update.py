@@ -610,8 +610,10 @@ def send_error_mail(context, source_id, status):
     obj_error = ''
     job_error = ''
 
-    for harvest_object_error in islice(report.get('object_errors'), 0, 20):
-        obj_error += harvest_object_error['message'] + '\n'
+    for harvest_object_error_key in islice(report.get('object_errors'), 0, 20):
+        harvest_object_error = report.get('object_errors')[harvest_object_error_key]['errors']
+        for error in harvest_object_error:
+            obj_error += error['message']
 
     for harvest_gather_error in islice(report.get('gather_errors'), 0, 20):
         job_error += harvest_gather_error['message'] + '\n'
