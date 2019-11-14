@@ -12,6 +12,11 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_
 Unreleased_
 ***********
 
+Fixed
+-----
+
+- get message from harvest_object_error-dict #381
+
 *******************
 1.2.0_ - 2019-11-01
 *******************
