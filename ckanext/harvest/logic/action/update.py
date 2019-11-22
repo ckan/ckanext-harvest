@@ -31,6 +31,8 @@ from ckanext.harvest.logic.dictization import harvest_job_dictize
 from ckanext.harvest.logic.action.get import (
     harvest_source_show, harvest_job_list, _get_sources_for_user)
 
+from ckanext.harvest.logic.action.notify import send_error_mail_ncar
+
 import ckan.lib.mailer as mailer
 from itertools import islice
 
@@ -561,7 +563,7 @@ def harvest_jobs_run(context, data_dict):
 
                     if toolkit.asbool(config.get('ckan.harvest.status_mail.errored'))\
                             and (status['last_job']['stats']['errored']):
-                        send_error_mail(context, job_obj.source.id, status)
+                        send_error_mail_ncar(context, job_obj)
                 else:
                     log.debug('Ongoing job:%s source:%s',
                               job['id'], job['source_id'])

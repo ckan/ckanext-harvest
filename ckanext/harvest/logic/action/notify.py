@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 
-def send_error_mail(context, job_obj):
+def send_error_mail_ncar(context, job_obj):
 
     sql = 'select name from package where id = :source_id;'
 
