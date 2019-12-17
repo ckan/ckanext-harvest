@@ -4,13 +4,7 @@ from nose.tools import assert_equal, assert_in
 from ckanext.harvest import model as harvest_model
 from ckanext.harvest.harvesters.base import HarvesterBase, munge_tag
 from mock import patch
-try:
-    from ckan.tests import helpers
-    from ckan.tests import factories
-except ImportError:
-    from ckan.new_tests import helpers
-    from ckan.new_tests import factories
-
+from ckantoolkit.tests import helpers, factories
 
 _ensure_name_is_unique = HarvesterBase._ensure_name_is_unique
 
@@ -51,7 +45,7 @@ class TestGenNewName(object):
         factories.Dataset(name='trees')
         new_name = HarvesterBase._gen_new_name('Trees')
 
-        assert re.match('trees[\da-f]{5}', new_name)
+        assert re.match(r'trees[\da-f]{5}', new_name)
 
     @patch.dict('ckanext.harvest.harvesters.base.config',
                 {'ckanext.harvest.default_dataset_name_append': 'random-hex'})
@@ -129,7 +123,7 @@ class TestEnsureNameIsUnique(object):
         factories.Dataset(name='trees')
         name = _ensure_name_is_unique('trees', append_type='random-hex')
         # e.g. 'trees0b53f'
-        assert re.match('trees[\da-f]{5}', name)
+        assert re.match(r'trees[\da-f]{5}', name)
 
 
 # taken from ckan/tests/lib/test_munge.py

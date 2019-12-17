@@ -172,6 +172,13 @@ class CKANHarvester(HarvesterBase):
 
         return config
 
+    def modify_package_dict(self, package_dict, harvest_object):
+        '''
+            Allows custom harvesters to modify the package dict before
+            creating or updating the actual package.
+        '''
+        return package_dict
+
     def gather_stage(self, harvest_job):
         log.debug('In CKANHarvester gather_stage (%s)',
                   harvest_job.source.url)
@@ -535,6 +542,8 @@ class CKANHarvester(HarvesterBase):
                 # and saving it will cause an IntegrityError with the foreign
                 # key.
                 resource.pop('revision_id', None)
+
+            package_dict = self.modify_package_dict(package_dict, harvest_object)
 
             result = self._create_or_update_package(
                 package_dict, harvest_object, package_dict_form='package_show')

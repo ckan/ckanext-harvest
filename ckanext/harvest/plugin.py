@@ -219,28 +219,41 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
         controller = 'ckanext.harvest.controllers.view:ViewController'
 
         map.connect('{0}_delete'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/delete/:id',
-                    controller=controller, action='delete')
+                    controller=controller,
+                    action='delete')
         map.connect('{0}_refresh'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/refresh/:id',
-                    controller=controller, action='refresh')
+                    controller=controller,
+                    action='refresh')
         map.connect('{0}_admin'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/admin/:id',
-                    controller=controller, action='admin')
+                    controller=controller,
+                    action='admin')
         map.connect('{0}_about'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/about/:id',
-                    controller=controller, action='about')
+                    controller=controller,
+                    action='about')
         map.connect('{0}_clear'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/clear/:id',
-                    controller=controller, action='clear')
+                    controller=controller,
+                    action='clear')
 
-        map.connect('harvest_job_list', '/' + DATASET_TYPE_NAME + '/{source}/job', controller=controller, action='list_jobs')
+        map.connect('harvest_job_list', '/' + DATASET_TYPE_NAME + '/{source}/job',
+                    controller=controller,
+                    action='list_jobs')
         map.connect('harvest_job_show_last', '/' + DATASET_TYPE_NAME + '/{source}/job/last',
-                    controller=controller, action='show_last_job')
+                    controller=controller,
+                    action='show_last_job')
         map.connect('harvest_job_show', '/' + DATASET_TYPE_NAME + '/{source}/job/{id}',
-                    controller=controller, action='show_job')
+                    controller=controller,
+                    action='show_job')
         map.connect('harvest_job_abort', '/' + DATASET_TYPE_NAME + '/{source}/job/{id}/abort',
-                    controller=controller, action='abort_job')
+                    controller=controller,
+                    action='abort_job')
 
         map.connect('harvest_object_show', '/' + DATASET_TYPE_NAME + '/object/:id',
-                    controller=controller, action='show_object')
+                    controller=controller,
+                    action='show_object')
         map.connect('harvest_object_for_dataset_show', '/dataset/harvest_object/:id',
-                    controller=controller, action='show_object', ref_type='dataset')
+                    controller=controller,
+                    action='show_object',
+                    ref_type='dataset')
 
         return map
 

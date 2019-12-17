@@ -5,12 +5,8 @@ import json
 from mock import patch, MagicMock, Mock
 from requests.exceptions import HTTPError, RequestException
 
-try:
-    from ckan.tests.helpers import reset_db, call_action
-    from ckan.tests.factories import Organization, Group
-except ImportError:
-    from ckan.new_tests.helpers import reset_db, call_action
-    from ckan.new_tests.factories import Organization, Group
+from ckantoolkit.tests.helpers import reset_db, call_action
+from ckantoolkit.tests.factories import Organization, Group
 from ckan import model
 from ckan.plugins import toolkit
 
@@ -309,18 +305,10 @@ class TestCkanHarvester(object):
                 'encoding': 'utf8',
                 'harvest_url': '{harvest_source_url}/dataset/{dataset_id}'
                 }}
-        tmp_c = toolkit.c
-        try:
-            # c.user is used by the validation (annoying),
-            # however patch doesn't work because it's a weird
-            # StackedObjectProxy, so we swap it manually
-            toolkit.c = MagicMock(user='')
-            results_by_guid = run_harvest(
-                url='http://localhost:%s' % mock_ckan.PORT,
-                harvester=CKANHarvester(),
-                config=json.dumps(config))
-        finally:
-            toolkit.c = tmp_c
+        results_by_guid = run_harvest(
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
         assert_equal(results_by_guid['dataset1-id']['errors'], [])
         extras = results_by_guid['dataset1-id']['dataset']['extras']
         extras_dict = dict((e['key'], e['value']) for e in extras)

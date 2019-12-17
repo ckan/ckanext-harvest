@@ -1,4 +1,4 @@
-from sqlalchemy import distinct, func
+from sqlalchemy import distinct, func, text
 
 from ckan.model import Package, Group
 from ckan import logic
@@ -66,7 +66,7 @@ def harvest_job_dictize(job, context):
             .join(HarvestObject) \
             .filter(HarvestObject.harvest_job_id == job.id) \
             .group_by(HarvestObjectError.message) \
-            .order_by('error_count desc') \
+            .order_by(text('error_count desc')) \
             .limit(context.get('error_summmary_limit', 20))
         out['object_error_summary'] = q.all()
         q = model.Session.query(
@@ -74,7 +74,7 @@ def harvest_job_dictize(job, context):
             func.count(HarvestGatherError.message).label('error_count')) \
             .filter(HarvestGatherError.harvest_job_id == job.id) \
             .group_by(HarvestGatherError.message) \
-            .order_by('error_count desc') \
+            .order_by(text('error_count desc')) \
             .limit(context.get('error_summmary_limit', 20))
         out['gather_error_summary'] = q.all()
     return out

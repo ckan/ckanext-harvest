@@ -2,6 +2,8 @@ import logging
 import datetime
 import json
 
+
+import redis
 import pika
 import sqlalchemy
 
@@ -64,11 +66,14 @@ def get_connection_amqp():
 
 
 def get_connection_redis():
-    import redis
-    return redis.StrictRedis(host=config.get('ckan.harvest.mq.hostname', HOSTNAME),
-                             port=int(config.get('ckan.harvest.mq.port', REDIS_PORT)),
-                             password=config.get('ckan.harvest.mq.password', None),
-                             db=int(config.get('ckan.harvest.mq.redis_db', REDIS_DB)))
+    if not config.get('ckan.harvest.mq.hostname') and config.get('ckan.redis.url'):
+        return redis.StrictRedis.from_url(config['ckan.redis.url'])
+    else:
+        return redis.StrictRedis(
+            host=config.get('ckan.harvest.mq.hostname', HOSTNAME),
+            port=int(config.get('ckan.harvest.mq.port', REDIS_PORT)),
+            password=config.get('ckan.harvest.mq.password', None),
+            db=int(config.get('ckan.harvest.mq.redis_db', REDIS_DB)))
 
 
 def get_gather_queue_name():
@@ -83,12 +88,12 @@ def get_fetch_queue_name():
 
 def get_gather_routing_key():
     return 'ckanext-harvest:{0}:harvest_job_id'.format(
-            config.get('ckan.site_id', 'default'))
+        config.get('ckan.site_id', 'default'))
 
 
 def get_fetch_routing_key():
     return 'ckanext-harvest:{0}:harvest_object_id'.format(
-            config.get('ckan.site_id', 'default'))
+        config.get('ckan.site_id', 'default'))
 
 
 def purge_queues():
@@ -142,6 +147,25 @@ def resubmit_jobs():
             redis.delete(key)
 
 
+def resubmit_objects():
+    '''
+    Resubmit all WAITING objects on the DB that are not present in Redis
+    '''
+    if config.get('ckan.harvest.mq.type') != 'redis':
+        return
+    redis = get_connection()
+    publisher = get_fetch_publisher()
+
+    waiting_objects = model.Session.query(HarvestObject.id) \
+        .filter_by(state='WAITING') \
+        .all()
+
+    for object_id in waiting_objects:
+        if not redis.get(object_id):
+            log.debug('Re-sent object {} to the fetch queue'.format(object_id[0]))
+            publisher.send({'harvest_object_id': object_id[0]})
+
+
 class Publisher(object):
     def __init__(self, connection, channel, exchange, routing_key):
         self.connection = connection
@@ -150,13 +174,14 @@ class Publisher(object):
         self.routing_key = routing_key
 
     def send(self, body, **kw):
-        return self.channel.basic_publish(self.exchange,
-                                          self.routing_key,
-                                          json.dumps(body),
-                                          properties=pika.BasicProperties(
-                                             delivery_mode=2,  # make message persistent
-                                          ),
-                                          **kw)
+        return self.channel.basic_publish(
+            self.exchange,
+            self.routing_key,
+            json.dumps(body),
+            properties=pika.BasicProperties(
+                delivery_mode=2,  # make message persistent
+            ),
+            **kw)
 
     def close(self):
         self.connection.close()
@@ -276,6 +301,7 @@ def get_consumer(queue_name, routing_key):
 
 
 def gather_callback(channel, method, header, body):
+
     try:
         id = json.loads(body)['harvest_job_id']
         log.debug('Received harvest job id: %s' % id)
@@ -307,7 +333,6 @@ def gather_callback(channel, method, header, body):
     # the Harvester interface, only if the source type
     # matches
     harvester = get_harvester(job.source.type)
-
     if harvester:
         try:
             harvest_object_ids = gather_stage(harvester, job)
@@ -328,7 +353,7 @@ def gather_callback(channel, method, header, body):
             return False
 
         log.debug('Received from plugin gather_stage: {0} objects (first: {1} last: {2})'.format(
-                    len(harvest_object_ids), harvest_object_ids[:1], harvest_object_ids[-1:]))
+            len(harvest_object_ids), harvest_object_ids[:1], harvest_object_ids[-1:]))
         for id in harvest_object_ids:
             # Send the id to the fetch queue
             publisher.send({'harvest_object_id': id})
@@ -342,6 +367,10 @@ def gather_callback(channel, method, header, body):
         err = HarvestGatherError(message=msg, job=job)
         err.save()
         log.error(msg)
+        job.status = u'Finished'
+        job.save()
+        log.info('Marking job as finished due to error: %s %s',
+                 job.source.url, job.id)
 
     model.Session.remove()
     publisher.close()
