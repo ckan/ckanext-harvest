@@ -647,16 +647,6 @@ def send_error_mail(context, source_id, status):
 
         recipients = []
 
-        # gather sysadmins
-        model = context['model']
-        sysadmins = model.Session.query(model.User).filter(
-            model.User.sysadmin == True  # noqa: E712
-        ).all()
-        for sysadmin in sysadmins:
-            recipients.append({
-                'name': sysadmin.name,
-                'email': sysadmin.email
-            })
 
         # gather organization-admins
         if source.get('organization'):
@@ -669,10 +659,13 @@ def send_error_mail(context, source_id, status):
                 if member_details['email']:
                     recipients.append({
                         'name': member_details['name'],
-                        'email': member_details['email']
+                        'email': member_details['email'],
+                        'capacity': 'admin'
                     })
 
+
         for recipient in recipients:
+            log.debug("Sending email to " + recipient['email'])
             email = {'recipient_name': recipient['name'],
                      'recipient_email': recipient['email'],
                      'subject': config.get('ckan.site_title') + ' - Harvesting Job - Error Notification',
