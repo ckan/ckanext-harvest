@@ -12,3 +12,4 @@ development.ini
 *~
 node_modules
 *.project
+.idea/

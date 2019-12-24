@@ -564,7 +564,7 @@ def harvest_jobs_run(context, data_dict):
 
                     if toolkit.asbool(config.get('ckan.harvest.status_mail.errored'))\
                             and (status['last_job']['stats']['errored']):
-                        send_error_mail_ncar(context, job_obj)
+                        send_error_mail(context, job_obj.source.id, status)
                 else:
                     log.debug('Ongoing job:%s source:%s',
                               job['id'], job['source_id'])
@@ -587,9 +587,8 @@ def send_error_mail(context, source_id, status):
     ckan_site_url = config.get('ckan.site_url')
     job_url = toolkit.url_for('harvest_job_show', source=source['id'], id=last_job['id'])
 
-    msg = toolkit._('This is a failure-notification of the latest harvest job ({0}) set-up in {1}.')\
-        .format(job_url, ckan_site_url)
-    msg += '\n\n'
+    msg = 'This is a failure-notification of the latest harvest job on ' + ckan_site_url + '.\n\n'
+    msg += 'Harvest Job URL: ' + ckan_site_url + job_url + '\n\n'
 
     msg += toolkit._('Harvest Source: {0}').format(source['title']) + '\n'
     if source.get('config'):
@@ -609,13 +608,21 @@ def send_error_mail(context, source_id, status):
     msg += toolkit._('Records in Error: {0}').format(str(last_job['stats'].get('errored', 0)))
     msg += '\n'
 
+    msg += 'For help, please contact the DASH Data Curation and Stewardship Coordinator (mailto:datahelp@ucar.edu).\n\n\n'
+
     obj_error = ''
     job_error = ''
 
     for harvest_object_error_key in islice(report.get('object_errors'), 0, 20):
         harvest_object_error = report.get('object_errors')[harvest_object_error_key]['errors']
+        harvest_object_url = report.get('object_errors')[harvest_object_error_key]['original_url']
         for error in harvest_object_error:
+            obj_error += harvest_object_url + ' :\n\n'
             obj_error += error['message']
+            if error['line']:
+                obj_error += ' (line ' + str(error['line']) + ')\n\n'
+            else:
+                obj_error += '\n'
 
     for harvest_gather_error in islice(report.get('gather_errors'), 0, 20):
         job_error += harvest_gather_error['message'] + '\n'
@@ -634,9 +641,9 @@ def send_error_mail(context, source_id, status):
 
     if obj_error or job_error:
         msg += '\n--\n'
-        msg += toolkit._('You are receiving this email because you are currently set-up as Administrator for {0}.'
+        msg += toolkit._('You are receiving this email because you are currently set-up as a member of the Organization {0} for {1}.'
                          ' Please do not reply to this email as it was sent from a non-monitored address.')\
-            .format(config.get('ckan.site_title'))
+            .format(source['organization']['name'], config.get('ckan.site_title'))
 
         recipients = []
 
@@ -655,8 +662,7 @@ def send_error_mail(context, source_id, status):
         if source.get('organization'):
             members = get_action('member_list')(context, {
                 'id': source['organization']['id'],
-                'object_type': 'user',
-                'capacity': 'admin'
+                'object_type': 'user'
             })
             for member in members:
                 member_details = get_action('user_show')(context, {'id': member[0]})
