@@ -543,7 +543,6 @@ class CKANHarvester(HarvesterBase):
                 # key.
                 resource.pop('revision_id', None)
 
-
             package_dict = self.modify_package_dict(package_dict, harvest_object)
 
             result = self._create_or_update_package(

@@ -5,17 +5,32 @@ Changelog
 All notable changes to this project will be documented in this file.
 
 The format is based on `Keep a Changelog <http://keepachangelog.com>`_
-and this project adheres to `Semantic Versioning <http://semver.org/>`_.
+and this project adheres to `Semantic Versioning <http://semver.org/>`_
+
 
 ***********
 Unreleased_
 ***********
+
+Fixed
+-----
+
+- get message from harvest_object_error-dict #381
+
+*******************
+1.2.0_ - 2019-11-01
+*******************
+
 Changed
 -------
 - Apply flake8 to be PEP-8 compliant #354
 - Use ckantoolkit to clean up imports #358
 - Add hook to extend the package dict in CKAN harvester
 - Use CKAN core ckan.redis.url setting if present
+- Remove database migration code targeting ancient versions #376
+    (In the unlikely event that you need to upgrade from one
+     of the previous DB versions just apply the changes removed
+     on the linked PR manually)
 
 Fixed
 -----
@@ -23,6 +38,9 @@ Fixed
 - Fix SSL problems for old versions of Python 2.7.x #344
 - Add an 'owner_org' to the v3 package migration #348
 - Fix harvest request exceptions #357
+- Fix wrong toolkit reference 8e862c8
+- Mark early errored jobs as finished 5ad6d86
+- Resubmit awaiting objects in the DB not on Redis 5ffe6d4
 
 *******************
 1.1.4_ - 2018-10-26
@@ -103,7 +121,7 @@ Added
 
 Changed
 -------
-- ``gather_stage`` return empty list instead of None if errors occured 
+- ``gather_stage`` return empty list instead of None if errors occured
 - Change ``redirect`` calls to ``h.redirect_to``
 
 Fixed
@@ -179,7 +197,8 @@ Categories
 - ``Fixed`` for any bug fixes.
 - ``Security`` to invite users to upgrade in case of vulnerabilities.
 
-.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.1.4...HEAD
+.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.2.0...HEAD
+.. _1.2.0: https://github.com/ckan/ckanext-harvest/compare/v1.1.4...v1.2.0
 .. _1.1.4: https://github.com/ckan/ckanext-harvest/compare/v1.1.3...v1.1.4
 .. _1.1.3: https://github.com/ckan/ckanext-harvest/compare/v1.1.2...v1.1.3
 .. _1.1.2: https://github.com/ckan/ckanext-harvest/compare/v1.1.1...v1.1.2

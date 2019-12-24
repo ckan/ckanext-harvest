@@ -90,7 +90,7 @@ def harvest_source_show_package_schema():
         'creator_user_id': [],
         'organization': [],
         'notes': [],
-        'revision_id': [],
+        'revision_id': [ignore_missing],
         'revision_timestamp': [ignore_missing],
         'tracking_summary': [ignore_missing],
     })

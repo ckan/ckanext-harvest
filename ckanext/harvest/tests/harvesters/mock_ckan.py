@@ -30,10 +30,10 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         # The API version is recorded and then removed from the path
         api_version = None
-        version_match = re.match('^/api/(\d)', self.path)
+        version_match = re.match(r'^/api/(\d)', self.path)
         if version_match:
             api_version = int(version_match.groups()[0])
-            self.path = re.sub('^/api/(\d)/', '/api/', self.path)
+            self.path = re.sub(r'^/api/(\d)/', '/api/', self.path)
 
         if self.path == '/api/rest/package':
             if api_version == 2:

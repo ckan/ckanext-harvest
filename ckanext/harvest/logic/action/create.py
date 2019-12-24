@@ -92,7 +92,7 @@ def harvest_job_create(context, data_dict):
     source = HarvestSource.get(source_id)
     if not source:
         log.warn('Harvest source %s does not exist', source_id)
-        raise toolkit.NotFound('Harvest source %s does not exist' % source_id)
+        raise toolkit.ObjectNotFound('Harvest source %s does not exist' % source_id)
 
     # Check if the source is active
     if not source.active:
