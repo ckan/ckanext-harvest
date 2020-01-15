@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import requests
 from requests.exceptions import HTTPError, RequestException
 
@@ -11,7 +12,7 @@ from ckan.lib.helpers import json
 from ckan.plugins import toolkit
 
 from ckanext.harvest.model import HarvestObject
-from base import HarvesterBase
+from .base import HarvesterBase
 
 import logging
 log = logging.getLogger(__name__)

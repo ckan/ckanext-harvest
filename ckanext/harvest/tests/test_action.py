@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import json
-import factories
+from . import factories
 import unittest
 from mock import patch
 from nose.tools import assert_equal, assert_raises, assert_in
