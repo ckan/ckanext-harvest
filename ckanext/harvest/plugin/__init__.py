@@ -4,7 +4,7 @@ import os
 import json
 from logging import getLogger
 
-from six import string_types
+from six import string_types, text_type
 from sqlalchemy.util import OrderedDict
 
 from ckan import logic
@@ -195,7 +195,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
         from ckanext.harvest.logic.schema import harvest_source_create_package_schema
         schema = harvest_source_create_package_schema()
         if self.startup:
-            schema['id'] = [unicode]
+            schema['id'] = [six.text_type]
 
         return schema
 

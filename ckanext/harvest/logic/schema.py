@@ -75,7 +75,7 @@ def harvest_source_create_package_schema():
 def harvest_source_update_package_schema():
 
     schema = harvest_source_create_package_schema()
-    schema['owner_org'] = [ignore_missing, owner_org_validator, unicode]
+    schema['owner_org'] = [ignore_missing, owner_org_validator, six.text_type]
 
     return schema
 
@@ -105,9 +105,9 @@ def harvest_source_show_package_schema():
 
 def harvest_object_create_schema():
     schema = {
-        'guid': [ignore_missing, unicode],
-        'content': [ignore_missing, unicode],
-        'state': [ignore_missing, unicode],
+        'guid': [ignore_missing, six.text_type],
+        'content': [ignore_missing, six.text_type],
+        'state': [ignore_missing, six.text_type],
         'job_id': [harvest_job_exists],
         'source_id': [ignore_missing, harvest_source_id_exists],
         'package_id': [ignore_missing, package_id_exists],

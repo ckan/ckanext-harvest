@@ -60,7 +60,7 @@ def get_connection_amqp():
                                            virtual_host=virtual_host,
                                            credentials=credentials,
                                            frame_max=10000)
-    log.debug("pika connection using %s" % parameters.__dict__)
+    log.debug("pika connection using %s" % parameters)
 
     return pika.BlockingConnection(parameters)
 

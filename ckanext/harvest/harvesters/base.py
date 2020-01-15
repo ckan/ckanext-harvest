@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
+
 import logging
 import re
 import uuid
+import six
 
 from sqlalchemy import exists
 from sqlalchemy.sql import update, bindparam
@@ -274,7 +277,7 @@ class HarvesterBase(SingletonPlugin):
         try:
             # Change default schema
             schema = default_create_package_schema()
-            schema['id'] = [ignore_missing, unicode]
+            schema['id'] = [ignore_missing, six.text_type]
             schema['__junk'] = [ignore]
 
             # Check API version
