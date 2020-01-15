@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+import six
 import ckan.plugins as p
 
 from ckan.logic.schema import default_extras_schema
@@ -31,17 +34,17 @@ from ckanext.harvest.logic.validators import (harvest_source_url_validator,
 def harvest_source_schema():
 
     schema = {
-        'id': [ignore_missing, unicode, package_id_exists],
-        'type': [dataset_type_exists, unicode],
-        'url': [not_empty, unicode, harvest_source_url_validator],
-        'name': [not_empty, unicode, name_validator, package_name_validator],
-        'source_type': [not_empty, unicode, harvest_source_type_exists, convert_to_extras],
-        'title': [if_empty_same_as("name"), unicode],
-        'notes': [ignore_missing, unicode],
-        'owner_org': [owner_org_validator, unicode],
+        'id': [ignore_missing, six.text_type, package_id_exists],
+        'type': [dataset_type_exists, six.text_type],
+        'url': [not_empty, six.text_type, harvest_source_url_validator],
+        'name': [not_empty, six.text_type, name_validator, package_name_validator],
+        'source_type': [not_empty, six.text_type, harvest_source_type_exists, convert_to_extras],
+        'title': [if_empty_same_as("name"), six.text_type],
+        'notes': [ignore_missing, six.text_type],
+        'owner_org': [owner_org_validator, six.text_type],
         'private': [ignore_missing, boolean_validator],
         'organization': [ignore_missing],
-        'frequency': [ignore_missing, unicode, harvest_source_frequency_exists, convert_to_extras],
+        'frequency': [ignore_missing, six.text_type, harvest_source_frequency_exists, convert_to_extras],
         'state': [ignore_missing],
         'config': [ignore_missing, harvest_source_config_validator, convert_to_extras],
         'extras': default_extras_schema(),

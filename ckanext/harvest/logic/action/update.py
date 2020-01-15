@@ -4,7 +4,7 @@ import json
 import logging
 import datetime
 
-from pylons import config
+from ckantoolkit import config
 from sqlalchemy import and_, or_
 
 from ckan.lib.search.index import PackageSearchIndex
@@ -21,7 +21,9 @@ from ckan.plugins import toolkit
 
 from ckan.logic import NotFound, check_access
 
-from ckanext.harvest.plugin import DATASET_TYPE_NAME
+from ckanext.harvest.utils import (
+    DATASET_TYPE_NAME
+)
 from ckanext.harvest.queue import (
     get_gather_publisher, resubmit_jobs, resubmit_objects)
 
@@ -330,7 +332,7 @@ def harvest_source_index_clear(context, data_dict):
             conn.delete_query(query)
             if solr_commit:
                 conn.commit()
-        except Exception, e:
+        except Exception as e:
             log.exception(e)
             raise SearchIndexError(e)
         finally:
@@ -339,7 +341,7 @@ def harvest_source_index_clear(context, data_dict):
         # conn is pysolr
         try:
             conn.delete(q=query, commit=solr_commit)
-        except Exception, e:
+        except Exception as e:
             log.exception(e)
             raise SearchIndexError(e)
 
@@ -831,7 +833,7 @@ def harvest_source_reindex(context, data_dict):
         config = json.loads(package_dict.get('config', ''))
     except ValueError:
         config = {}
-    for key, value in package_dict.iteritems():
+    for key, value in package_dict.items():
         if key not in config:
             new_dict[key] = value
 

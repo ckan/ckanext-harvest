@@ -10,7 +10,8 @@ except AttributeError:
 
     xml_parser_exception = expat.ExpatError
 
-from pylons.i18n import _
+from ckantoolkit import _
+# from pylons.i18n import _
 
 from ckan import model
 
@@ -20,7 +21,9 @@ import json
 from ckan.lib.base import BaseController, c, request, response, render, abort
 
 from ckanext.harvest.logic import HarvestJobExists, HarvestSourceInactiveError
-from ckanext.harvest.plugin import DATASET_TYPE_NAME
+from ckanext.harvest.utils import (
+    DATASET_TYPE_NAME
+)
 
 import logging
 

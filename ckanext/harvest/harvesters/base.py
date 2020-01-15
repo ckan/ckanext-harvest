@@ -5,7 +5,7 @@ import uuid
 from sqlalchemy import exists
 from sqlalchemy.sql import update, bindparam
 
-from pylons import config
+from ckantoolkit import config
 
 from ckan import plugins as p
 from ckan import model
@@ -223,7 +223,7 @@ class HarvesterBase(SingletonPlugin):
                 return object_ids
             else:
                 self._save_gather_error('No remote datasets could be identified', harvest_job)
-        except Exception, e:
+        except Exception as e:
             self._save_gather_error('%r' % e.message, harvest_job)
 
     def _create_or_update_package(self, package_dict, harvest_object,
@@ -372,11 +372,11 @@ class HarvesterBase(SingletonPlugin):
 
             return True
 
-        except p.toolkit.ValidationError, e:
+        except p.toolkit.ValidationError as e:
             log.exception(e)
             self._save_object_error('Invalid package with GUID %s: %r' % (harvest_object.guid, e.error_dict),
                                     harvest_object, 'Import')
-        except Exception, e:
+        except Exception as e:
             log.exception(e)
             self._save_object_error('%r' % e, harvest_object, 'Import')
 

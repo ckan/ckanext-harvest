@@ -2,7 +2,9 @@
 
 import logging
 from ckan.logic import get_action
-from ckanext.harvest.plugin import DATASET_TYPE_NAME
+from ckanext.harvest.utils import (
+    DATASET_TYPE_NAME
+)
 
 log = logging.getLogger(__name__)
 

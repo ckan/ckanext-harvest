@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+import os
 import json
 from logging import getLogger
 
@@ -14,21 +17,28 @@ except ImportError:
     class DefaultTranslation():
         pass
 
+import ckanext.harvest
 from ckanext.harvest.model import setup as model_setup
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 from ckanext.harvest.log import DBLogHandler
 
+from ckanext.harvest.utils import (
+    DATASET_TYPE_NAME
+)
+
+if p.toolkit.check_ckan_version(min_version='2.9.0'):
+    from ckanext.harvest.plugin.flask_plugin import MixinPlugin
+else:
+    from ckanext.harvest.plugin.pylons_plugin import MixinPlugin
 
 log = getLogger(__name__)
 assert not log.disabled
 
-DATASET_TYPE_NAME = 'harvest'
 
 
-class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
+class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
 
     p.implements(p.IConfigurable)
-    p.implements(p.IRoutes, inherit=True)
     p.implements(p.IConfigurer, inherit=True)
     p.implements(p.IActions)
     p.implements(p.IAuthFunctions)
@@ -40,6 +50,14 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
         p.implements(p.ITranslation, inherit=True)
 
     startup = False
+
+    # ITranslation
+    def i18n_directory(self):
+        u'''Change the directory of the .mo translation files'''
+        return os.path.join(
+            os.path.dirname(ckanext.harvest.__file__),
+            'i18n'
+        )
 
     # IPackageController
 
@@ -212,51 +230,6 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
 
         self.startup = False
 
-    def before_map(self, map):
-
-        # Most of the routes are defined via the IDatasetForm interface
-        # (ie they are the ones for a package type)
-        controller = 'ckanext.harvest.controllers.view:ViewController'
-
-        map.connect('{0}_delete'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/delete/:id',
-                    controller=controller,
-                    action='delete')
-        map.connect('{0}_refresh'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/refresh/:id',
-                    controller=controller,
-                    action='refresh')
-        map.connect('{0}_admin'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/admin/:id',
-                    controller=controller,
-                    action='admin')
-        map.connect('{0}_about'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/about/:id',
-                    controller=controller,
-                    action='about')
-        map.connect('{0}_clear'.format(DATASET_TYPE_NAME), '/' + DATASET_TYPE_NAME + '/clear/:id',
-                    controller=controller,
-                    action='clear')
-
-        map.connect('harvest_job_list', '/' + DATASET_TYPE_NAME + '/{source}/job',
-                    controller=controller,
-                    action='list_jobs')
-        map.connect('harvest_job_show_last', '/' + DATASET_TYPE_NAME + '/{source}/job/last',
-                    controller=controller,
-                    action='show_last_job')
-        map.connect('harvest_job_show', '/' + DATASET_TYPE_NAME + '/{source}/job/{id}',
-                    controller=controller,
-                    action='show_job')
-        map.connect('harvest_job_abort', '/' + DATASET_TYPE_NAME + '/{source}/job/{id}/abort',
-                    controller=controller,
-                    action='abort_job')
-
-        map.connect('harvest_object_show', '/' + DATASET_TYPE_NAME + '/object/:id',
-                    controller=controller,
-                    action='show_object')
-        map.connect('harvest_object_for_dataset_show', '/dataset/harvest_object/:id',
-                    controller=controller,
-                    action='show_object',
-                    ref_type='dataset')
-
-        return map
-
     def update_config(self, config):
         if not p.toolkit.check_ckan_version(min_version='2.0'):
             assert 0, 'CKAN before 2.0 not supported by ckanext-harvest - '\
@@ -265,10 +238,10 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
             log.warn('Old genshi templates not supported any more by '
                      'ckanext-harvest so you should set ckan.legacy_templates '
                      'option to True any more.')
-        p.toolkit.add_template_directory(config, 'templates')
-        p.toolkit.add_public_directory(config, 'public')
-        p.toolkit.add_resource('fanstatic_library', 'ckanext-harvest')
-        p.toolkit.add_resource('public/ckanext/harvest/javascript', 'harvest-extra-field')
+        p.toolkit.add_template_directory(config, '../templates')
+        p.toolkit.add_public_directory(config, '../public')
+        p.toolkit.add_resource('../fanstatic_library', 'ckanext-harvest')
+        p.toolkit.add_resource('../public/ckanext/harvest/javascript', 'harvest-extra-field')
 
         if p.toolkit.check_ckan_version(min_version='2.9.0'):
             mappings = config.get('ckan.legacy_route_mappings', {})

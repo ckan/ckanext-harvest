@@ -1,28 +1,76 @@
-from __future__ import print_function
+# -*- coding: utf-8 -*-
+
+import click
+import six
 
 import sys
 from pprint import pprint
 
 from ckan import model
 from ckan.logic import get_action, ValidationError
-from ckan.plugins import toolkit
+import ckantoolkit as tk
 
-from ckan.lib.cli import CkanCommand
-from ckantoolkit import config
+import ckanext.harvest.utils as utils
 
-class Harvester(CkanCommand):
+def get_commands():
+    return [harvester]
+
+@click.group()
+def harvester():
+    """Harvests remotely mastered metadata.
+    """
+    pass
+
+@harvester.command()
+def initdb():
+    """Creates the necessary tables in the database.
+    """
+    utils.initdb()
+    click.secho(u'DB tables created', fg=u'green')
+
+@harvester.group()
+def source():
+    """Manage harvest sources
+    """
+    pass
+
+@source.command()
+@click.argument(u'name')
+@click.argument(u'url')
+@click.argument(u'type')
+@click.argument(u'title', required=False)
+@click.argument(u'active', type=tk.asbool, default=True)
+@click.argument(u'owner_org', required=False)
+@click.argument(u'frequency', default=u'MANUAL')
+@click.argument(u'config', required=False)
+def create(name, url, type, title, active, owner_org, frequency, config):
+    """Create new harvest source.
+    """
+    result = utils.create_harvest_source(
+        name, url, type, title, active, owner_org, frequency, config
+    )
+    click.echo(result)
+
+
+@source.command()
+@click.argument(u'id', metavar=u'SOURCE_ID_OR_NAME')
+def show(id):
+    """Shows a harvest source.
+    """
+    # harvester source {}
+    try:
+        result = utils.show_harvest_source(id)
+    except tk.ObjectNotFound as e:
+        tk.error_shout(u'Source <{}> not found.'.format(id))
+        raise click.Abort()
+    click.echo(result)
+
+
+
+class Harvester(object):
     '''Harvests remotely mastered metadata
-
     Usage:
 
-      harvester initdb
-        - Creates the necessary tables in the database
-
-      harvester source {name} {url} {type} [{title}] [{active}] [{owner_org}] [{frequency}] [{config}]
-        - create new harvest source
-
-      harvester source {source-id/name}
-        - shows a harvest source
 
       harvester rmsource {source-id/name}
         - remove (deactivate) a harvester source, whilst leaving any related
@@ -112,11 +160,6 @@ class Harvester(CkanCommand):
 
     '''
 
-    summary = __doc__.split('\n')[0]
-    usage = __doc__
-    max_args = 9
-    min_args = 0
-
     def __init__(self, name):
 
         super(Harvester, self).__init__(name)
@@ -140,23 +183,8 @@ class Harvester(CkanCommand):
     def command(self):
         self._load_config()
 
-        # We'll need a sysadmin user to perform most of the actions
-        # We will use the sysadmin site user (named as the site_id)
-        context = {'model': model, 'session': model.Session, 'ignore_auth': True}
-        self.admin_user = get_action('get_site_user')(context, {})
 
-        print('')
-
-        if len(self.args) == 0:
-            self.parser.print_usage()
-            sys.exit(1)
-        cmd = self.args[0]
-        if cmd == 'source':
-            if len(self.args) > 2:
-                self.create_harvest_source()
-            else:
-                self.show_harvest_source()
-        elif cmd == 'rmsource':
+        if cmd == 'rmsource':
             self.remove_harvest_source()
         elif cmd == 'clearsource':
             self.clear_harvest_source()
@@ -192,8 +220,6 @@ class Harvester(CkanCommand):
                 fetch_callback(consumer, method, header, body)
         elif cmd == 'purge_queues':
             self.purge_queues()
-        elif cmd == 'initdb':
-            self.initdb()
         elif cmd == 'import':
             self.initdb()
             self.import_stage()
@@ -212,94 +238,12 @@ class Harvester(CkanCommand):
     def _load_config(self):
         super(Harvester, self)._load_config()
 
-    def initdb(self):
-        from ckanext.harvest.model import setup as db_setup
-        db_setup()
 
-        print('DB tables created')
-
-    def create_harvest_source(self):
-
-        if len(self.args) >= 2:
-            name = unicode(self.args[1])
-        else:
-            print('Please provide a source name')
-            sys.exit(1)
-        if len(self.args) >= 3:
-            url = unicode(self.args[2])
-        else:
-            print('Please provide a source URL')
-            sys.exit(1)
-        if len(self.args) >= 4:
-            type = unicode(self.args[3])
-        else:
-            print('Please provide a source type')
-            sys.exit(1)
-
-        if len(self.args) >= 5:
-            title = unicode(self.args[4])
-        else:
-            title = None
-        if len(self.args) >= 6:
-            active = not(self.args[5].lower() == 'false' or
-                         self.args[5] == '0')
-        else:
-            active = True
-        if len(self.args) >= 7:
-            owner_org = unicode(self.args[6])
-        else:
-            owner_org = None
-        if len(self.args) >= 8:
-            frequency = unicode(self.args[7])
-            if not frequency:
-                frequency = 'MANUAL'
-        else:
-            frequency = 'MANUAL'
-        if len(self.args) >= 9:
-            config = unicode(self.args[8])
-        else:
-            config = None
-
-        try:
-            data_dict = {
-                    'name': name,
-                    'url': url,
-                    'source_type': type,
-                    'title': title,
-                    'active': active,
-                    'owner_org': owner_org,
-                    'frequency': frequency,
-                    'config': config,
-                    }
-
-            context = {
-                'model': model,
-                'session': model.Session,
-                'user': self.admin_user['name'],
-                'ignore_auth': True,
-            }
-            source = get_action('harvest_source_create')(context, data_dict)
-            print('Created new harvest source:')
-            self.print_harvest_source(source)
-
-            sources = get_action('harvest_source_list')(context, {})
-            self.print_there_are('harvest source', sources)
-
-            # Create a harvest job for the new source if not regular job.
-            if not data_dict['frequency']:
-                get_action('harvest_job_create')(
-                    context, {'source_id': source['id'], 'run': True})
-                print('A new Harvest Job for this source has also been created')
-
-        except ValidationError as e:
-            print('An error occurred:')
-            print(str(e.error_dict))
-            raise e
 
     def clear_harvest_source_history(self):
         source_id = None
         if len(self.args) >= 2:
-            source_id = unicode(self.args[1])
+            source_id = six.text_type(self.args[1])
 
         context = {
             'model': model,
@@ -318,22 +262,9 @@ class Harvester(CkanCommand):
             cleared_sources_dicts = get_action('harvest_sources_job_history_clear')(context, {})
             print('Cleared job history for all harvest sources: {0} source(s)'.format(len(cleared_sources_dicts)))
 
-    def show_harvest_source(self):
-
-        if len(self.args) >= 2:
-            source_id_or_name = unicode(self.args[1])
-        else:
-            print('Please provide a source name')
-            sys.exit(1)
-        context = {'model': model, 'session': model.Session,
-                   'user': self.admin_user['name']}
-        source = get_action('harvest_source_show')(
-            context, {'id': source_id_or_name})
-        self.print_harvest_source(source)
-
     def remove_harvest_source(self):
         if len(self.args) >= 2:
-            source_id_or_name = unicode(self.args[1])
+            source_id_or_name = six.text_type(self.args[1])
         else:
             print('Please provide a source id')
             sys.exit(1)
@@ -346,7 +277,7 @@ class Harvester(CkanCommand):
 
     def clear_harvest_source(self):
         if len(self.args) >= 2:
-            source_id_or_name = unicode(self.args[1])
+            source_id_or_name = six.text_type(self.args[1])
         else:
             print('Please provide a source id')
             sys.exit(1)
@@ -368,11 +299,11 @@ class Harvester(CkanCommand):
         context = {'model': model, 'session': model.Session, 'user': self.admin_user['name']}
         sources = get_action('harvest_source_list')(context, data_dict)
         self.print_harvest_sources(sources)
-        self.print_there_are(what=what, sequence=sources)
+        _print_there_are(what=what, sequence=sources)
 
     def create_harvest_job(self):
         if len(self.args) >= 2:
-            source_id_or_name = unicode(self.args[1])
+            source_id_or_name = six.text_type(self.args[1])
         else:
             print('Please provide a source id')
             sys.exit(1)
@@ -387,18 +318,18 @@ class Harvester(CkanCommand):
 
         self.print_harvest_job(job)
         jobs = get_action('harvest_job_list')(context, {'status': u'New'})
-        self.print_there_are('harvest job', jobs, condition=u'New')
+        _print_there_are('harvest job', jobs, condition=u'New')
 
     def list_harvest_jobs(self):
         context = {'model': model, 'user': self.admin_user['name'], 'session': model.Session}
         jobs = get_action('harvest_job_list')(context, {})
 
         self.print_harvest_jobs(jobs)
-        self.print_there_are(what='harvest job', sequence=jobs)
+        _print_there_are(what='harvest job', sequence=jobs)
 
     def job_abort(self):
         if len(self.args) >= 2:
-            job_or_source_id_or_name = unicode(self.args[1])
+            job_or_source_id_or_name = six.text_type(self.args[1])
         else:
             print('Please provide a job id or source name/id')
             sys.exit(1)
@@ -422,7 +353,7 @@ class Harvester(CkanCommand):
 
         # Determine the source
         if len(self.args) >= 2:
-            source_id_or_name = unicode(self.args[1])
+            source_id_or_name = six.text_type(self.args[1])
         else:
             print('Please provide a source id')
             sys.exit(1)
@@ -463,7 +394,7 @@ class Harvester(CkanCommand):
     def import_stage(self):
 
         if len(self.args) >= 2:
-            source_id_or_name = unicode(self.args[1])
+            source_id_or_name = six.text_type(self.args[1])
             context = {'model': model, 'session': model.Session,
                        'user': self.admin_user['name']}
             source = get_action('harvest_source_show')(
@@ -503,23 +434,8 @@ class Harvester(CkanCommand):
         if sources:
             print('')
         for source in sources:
-            self.print_harvest_source(source)
+            print(_print_harvest_source(source))
 
-    def print_harvest_source(self, source):
-        print('Source id: {0}'.format(source.get('id')))
-        if 'name' in source:
-            # 'name' is only there if the source comes from the Package
-            print('     name: {0}'.format(source.get('name')))
-        print('      url: {0}'.format(source.get('url')))
-        # 'type' if source comes from HarvestSource, 'source_type' if it comes
-        # from the Package
-        print('     type: {0}'.format(source.get('source_type') or
-                                      source.get('type')))
-        print('   active: {0}'.format(source.get('active',
-                                                 source.get('state') == 'active')))
-        print('frequency: {0}'.format(source.get('frequency')))
-        print('     jobs: {0}'.format(source.get('status').get('job_count')))
-        print('')
 
     def print_harvest_jobs(self, jobs):
         if jobs:
@@ -539,25 +455,15 @@ class Harvester(CkanCommand):
 
         print('')
 
-    def print_there_are(self, what, sequence, condition=''):
-        is_singular = self.is_singular(sequence)
-        print('There {0} {1} {2}{3}{4}'.format(
-            is_singular and 'is' or 'are',
-            len(sequence),
-            condition and ('{0} '.format(condition.lower())) or '',
-            what,
-            not is_singular and 's' or '',
-        ))
 
-    def is_singular(self, sequence):
-        return len(sequence) == 1
 
     def clean_harvest_log(self):
         from datetime import datetime, timedelta
+        from ckantoolkit import config
         from ckanext.harvest.model import clean_harvest_log
 
         # Log time frame - in days
-        log_timeframe = toolkit.asint(config.get('ckan.harvest.log_timeframe', 30))
+        log_timeframe = tk.asint(config.get('ckan.harvest.log_timeframe', 30))
         condition = datetime.utcnow() - timedelta(days=log_timeframe)
 
         # Delete logs older then the given date
