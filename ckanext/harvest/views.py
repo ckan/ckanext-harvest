@@ -1,25 +1,24 @@
 # -*- coding: utf-8 -*-
 
-from flask import Blueprint
-
 import ckantoolkit as tk
+from flask import Blueprint, make_response
 
 import ckanext.harvest.utils as utils
 
-harvest = Blueprint("harvester", __name__)
+harvester = Blueprint("harvester", __name__)
 
 
-@harvest.before_request
+@harvester.before_request
 def before_request():
     tk.c.dataset_type = utils.DATASET_TYPE_NAME
 
 
 def delete(id):
-    return "delete"
+    return utils.delete_view(id)
 
 
 def refresh(id):
-    return "refresh"
+    return utils.refresh_view(id)
 
 
 def admin(id):
@@ -27,69 +26,76 @@ def admin(id):
 
 
 def about(id):
-    return "about"
+    return utils.about_view(id)
 
 
 def clear(id):
-    return "clear"
+    return utils.clear_view(id)
 
 
 def job_list(source):
-    return "job_list"
+    return utils.job_list_view(source)
 
 
 def job_show_last(source):
-    return "job_show_last"
+    return utils.job_show_last_view(source)
 
 
 def job_show(source, id):
-    return "job_show"
+    return utils.job_show_view(id)
 
 
 def job_abort(source, id):
-    return "job_abort"
+    return utils.job_abort_view(source, id)
 
 
 def object_show(id, ref_type):
-    return "object_show {}".format(ref_type)
+    (response, content) = utils.object_show_view(id, ref_type, make_response())
+    response.set_data(content)
+    return response
 
 
-harvest.add_url_rule(
-    "/" + utils.DATASET_TYPE_NAME + "/delete/<id>", view_func=delete,
+harvester.add_url_rule(
+    "/" + utils.DATASET_TYPE_NAME + "/delete/<id>",
+    view_func=delete,
 )
-harvest.add_url_rule(
-    "/" + utils.DATASET_TYPE_NAME + "/refresh/<id>", view_func=refresh,
+harvester.add_url_rule("/" + utils.DATASET_TYPE_NAME + "/refresh/<id>",
+                       view_func=refresh,
+                       methods=(u'POST', ))
+harvester.add_url_rule(
+    "/" + utils.DATASET_TYPE_NAME + "/admin/<id>",
+    view_func=admin,
 )
-harvest.add_url_rule(
-    "/" + utils.DATASET_TYPE_NAME + "/admin/<id>", view_func=admin,
+harvester.add_url_rule(
+    "/" + utils.DATASET_TYPE_NAME + "/about/<id>",
+    view_func=about,
 )
-harvest.add_url_rule(
-    "/" + utils.DATASET_TYPE_NAME + "/about/<id>", view_func=about,
+harvester.add_url_rule("/" + utils.DATASET_TYPE_NAME + "/clear/<id>",
+                       view_func=clear,
+                       methods=(u'POST', ))
+harvester.add_url_rule(
+    "/" + utils.DATASET_TYPE_NAME + "/<source>/job",
+    view_func=job_list,
 )
-harvest.add_url_rule(
-    "/" + utils.DATASET_TYPE_NAME + "/clear/<id>", view_func=clear,
-)
-harvest.add_url_rule(
-    "/" + utils.DATASET_TYPE_NAME + "/<source>/job", view_func=job_list,
-)
-harvest.add_url_rule(
+harvester.add_url_rule(
     "/" + utils.DATASET_TYPE_NAME + "/<source>/job/last",
     view_func=job_show_last,
 )
 
-harvest.add_url_rule(
-    "/" + utils.DATASET_TYPE_NAME + "/<source>/job/<id>", view_func=job_show,
+harvester.add_url_rule(
+    "/" + utils.DATASET_TYPE_NAME + "/<source>/job/<id>",
+    view_func=job_show,
 )
-harvest.add_url_rule(
+harvester.add_url_rule(
     "/" + utils.DATASET_TYPE_NAME + "/<source>/job/<id>/abort",
     view_func=job_abort,
 )
-harvest.add_url_rule(
+harvester.add_url_rule(
     "/" + utils.DATASET_TYPE_NAME + "/object/<id>",
     view_func=object_show,
     defaults={"ref_type": "object"},
 )
-harvest.add_url_rule(
+harvester.add_url_rule(
     "/dataset/harvest_object/<id>",
     view_func=object_show,
     defaults={"ref_type": "dataset"},
@@ -97,5 +103,4 @@ harvest.add_url_rule(
 
 
 def get_blueprints():
-    # import ipdb; ipdb.set_trace()
-    return [harvest]
+    return [harvester]
