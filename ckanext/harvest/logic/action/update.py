@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
+
 import hashlib
 import json
+import six
 
 import logging
 import datetime
@@ -434,7 +437,7 @@ def harvest_objects_import(context, data_dict):
 
     for obj_id in last_objects_ids:
         if segments and \
-                str(hashlib.md5(obj_id[0]).hexdigest())[0] not in segments:
+                str(hashlib.md5(six.ensure_binary(obj_id[0])).hexdigest())[0] not in segments:
             continue
 
         obj = session.query(HarvestObject).get(obj_id)

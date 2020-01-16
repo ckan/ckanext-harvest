@@ -5,12 +5,13 @@ import json
 from logging import getLogger
 
 from six import string_types, text_type
-from sqlalchemy.util import OrderedDict
+from collections import OrderedDict
 
 from ckan import logic
 from ckan import model
 import ckan.plugins as p
 from ckan.lib.plugins import DefaultDatasetForm
+
 try:
     from ckan.lib.plugins import DefaultTranslation
 except ImportError:
@@ -251,6 +252,15 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
             mappings.update({
                 'harvest_read': 'harvest.read',
                 'harvest_edit': 'harvest.edit',
+            })
+            bp_routes = [
+                "delete", "refresh", "admin", "about",
+                "clear", "job_list", "job_show_last", "job_show",
+                "job_abort", "object_show"
+            ]
+            mappings.update({
+                'harvest_' + route: 'harvester.' + route
+                for route in bp_routes
             })
             # https://github.com/ckan/ckan/pull/4521
             config['ckan.legacy_route_mappings'] = json.dumps(mappings)

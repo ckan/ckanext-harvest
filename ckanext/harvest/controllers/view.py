@@ -21,6 +21,7 @@ import json
 from ckan.lib.base import BaseController, c, request, response, render, abort
 
 from ckanext.harvest.logic import HarvestJobExists, HarvestSourceInactiveError
+import ckanext.harvest.utils as utils
 from ckanext.harvest.utils import (
     DATASET_TYPE_NAME
 )
@@ -220,19 +221,7 @@ class ViewController(BaseController):
             abort(401, self.not_auth_message)
 
     def admin(self, id):
-        try:
-            context = {'model': model, 'user': c.user}
-            p.toolkit.check_access('harvest_source_update', context, {'id': id})
-            harvest_source = p.toolkit.get_action('harvest_source_show')(
-                context, {'id': id}
-            )
-            return render(
-                'source/admin.html', extra_vars={'harvest_source': harvest_source}
-            )
-        except p.toolkit.ObjectNotFound:
-            abort(404, _('Harvest source not found'))
-        except p.toolkit.NotAuthorized:
-            abort(401, self.not_auth_message)
+        return utils.admin_view(id)
 
     def abort_job(self, source, id):
         try:
