@@ -45,7 +45,7 @@
                   </span>
                 </li>
               {% endif %}
-              {% for action in ['added', 'updated', 'deleted'] %}
+              {% for action in ['added', 'updated', 'deleted', 'not modified'] %}
                 <li>
                   <span class="label" data-diff="{{ action }}" title="{{ _(action) }}">
                     {% if action in job.stats and job.stats[action] > 0 %}
@@ -66,4 +66,3 @@
 
 </div>
 {% endblock %}
-  

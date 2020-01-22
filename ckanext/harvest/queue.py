@@ -236,8 +236,12 @@ class RedisConsumer(object):
     def consume(self, queue):
         while True:
             key, body = self.redis.blpop(self.routing_key)
-            self.redis.set(self.persistance_key(body),
-                           str(datetime.datetime.now()))
+            try:
+                self.redis.set(self.persistance_key(body), str(datetime.datetime.now()))
+            except Exception as e:
+                log.error("Redis Exception: %s", e)
+                continue
+
             yield (FakeMethod(body), self, body)
 
     def persistance_key(self, message):
