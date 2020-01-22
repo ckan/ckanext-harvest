@@ -439,7 +439,7 @@ dataset dict in the ``content`` property.
 
 This is a simple example::
 
-    from ckanext.harvester.harvesters.ckanharvester import CKANHarvester
+    from ckanext.harvest.harvesters.ckanharvester import CKANHarvester
 
     class MySiteCKANHarvester(CKANHarvester):
 
