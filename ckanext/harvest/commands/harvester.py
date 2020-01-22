@@ -434,7 +434,7 @@ class Harvester(CkanCommand):
         # Determine the job
         try:
             job_dict = get_action('harvest_job_create')(
-                context, {'source_id': source['id']})
+                context, {'source_id': source['id'], 'run': False})
         except HarvestJobExists:
             running_jobs = get_action('harvest_job_list')(
                 context, {'source_id': source['id'], 'status': 'Running'})
@@ -454,6 +454,9 @@ class Harvester(CkanCommand):
                     'Multiple "New" jobs for this source! {0}'.format(jobs)
                 job_dict = jobs[0]
         job_obj = HarvestJob.get(job_dict['id'])
+
+        if len(self.args) >= 3 and self.args[2].startswith('force-import='):
+            job_obj.force_import = self.args[2].split('=')[-1]
 
         harvester = queue.get_harvester(source['source_type'])
         assert harvester, \
