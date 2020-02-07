@@ -36,7 +36,6 @@ log = getLogger(__name__)
 assert not log.disabled
 
 
-
 class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
 
     p.implements(p.IConfigurable)
@@ -196,7 +195,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
         from ckanext.harvest.logic.schema import harvest_source_create_package_schema
         schema = harvest_source_create_package_schema()
         if self.startup:
-            schema['id'] = [six.text_type]
+            schema['id'] = [text_type]
 
         return schema
 
