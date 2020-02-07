@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import json
-import factories
+from . import factories
 import unittest
 from mock import patch
 from nose.tools import assert_equal, assert_raises, assert_in
@@ -97,7 +98,7 @@ class MockHarvesterForActionTests(p.SingletonPlugin):
                 if not isinstance(config_obj['custom_option'], list):
                     raise ValueError('custom_option must be a list')
 
-        except ValueError, e:
+        except ValueError as e:
             raise e
 
         return config

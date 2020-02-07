@@ -1,14 +1,21 @@
+# -*- coding: utf-8 -*-
+
 import logging
-import urlparse
 import json
 
 from ckan.lib.navl.dictization_functions import Invalid, validate
 from ckan import model
 from ckan.plugins import PluginImplementations
 
-from ckanext.harvest.plugin import DATASET_TYPE_NAME
+from ckanext.harvest.utils import (
+    DATASET_TYPE_NAME
+)
 from ckanext.harvest.model import HarvestSource, UPDATE_FREQUENCIES, HarvestJob
 from ckanext.harvest.interfaces import IHarvester
+
+from six.moves.urllib.parse import (
+    urlparse, urlunparse
+)
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +42,7 @@ def _normalize_url(url):
     '''Strips off parameters off a URL, and an unnecessary port number, so that
     simple variations on a URL are ignored, to used to help avoid getting two
     harvesters for the same URL.'''
-    o = urlparse.urlparse(url)
+    o = urlparse(url)
 
     # Normalize port
     if ':' in o.netloc:
@@ -51,7 +58,7 @@ def _normalize_url(url):
     # Remove trailing slash
     path = o.path.rstrip('/')
 
-    check_url = urlparse.urlunparse((
+    check_url = urlunparse((
         o.scheme,
         netloc,
         path,
@@ -136,7 +143,7 @@ def harvest_source_config_validator(key, data, errors, context):
             if hasattr(harvester, 'validate_config'):
                 try:
                     config = harvester.validate_config(data[key])
-                except Exception, e:
+                except Exception as e:
                     raise Invalid('Error parsing the configuration options: %s'
                                   % e)
                 if config is not None:
@@ -147,7 +154,7 @@ def harvest_source_config_validator(key, data, errors, context):
 
 def keep_not_empty_extras(key, data, errors, context):
     extras = data.pop(key, {})
-    for extras_key, value in extras.iteritems():
+    for extras_key, value in extras.items():
         if value:
             data[key[:-1] + (extras_key,)] = value
 
@@ -174,15 +181,15 @@ def harvest_source_extra_validator(key, data, errors, context):
         break
 
     extra_data, extra_errors = validate(data.get(key, {}), extra_schema)
-    for key in extra_data.keys():
+    for key in list(extra_data.keys()):
         # only allow keys that appear in at least one harvester
         if key not in all_extra_fields:
             extra_data.pop(key)
 
-    for key, value in extra_data.iteritems():
+    for key, value in extra_data.items():
         data[(key,)] = value
 
-    for key, value in extra_errors.iteritems():
+    for key, value in extra_errors.items():
         errors[(key,)] = value
 
     # need to get config out of extras as __extra runs
@@ -215,7 +222,7 @@ def harvest_source_convert_from_config(key, data, errors, context):
     config = data[key]
     if config:
         config_dict = json.loads(config)
-        for key, value in config_dict.iteritems():
+        for key, value in config_dict.items():
             data[(key,)] = value
 
 

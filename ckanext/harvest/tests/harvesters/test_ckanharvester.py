@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import copy
 
 from nose.tools import assert_equal, assert_raises, assert_in
@@ -18,7 +19,7 @@ import ckanext.harvest.model as harvest_model
 from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.harvest.harvesters.ckanharvester import CKANHarvester
 
-import mock_ckan
+from . import mock_ckan
 
 # Start CKAN-alike server we can test harvesting against it
 mock_ckan.serve()
