@@ -59,5 +59,6 @@ paster harvester initdb -c ckan/test-core.ini
 echo "Moving test.ini into a subdir..."
 mkdir subdir
 mv test-core.ini subdir
+mv test-core-nose.ini subdir
 
 echo "travis-build.bash is done."
