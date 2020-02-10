@@ -1,7 +1,7 @@
 from ckan.lib.helpers import url_for
 
 from ckantoolkit.tests import helpers, factories
-from ckanext.harvest.tests import factories as harvest_factories
+from ckanext.harvest.tests.nose import factories as harvest_factories
 from nose.tools import assert_in
 import ckanext.harvest.model as harvest_model
 

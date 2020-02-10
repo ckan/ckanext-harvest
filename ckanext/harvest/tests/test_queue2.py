@@ -3,7 +3,11 @@
 '''
 import json
 
+<<<<<<< HEAD
 import pytest
+=======
+from ckantoolkit.tests.helpers import reset_db
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0
 
 from ckan import model
 from ckan import plugins as p
@@ -84,6 +88,7 @@ class MockHarvester(p.SingletonPlugin):
         return True
 
 
+<<<<<<< HEAD
 @pytest.mark.usefixtures('with_plugins', 'clean_db', 'harvest_setup', 'clean_queues')
 @pytest.mark.ckan_config('ckan.plugins', 'harvest test_harvester2')
 class TestEndStates(object):
@@ -176,3 +181,7 @@ class TestEndStates(object):
         assert result['state'] == 'COMPLETE'
         assert result['report_status'] == 'not modified'
         assert result['errors'] == []
+=======
+def test_a(self):
+    assert 1
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0

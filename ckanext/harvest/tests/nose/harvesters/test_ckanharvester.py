@@ -12,7 +12,7 @@ from ckan import model
 from ckan.plugins import toolkit
 
 from ckanext.harvest.harvesters.ckanharvester import ContentFetchError
-from ckanext.harvest.tests.factories import (HarvestSourceObj, HarvestJobObj,
+from ckanext.harvest.tests.nose.factories import (HarvestSourceObj, HarvestJobObj,
                                              HarvestObjectObj)
 from ckanext.harvest.tests.lib import run_harvest
 import ckanext.harvest.model as harvest_model
@@ -113,7 +113,7 @@ class TestCkanHarvester(object):
         # change the modified date
         datasets = copy.deepcopy(mock_ckan.DATASETS)
         datasets[1]['metadata_modified'] = '2050-05-09T22:00:01.486366'
-        with patch('ckanext.harvest.tests.harvesters.mock_ckan.DATASETS',
+        with patch('ckanext.harvest.tests.nose.harvesters.mock_ckan.DATASETS',
                    datasets):
             results_by_guid = run_harvest(
                 url='http://localhost:%s/' % mock_ckan.PORT,

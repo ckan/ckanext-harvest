@@ -3,7 +3,13 @@ import json
 import pytest
 
 from ckan import plugins as p
+<<<<<<< HEAD
 from ckan import model
+=======
+
+from ckantoolkit.tests import factories as ckan_factories, helpers
+from ckanext.harvest.tests import factories
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0
 
 from ckantoolkit import ValidationError, get_action
 from ckantoolkit.tests import factories as ckan_factories, helpers
@@ -60,7 +66,11 @@ SOURCE_DICT = {
 
 @pytest.mark.usefixtures('with_plugins', 'clean_db', 'harvest_setup', 'clean_queues')
 @pytest.mark.ckan_config('ckan.plugins', 'harvest test_action_harvester')
+<<<<<<< HEAD
 class HarvestSourceActionBase(object):
+=======
+class HarvestSourceActionBase():
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0
 
     def _get_source_dict(self):
         return {
@@ -79,18 +89,33 @@ class HarvestSourceActionBase(object):
         if 'id' in test_data:
             source_dict['id'] = test_data['id']
 
+<<<<<<< HEAD
         with pytest.raises(ValidationError) as e:
             helpers.call_action(self.action, **source_dict)
 
         for key in ('name', 'title', 'url', 'source_type'):
             assert e.value.error_dict[key] == [u'Missing value']
+=======
+
+        result = helpers.call_action(self.action,
+                                 **source_dict)
+
+        for key in ('name', 'title', 'url', 'source_type'):
+            assert result[key] == [u'Missing value']
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0
 
     def test_invalid_unknown_type(self):
         source_dict = self._get_source_dict()
         source_dict['source_type'] = 'unknown'
 
+<<<<<<< HEAD
         with pytest.raises(ValidationError) as e:
             helpers.call_action(self.action, **source_dict)
+=======
+
+        result = helpers.call_action(self.action,
+                                 **source_dict)
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0
 
         assert u'Unknown harvester type' in e.value.error_dict['source_type'][0]
 
@@ -99,8 +124,14 @@ class HarvestSourceActionBase(object):
         source_dict = self._get_source_dict()
         source_dict['frequency'] = wrong_frequency
 
+<<<<<<< HEAD
         with pytest.raises(ValidationError) as e:
             helpers.call_action(self.action, **source_dict)
+=======
+
+        result = helpers.call_action(self.action,
+                                 **source_dict)
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0
 
         assert u'Frequency {0} not recognised'.format(wrong_frequency) in e.value.error_dict['frequency'][0]
 
@@ -108,15 +139,26 @@ class HarvestSourceActionBase(object):
         source_dict = self._get_source_dict()
         source_dict['config'] = 'not_json'
 
+<<<<<<< HEAD
         with pytest.raises(ValidationError) as e:
             helpers.call_action(self.action, **source_dict)
+=======
+
+        result = helpers.call_action(self.action,
+                                 **source_dict)
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0
 
         assert u'Error parsing the configuration options: No JSON object could be decoded' in e.value.error_dict['config'][0]
 
         source_dict['config'] = json.dumps({'custom_option': 'not_a_list'})
 
+<<<<<<< HEAD
         with pytest.raises(ValidationError) as e:
             helpers.call_action(self.action, **source_dict)
+=======
+        result = helpers.call_action(self.action,
+                                 **source_dict)
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0
 
         assert u'Error parsing the configuration options: custom_option must be a list' in e.value.error_dict['config'][0]
 
@@ -129,8 +171,13 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
 
         source_dict = self._get_source_dict()
 
+<<<<<<< HEAD
         result = helpers.call_action(
             'harvest_source_create', **source_dict)
+=======
+        result = helpers.call_action('harvest_source_create',
+                                 **source_dict)
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0
 
         for key in source_dict.keys():
             assert source_dict[key] == result[key]
@@ -144,13 +191,19 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
         source_dict = self._get_source_dict()
         source_dict['name'] = 'test-source-action-new'
 
+<<<<<<< HEAD
         with pytest.raises(ValidationError) as e:
             result = helpers.call_action(
                 'harvest_source_create', **source_dict)
+=======
+        result = helpers.call_action('harvest_source_create',
+                                 **source_dict)
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0
 
         assert u'There already is a Harvest Source for this URL' in e.value.error_dict['url'][0]
 
 
+<<<<<<< HEAD
 class HarvestSourceFixtureMixin(object):
     def _get_source_dict(self):
         '''Not only returns a source_dict, but creates the HarvestSource object
@@ -385,3 +438,5 @@ class TestActions():
         assert job['status'] == 'Running'
         assert job['gather_started'] is None
         assert 'stats' in job.keys()
+=======
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0
