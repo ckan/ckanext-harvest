@@ -34,14 +34,14 @@ class MockHarvester(SingletonPlugin):
         return []
 
     def fetch_stage(self, harvest_object):
-        assert_equal(harvest_object.state, "FETCH")
+        assert harvest_object.state == "FETCH"
         assert harvest_object.fetch_started is not None
         harvest_object.content = json.dumps({'name': harvest_object.guid})
         harvest_object.save()
         return True
 
     def import_stage(self, harvest_object):
-        assert_equal(harvest_object.state, "IMPORT")
+        assert harvest_object.state == "IMPORT"
         assert harvest_object.fetch_finished is not None
         assert harvest_object.import_started is not None
 
