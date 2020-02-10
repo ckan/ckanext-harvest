@@ -3,7 +3,11 @@
 '''
 import json
 
+<<<<<<< HEAD
+import pytest
+=======
 from ckantoolkit.tests.helpers import reset_db
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0
 
 from ckan import model
 from ckan import plugins as p
@@ -84,5 +88,100 @@ class MockHarvester(p.SingletonPlugin):
         return True
 
 
+<<<<<<< HEAD
+@pytest.mark.usefixtures('with_plugins', 'clean_db', 'harvest_setup', 'clean_queues')
+@pytest.mark.ckan_config('ckan.plugins', 'harvest test_harvester2')
+class TestEndStates(object):
+
+    def test_create_dataset(self):
+        guid = 'obj-create'
+        MockHarvester._set_test_params(guid=guid)
+
+        results_by_guid = run_harvest(
+            url='http://some-url.com',
+            harvester=MockHarvester())
+
+        result = results_by_guid[guid]
+        assert result['state'] == 'COMPLETE'
+        assert result['report_status'] == 'added'
+        assert result['errors'] == []
+
+    def test_update_dataset(self):
+        guid = 'obj-update'
+        MockHarvester._set_test_params(guid=guid)
+
+        # create the original harvest_object and dataset
+        run_harvest(
+            url='http://some-url.com',
+            harvester=MockHarvester())
+        # update it
+        results_by_guid = run_harvest(
+            url='http://some-url.com',
+            harvester=MockHarvester())
+
+        result = results_by_guid[guid]
+        assert result['state'] == 'COMPLETE'
+        assert result['report_status'] == 'updated'
+        assert result['errors'] == []
+
+    def test_delete_dataset(self):
+        guid = 'obj-delete'
+        MockHarvester._set_test_params(guid=guid)
+        # create the original harvest_object and dataset
+        run_harvest(
+            url='http://some-url.com',
+            harvester=MockHarvester())
+        MockHarvester._set_test_params(guid=guid, delete=True)
+
+        # delete it
+        results_by_guid = run_harvest(
+            url='http://some-url.com',
+            harvester=MockHarvester())
+
+        result = results_by_guid[guid]
+        assert result['state'] == 'COMPLETE'
+        assert result['report_status'] == 'deleted'
+        assert result['errors'] == []
+
+    def test_obj_error(self):
+        guid = 'obj-error'
+        MockHarvester._set_test_params(guid=guid, object_error=True)
+
+        results_by_guid = run_harvest(
+            url='http://some-url.com',
+            harvester=MockHarvester())
+
+        result = results_by_guid[guid]
+        assert result['state'] == 'ERROR'
+        assert result['report_status'] == 'errored'
+        assert result['errors'] == []
+
+    def test_fetch_unchanged(self):
+        guid = 'obj-error'
+        MockHarvester._set_test_params(guid=guid, fetch_object_unchanged=True)
+
+        results_by_guid = run_harvest(
+            url='http://some-url.com',
+            harvester=MockHarvester())
+
+        result = results_by_guid[guid]
+        assert result['state'] == 'COMPLETE'
+        assert result['report_status'] == 'not modified'
+        assert result['errors'] == []
+
+    def test_import_unchanged(self):
+        guid = 'obj-error'
+        MockHarvester._set_test_params(guid=guid, import_object_unchanged=True)
+
+        results_by_guid = run_harvest(
+            url='http://some-url.com',
+            harvester=MockHarvester())
+
+        result = results_by_guid[guid]
+        assert result['state'] == 'COMPLETE'
+        assert result['report_status'] == 'not modified'
+        assert result['errors'] == []
+=======
 def test_a(self):
     assert 1
+>>>>>>> 4ee8fa2a5df10b8ea583618e2e89076ef7f7c1b0
