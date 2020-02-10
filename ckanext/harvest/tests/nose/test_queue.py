@@ -1,6 +1,7 @@
-import pytest
 from mock import patch
 
+from ckantoolkit.tests.helpers import reset_db
+import ckanext.harvest.model as harvest_model
 from ckanext.harvest.model import HarvestObject, HarvestObjectExtra
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.queue as queue
@@ -8,7 +9,9 @@ from ckan.plugins.core import SingletonPlugin, implements
 import json
 import ckan.logic as logic
 from ckan import model
+from nose.tools import assert_equal, ok_
 from ckan.lib.base import config
+from nose.plugins.skip import SkipTest
 import uuid
 
 
@@ -33,14 +36,14 @@ class MockHarvester(SingletonPlugin):
         return []
 
     def fetch_stage(self, harvest_object):
-        assert harvest_object.state == "FETCH"
+        assert_equal(harvest_object.state, "FETCH")
         assert harvest_object.fetch_started is not None
         harvest_object.content = json.dumps({'name': harvest_object.guid})
         harvest_object.save()
         return True
 
     def import_stage(self, harvest_object):
-        assert harvest_object.state == "IMPORT"
+        assert_equal(harvest_object.state, "IMPORT")
         assert harvest_object.fetch_finished is not None
         assert harvest_object.import_started is not None
 
@@ -85,9 +88,11 @@ class MockHarvester(SingletonPlugin):
         return True
 
 
-@pytest.mark.usefixtures('with_plugins', 'clean_db', 'harvest_setup', 'clean_queues')
-@pytest.mark.ckan_config('ckan.plugins', 'harvest test_harvester')
 class TestHarvestQueue(object):
+    @classmethod
+    def setup_class(cls):
+        reset_db()
+        harvest_model.setup()
 
     def test_01_basic_harvester(self):
 
@@ -164,13 +169,13 @@ class TestHarvestQueue(object):
         assert count == 3
         all_objects = model.Session.query(HarvestObject).filter_by(current=True).all()
 
-        assert len(all_objects) == 3
-        assert all_objects[0].state == 'COMPLETE'
-        assert all_objects[0].report_status == 'added'
-        assert all_objects[1].state == 'COMPLETE'
-        assert all_objects[1].report_status == 'added'
-        assert all_objects[2].state == 'COMPLETE'
-        assert all_objects[2].report_status == 'added'
+        assert_equal(len(all_objects), 3)
+        assert_equal(all_objects[0].state, 'COMPLETE')
+        assert_equal(all_objects[0].report_status, 'added')
+        assert_equal(all_objects[1].state, 'COMPLETE')
+        assert_equal(all_objects[1].report_status, 'added')
+        assert_equal(all_objects[2].state, 'COMPLETE')
+        assert_equal(all_objects[2].report_status, 'added')
 
         # fire run again to check if job is set to Finished
         logic.get_action('harvest_jobs_run')(
@@ -183,18 +188,18 @@ class TestHarvestQueue(object):
             {'id': job_id}
         )
 
-        assert harvest_job['status'] == u'Finished'
-        assert harvest_job['stats'] == {'added': 3, 'updated': 0, 'not modified': 0, 'errored': 0, 'deleted': 0}
+        assert_equal(harvest_job['status'], u'Finished')
+        assert_equal(harvest_job['stats'], {'added': 3, 'updated': 0, 'not modified': 0, 'errored': 0, 'deleted': 0})
 
         harvest_source_dict = logic.get_action('harvest_source_show')(
             context,
             {'id': harvest_source['id']}
         )
 
-        assert harvest_source_dict['status']['last_job']['stats'] == {
-            'added': 3, 'updated': 0, 'not modified': 0, 'errored': 0, 'deleted': 0}
-        assert harvest_source_dict['status']['total_datasets'] == 3
-        assert harvest_source_dict['status']['job_count'] == 1
+        assert_equal(harvest_source_dict['status']['last_job']['stats'], {'added': 3, 'updated': 0,
+                                                                          'not modified': 0, 'errored': 0, 'deleted': 0})
+        assert_equal(harvest_source_dict['status']['total_datasets'], 3)
+        assert_equal(harvest_source_dict['status']['job_count'], 1)
 
         # Second run
         harvest_job = logic.get_action('harvest_job_create')(
@@ -226,16 +231,16 @@ class TestHarvestQueue(object):
         count = model.Session.query(model.Package) \
             .filter(model.Package.type == 'dataset') \
             .count()
-        assert count == 3
+        assert_equal(count, 3)
 
         all_objects = model.Session.query(HarvestObject).filter_by(report_status='added').all()
-        assert len(all_objects) == 3
+        assert_equal(len(all_objects), 3)
 
         all_objects = model.Session.query(HarvestObject).filter_by(report_status='updated').all()
-        assert len(all_objects) == 2
+        assert_equal(len(all_objects), 2)
 
         all_objects = model.Session.query(HarvestObject).filter_by(report_status='deleted').all()
-        assert len(all_objects) == 1
+        assert_equal(len(all_objects), 1)
 
         # run to make sure job is marked as finshed
         logic.get_action('harvest_jobs_run')(
@@ -247,24 +252,24 @@ class TestHarvestQueue(object):
             context,
             {'id': job_id}
         )
-        assert harvest_job['stats'] == {'added': 0, 'updated': 2, 'not modified': 0, 'errored': 0, 'deleted': 1}
+        assert_equal(harvest_job['stats'], {'added': 0, 'updated': 2, 'not modified': 0, 'errored': 0, 'deleted': 1})
 
         harvest_source_dict = logic.get_action('harvest_source_show')(
             context,
             {'id': harvest_source['id']}
         )
 
-        assert harvest_source_dict['status']['last_job']['stats'] == {
-            'added': 0, 'updated': 2, 'not modified': 0, 'errored': 0, 'deleted': 1}
-        assert harvest_source_dict['status']['total_datasets'] == 2
-        assert harvest_source_dict['status']['job_count'] == 2
+        assert_equal(harvest_source_dict['status']['last_job']['stats'], {'added': 0, 'updated': 2,
+                                                                          'not modified': 0, 'errored': 0, 'deleted': 1})
+        assert_equal(harvest_source_dict['status']['total_datasets'], 2)
+        assert_equal(harvest_source_dict['status']['job_count'], 2)
 
     def test_redis_queue_purging(self):
         '''
         Test that Redis queue purging doesn't purge the wrong keys.
         '''
         if config.get('ckan.harvest.mq.type') != 'redis':
-            pytest.skip()
+            raise SkipTest()
         redis = queue.get_connection()
         try:
             redis.set('ckanext-harvest:some-random-key', 'foobar')
@@ -284,19 +289,24 @@ class TestHarvestQueue(object):
             fetch_consumer = queue.get_fetch_consumer()
             next(fetch_consumer.consume(queue.get_fetch_queue_name()))
 
-            assert redis.dbsize() > num_keys
+            ok_(redis.dbsize() > num_keys)
 
             queue.purge_queues()
 
-            assert redis.get('ckanext-harvest:some-random-key') == 'foobar'
-            assert redis.dbsize() == num_keys
-            assert redis.llen(queue.get_gather_routing_key()) == 0
-            assert redis.llen(queue.get_fetch_routing_key()) == 0
+            assert_equal(redis.get('ckanext-harvest:some-random-key'),
+                         'foobar')
+            assert_equal(redis.dbsize(), num_keys)
+            assert_equal(redis.llen(queue.get_gather_routing_key()), 0)
+            assert_equal(redis.llen(queue.get_fetch_routing_key()), 0)
         finally:
             redis.delete('ckanext-harvest:some-random-key')
 
 
 class TestHarvestCorruptRedis(object):
+    @classmethod
+    def setup_class(cls):
+        reset_db()
+        harvest_model.setup()
 
     @patch('ckanext.harvest.queue.log.error')
     def test_redis_corrupt(self, mock_log_error):
@@ -304,7 +314,7 @@ class TestHarvestCorruptRedis(object):
         Test that corrupt Redis doesn't stop harvest process and still processes other jobs.
         '''
         if config.get('ckan.harvest.mq.type') != 'redis':
-            pytest.skip()
+            raise SkipTest()
         redis = queue.get_connection()
         try:
             redis.set('ckanext-harvest:some-random-key-2', 'foobar')
