@@ -11,7 +11,7 @@ class HarvestSource(factory.Factory):
     name = factory.Sequence(lambda n: 'test_source_{n}'.format(n=n))
     title = factory.Sequence(lambda n: 'test title {n}'.format(n=n))
     url = factory.Sequence(lambda n: 'http://{n}.test.com'.format(n=n))
-    source_type = 'test'  # defined in test_queue.py
+    source_type = 'test-nose'  # defined in test_queue.py
     id = '{0}_id'.format(name).lower()
 
     @classmethod

@@ -19,7 +19,7 @@ class MockHarvester(SingletonPlugin):
     implements(IHarvester)
 
     def info(self):
-        return {'name': 'test', 'title': 'test', 'description': 'test'}
+        return {'name': 'test-nose', 'title': 'test', 'description': 'test'}
 
     def gather_stage(self, harvest_job):
 
@@ -113,7 +113,7 @@ class TestHarvestQueue(object):
             'title': 'Test Source',
             'name': 'test-source',
             'url': 'basic_test',
-            'source_type': 'test',
+            'source_type': 'test-nose',
         }
 
         harvest_source = logic.get_action('harvest_source_create')(
@@ -121,7 +121,7 @@ class TestHarvestQueue(object):
             source_dict
         )
 
-        assert harvest_source['source_type'] == 'test', harvest_source
+        assert harvest_source['source_type'] == 'test-nose', harvest_source
         assert harvest_source['url'] == 'basic_test', harvest_source
 
         harvest_job = logic.get_action('harvest_job_create')(

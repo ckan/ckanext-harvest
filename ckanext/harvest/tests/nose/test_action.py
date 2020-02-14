@@ -82,7 +82,7 @@ class MockHarvesterForActionTests(p.SingletonPlugin):
     p.implements(IHarvester)
 
     def info(self):
-        return {'name': 'test-for-action',
+        return {'name': 'test-for-action-nose',
                 'title': 'Test for action',
                 'description': 'test'}
 
@@ -117,7 +117,7 @@ SOURCE_DICT = {
     "name": "test-source-action",
     "title": "Test source action",
     "notes": "Test source action desc",
-    "source_type": "test-for-action",
+    "source_type": "test-for-action-nose",
     "frequency": "MANUAL",
     "config": json.dumps({"custom_option": ["a", "b"]})
 }
@@ -126,8 +126,8 @@ SOURCE_DICT = {
 class ActionBase(object):
     @classmethod
     def setup_class(cls):
-        if not p.plugin_loaded('test_action_harvester'):
-            p.load('test_action_harvester')
+        if not p.plugin_loaded('test_nose_action_harvester'):
+            p.load('test_nose_action_harvester')
 
     def setup(self):
         reset_db()
@@ -135,7 +135,7 @@ class ActionBase(object):
 
     @classmethod
     def teardown_class(cls):
-        p.unload('test_action_harvester')
+        p.unload('test_nose_action_harvester')
 
 
 class HarvestSourceActionBase(FunctionalTestBase):
@@ -145,14 +145,14 @@ class HarvestSourceActionBase(FunctionalTestBase):
         super(HarvestSourceActionBase, cls).setup_class()
         harvest_model.setup()
 
-        if not p.plugin_loaded('test_action_harvester'):
-            p.load('test_action_harvester')
+        if not p.plugin_loaded('test_nose_action_harvester'):
+            p.load('test_nose_action_harvester')
 
     @classmethod
     def teardown_class(cls):
         super(HarvestSourceActionBase, cls).teardown_class()
 
-        p.unload('test_action_harvester')
+        p.unload('test_nose_action_harvester')
 
     def _get_source_dict(self):
         return {
@@ -160,7 +160,7 @@ class HarvestSourceActionBase(FunctionalTestBase):
             "name": "test-source-action",
             "title": "Test source action",
             "notes": "Test source action desc",
-            "source_type": "test-for-action",
+            "source_type": "test-for-action-nose",
             "frequency": "MANUAL",
             "config": json.dumps({"custom_option": ["a", "b"]})
         }
@@ -285,7 +285,7 @@ class TestHarvestSourceActionUpdate(HarvestSourceFixtureMixin,
             "name": "test-source-action-updated",
             "title": "Test source action updated",
             "notes": "Test source action desc updated",
-            "source_type": "test",
+            "source_type": "test-nose",
             "frequency": "MONTHLY",
             "config": json.dumps({"custom_option": ["c", "d"]})
         })
@@ -574,7 +574,7 @@ class TestHarvestErrorMail(FunctionalTestBase):
             'title': 'Test Source',
             'name': 'test-source',
             'url': 'basic_test',
-            'source_type': 'test',
+            'source_type': 'test-nose',
         }
 
         try:
@@ -649,7 +649,7 @@ class TestHarvestErrorMail(FunctionalTestBase):
             'title': 'Test Source',
             'name': 'test-source',
             'url': 'basic_test',
-            'source_type': 'test',
+            'source_type': 'test-nose',
             'owner_org': test_org['id'],
             'run': True
         }
@@ -779,7 +779,7 @@ class XXTestHarvestDBLog(unittest.TestCase):
     def xxtest_harvest_db_logger(self):
         # Create source and check if harvest_log table is populated
         data_dict = SOURCE_DICT.copy()
-        data_dict['source_type'] = 'test'
+        data_dict['source_type'] = 'test-nose'
         source = factories.HarvestSourceObj(**data_dict)
         content = 'Harvest source created: %s' % source.id
         log = harvest_model.Session.query(harvest_model.HarvestLog).\
