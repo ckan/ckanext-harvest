@@ -74,15 +74,15 @@ python setup.py develop
 
 if (( $CKAN_MINOR_VERSION >= 9 ))
 then
-    ckan -c ckan/test-core.ini harvester initdb
+    ckan -c test.ini harvester initdb
 else
-    paster harvester initdb -c ckan/test-core.ini
+    paster harvester initdb -c test.ini
 fi
 
 
 echo "Moving test.ini into a subdir..."
 mkdir subdir
-mv test-core.ini subdir
-mv test-core-nose.ini subdir
+mv test.ini subdir
+mv test-nose.ini subdir
 
 echo "travis-build.bash is done."
