@@ -77,7 +77,7 @@ if (( $CKAN_MINOR_VERSION >= 9 ))
 then
 echo "Patching CKAN until #5204 is fixed"
     cd ckan
-    patch -p1 < ../ckanext-harvest/here_patch.diff
+    patch -p1 < ../here_patch.diff
     cd -
 fi
 
