@@ -39,3 +39,6 @@ jobs:
     - python: "2.7"
       env: CKANVERSION=2.6
 
+cache:
+  directories:
+    - $HOME/.cache/pip
