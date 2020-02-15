@@ -1,10 +1,9 @@
 language: python
 services:
-    - redis-server
+    - redis
     - postgresql
-install:
-    - bash bin/travis-build.bash
-script: sh bin/travis-run.bash
+install: bash bin/travis-build.bash
+script: bash bin/travis-run.bash
 
 # the new trusty images of Travis cause build errors with psycopg2, see https://github.com/travis-ci/travis-ci/issues/8897
 dist: trusty
@@ -28,15 +27,15 @@ jobs:
         - flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics --exclude ckan
         # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
         - flake8 . --count --max-line-length=127 --statistics --exclude ckan --exit-zero
-   - stage: Tests
-     python: "2.7"
-     env: CKANVERSION=master
-   - python: "3.6"
-     env: CKANVERSION=master
-   - python: "2.7"
-     env: CKANVERSION=2.8
-   - python: "2.7"
-     env: CKANVERSION=2.7
-   - python: "2.7"
-     env: CKANVERSION=2.6
+    - stage: Tests
+      python: "2.7"
+      env: CKANVERSION=master
+    - python: "3.6"
+      env: CKANVERSION=master
+    - python: "2.7"
+      env: CKANVERSION=2.8
+    - python: "2.7"
+      env: CKANVERSION=2.7
+    - python: "2.7"
+      env: CKANVERSION=2.6
 
