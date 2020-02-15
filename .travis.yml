@@ -18,7 +18,6 @@ jobs:
     - stage: Flake8
       env: FLAKE8=True
       install:
-        - bash bin/travis-build.bash
         - pip install flake8==3.5.0
         - pip install pycodestyle==2.3.0
       script:
