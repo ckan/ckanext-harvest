@@ -15,7 +15,7 @@ export PYTHON_MAJOR_VERSION=${TRAVIS_PYTHON_VERSION%.*}
 
 echo "Installing the packages that CKAN requires..."
 sudo apt-get update -qq
-sudo apt-get install solr-jetty libcommons-fileupload-java
+sudo apt-get install solr-jetty
 
 echo "Installing CKAN and its Python dependencies..."
 git clone https://github.com/ckan/ckan
@@ -74,9 +74,9 @@ python setup.py develop
 
 if (( $CKAN_MINOR_VERSION >= 9 ))
 then
-    ckan -c ../ckan/test-core.ini harvester initdb
+    ckan -c ckan/test-core.ini harvester initdb
 else
-    paster harvester initdb -c ../ckan/test-core.ini
+    paster harvester initdb -c ckan/test-core.ini
 fi
 
 
