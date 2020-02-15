@@ -80,9 +80,9 @@ mv test-nose.ini subdir
 
 if (( $CKAN_MINOR_VERSION >= 9 ))
 then
-    ckan -c test.ini harvester initdb
+    ckan -c subdir/test.ini harvester initdb
 else
-    paster harvester initdb -c test.ini
+    paster harvester initdb -c subdir/test.ini
 fi
 
 
