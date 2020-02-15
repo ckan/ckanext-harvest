@@ -16,6 +16,7 @@ stages:
 jobs:
   include:
     - stage: Flake8
+      python: 2.7
       env: FLAKE8=True
       install:
         - pip install flake8==3.5.0
