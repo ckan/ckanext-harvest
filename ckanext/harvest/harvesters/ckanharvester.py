@@ -1,10 +1,10 @@
 from __future__ import absolute_import
+import six
 import requests
 from requests.exceptions import HTTPError, RequestException
 
 import datetime
 from urllib3.contrib import pyopenssl
-import urllib
 
 from six.moves.urllib.parse import urlencode
 from ckan import model
@@ -123,7 +123,7 @@ class CKANHarvester(HarvesterBase):
                                      ' names/ids')
                 if config_obj['default_groups'] and \
                         not isinstance(config_obj['default_groups'][0],
-                                       basestring):
+                                       six.string_types):
                     raise ValueError('default_groups must be a list of group '
                                      'names/ids (i.e. strings)')
 
@@ -523,7 +523,7 @@ class CKANHarvester(HarvesterBase):
                     if existing_extra:
                         package_dict['extras'].remove(existing_extra)
                     # Look for replacement strings
-                    if isinstance(value, basestring):
+                    if isinstance(value, six.string_types):
                         value = value.format(
                             harvest_source_id=harvest_object.job.source.id,
                             harvest_source_url=harvest_object.job.source.url.strip('/'),

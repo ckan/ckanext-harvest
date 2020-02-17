@@ -13,6 +13,7 @@ from ckanext.harvest.utils import (
 from ckanext.harvest.model import HarvestSource, UPDATE_FREQUENCIES, HarvestJob
 from ckanext.harvest.interfaces import IHarvester
 
+import six
 from six.moves.urllib.parse import (
     urlparse, urlunparse
 )
@@ -227,7 +228,7 @@ def harvest_source_convert_from_config(key, data, errors, context):
 
 
 def harvest_source_active_validator(value, context):
-    if isinstance(value, basestring):
+    if isinstance(value, six.string_types):
         if value.lower() == 'true':
             return True
         else:
@@ -253,6 +254,6 @@ def harvest_object_extras_validator(value, context):
     if not isinstance(value, dict):
         raise Invalid('extras must be a dict')
     for v in value.values():
-        if not isinstance(v, basestring):
+        if not isinstance(v, six.string_types):
             raise Invalid('extras must be a dict of strings')
     return value

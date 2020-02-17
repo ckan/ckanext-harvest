@@ -110,7 +110,7 @@ class HarvestSourceActionBase():
         with pytest.raises(ValidationError) as e:
             helpers.call_action(self.action, **source_dict)
 
-        assert u'Error parsing the configuration options: No JSON object could be decoded' in e.value.error_dict['config'][0]
+        assert u'Error parsing the configuration options' in e.value.error_dict['config'][0]
 
         source_dict['config'] = json.dumps({'custom_option': 'not_a_list'})
 
@@ -298,7 +298,8 @@ class TestActions():
             context, {})
 
         # verify
-        assert sorted(result) == sorted([{'id': source_1.id}, {'id': source_2.id}])
+        assert sorted(result, key=lambda item: item['id']) == sorted(
+            [{'id': source_1.id}, {'id': source_2.id}], key=lambda item: item['id'])
         source_1 = harvest_model.HarvestSource.get(source_1.id)
         assert source_1
         assert harvest_model.HarvestJob.get(job_1.id) is None
@@ -368,9 +369,9 @@ class TestActions():
         user = ckan_factories.User()
         user['capacity'] = 'admin'
         org = ckan_factories.Organization(users=[user])
-        source_dict = dict(
-            SOURCE_DICT.items() + [('publisher_id', org['id'])]
-        )
+        source_dict = SOURCE_DICT.copy()
+        source_dict['publisher_id'] = org['id']
+
         source = factories.HarvestSource(**source_dict)
 
         data_dict = {

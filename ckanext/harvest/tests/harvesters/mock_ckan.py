@@ -5,6 +5,7 @@ import re
 import copy
 import urllib
 import six
+from six.moves.urllib.parse import unquote_plus
 
 from threading import Thread
 
@@ -171,7 +172,10 @@ class MockCkanHandler(SimpleHTTPRequestHandler):
 
     def get_url_params(self):
         params_str = self.path.split('?')[-1]
-        params_unicode = urllib.unquote_plus(params_str).decode('utf8')
+        if six.PY2:
+            params_unicode = unquote_plus(params_str).decode('utf8')
+        else:
+            params_unicode = unquote_plus(params_str)
         params = params_unicode.split('&')
         return dict([param.split('=') for param in params])
 
@@ -187,7 +191,7 @@ class MockCkanHandler(SimpleHTTPRequestHandler):
         self.send_response(status)
         self.send_header('Content-Type', content_type)
         self.end_headers()
-        self.wfile.write(content)
+        self.wfile.write(content.encode('utf-8'))
         self.wfile.close()
 
 
