@@ -67,13 +67,20 @@ def get_connection_amqp():
 
 def get_connection_redis():
     if not config.get('ckan.harvest.mq.hostname') and config.get('ckan.redis.url'):
-        return redis.StrictRedis.from_url(config['ckan.redis.url'])
+        return redis.Redis.from_url(
+            config['ckan.redis.url'],
+            decode_responses=True,
+            encoding='utf-8',
+        )
     else:
-        return redis.StrictRedis(
+        return redis.Redis(
             host=config.get('ckan.harvest.mq.hostname', HOSTNAME),
             port=int(config.get('ckan.harvest.mq.port', REDIS_PORT)),
             password=config.get('ckan.harvest.mq.password', None),
-            db=int(config.get('ckan.harvest.mq.redis_db', REDIS_DB)))
+            db=int(config.get('ckan.harvest.mq.redis_db', REDIS_DB)),
+            decode_responses=True,
+            encoding='utf-8',
+        )
 
 
 def get_gather_queue_name():
@@ -125,8 +132,8 @@ def resubmit_jobs():
     # fetch queue
     harvest_object_pending = redis.keys(get_fetch_routing_key() + ':*')
     for key in harvest_object_pending:
-        date_of_key = datetime.datetime.strptime(redis.get(key),
-                                                 "%Y-%m-%d %H:%M:%S.%f")
+        date_of_key = datetime.datetime.strptime(
+            redis.get(key), "%Y-%m-%d %H:%M:%S.%f")
         # 3 minutes for fetch and import max
         if (datetime.datetime.now() - date_of_key).seconds > 180:
             redis.rpush(get_fetch_routing_key(),
@@ -137,8 +144,8 @@ def resubmit_jobs():
     # gather queue
     harvest_jobs_pending = redis.keys(get_gather_routing_key() + ':*')
     for key in harvest_jobs_pending:
-        date_of_key = datetime.datetime.strptime(redis.get(key),
-                                                 "%Y-%m-%d %H:%M:%S.%f")
+        date_of_key = datetime.datetime.strptime(
+            redis.get(key), "%Y-%m-%d %H:%M:%S.%f")
         # 3 hours for a gather
         if (datetime.datetime.now() - date_of_key).seconds > 7200:
             redis.rpush(get_gather_routing_key(),
