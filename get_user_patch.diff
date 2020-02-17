@@ -1,5 +1,5 @@
 diff --git a/ckan/authz.py b/ckan/authz.py
-index acecd951e..59b9b5bf2 100644
+index acecd951e..270125512 100644
 --- a/ckan/authz.py
 +++ b/ckan/authz.py
 @@ -13,7 +13,7 @@ from ckan.common import asbool
@@ -11,7 +11,7 @@ index acecd951e..59b9b5bf2 100644
  
  import ckan.lib.maintain as maintain
  
-@@ -143,18 +143,21 @@ def is_sysadmin(username):
+@@ -143,19 +143,26 @@ def is_sysadmin(username):
  
  
  def _get_user(username):
@@ -35,10 +35,15 @@ index acecd951e..59b9b5bf2 100644
      except TypeError:
 -        # c is not available
 +        # c is not available (py2)
++        pass
++    except RuntimeError:
++        # g is not available (py3)
          pass
++
      # Get user from the DB
      return model.User.get(username)
-@@ -382,13 +385,7 @@ def has_user_permission_for_some_org(user_name, permission):
+ 
+@@ -382,13 +389,7 @@ def has_user_permission_for_some_org(user_name, permission):
  def get_user_id_for_username(user_name, allow_none=False):
      ''' Helper function to get user id '''
      # first check if we have the user object already and get from there
@@ -53,7 +58,7 @@ index acecd951e..59b9b5bf2 100644
      if user:
          return user.id
      if allow_none:
-@@ -458,7 +455,7 @@ def auth_is_registered_user():
+@@ -458,7 +459,7 @@ def auth_is_registered_user():
  def auth_is_loggedin_user():
      ''' Do we have a logged in user '''
      try:
