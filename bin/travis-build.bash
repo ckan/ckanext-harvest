@@ -75,9 +75,10 @@ python setup.py develop
 
 if (( $CKAN_MINOR_VERSION >= 9 ))
 then
-echo "Patching CKAN until #5204 is fixed"
+echo "Patching CKAN until #5204 # 5218 are fixed"
     cd ckan
     patch -p1 < ../here_patch.diff
+    patch -p1 < ../get_user_patch.diff
     cd -
 fi
 
