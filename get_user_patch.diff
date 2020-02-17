@@ -1,5 +1,5 @@
 diff --git a/ckan/authz.py b/ckan/authz.py
-index acecd951e..480e5b6a5 100644
+index acecd951e..59b9b5bf2 100644
 --- a/ckan/authz.py
 +++ b/ckan/authz.py
 @@ -13,7 +13,7 @@ from ckan.common import asbool
@@ -53,6 +53,15 @@ index acecd951e..480e5b6a5 100644
      if user:
          return user.id
      if allow_none:
+@@ -458,7 +455,7 @@ def auth_is_registered_user():
+ def auth_is_loggedin_user():
+     ''' Do we have a logged in user '''
+     try:
+-        context_user = c.user
++        context_user = g.user
+     except TypeError:
+         context_user = None
+     return bool(context_user)
 diff --git a/ckan/tests/test_authz.py b/ckan/tests/test_authz.py
 index a6d62f254..74af0b4d6 100644
 --- a/ckan/tests/test_authz.py
