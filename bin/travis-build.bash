@@ -73,14 +73,6 @@ pip install -r dev-requirements.txt
 python setup.py develop
 
 
-if (( $CKAN_MINOR_VERSION >= 9 ))
-then
-echo "Patching CKAN until #5204 is fixed"
-    cd ckan
-    patch -p1 < ../here_patch.diff
-    cd -
-fi
-
 echo "Moving test.ini into a subdir... (because the core ini file is referenced as ../ckan/test-core.ini)"
 mkdir subdir
 mv test.ini subdir
