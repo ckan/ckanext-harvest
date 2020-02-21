@@ -5,7 +5,9 @@ import ckan
 from ckan.plugins import toolkit
 
 from ckanext.harvest.logic import HarvestJobExists, HarvestSourceInactiveError
-from ckanext.harvest.plugin import DATASET_TYPE_NAME
+from ckanext.harvest.utils import (
+    DATASET_TYPE_NAME
+)
 from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject,
                                    HarvestObjectExtra)
 from ckanext.harvest.logic.dictization import (harvest_job_dictize,
