@@ -110,14 +110,17 @@ def clear(ctx, id):
 @click.argument(u"id", metavar=u"SOURCE_ID_OR_NAME", required=False)
 @click.pass_context
 def clear_history(ctx, id):
-    """If no source id is given the history for all harvest sources
-    (maximum is 1000) will be cleared.
+    """
+    Clears all jobs and objects related to a harvest source, but keeps the
+    source itself. This is useful to clean history of long running harvest
+    sources to start again fresh.
 
-    Clears all jobs and objects related to a harvest source, but keeps
-    the source itself.  The datasets imported from the harvest source
-    will NOT be deleted!!!  If a source id is given, it only clears
-    the history of the harvest source with the given source id.
+    Warning: The datasets imported from the harvest source will NOT be deleted.
+    They will be disassociated with the harvest source, so if you harvest again
+    it'll create duplicate datasets.
 
+    If no source id is given the history for all harvest sources (up to a
+    maximum of 1000 sources) will be cleared.
     """
     flask_app = ctx.meta["flask_app"]
 

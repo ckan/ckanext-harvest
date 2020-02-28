@@ -219,12 +219,14 @@ The following operations can be run from the command line as described underneat
           but keeps the source itself
 
       harvester clearsource_history [{source-id}]
-        - If no source id is given the history for all harvest sources (maximum is 1000)
-          will be cleared.
-          Clears all jobs and objects related to a harvest source, but keeps the source
-          itself. The datasets imported from the harvest source will **NOT** be deleted!!!
-          If a source id is given, it only clears the history of the harvest source with
-          the given source id.
+        - clears the history for all active harvest sources (up to a maximum of
+          1000 sources), or specify a specific harvest source to clear just
+          that one. All jobs and objects related to the harvest source(s) will
+          be cleared, but it keeps the source itself. This is useful to clean
+          history of long running harvest sources to start again fresh.
+          Warning: The datasets imported from the harvest source will NOT be deleted.
+          They will be disassociated with the harvest source, so if you harvest again
+          it'll create duplicate datasets.
 
       harvester sources [all]
         - lists harvest sources
@@ -253,9 +255,9 @@ The following operations can be run from the command line as described underneat
           import) without involving the web UI or the queue backends. This is
           useful for testing a harvester without having to fire up
           gather/fetch_consumer processes, as is done in production.
-          
+
       harvester run_test {source-id/name} force-import=guid1,guid2...
-        - In order to force an import of particular datasets, useful to 
+        - In order to force an import of particular datasets, useful to
           target a dataset for dev purposes or when forcing imports on other environments.
 
       harvester gather_consumer
@@ -654,10 +656,10 @@ harvester run_test
 You can run a harvester simply using the ``run_test`` command. This is handy
 for running a harvest with one command in the console and see all the output
 in-line. It runs the gather, fetch and import stages all in the same process.
-You must ensure that you have pip installed ``dev-requirements.txt`` 
+You must ensure that you have pip installed ``dev-requirements.txt``
 in ``/home/ckan/ckan/lib/default/src/ckanext-harvest`` before using the
 ``run_test`` command.
-  
+
 This is useful for developing a harvester because you can insert break-points
 in your harvester, and rerun a harvest without having to restart the
 gather_consumer and fetch_consumer processes each time. In addition, because it
