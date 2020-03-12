@@ -23,8 +23,8 @@ class ViewController(BaseController):
         return utils.clear_view(id)
 
     def show_object(self, id, ref_type='object'):
-        obj = utils.object_show_view(id, ref_type, response)
-        return obj.content
+        _, content = utils.object_show_view(id, ref_type, response)
+        return content
 
     def show_job(self, id, source_dict=False, is_last=False):
         return utils.job_show_view(id, source_dict, is_last)
