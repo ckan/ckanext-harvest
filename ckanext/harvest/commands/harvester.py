@@ -162,6 +162,14 @@ class Harvester(CkanCommand):
  the 16 harvest object segments to import. e.g. 15af will run segments 1,5,a,f""",
         )
 
+        self.parser.add_option(
+            "-k",
+            "--keep-actual",
+            dest="keep_actual",
+            default=False,
+            help="Do not delete relevant harvest objects",
+        )
+
     def command(self):
         self._load_config()
 
@@ -286,11 +294,13 @@ class Harvester(CkanCommand):
         print(result)
 
     def clear_harvest_source_history(self):
+        keep_actual = bool(self.options.keep_actual)
         source_id = None
+
         if len(self.args) >= 2:
             source_id = unicode(self.args[1])
 
-        print(utils.clear_harvest_source_history(source_id))
+        print(utils.clear_harvest_source_history(source_id, keep_actual))
 
     def show_harvest_source(self):
 

@@ -315,6 +315,74 @@ class TestActions():
         assert dataset_from_db_2, 'is None'
         assert dataset_from_db_2.id == dataset_2['id']
 
+    def test_harvest_sources_job_history_clear_keep_actual(self):
+        # prepare
+        data_dict = SOURCE_DICT.copy()
+        source_1 = factories.HarvestSourceObj(**data_dict)
+        data_dict['name'] = 'another-source'
+        data_dict['url'] = 'http://another-url'
+        source_2 = factories.HarvestSourceObj(**data_dict)
+
+        job_1 = factories.HarvestJobObj(source=source_1)
+        dataset_1 = ckan_factories.Dataset()
+        object_1_ = factories.HarvestObjectObj(job=job_1, source=source_1,
+                                               package_id=dataset_1['id'])
+
+        job_2 = factories.HarvestJobObj(source=source_2)
+        # creating harvest_object with empty package_id
+        object_2_ = factories.HarvestObjectObj(job=job_2, source=source_2,
+                                               package_id=None)
+
+        setattr(object_1_, 'report_status', 'added')
+        setattr(object_1_, 'current', True)
+        model.Session.commit()
+
+        # execute
+        context = {'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+        result = get_action('harvest_sources_job_history_clear')(
+            context, {})
+
+        # verify
+        assert sorted(result, key=lambda item: item['id']) == sorted(
+            [{'id': source_1.id}, {'id': source_2.id}], key=lambda item: item['id'])
+
+        # dataset, related source, object and job still persist!
+        assert harvest_model.HarvestSource.get(source_1.id)
+        assert harvest_model.HarvestJob.get(job_1.id)
+        assert harvest_model.HarvestObject.get(object_1_.id)
+        dataset_from_db_1 = model.Package.get(dataset_1['id'])
+        assert dataset_from_db_1, 'is None'
+        assert_equal(dataset_from_db_1.id, dataset_1['id'])
+
+        # second source persist, but job and object was deleted
+        assert harvest_model.HarvestSource.get(source_2.id)
+        assert not harvest_model.HarvestJob.get(job_2.id)
+        assert not harvest_model.HarvestObject.get(object_2_.id)
+
+    def test_harvest_source_job_history_clear_keep_actual(self):
+        # prepare
+        source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
+        job = factories.HarvestJobObj(source=source)
+        dataset = ckan_factories.Dataset()
+        object_ = factories.HarvestObjectObj(job=job, source=source,
+                                             package_id=dataset['id'])
+
+        # execute
+        context = {'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+        result = get_action('harvest_source_job_history_clear')(
+            context, {'id': source.id})
+
+        # verify
+        assert result == {'id': source.id}
+        assert harvest_model.HarvestSource.get(source.id)
+        assert harvest_model.HarvestJob.get(job.id)
+        assert harvest_model.HarvestObject.get(object_.id)
+        dataset_from_db = model.Package.get(dataset['id'])
+        assert dataset_from_db, 'is None'
+        assert dataset_from_db.id == dataset['id']
+
     def test_harvest_source_create_twice_with_unique_url(self):
         data_dict = SOURCE_DICT.copy()
         factories.HarvestSourceObj(**data_dict)

@@ -245,13 +245,20 @@ def harvest_sources_job_history_clear(context, data_dict):
     check_access('harvest_sources_clear', context, data_dict)
 
     job_history_clear_results = []
+    keep_actual = data_dict.get('keep_actual')
+
     # We assume that the maximum of 1000 (hard limit) rows should be enough
-    result = logic.get_action('package_search')(context, {'fq': '+dataset_type:harvest', 'rows': 1000})
+    result = logic.get_action('package_search')(
+        context, {'fq': '+dataset_type:harvest', 'rows': 1000})
     harvest_packages = result['results']
     if harvest_packages:
         for data_dict in harvest_packages:
             try:
-                clear_result = get_action('harvest_source_job_history_clear')(context, {'id': data_dict['id']})
+                clear_result = get_action('harvest_source_job_history_clear')(
+                    context, {
+                        'id': data_dict['id'],
+                        'keep_actual': keep_actual
+                    })
                 job_history_clear_results.append(clear_result)
             except NotFound:
                 # Ignoring not existent harvest sources because of a possibly corrupt search index
@@ -274,6 +281,7 @@ def harvest_source_job_history_clear(context, data_dict):
     check_access('harvest_source_clear', context, data_dict)
 
     harvest_source_id = data_dict.get('id', None)
+    keep_actual = data_dict.get('keep_actual', False)
 
     source = HarvestSource.get(harvest_source_id)
     if not source:
@@ -289,14 +297,27 @@ def harvest_source_job_history_clear(context, data_dict):
      in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
     delete from harvest_object_extra where harvest_object_id
      in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
-    delete from harvest_object where harvest_source_id = '{harvest_source_id}';
     delete from harvest_gather_error where harvest_job_id
      in (select id from harvest_job where source_id = '{harvest_source_id}');
-    delete from harvest_job where source_id = '{harvest_source_id}';
-    commit;
-    '''.format(harvest_source_id=harvest_source_id)
+    '''
 
-    model.Session.execute(sql)
+    if keep_actual:
+        sql += '''
+        delete from harvest_object where harvest_source_id = '{harvest_source_id}'
+        and current != true and (report_status is null or report_status != 'added');
+        DELETE FROM harvest_job AS job WHERE NOT EXISTS (
+            SELECT id FROM harvest_object WHERE harvest_job_id = job.id);
+        '''
+    else:
+        sql += '''
+        delete from harvest_object where harvest_source_id = '{harvest_source_id}';
+        delete from harvest_job where source_id = '{harvest_source_id}';
+        '''
+    sql += '''
+    commit;
+    '''
+
+    model.Session.execute(sql.format(harvest_source_id=harvest_source_id))
 
     # Refresh the index for this source to update the status object
     get_action('harvest_source_reindex')(context, {'id': harvest_source_id})
