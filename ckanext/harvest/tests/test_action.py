@@ -292,7 +292,7 @@ class TestActions():
                                                package_id=dataset_2['id'])
 
         # execute
-        context = {'session': model.Session,
+        context = {'model': model, 'session': model.Session,
                    'ignore_auth': True, 'user': ''}
         result = get_action('harvest_sources_job_history_clear')(
             context, {})
@@ -338,7 +338,7 @@ class TestActions():
         model.Session.commit()
 
         # execute
-        context = {'session': model.Session,
+        context = {'model': model, 'session': model.Session,
                    'ignore_auth': True, 'user': ''}
         result = get_action('harvest_sources_job_history_clear')(
             context, {})
@@ -353,7 +353,7 @@ class TestActions():
         assert harvest_model.HarvestObject.get(object_1_.id)
         dataset_from_db_1 = model.Package.get(dataset_1['id'])
         assert dataset_from_db_1, 'is None'
-        assert_equal(dataset_from_db_1.id, dataset_1['id'])
+        assert dataset_from_db_1.id == dataset_1['id']
 
         # second source persist, but job and object was deleted
         assert harvest_model.HarvestSource.get(source_2.id)
