@@ -297,20 +297,22 @@ def harvest_source_job_history_clear(context, data_dict):
      IN (SELECT id FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}');
     DELETE FROM harvest_object_extra WHERE harvest_object_id
      IN (SELECT id FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}');
-    DELETE FROM harvest_gather_error WHERE harvest_job_id
-     IN (SELECT id FROM harvest_job WHERE source_id = '{harvest_source_id}');
     '''
 
     if keep_actual:
         sql += '''
         DELETE FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}'
-        AND current != true AND
-        (report_status IS NULL OR report_status NOT IN ('added', 'updated', 'not modified'));
-        DELETE FROM harvest_job AS job WHERE NOT EXISTS (
-            SELECT id FROM harvest_object WHERE harvest_job_id = job.id);
+         AND current != true;
+        DELETE FROM harvest_gather_error AS err WHERE NOT EXISTS
+         (SELECT id FROM harvest_object WHERE harvest_job_id = err.harvest_job_id
+          AND harvest_source_id = '{harvest_source_id}');
+        DELETE FROM harvest_job AS job WHERE source_id = '{harvest_source_id}'
+         AND NOT EXISTS (SELECT id FROM harvest_object WHERE harvest_job_id = job.id);
         '''
     else:
         sql += '''
+        DELETE FROM harvest_gather_error WHERE harvest_job_id
+         IN (SELECT id FROM harvest_job WHERE source_id = '{harvest_source_id}');
         DELETE FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}';
         DELETE FROM harvest_job WHERE source_id = '{harvest_source_id}';
         '''
