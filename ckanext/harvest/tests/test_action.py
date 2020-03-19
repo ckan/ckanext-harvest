@@ -362,14 +362,22 @@ class TestActions():
 
     def test_harvest_source_job_history_clear_keep_actual(self):
         # prepare
-        source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
+        data_dict = SOURCE_DICT.copy()
+        data_dict['name'] = 'another-source12'
+        data_dict['url'] = 'http://another-url12'
+        source = factories.HarvestSourceObj(**data_dict)
+
         job = factories.HarvestJobObj(source=source)
         dataset = ckan_factories.Dataset()
         object_ = factories.HarvestObjectObj(job=job, source=source,
                                              package_id=dataset['id'])
 
+        setattr(object_, 'report_status', 'added')
+        setattr(object_, 'current', True)
+        model.Session.commit()
+
         # execute
-        context = {'session': model.Session,
+        context = {'model': model, 'session': model.Session,
                    'ignore_auth': True, 'user': ''}
         result = get_action('harvest_source_job_history_clear')(
             context, {'id': source.id, 'keep_actual': True})
