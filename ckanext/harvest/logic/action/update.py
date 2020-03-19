@@ -292,29 +292,30 @@ def harvest_source_job_history_clear(context, data_dict):
 
     model = context['model']
 
-    sql = '''begin;
-    delete from harvest_object_error where harvest_object_id
-     in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
-    delete from harvest_object_extra where harvest_object_id
-     in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
-    delete from harvest_gather_error where harvest_job_id
-     in (select id from harvest_job where source_id = '{harvest_source_id}');
+    sql = '''BEGIN;
+    DELETE FROM harvest_object_error WHERE harvest_object_id
+     IN (SELECT id FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}');
+    DELETE FROM harvest_object_extra WHERE harvest_object_id
+     IN (SELECT id FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}');
+    DELETE FROM harvest_gather_error WHERE harvest_job_id
+     IN (SELECT id FROM harvest_job WHERE source_id = '{harvest_source_id}');
     '''
 
     if keep_actual:
         sql += '''
-        delete from harvest_object where harvest_source_id = '{harvest_source_id}'
-        and current != true and (report_status is null or report_status != 'added');
+        DELETE FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}'
+        AND current != true AND
+        (report_status IS NULL OR report_status NOT IN ('added', 'updated', 'not modified'));
         DELETE FROM harvest_job AS job WHERE NOT EXISTS (
             SELECT id FROM harvest_object WHERE harvest_job_id = job.id);
         '''
     else:
         sql += '''
-        delete from harvest_object where harvest_source_id = '{harvest_source_id}';
-        delete from harvest_job where source_id = '{harvest_source_id}';
+        DELETE FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}';
+        DELETE FROM harvest_job WHERE source_id = '{harvest_source_id}';
         '''
     sql += '''
-    commit;
+    COMMIT;
     '''
 
     model.Session.execute(sql.format(harvest_source_id=harvest_source_id))
