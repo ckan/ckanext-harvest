@@ -307,6 +307,7 @@ def harvest_source_job_history_clear(context, data_dict):
          (SELECT id FROM harvest_object WHERE harvest_job_id = err.harvest_job_id
           AND harvest_source_id = '{harvest_source_id}');
         DELETE FROM harvest_job AS job WHERE source_id = '{harvest_source_id}'
+         AND job.status != 'Running'
          AND NOT EXISTS (SELECT id FROM harvest_object WHERE harvest_job_id = job.id);
         '''
     else:
