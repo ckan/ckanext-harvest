@@ -1,5 +1,5 @@
 import json
-
+import datetime
 import pytest
 
 from ckan import plugins as p
@@ -473,7 +473,7 @@ class TestActions():
         assert job.status == 'Running'
         assert job.source_id == source.id
         assert 'Aborted jobs: 0' in result
-    
+
     def test_harvest_abort_failed_jobs_with_unknown_frequency(self):
         # prepare
         data_dict = SOURCE_DICT.copy()
@@ -490,9 +490,9 @@ class TestActions():
         context = {'model': model, 'session': model.Session,
                    'ignore_auth': True, 'user': ''}
 
-        with pytest.raises(Exception) as e:
-            toolkit.get_action('harvest_abort_failed_jobs')(
-            context, {'life_span': 3})
+        with pytest.raises(Exception):
+            get_action('harvest_abort_failed_jobs')(
+                context, {'life_span': 3})
 
     def test_harvest_source_create_twice_with_unique_url(self):
         data_dict = SOURCE_DICT.copy()

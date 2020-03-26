@@ -206,18 +206,18 @@ def job_abort(ctx, id):
     "-e",
     "--exclude",
     default=False,
-    help="""If source_id provided as excluded, all sources failed jobs, except for that 
+    help="""If source_id provided as excluded, all sources failed jobs, except for that
     will be aborted. You can use comma as a separator to provide multiple source_id's""",
 )
 @click.pass_context
 def abort_failed_jobs(ctx, life_span, include, exclude):
     """Abort all jobs which are in a "limbo state" where the job has
-    run with errors but the harvester run command will not mark it 
+    run with errors but the harvester run command will not mark it
     as finished, and therefore you cannot run another job.
     """
     flask_app = ctx.meta["flask_app"]
     with flask_app.test_request_context():
-        result = abort_failed_jobs(job_life_span, include, exclude)
+        result = utils.abort_failed_jobs(life_span, include, exclude)
     click.echo(result)
 
 
