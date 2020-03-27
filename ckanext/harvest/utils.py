@@ -497,12 +497,12 @@ def _get_source_for_job(source_id):
             'id': source_id
         })
     except tk.ObjectNotFound:
-        return tk.abort(404, _('Harvest source not found'))
+        tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        tk.abort(401, _not_auth_message())
     except Exception as e:
         msg = 'An error occurred: [%s]' % str(e)
-        return tk.abort(500, msg)
+        tk.abort(500, msg)
 
     return source_dict
 
@@ -517,16 +517,16 @@ def admin_view(id):
         return tk.render('source/admin.html',
                          extra_vars={'harvest_source': harvest_source})
     except tk.ObjectNotFound:
-        return tk.abort(404, _('Harvest source not found'))
+        tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        tk.abort(401, _not_auth_message())
 
 
 def job_show_last_view(source):
     source_dict = _get_source_for_job(source)
 
     if not source_dict['status']['last_job']:
-        return tk.abort(404, _('No jobs yet for this source'))
+        tk.abort(404, _('No jobs yet for this source'))
 
     return job_show_view(
         source_dict['status']['last_job']['id'],
@@ -559,12 +559,12 @@ def job_show_view(id, source_dict=False, is_last=False):
         )
 
     except tk.ObjectNotFound:
-        return tk.abort(404, _('Harvest job not found'))
+        tk.abort(404, _('Harvest job not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        tk.abort(401, _not_auth_message())
     except Exception as e:
         msg = 'An error occurred: [%s]' % str(e)
-        return tk.abort(500, msg)
+        tk.abort(500, msg)
 
 
 def job_list_view(source):
@@ -587,12 +587,12 @@ def job_list_view(source):
         )
 
     except tk.ObjectNotFound:
-        return tk.abort(404, _('Harvest source not found'))
+        tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        tk.abort(401, _not_auth_message())
     except Exception as e:
         msg = 'An error occurred: [%s]' % str(e)
-        return tk.abort(500, msg)
+        tk.abort(500, msg)
 
 
 def about_view(id):
@@ -605,9 +605,9 @@ def about_view(id):
         return tk.render('source/about.html',
                          extra_vars={'harvest_source': harvest_source})
     except tk.ObjectNotFound:
-        return tk.abort(404, _('Harvest source not found'))
+        tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        tk.abort(401, _not_auth_message())
 
 
 def job_abort_view(source, id):
@@ -618,12 +618,12 @@ def job_abort_view(source, id):
         h.flash_success(_('Harvest job stopped'))
 
     except tk.ObjectNotFound:
-        return tk.abort(404, _('Harvest job not found'))
+        tk.abort(404, _('Harvest job not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        tk.abort(401, _not_auth_message())
     except Exception as e:
         msg = 'An error occurred: [%s]' % str(e)
-        return tk.abort(500, msg)
+        tk.abort(500, msg)
 
     return h.redirect_to(
         h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=source))
@@ -639,9 +639,9 @@ def refresh_view(id):
         h.flash_success(
             _('Harvest will start shortly. Refresh this page for updates.'))
     except tk.ObjectNotFound:
-        return tk.abort(404, _('Harvest source not found'))
+        tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        tk.abort(401, _not_auth_message())
     except HarvestSourceInactiveError:
         h.flash_error(
             _('Cannot create new harvest jobs on inactive '
@@ -665,9 +665,9 @@ def clear_view(id):
         tk.get_action('harvest_source_clear')(context, {'id': id})
         h.flash_success(_('Harvest source cleared'))
     except tk.ObjectNotFound:
-        return tk.abort(404, _('Harvest source not found'))
+        tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        tk.abort(401, _not_auth_message())
     except Exception as e:
         msg = 'An error occurred: [%s]' % str(e)
         h.flash_error(msg)
@@ -696,9 +696,9 @@ def delete_view(id):
         return h.redirect_to(
             h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
     except tk.ObjectNotFound:
-        return tk.abort(404, _('Harvest source not found'))
+        tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        tk.abort(401, _not_auth_message())
 
 
 def object_show_view(id, ref_type, response):
@@ -720,7 +720,7 @@ def object_show_view(id, ref_type, response):
             elif 'original_document' in obj['extras']:
                 content = obj['extras']['original_document']
             else:
-                return tk.abort(404, _('No content found'))
+                tk.abort(404, _('No content found'))
             try:
                 etree.fromstring(re.sub(r'<\?xml(.*)\?>', '', content))
             except UnicodeEncodeError:
@@ -742,9 +742,9 @@ def object_show_view(id, ref_type, response):
         return (response, six.ensure_str(content))
 
     except tk.ObjectNotFound as e:
-        return tk.abort(404, _(str(e)))
+        tk.abort(404, _(str(e)))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        tk.abort(401, _not_auth_message())
     except Exception as e:
         msg = 'An error occurred: [%s]' % str(e)
-        return tk.abort(500, msg)
+        tk.abort(500, msg)
