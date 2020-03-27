@@ -152,3 +152,10 @@ class TestController(helpers.FunctionalTestBase):
         response = app.get(url)
 
         assert_in(data_dict['content'], response.unicode_body)
+
+    def test_job_show_object_404(self):
+        app = self._get_test_app()
+        url = url_for('harvest_object_show', id='harvest-obj-does-not-exist')
+
+        response = app.get(url, status=404)
+        assert_in('Harvest object not found', response.unicode_body)
