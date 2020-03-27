@@ -31,6 +31,20 @@ fi
 
 python setup.py develop
 
+if (( $CKAN_MINOR_VERSION < 8 )) && (( $PYTHON_MAJOR_VERSION == 2 ))
+then
+    echo "Hack to get CKAN 2.6 / 2.7 to work with Postgres 10..."
+    # because Postgres 10 is what Travis' Ubuntu image gives us now
+    sed -i -e 's/psycopg2==.*/psycopg2==2.8.2/' requirements.txt
+    sed -i -e 's/except sqlalchemy.exc.InternalError:/except (sqlalchemy.exc.InternalError, sqlalchemy.exc.DBAPIError):/' ckan/config/environment.py
+    if (( $CKAN_MINOR_VERSION == 7 ))
+    then
+        sed -i -e 's/ connection.connection,/ connection.connection.connection,/' ckanext/datastore/backend/postgres.py
+    else
+        sed -i -e 's/ connection.connection,/ connection.connection.connection,/' ckanext/datastore/db.py
+    fi
+fi
+
 if (( $CKAN_MINOR_VERSION >= 9 )) && (( $PYTHON_MAJOR_VERSION == 2 ))
 then
     pip install -r requirements-py2.txt
