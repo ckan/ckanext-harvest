@@ -86,7 +86,7 @@ def send_error_mail_ncar(context, job_obj):
 
         # get org info
         log.debug('orgName == ' + orgName)
-        org_dict = toolkit.get_action('organization_show')(context, {'id' : orgName.lower()})
+        org_dict = toolkit.get_action('organization_show')(context, {'id' : orgName.lower(), 'include_users': True})
 
         # get usernames in org
         usernames = [x['name'] for x in org_dict['users']]
