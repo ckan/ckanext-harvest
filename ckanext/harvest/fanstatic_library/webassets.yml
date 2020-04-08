@@ -1,0 +1,4 @@
+harvest_css:
+  output: ckanext-harvest/%(version)s_harvest_css.css
+  contents:
+    - styles/harvest.css

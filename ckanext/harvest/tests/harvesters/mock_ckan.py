@@ -4,15 +4,23 @@ import json
 import re
 import copy
 import urllib
+import six
+from six.moves.urllib.parse import unquote_plus
 
-import SimpleHTTPServer
-import SocketServer
 from threading import Thread
+
+if six.PY2:
+    from SimpleHTTPServer import SimpleHTTPRequestHandler
+    from SocketServer import TCPServer
+else:
+    from http.server import SimpleHTTPRequestHandler
+    from socketserver import TCPServer
+
 
 PORT = 8998
 
 
-class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class MockCkanHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         # test name is the first bit of the URL and makes CKAN behave
         # differently in some way.
@@ -164,7 +172,10 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def get_url_params(self):
         params_str = self.path.split('?')[-1]
-        params_unicode = urllib.unquote_plus(params_str).decode('utf8')
+        if six.PY2:
+            params_unicode = unquote_plus(params_str).decode('utf8')
+        else:
+            params_unicode = unquote_plus(params_str)
         params = params_unicode.split('&')
         return dict([param.split('=') for param in params])
 
@@ -180,7 +191,7 @@ class MockCkanHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.send_response(status)
         self.send_header('Content-Type', content_type)
         self.end_headers()
-        self.wfile.write(content)
+        self.wfile.write(content.encode('utf-8'))
         self.wfile.close()
 
 
@@ -191,7 +202,7 @@ def serve(port=PORT):
     # os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)),
     #                      'mock_ckan_files'))
 
-    class TestServer(SocketServer.TCPServer):
+    class TestServer(TCPServer):
         allow_reuse_address = True
 
     httpd = TestServer(("", PORT), MockCkanHandler)

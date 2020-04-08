@@ -1,6 +1,0 @@
-{% import 'macros/autoform.html' as autoform %}
-
-<form id="source-new" class="form-horizontal" method="post">
-  {{ autoform.generate(form_items, data, errors, error_summary) }}
-  <input id="save" name="save" value="Save" type="submit" class="btn"/> or <a href="/harvest">{% trans %}Return to the harvest sources list{% endtrans %}</a>
-</form>

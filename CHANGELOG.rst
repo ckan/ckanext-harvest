@@ -7,15 +7,27 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog <http://keepachangelog.com>`_
 and this project adheres to `Semantic Versioning <http://semver.org/>`_
 
-
 ***********
 Unreleased_
 ***********
 
+
+***********
+1.2.1_ - 2020-01-22
+***********
+
+Changed
+-------
+
+- Support ``not modified`` status for objects #385
+- New ``force-import`` flag for the ``run_test`` command #385
+
 Fixed
 -----
 
-- get message from harvest_object_error-dict #381
+- Get message from harvest_object_error-dict #381
+- Fix Admin link appearing to non authorized users #389
+- Capture Redis Exceptions #385
 
 *******************
 1.2.0_ - 2019-11-01

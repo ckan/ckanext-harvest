@@ -3,8 +3,7 @@
 '''
 import json
 
-from nose.tools import assert_equal
-from ckantoolkit.tests.helpers import reset_db
+import pytest
 
 from ckan import model
 from ckan import plugins as p
@@ -85,10 +84,9 @@ class MockHarvester(p.SingletonPlugin):
         return True
 
 
+@pytest.mark.usefixtures('with_plugins', 'clean_db', 'harvest_setup', 'clean_queues')
+@pytest.mark.ckan_config('ckan.plugins', 'harvest test_harvester2')
 class TestEndStates(object):
-    def setup(self):
-        reset_db()
-        harvest_model.setup()
 
     def test_create_dataset(self):
         guid = 'obj-create'
@@ -99,9 +97,9 @@ class TestEndStates(object):
             harvester=MockHarvester())
 
         result = results_by_guid[guid]
-        assert_equal(result['state'], 'COMPLETE')
-        assert_equal(result['report_status'], 'added')
-        assert_equal(result['errors'], [])
+        assert result['state'] == 'COMPLETE'
+        assert result['report_status'] == 'added'
+        assert result['errors'] == []
 
     def test_update_dataset(self):
         guid = 'obj-update'
@@ -117,9 +115,9 @@ class TestEndStates(object):
             harvester=MockHarvester())
 
         result = results_by_guid[guid]
-        assert_equal(result['state'], 'COMPLETE')
-        assert_equal(result['report_status'], 'updated')
-        assert_equal(result['errors'], [])
+        assert result['state'] == 'COMPLETE'
+        assert result['report_status'] == 'updated'
+        assert result['errors'] == []
 
     def test_delete_dataset(self):
         guid = 'obj-delete'
@@ -136,9 +134,9 @@ class TestEndStates(object):
             harvester=MockHarvester())
 
         result = results_by_guid[guid]
-        assert_equal(result['state'], 'COMPLETE')
-        assert_equal(result['report_status'], 'deleted')
-        assert_equal(result['errors'], [])
+        assert result['state'] == 'COMPLETE'
+        assert result['report_status'] == 'deleted'
+        assert result['errors'] == []
 
     def test_obj_error(self):
         guid = 'obj-error'
@@ -149,9 +147,9 @@ class TestEndStates(object):
             harvester=MockHarvester())
 
         result = results_by_guid[guid]
-        assert_equal(result['state'], 'ERROR')
-        assert_equal(result['report_status'], 'errored')
-        assert_equal(result['errors'], [])
+        assert result['state'] == 'ERROR'
+        assert result['report_status'] == 'errored'
+        assert result['errors'] == []
 
     def test_fetch_unchanged(self):
         guid = 'obj-error'
@@ -162,9 +160,9 @@ class TestEndStates(object):
             harvester=MockHarvester())
 
         result = results_by_guid[guid]
-        assert_equal(result['state'], 'COMPLETE')
-        assert_equal(result['report_status'], 'not modified')
-        assert_equal(result['errors'], [])
+        assert result['state'] == 'COMPLETE'
+        assert result['report_status'] == 'not modified'
+        assert result['errors'] == []
 
     def test_import_unchanged(self):
         guid = 'obj-error'
@@ -175,6 +173,6 @@ class TestEndStates(object):
             harvester=MockHarvester())
 
         result = results_by_guid[guid]
-        assert_equal(result['state'], 'COMPLETE')
-        assert_equal(result['report_status'], 'not modified')
-        assert_equal(result['errors'], [])
+        assert result['state'] == 'COMPLETE'
+        assert result['report_status'] == 'not modified'
+        assert result['errors'] == []

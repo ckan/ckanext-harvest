@@ -253,6 +253,10 @@ The following operations can be run from the command line as described underneat
           import) without involving the web UI or the queue backends. This is
           useful for testing a harvester without having to fire up
           gather/fetch_consumer processes, as is done in production.
+          
+      harvester run_test {source-id/name} force-import=guid1,guid2...
+        - In order to force an import of particular datasets, useful to 
+          target a dataset for dev purposes or when forcing imports on other environments.
 
       harvester gather_consumer
         - starts the consumer for the gathering queue
@@ -435,7 +439,7 @@ dataset dict in the ``content`` property.
 
 This is a simple example::
 
-    from ckanext.harvester.harvesters.ckanharvester import CKANHarvester
+    from ckanext.harvest.harvesters.ckanharvester import CKANHarvester
 
     class MySiteCKANHarvester(CKANHarvester):
 
