@@ -60,7 +60,7 @@ def send_error_mail_ncar(context, job_obj):
     numRecordsInError = len(errored_object_keys)
     msg += 'Records in Error: ' + str(numRecordsInError) + '\n\n'
 
-    msg += 'For help, please contact the DASH Data Curation and Stewardship Coordinator (mailto:datahelp@ucar.edu).\n\n\n'
+    msg += 'For help, please contact the NCAR Data Stewardship Coordinator (mailto:datahelp@ucar.edu).\n\n\n'
 
     if numRecordsInError <= 20:
        errored_object_keys = errored_object_keys[:20]
