@@ -613,7 +613,7 @@ def send_error_mail(context, source_id, status):
     msg += toolkit._('Records in Error: {0}').format(str(last_job['stats'].get('errored', 0)))
     msg += '\n'
 
-    msg += 'For help, please contact the DASH Data Curation and Stewardship Coordinator (mailto:datahelp@ucar.edu).\n\n\n'
+    msg += 'For help, please contact the NCAR Data Stewardship Coordinator (mailto:datahelp@ucar.edu).\n\n\n'
 
     obj_error = ''
     job_error = ''
