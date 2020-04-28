@@ -1,0 +1,8 @@
+main:
+  filters: rjsmin
+  output: ckanext-harvest/%(version)s_harvest_extra_fieldmain.js
+  extra:
+    preload:
+      - base/main
+  contents:
+    - extra_fields.js

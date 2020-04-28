@@ -1,4 +1,4 @@
-from sqlalchemy import distinct, func
+from sqlalchemy import distinct, func, text
 
 from ckan.model import Package, Group
 from ckan import logic
@@ -66,7 +66,7 @@ def harvest_job_dictize(job, context):
             .join(HarvestObject) \
             .filter(HarvestObject.harvest_job_id == job.id) \
             .group_by(HarvestObjectError.message) \
-            .order_by('error_count desc') \
+            .order_by(text('error_count desc')) \
             .limit(context.get('error_summmary_limit', 20))
         out['object_error_summary'] = q.all()
         q = model.Session.query(
@@ -74,7 +74,7 @@ def harvest_job_dictize(job, context):
             func.count(HarvestGatherError.message).label('error_count')) \
             .filter(HarvestGatherError.harvest_job_id == job.id) \
             .group_by(HarvestGatherError.message) \
-            .order_by('error_count desc') \
+            .order_by(text('error_count desc')) \
             .limit(context.get('error_summmary_limit', 20))
         out['gather_error_summary'] = q.all()
     return out
@@ -117,14 +117,10 @@ def _get_source_status(source, context):
 
     job_count = HarvestJob.filter(source=source).count()
 
-    # Overall statistics are commented out because of timeout issues
-    # an issue has been raised https://github.com/ckan/ckanext-harvest/issues/366
-    # for the CKAN team to look into
     out = {
         'job_count': 0,
         'next_harvest': '',
         'last_harvest_request': '',
-        # 'overall_statistics': {'added': 0, 'errors': 0},
         }
 
     if not job_count:
@@ -145,28 +141,7 @@ def _get_source_status(source, context):
         .order_by(HarvestJob.created.desc()).first()
 
     if last_job:
-        # TODO: Should we encode the dates as strings?
         out['last_harvest_request'] = str(last_job.gather_finished)
-
-        # Overall statistics
-        # packages = model.Session.query(distinct(HarvestObject.package_id),
-        #                                Package.name) \
-        #     .join(Package).join(HarvestSource) \
-        #     .filter(HarvestObject.source == source) \
-        #     .filter(
-        #     HarvestObject.current == True  # noqa: E711
-        # ).filter(Package.state == u'active')
-
-        # out['overall_statistics']['added'] = packages.count()
-
-        # gather_errors = model.Session.query(HarvestGatherError) \
-        #     .join(HarvestJob).join(HarvestSource) \
-        #     .filter(HarvestJob.source == source).count()
-
-        # object_errors = model.Session.query(HarvestObjectError) \
-        #     .join(HarvestObject).join(HarvestJob).join(HarvestSource) \
-        #     .filter(HarvestJob.source == source).count()
-        # out['overall_statistics']['errors'] = gather_errors + object_errors
     else:
         out['last_harvest_request'] = 'Not yet harvested'
 

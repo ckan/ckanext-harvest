@@ -1,17 +1,19 @@
+from __future__ import absolute_import
+import six
 import requests
 from requests.exceptions import HTTPError, RequestException
 
 import datetime
 from urllib3.contrib import pyopenssl
-import urllib
 
+from six.moves.urllib.parse import urlencode
 from ckan import model
 from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
 from ckan.plugins import toolkit
 
 from ckanext.harvest.model import HarvestObject
-from base import HarvesterBase
+from .base import HarvesterBase
 
 import logging
 log = logging.getLogger(__name__)
@@ -121,7 +123,7 @@ class CKANHarvester(HarvesterBase):
                                      ' names/ids')
                 if config_obj['default_groups'] and \
                         not isinstance(config_obj['default_groups'][0],
-                                       basestring):
+                                       six.string_types):
                     raise ValueError('default_groups must be a list of group '
                                      'names/ids (i.e. strings)')
 
@@ -135,7 +137,7 @@ class CKANHarvester(HarvesterBase):
                         # save the dict to the config object, as we'll need it
                         # in the import_stage of every dataset
                         config_obj['default_group_dicts'].append(group)
-                    except NotFound, e:
+                    except NotFound as e:
                         raise ValueError('Default group not found')
                 config = json.dumps(config_obj)
 
@@ -167,10 +169,17 @@ class CKANHarvester(HarvesterBase):
                     if not isinstance(config_obj[key], bool):
                         raise ValueError('%s must be boolean' % key)
 
-        except ValueError, e:
+        except ValueError as e:
             raise e
 
         return config
+
+    def modify_package_dict(self, package_dict, harvest_object):
+        '''
+            Allows custom harvesters to modify the package dict before
+            creating or updating the actual package.
+        '''
+        return package_dict
 
     def gather_stage(self, harvest_job):
         log.debug('In CKANHarvester gather_stage (%s)',
@@ -228,7 +237,7 @@ class CKANHarvester(HarvesterBase):
                 pkg_dicts = self._search_for_datasets(
                     remote_ckan_base_url,
                     fq_terms + [fq_since_last_time])
-            except SearchError, e:
+            except SearchError as e:
                 log.info('Searching for datasets changed since last time '
                          'gave an error: %s', e)
                 get_all_packages = True
@@ -245,7 +254,7 @@ class CKANHarvester(HarvesterBase):
             try:
                 pkg_dicts = self._search_for_datasets(remote_ckan_base_url,
                                                       fq_terms)
-            except SearchError, e:
+            except SearchError as e:
                 log.info('Searching for all datasets gave an error: %s', e)
                 self._save_gather_error(
                     'Unable to search remote CKAN for datasets:%s url:%s'
@@ -280,7 +289,7 @@ class CKANHarvester(HarvesterBase):
                 object_ids.append(obj.id)
 
             return object_ids
-        except Exception, e:
+        except Exception as e:
             self._save_gather_error('%r' % e.message, harvest_job)
 
     def _search_for_datasets(self, remote_ckan_base_url, fq_terms=None):
@@ -315,11 +324,11 @@ class CKANHarvester(HarvesterBase):
         pkg_ids = set()
         previous_content = None
         while True:
-            url = base_search_url + '?' + urllib.urlencode(params)
+            url = base_search_url + '?' + urlencode(params)
             log.debug('Searching for CKAN datasets: %s', url)
             try:
                 content = self._get_content(url)
-            except ContentFetchError, e:
+            except ContentFetchError as e:
                 raise SearchError(
                     'Error sending request to search remote '
                     'CKAN instance %s using URL %r. Error: %s' %
@@ -415,7 +424,7 @@ class CKANHarvester(HarvesterBase):
                             else:
                                 raise NotFound
 
-                        except NotFound, e:
+                        except NotFound as e:
                             if 'name' in group_:
                                 data_dict = {'id': group_['name']}
                                 group = get_action('group_show')(base_context.copy(), data_dict)
@@ -424,7 +433,7 @@ class CKANHarvester(HarvesterBase):
                         # Found local group
                         validated_groups.append({'id': group['id'], 'name': group['name']})
 
-                    except NotFound, e:
+                    except NotFound as e:
                         log.info('Group %s is not available', group_)
                         if remote_groups == 'create':
                             try:
@@ -464,7 +473,7 @@ class CKANHarvester(HarvesterBase):
                         data_dict = {'id': remote_org}
                         org = get_action('organization_show')(base_context.copy(), data_dict)
                         validated_org = org['id']
-                    except NotFound, e:
+                    except NotFound as e:
                         log.info('Organization %s is not available', remote_org)
                         if remote_orgs == 'create':
                             try:
@@ -507,14 +516,14 @@ class CKANHarvester(HarvesterBase):
                 override_extras = self.config.get('override_extras', False)
                 if 'extras' not in package_dict:
                     package_dict['extras'] = []
-                for key, value in default_extras.iteritems():
+                for key, value in default_extras.items():
                     existing_extra = get_extra(key, package_dict)
                     if existing_extra and not override_extras:
                         continue  # no need for the default
                     if existing_extra:
                         package_dict['extras'].remove(existing_extra)
                     # Look for replacement strings
-                    if isinstance(value, basestring):
+                    if isinstance(value, six.string_types):
                         value = value.format(
                             harvest_source_id=harvest_object.job.source.id,
                             harvest_source_url=harvest_object.job.source.url.strip('/'),
@@ -536,15 +545,17 @@ class CKANHarvester(HarvesterBase):
                 # key.
                 resource.pop('revision_id', None)
 
+            package_dict = self.modify_package_dict(package_dict, harvest_object)
+
             result = self._create_or_update_package(
                 package_dict, harvest_object, package_dict_form='package_show')
 
             return result
-        except ValidationError, e:
+        except ValidationError as e:
             self._save_object_error('Invalid package with GUID %s: %r' %
                                     (harvest_object.guid, e.error_dict),
                                     harvest_object, 'Import')
-        except Exception, e:
+        except Exception as e:
             self._save_object_error('%s' % e, harvest_object, 'Import')
 
 

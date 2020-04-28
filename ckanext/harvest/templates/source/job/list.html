@@ -1,6 +1,5 @@
 {% extends "source/admin_base.html" %}
 
-{% set controller = 'ckanext.harvest.controllers.view:ViewController' %}
 
 {% block subtitle %}{{ _('Harvest Jobs')}} - {{ super() }}{% endblock %}
 
@@ -17,7 +16,7 @@
         <li class="dataset-item">
           <div class="dataset-content">
             <h3 class="dataset-heading">
-              <a href="{{ h.url_for(controller=controller, action='show_job', source=harvest_source.name, id=job.id) }}">
+                <a href="{{ h.url_for('harvest_job_show', source=harvest_source.name, id=job.id) }}">
                 {{ _('Job: ') }} {{ job.id }}
               </a>
               {% if job.status != 'Finished' %}

@@ -1,24 +1,11 @@
 from ckan.lib.helpers import url_for
 
-try:
-    from ckan.tests import helpers, factories
-except ImportError:
-    from ckan.new_tests import helpers, factories
-
-from ckanext.harvest.tests import factories as harvest_factories
-
-try:
-    from ckan.tests.helpers import assert_in
-except ImportError:
-    # for ckan 2.2
-    try:
-        from nose.tools import assert_in
-    except ImportError:
-        # Python 2.6 doesn't have it
-        def assert_in(a, b, msg=None):
-            assert a in b, msg or '%r was not in %r' % (a, b)
-
+from ckantoolkit.tests import helpers, factories
+from ckanext.harvest.tests.nose import factories as harvest_factories
+from nose.tools import assert_in
 import ckanext.harvest.model as harvest_model
+from ckan.plugins import toolkit
+from ckan import model
 
 
 class TestController(helpers.FunctionalTestBase):
@@ -139,3 +126,29 @@ class TestController(helpers.FunctionalTestBase):
         response = app.get(url, extra_environ=self.extra_environ)
 
         assert_in(job['id'], response.unicode_body)
+
+    def test_job_show_object(self):
+        source_obj = harvest_factories.HarvestSourceObj()
+        job = harvest_factories.HarvestJob(source=source_obj)
+
+        context = {
+            'model': model,
+            'session': model.Session,
+            'ignore_auth': True,
+        }
+        data_dict = {
+            'guid': 'guid',
+            'content': 'test content',
+            'job_id': job['id'],
+            'source_id': source_obj.id,
+            'extras': {'a key': 'a value'},
+        }
+        harvest_object = toolkit.get_action('harvest_object_create')(
+            context, data_dict)
+
+        app = self._get_test_app()
+        url = url_for('harvest_object_show', id=harvest_object['id'])
+
+        response = app.get(url)
+
+        assert_in(data_dict['content'], response.unicode_body)

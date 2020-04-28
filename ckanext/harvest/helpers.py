@@ -5,7 +5,9 @@ import ckan.lib.helpers as h
 import ckan.plugins as p
 
 from ckanext.harvest.model import UPDATE_FREQUENCIES
-from ckanext.harvest.plugin import DATASET_TYPE_NAME
+from ckanext.harvest.utils import (
+    DATASET_TYPE_NAME
+)
 from ckanext.harvest.interfaces import IHarvester
 
 

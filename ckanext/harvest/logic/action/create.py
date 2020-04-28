@@ -5,7 +5,9 @@ import ckan
 from ckan.plugins import toolkit
 
 from ckanext.harvest.logic import HarvestJobExists, HarvestSourceInactiveError
-from ckanext.harvest.plugin import DATASET_TYPE_NAME
+from ckanext.harvest.utils import (
+    DATASET_TYPE_NAME
+)
 from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject,
                                    HarvestObjectExtra)
 from ckanext.harvest.logic.dictization import (harvest_job_dictize,
@@ -92,7 +94,7 @@ def harvest_job_create(context, data_dict):
     source = HarvestSource.get(source_id)
     if not source:
         log.warn('Harvest source %s does not exist', source_id)
-        raise toolkit.NotFound('Harvest source %s does not exist' % source_id)
+        raise toolkit.ObjectNotFound('Harvest source %s does not exist' % source_id)
 
     # Check if the source is active
     if not source.active:
