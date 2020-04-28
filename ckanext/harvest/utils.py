@@ -346,7 +346,7 @@ def run_harvester():
     tk.get_action("harvest_jobs_run")(context, {})
 
 
-def run_test_harvester(source_id_or_name):
+def run_test_harvester(source_id_or_name, force_import):
     from ckanext.harvest import queue
     from ckanext.harvest.tests import lib
     from ckanext.harvest.logic import HarvestJobExists
@@ -397,6 +397,9 @@ def run_test_harvester(source_id_or_name):
                     ), 'Multiple "New" jobs for this source! {0}'.format(jobs)
             job_dict = jobs[0]
     job_obj = HarvestJob.get(job_dict["id"])
+
+    if force_import:
+        job_obj.force_import = force_import
 
     harvester = queue.get_harvester(source["source_type"])
     assert harvester, "No harvester found for type: {0}".format(
