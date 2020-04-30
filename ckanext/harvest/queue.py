@@ -203,7 +203,13 @@ class RedisPublisher(object):
         value = json.dumps(body)
         # remove if already there
         if self.routing_key == get_gather_routing_key():
-            self.redis.lrem(self.routing_key, value, 0)
+            # it appears that both types of call are possible within the redis library depending on which version used
+            # for now support both versions
+            # https://github.com/andymccurdy/redis-py#client-classes-redis-and-strictredis
+            try:
+                self.redis.lrem(self.routing_key, 0, value)
+            except:
+                self.redis.lrem(self.routing_key, value, 0)
         self.redis.rpush(self.routing_key, value)
 
     def close(self):
