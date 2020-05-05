@@ -208,8 +208,11 @@ class RedisPublisher(object):
             # https://github.com/andymccurdy/redis-py#client-classes-redis-and-strictredis
             try:
                 self.redis.lrem(self.routing_key, 0, value)
-            except:
-                self.redis.lrem(self.routing_key, value, 0)
+            except redis.ResponseError as e:
+                if 'value is not an integer' in e.message:
+                    self.redis.lrem(self.routing_key, value, 0)
+                else:
+                    raise
         self.redis.rpush(self.routing_key, value)
 
     def close(self):
