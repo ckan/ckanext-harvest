@@ -1,11 +1,12 @@
 import logging
 from sqlalchemy import or_
-from ckan.model import User
+from ckan.model import (User, Package)
 import datetime
 
 from ckan import logic
 from ckan.plugins import PluginImplementations
 from ckanext.harvest.interfaces import IHarvester
+from ckan.common import request
 
 import ckan.plugins as p
 from ckan.logic import NotFound, check_access, side_effect_free
@@ -126,7 +127,7 @@ def harvest_source_list(context, data_dict):
 
     check_access('harvest_source_list', context, data_dict)
 
-    sources = _get_sources_for_user(context, data_dict)
+    sources = _get_sources_for_user(context, data_dict, limit=100)
 
     last_job_status = p.toolkit.asbool(data_dict.get('return_last_job_status', False))
 
@@ -361,7 +362,7 @@ def harvest_log_list(context, data_dict):
     return out
 
 
-def _get_sources_for_user(context, data_dict):
+def _get_sources_for_user(context, data_dict, limit=None):
 
     session = context['session']
     user = context.get('user', '')
@@ -369,8 +370,15 @@ def _get_sources_for_user(context, data_dict):
     only_active = data_dict.get('only_active', False)
     only_to_run = data_dict.get('only_to_run', False)
 
+    organization_id = request.params.get('organization_id')
+
     query = session.query(HarvestSource) \
         .order_by(HarvestSource.created.desc())
+
+    if organization_id:
+        query = query.join(
+            Package, HarvestSource.id == Package.id
+        ).filter(Package.owner_org == organization_id)
 
     if only_active:
         query = query.filter(
@@ -406,6 +414,6 @@ def _get_sources_for_user(context, data_dict):
         log.debug('User %s with publishers %r has Harvest Sources: %r',
                   user, publishers_for_the_user, [(hs.id, hs.url) for hs in query])
 
-    sources = query.all()
+    sources = query.limit(limit).all() if limit else query.all()
 
     return sources

@@ -11,6 +11,7 @@ from ckantoolkit.tests.helpers import _get_test_app, reset_db, FunctionalTestBas
 from ckan import plugins as p
 from ckan.plugins import toolkit
 from ckan import model
+from ckan.model import Package
 
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.model as harvest_model
@@ -257,6 +258,75 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
 
         assert 'url' in result
         assert u'There already is a Harvest Source for this URL' in result['url'][0]
+
+class TestHarvestSourceActionList(FunctionalTestBase):
+
+    def test_list_with_organization(self):
+        organization = ckan_factories.Organization.create()
+        harvest_data = {
+            "owner_org": organization["id"],
+            "type": "harvest",
+            "url": "https://www.gov.uk/random",
+            "source_type": "test-nose"
+        }
+
+        other_harvest_data = {
+            "type": "harvest",
+            "url": "https://www.gov.uk/other-path",
+            "source_type": "test-nose"
+        }
+
+        harvest = ckan_factories.Dataset.create(**harvest_data)
+        harvest_source = factories.HarvestSource.create(id=harvest["id"])
+
+        other_harvest = ckan_factories.Dataset.create(**other_harvest_data)
+        other_harvest_source = factories.HarvestSource.create(id=other_harvest["id"])
+
+        sysadmin = ckan_factories.Sysadmin()
+
+        app = _get_test_app()
+        response = app.get('/api/action/{0}'.format('harvest_source_list'), params={"organization_id":organization["id"]},
+                            extra_environ={'Authorization': str(sysadmin['apikey'])},
+                            status=200)
+
+
+        results = response.json['result']
+
+        result_harvest = model.Session.query(Package).get(results[0]["id"])
+        result_organisation_id = result_harvest.owner_org
+
+        assert response.json['success'] is True
+        assert 1 is len(results)
+        assert_equal(organization["id"], result_organisation_id)
+
+    def test_list_without_organization(self):
+        harvest_data = {
+            "type": "harvest",
+            "url": "https://www.gov.uk/random",
+            "source_type": "test-nose"
+        }
+
+        other_harvest_data = {
+            "type": "harvest",
+            "url": "https://www.gov.uk/other-path",
+            "source_type": "test-nose"
+        }
+
+        harvest_source = factories.HarvestSource.create()
+        other_harvest_source = factories.HarvestSource.create()
+
+        sysadmin = ckan_factories.Sysadmin()
+
+        app = _get_test_app()
+        response = app.get('/api/action/{0}'.format('harvest_source_list'),
+                            extra_environ={'Authorization': str(sysadmin['apikey'])},
+                            status=200)
+
+
+        results = response.json['result']
+
+        assert response.json['success'] is True
+        assert 2 is len(results)
 
 
 class HarvestSourceFixtureMixin(object):
