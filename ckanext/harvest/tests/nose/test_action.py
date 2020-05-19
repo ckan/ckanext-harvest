@@ -496,6 +496,103 @@ class TestActions(ActionBase):
         assert_equal(job['gather_started'], None)
         assert_in('stats', job.keys())
 
+    @patch('ckanext.harvest.logic.action.update.log.error')
+    def test_harvest_jobs_run_times_out(self, mock_error_log):
+        harvest_source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
+        harvest_job = factories.HarvestJobObj(
+            source=harvest_source,
+            run=True
+        )
+        # date in the past, ckan.harvest.timeout has been set to 5 minutes in test-nose.ini
+        harvest_job.created = '2020-05-29 10:00:00.0'
+        harvest_job.save()
+
+        context = {'model': model, 'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+
+        data_dict = {
+            'guid': 'guid',
+            'content': 'content',
+            'job_id': harvest_job.id,
+            'source_id': harvest_source.id
+        }
+
+        job = toolkit.get_action('harvest_jobs_run')(
+            context, data_dict)
+
+        msg, = mock_error_log.call_args[0]
+
+        assert mock_error_log.called
+        assert msg == 'Job timeout: {} is taking longer than 5 minutes'.format(harvest_job.id)
+
+        status = toolkit.get_action('harvest_source_show_status')(context, {'id': harvest_source.id})
+        assert status['last_job']['status'] == 'Finished'
+        assert status['last_job']['stats']['errored'] == 1
+
+    @patch('ckanext.harvest.logic.action.update.log.error')
+    def test_harvest_jobs_run_does_not_timeout_if_within_time(self, mock_error_log):
+        harvest_source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
+        harvest_job = factories.HarvestJobObj(
+            source=harvest_source,
+            run=True
+        )
+        # job has just been created, so no timeout expected
+
+        context = {'model': model, 'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+
+        data_dict = {
+            'guid': 'guid',
+            'content': 'content',
+            'job_id': harvest_job.id,
+            'source_id': harvest_source.id
+        }
+
+        job_obj = HarvestJob.get(harvest_job.id)
+
+        job = toolkit.get_action('harvest_jobs_run')(
+            context, data_dict)
+
+        assert not mock_error_log.called
+
+        status = toolkit.get_action('harvest_source_show_status')(context, {'id': harvest_source.id})
+        assert status['last_job']['status'] == 'Running'
+        assert status['last_job']['stats']['errored'] == 0
+
+    @patch.dict('ckanext.harvest.logic.action.update.config',
+                {'ckan.harvest.timeout': None})
+    @patch('ckanext.harvest.logic.action.update.log.error')
+    def test_harvest_jobs_run_does_not_timeout_if_timeout_not_set(self, mock_error_log):
+        harvest_source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
+        harvest_job = factories.HarvestJobObj(
+            source=harvest_source,
+            run=True
+        )
+        # date in the past, assumes ckan.harvest.timeout has been set to 5 minutes
+        harvest_job.created = '2020-05-29 10:00:00.0'
+        harvest_job.save()
+
+        context = {'model': model, 'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+
+        data_dict = {
+            'guid': 'guid',
+            'content': 'content',
+            'job_id': harvest_job.id,
+            'source_id': harvest_source.id
+        }
+
+        job_obj = HarvestJob.get(harvest_job.id)
+
+        job = toolkit.get_action('harvest_jobs_run')(
+            context, data_dict)
+
+        assert not mock_error_log.called
+
+        status = toolkit.get_action('harvest_source_show_status')(context, {'id': harvest_source.id})
+        assert status['last_job']['status'] == 'Running'
+        assert status['last_job']['stats']['errored'] == 0
+
 
 class TestHarvestObject(unittest.TestCase):
     @classmethod

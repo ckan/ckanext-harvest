@@ -196,6 +196,18 @@ That way, all CKAN Users who are declared as Sysadmins will receive the Error em
 If you don't specify this setting, the default will be False.
 
 
+Set a timeout for a harvest job (optional)
+================================================
+
+IF you want to set a timeout for harvest jobs, you can add this configuration option to the ini file:
+
+    ckan.harvest.timeout = 1440
+
+The timeout value is in minutes, so 1440 represents 24 hours. 
+Any jobs which are timed out will create an error message for the user to see.
+
+If you don't specify this setting, the default will be False and there will be no timeout on harvest jobs.
+
 Command line interface
 ======================
 
