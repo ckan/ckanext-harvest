@@ -349,13 +349,16 @@ class Harvester(CkanCommand):
 
     def run_test_harvest(self):
         # Determine the source
+        force_import = None
         if len(self.args) >= 2:
+            if len(self.args) >= 3 and self.args[2].startswith('force-import='):
+                force_import = self.args[2].split('=')[-1]
             source_id_or_name = unicode(self.args[1])
         else:
             print("Please provide a source id")
             sys.exit(1)
 
-        utils.run_test_harvester(source_id_or_name)
+        utils.run_test_harvester(source_id_or_name, force_import)
 
     def import_stage(self):
 
