@@ -885,6 +885,21 @@ Here are some common errors and solutions:
 * ``(OperationalError) near "SET": syntax error``
   You are testing with SQLite as the database, but the CKAN Harvester needs PostgreSQL. Specify test-core.ini instead of test.ini.
 
+Harvest API
+=====
+
+ckanext-harvest has multiple API's exposed in the format `/api/action/<endpoint>`.
+
+* `/api/action/harvest_source_list`
+
+This endpoint will return all the harvest sources in CKAN with a default limit
+of 100 items. The limit can be set to a bespoke value in the config for ckan
+under `ckan.harvest.harvest_source_limit`.
+
+An optional query param `organization_id` can be used to narrow down the
+results to only return the harvest sources created by certain organization's by
+supplying their respective organization id -> `/api/action/harvest_source_list?organization_id=<some-org-id>`
+
 
 Releases
 ========
