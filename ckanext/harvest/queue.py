@@ -459,6 +459,16 @@ def fetch_callback(channel, method, header, body):
         channel.basic_ack(method.delivery_tag)
         return False
 
+    # check if job has been set to finished 
+    job = HarvestJob.get(obj.harvest_job_id)
+    if job.status == 'Finished':
+        obj.state = "ERROR"
+        obj.report_status = "errored"
+        obj.save()
+        log.error('Job {0} was aborted or timed out, object {1} set to error'.format(job.id, obj.id))
+        channel.basic_ack(method.delivery_tag)
+        return False
+
     # Send the harvest object to the plugins that implement
     # the Harvester interface, only if the source type
     # matches
