@@ -2,7 +2,7 @@ from mock import patch
 
 from ckantoolkit.tests.helpers import reset_db
 import ckanext.harvest.model as harvest_model
-from ckanext.harvest.model import HarvestObject, HarvestObjectExtra
+from ckanext.harvest.model import HarvestObject, HarvestObjectExtra, HarvestJob
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.queue as queue
 from ckan.plugins.core import SingletonPlugin, implements
