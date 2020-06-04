@@ -2,7 +2,7 @@ from mock import patch
 
 from ckantoolkit.tests.helpers import reset_db
 import ckanext.harvest.model as harvest_model
-from ckanext.harvest.model import HarvestObject, HarvestObjectExtra
+from ckanext.harvest.model import HarvestObject, HarvestObjectExtra, HarvestJob
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.queue as queue
 from ckan.plugins.core import SingletonPlugin, implements
@@ -263,6 +263,121 @@ class TestHarvestQueue(object):
                                                                           'not modified': 0, 'errored': 0, 'deleted': 1})
         assert_equal(harvest_source_dict['status']['total_datasets'], 2)
         assert_equal(harvest_source_dict['status']['job_count'], 2)
+
+    def test_fetch_doesnt_process_remaining_objects_if_job_status_finished(self):
+
+        # make sure queues/exchanges are created first and are empty
+        consumer = queue.get_gather_consumer()
+        consumer_fetch = queue.get_fetch_consumer()
+        consumer.queue_purge(queue=queue.get_gather_queue_name())
+        consumer_fetch.queue_purge(queue=queue.get_fetch_queue_name())
+
+        user = logic.get_action('get_site_user')(
+            {'model': model, 'ignore_auth': True}, {}
+        )['name']
+
+        context = {'model': model, 'session': model.Session,
+                   'user': user, 'api_version': 3, 'ignore_auth': True}
+
+        source_dict = {
+            'title': 'Test Job Finished',
+            'name': 'test-job-finished',
+            'url': 'basic_test_1',
+            'source_type': 'test-nose',
+        }
+
+        harvest_source = logic.get_action('harvest_source_create')(
+            context,
+            source_dict
+        )
+
+        assert harvest_source['source_type'] == 'test-nose', harvest_source
+        assert harvest_source['url'] == 'basic_test_1', harvest_source
+
+        harvest_job = logic.get_action('harvest_job_create')(
+            context,
+            {'source_id': harvest_source['id'], 'run': True}
+        )
+
+        job_id = harvest_job['id']
+
+        assert harvest_job['source_id'] == harvest_source['id'], harvest_job
+
+        assert harvest_job['status'] == u'Running'
+
+        assert logic.get_action('harvest_job_show')(
+            context,
+            {'id': job_id}
+        )['status'] == u'Running'
+
+        # pop on item off the queue and run the callback
+        reply = consumer.basic_get(queue='ckan.harvest.gather')
+
+        queue.gather_callback(consumer, *reply)
+
+        all_objects = model.Session.query(HarvestObject).filter(
+            HarvestObject.harvest_job_id == harvest_job['id']
+        ).all()
+
+        assert len(all_objects) == 3
+        assert all_objects[0].state == 'WAITING'
+        assert all_objects[1].state == 'WAITING'
+        assert all_objects[2].state == 'WAITING'
+
+        # artificially set the job to finished to simulate a job abort or timeout
+        job_obj = HarvestJob.get(harvest_job['id'])
+        job_obj.status = 'Finished'
+        job_obj.save()
+
+        original_dataset_count = model.Session.query(model.Package) \
+            .filter(model.Package.type == 'dataset') \
+            .count()
+
+        # do three times as three harvest objects
+        reply = consumer_fetch.basic_get(queue='ckan.harvest.fetch')
+        queue.fetch_callback(consumer_fetch, *reply)
+        reply = consumer_fetch.basic_get(queue='ckan.harvest.fetch')
+        queue.fetch_callback(consumer_fetch, *reply)
+        reply = consumer_fetch.basic_get(queue='ckan.harvest.fetch')
+        queue.fetch_callback(consumer_fetch, *reply)
+
+        all_objects = model.Session.query(HarvestObject).filter(
+            HarvestObject.harvest_job_id == harvest_job['id']
+        ).all()
+
+        assert len(all_objects) == 3
+        assert all_objects[0].state == 'ERROR'
+        assert all_objects[1].state == 'ERROR'
+        assert all_objects[2].state == 'ERROR'
+
+        count = model.Session.query(model.Package) \
+            .filter(model.Package.type == 'dataset') \
+            .count()
+        assert count == original_dataset_count
+
+        # fire run again to check if job is set to Finished
+        logic.get_action('harvest_jobs_run')(
+            context,
+            {'source_id': harvest_source['id']}
+        )
+
+        harvest_job = logic.get_action('harvest_job_show')(
+            context,
+            {'id': job_id}
+        )
+
+        assert_equal(harvest_job['status'], u'Finished')
+        assert_equal(harvest_job['stats'], {'added': 0, 'updated': 0, 'not modified': 0, 'errored': 3, 'deleted': 0})
+
+        harvest_source_dict = logic.get_action('harvest_source_show')(
+            context,
+            {'id': harvest_source['id']}
+        )
+
+        assert_equal(harvest_source_dict['status']['last_job']['stats'], {'added': 0, 'updated': 0,
+                                                                          'not modified': 0, 'errored': 3, 'deleted': 0})
+        assert_equal(harvest_source_dict['status']['total_datasets'], 0)
+        assert_equal(harvest_source_dict['status']['job_count'], 1)
 
     def test_redis_queue_purging(self):
         '''

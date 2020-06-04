@@ -11,6 +11,7 @@ from ckantoolkit.tests.helpers import _get_test_app, reset_db, FunctionalTestBas
 from ckan import plugins as p
 from ckan.plugins import toolkit
 from ckan import model
+from ckan.lib.base import config
 
 from ckanext.harvest.interfaces import IHarvester
 import ckanext.harvest.model as harvest_model
@@ -258,6 +259,94 @@ class TestHarvestSourceActionCreate(HarvestSourceActionBase):
         assert 'url' in result
         assert u'There already is a Harvest Source for this URL' in result['url'][0]
 
+class TestHarvestSourceActionList(FunctionalTestBase):
+
+    def test_list_with_organization(self):
+        organization = ckan_factories.Organization.create()
+        harvest_data = {
+            "owner_org": organization["id"],
+            "type": "harvest",
+            "url": "https://www.gov.uk/random",
+            "source_type": "test-nose"
+        }
+
+        other_harvest_data = {
+            "type": "harvest",
+            "url": "https://www.gov.uk/other-path",
+            "source_type": "test-nose"
+        }
+
+        harvest = ckan_factories.Dataset.create(**harvest_data)
+        harvest_source = factories.HarvestSource.create(id=harvest["id"])
+
+        other_harvest = ckan_factories.Dataset.create(**other_harvest_data)
+        other_harvest_source = factories.HarvestSource.create(id=other_harvest["id"])
+
+        app = _get_test_app()
+        response = app.get('/api/action/{0}'.format('harvest_source_list'),
+                           params={"organization_id":organization["id"]},
+                           status=200)
+
+
+        results = response.json['result']
+
+        result_harvest = model.Session.query(model.Package).get(results[0]["id"])
+        result_organization_id = result_harvest.owner_org
+
+        assert response.json['success'] is True
+        assert 1 is len(results)
+        assert_equal(organization["id"], result_organization_id)
+
+    def test_list_without_organization(self):
+        harvest_data = {
+            "type": "harvest",
+            "url": "https://www.gov.uk/random",
+            "source_type": "test-nose"
+        }
+
+        other_harvest_data = {
+            "type": "harvest",
+            "url": "https://www.gov.uk/other-path",
+            "source_type": "test-nose"
+        }
+
+        harvest_source = factories.HarvestSource.create()
+        other_harvest_source = factories.HarvestSource.create()
+
+        app = _get_test_app()
+        response = app.get('/api/action/{0}'.format('harvest_source_list'), status=200)
+
+        results = response.json['result']
+
+        assert response.json['success'] is True
+        assert 2 is len(results)
+
+    @patch.dict('ckanext.harvest.logic.action.get.config',
+                {'ckan.harvest.harvest_source_limit': 1})
+    def test_list_with_limit(self):
+        harvest_data = {
+            "type": "harvest",
+            "url": "https://www.gov.uk/random",
+            "source_type": "test-nose"
+        }
+
+        other_harvest_data = {
+            "type": "harvest",
+            "url": "https://www.gov.uk/other-path",
+            "source_type": "test-nose"
+        }
+
+        harvest_source = factories.HarvestSource.create()
+        other_harvest_source = factories.HarvestSource.create()
+
+        app = _get_test_app()
+        response = app.get('/api/action/{0}'.format('harvest_source_list'), status=200)
+
+        results = response.json['result']
+
+        assert response.json['success'] is True
+        assert 1 is len(results)
+
 
 class HarvestSourceFixtureMixin(object):
     def _get_source_dict(self):
@@ -495,6 +584,103 @@ class TestActions(ActionBase):
         assert_equal(job['status'], 'Running')
         assert_equal(job['gather_started'], None)
         assert_in('stats', job.keys())
+
+    @patch('ckanext.harvest.logic.action.update.log.error')
+    def test_harvest_jobs_run_times_out(self, mock_error_log):
+        harvest_source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
+        harvest_job = factories.HarvestJobObj(
+            source=harvest_source,
+            run=True
+        )
+        # date in the past, ckan.harvest.timeout has been set to 5 minutes in test-nose.ini
+        harvest_job.created = '2020-05-29 10:00:00.0'
+        harvest_job.save()
+
+        context = {'model': model, 'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+
+        data_dict = {
+            'guid': 'guid',
+            'content': 'content',
+            'job_id': harvest_job.id,
+            'source_id': harvest_source.id
+        }
+
+        job = toolkit.get_action('harvest_jobs_run')(
+            context, data_dict)
+
+        msg, = mock_error_log.call_args[0]
+
+        assert mock_error_log.called
+        assert msg == 'Job timeout: {} is taking longer than 5 minutes'.format(harvest_job.id)
+
+        status = toolkit.get_action('harvest_source_show_status')(context, {'id': harvest_source.id})
+        assert status['last_job']['status'] == 'Finished'
+        assert status['last_job']['stats']['errored'] == 1
+
+    @patch('ckanext.harvest.logic.action.update.log.error')
+    def test_harvest_jobs_run_does_not_timeout_if_within_time(self, mock_error_log):
+        harvest_source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
+        harvest_job = factories.HarvestJobObj(
+            source=harvest_source,
+            run=True
+        )
+        # job has just been created, so no timeout expected
+
+        context = {'model': model, 'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+
+        data_dict = {
+            'guid': 'guid',
+            'content': 'content',
+            'job_id': harvest_job.id,
+            'source_id': harvest_source.id
+        }
+
+        job_obj = HarvestJob.get(harvest_job.id)
+
+        job = toolkit.get_action('harvest_jobs_run')(
+            context, data_dict)
+
+        assert not mock_error_log.called
+
+        status = toolkit.get_action('harvest_source_show_status')(context, {'id': harvest_source.id})
+        assert status['last_job']['status'] == 'Running'
+        assert status['last_job']['stats']['errored'] == 0
+
+    @patch.dict('ckanext.harvest.logic.action.update.config',
+                {'ckan.harvest.timeout': None})
+    @patch('ckanext.harvest.logic.action.update.log.error')
+    def test_harvest_jobs_run_does_not_timeout_if_timeout_not_set(self, mock_error_log):
+        harvest_source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
+        harvest_job = factories.HarvestJobObj(
+            source=harvest_source,
+            run=True
+        )
+        # date in the past, assumes ckan.harvest.timeout has been set to 5 minutes
+        harvest_job.created = '2020-05-29 10:00:00.0'
+        harvest_job.save()
+
+        context = {'model': model, 'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+
+        data_dict = {
+            'guid': 'guid',
+            'content': 'content',
+            'job_id': harvest_job.id,
+            'source_id': harvest_source.id
+        }
+
+        job_obj = HarvestJob.get(harvest_job.id)
+
+        job = toolkit.get_action('harvest_jobs_run')(
+            context, data_dict)
+
+        assert not mock_error_log.called
+
+        status = toolkit.get_action('harvest_source_show_status')(context, {'id': harvest_source.id})
+        assert status['last_job']['status'] == 'Running'
+        assert status['last_job']['stats']['errored'] == 0
 
 
 class TestHarvestObject(unittest.TestCase):
