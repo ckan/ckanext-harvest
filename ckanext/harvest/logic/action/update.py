@@ -30,7 +30,7 @@ from ckanext.harvest.utils import (
 from ckanext.harvest.queue import (
     get_gather_publisher, resubmit_jobs, resubmit_objects)
 
-from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
+from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject, HarvestGatherError, HarvestObjectError
 from ckanext.harvest.logic import HarvestJobExists
 from ckanext.harvest.logic.dictization import harvest_job_dictize
 
@@ -500,6 +500,10 @@ def harvest_jobs_run(context, data_dict):
     Runs scheduled jobs, checks if any jobs need marking as finished, and
     resubmits queue items if needed.
 
+    If ckanext.harvest.timeout is set:
+    Check if the duration of the job is longer than ckanext.harvest.timeout, 
+    then mark that job as finished as there is probably an underlying issue with the harvest process.
+
     This should be called every few minutes (e.g. by a cron), or else jobs
     will never show as finished.
 
@@ -514,6 +518,7 @@ def harvest_jobs_run(context, data_dict):
     '''
     log.info('Harvest job run: %r', data_dict)
     check_access('harvest_jobs_run', context, data_dict)
+    timeout = config.get('ckan.harvest.timeout')
 
     session = context['session']
 
@@ -530,6 +535,24 @@ def harvest_jobs_run(context, data_dict):
         context, {'source_id': source_id, 'status': u'Running'})
     if len(jobs):
         for job in jobs:
+            if timeout:
+                created = datetime.datetime.strptime(job['created'], '%Y-%m-%d %H:%M:%S.%f')
+                now = datetime.datetime.now()
+                if now - created > datetime.timedelta(minutes=int(timeout)):
+                    msg = 'Job timeout: %s is taking longer than %s minutes' % (job['id'], timeout)
+                    log.error(msg)
+
+                    job_obj = HarvestJob.get(job['id'])
+                    job_obj.status = u'Finished'
+                    job_obj.finished = now
+                    job_obj.save()
+
+                    err = HarvestGatherError(message=msg, job=job_obj)
+                    err.save()
+                    log.info('Marking job as finished due to error: %s %s',
+                            job_obj.source.url, job_obj.id)
+                    continue
+
             if job['gather_finished']:
                 num_objects_in_progress = \
                     session.query(HarvestObject.id) \
