@@ -1,0 +1,33 @@
+This is a summary of the latest harvest job ({{ job_url }}) set-up in {{ site_url }}.
+
+Harvest Source: {{ harvest_source_title }}
+Harvest Configuration: {{ harvest_configuration | safe }}
+
+Organization: {{ organization }}
+
+Harvest Job Id: {{ job_id }}
+Created: {{ job_created }}
+Finished: {{ job_finished }}
+
+Records in Error: {{ records_in_error }}
+Records Added: {{ records_added }}
+Records Updated: {{ records_updated }}
+Records Deleted: {{ records_deleted }}
+
+{{ error_summary_title }}
+ - {{ errors|length }} errors
+{{ job_errors_title }}: {{ job_errors|length }}
+{% for error in job_errors %}
+    - {{ error }} {% endfor %}
+
+{{ obj_errors_title }}: {{ obj_errors|length }}
+{% for error in obj_errors %}
+    - {{ error }} {% endfor %}
+
+Total packages: {{ packages|length }}
+{% for package in packages %}
+    - {{ package }}{% endfor %}
+
+--
+You are receiving this email because you are currently set-up as Administrator for {{ site_url }}.
+Please do not reply to this email as it was sent from a non-monitored address.

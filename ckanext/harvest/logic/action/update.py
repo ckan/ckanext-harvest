@@ -39,6 +39,7 @@ from ckanext.harvest.logic.action.get import (
 
 import ckan.lib.mailer as mailer
 from itertools import islice
+from ckan.lib.base import render_jinja2
 
 log = logging.getLogger(__name__)
 
@@ -660,11 +661,22 @@ def harvest_jobs_run(context, data_dict):
                     get_action('harvest_source_reindex')(
                         context, {'id': job_obj.source.id})
 
-                    status = get_action('harvest_source_show_status')(context, {'id': job_obj.source.id})
+                    status = get_action('harvest_source_show_status')(
+                        context, {'id': job_obj.source.id})
 
-                    if toolkit.asbool(config.get('ckan.harvest.status_mail.errored'))\
-                            and (status['last_job']['stats']['errored']):
-                        send_error_mail(context, job_obj.source.id, status)
+                    notify_all = toolkit.asbool(config.get('ckan.harvest.status_mail.all'))
+                    notify_errors = toolkit.asbool(config.get('ckan.harvest.status_mail.errored'))
+                    last_job_errors = status['last_job']['stats'].get('errored', 0)
+
+                    if notify_all:
+                        subject, body = prepare_summary_mail(context, job_obj.source.id, status)
+                        log.info('Sending summary email')
+                        send_mail(context, job_obj.source.id, subject, body)
+                    elif notify_errors and last_job_errors > 0:
+                        subject, body = prepare_error_mail(context, job_obj.source_id, status)
+                        log.info('Sending error mail')
+                        send_mail(context, job_obj.source.id, subject, body)
+                    
                 else:
                     log.debug('Ongoing job:%s source:%s',
                               job['id'], job['source_id'])
@@ -679,106 +691,146 @@ def harvest_jobs_run(context, data_dict):
     return []  # merely for backwards compatibility
 
 
-def send_error_mail(context, source_id, status):
-
+def get_mail_extra_vars(context, source_id, status):
     last_job = status['last_job']
+    harvest_objects = get_action(
+        'harvest_object_list')(context, {'id': source_id})
+    packages = []
+    
+    for harvest_object in harvest_objects:
+        object_info = get_action(
+            'harvest_object_show')(context, {'id': harvest_object})
+
+        packages.append(object_info.get('package'))
+
     source = get_action('harvest_source_show')(context, {'id': source_id})
-
-    ckan_site_url = config.get('ckan.site_url')
-    job_url = toolkit.url_for('harvest_job_show', source=source['id'], id=last_job['id'])
-
-    msg = toolkit._('This is a failure-notification of the latest harvest job ({0}) set-up in {1}.')\
-        .format(job_url, ckan_site_url)
-    msg += '\n\n'
-
-    msg += toolkit._('Harvest Source: {0}').format(source['title']) + '\n'
-    if source.get('config'):
-        msg += toolkit._('Harvester-Configuration: {0}').format(source['config']) + '\n'
-    msg += '\n\n'
-
-    if source['organization']:
-        msg += toolkit._('Organization: {0}').format(source['organization']['name'])
-        msg += '\n\n'
-
-    msg += toolkit._('Harvest Job Id: {0}').format(last_job['id']) + '\n'
-    msg += toolkit._('Created: {0}').format(last_job['created']) + '\n'
-    msg += toolkit._('Finished: {0}').format(last_job['finished']) + '\n\n'
-
-    report = get_action('harvest_job_report')(context, {'id': status['last_job']['id']})
-
-    msg += toolkit._('Records in Error: {0}').format(str(last_job['stats'].get('errored', 0)))
-    msg += '\n'
-
-    obj_error = ''
-    job_error = ''
-
+    report = get_action(
+        'harvest_job_report')(context, {'id': status['last_job']['id']})
+    obj_errors = []
+    job_errors = []
+    
     for harvest_object_error_key in islice(report.get('object_errors'), 0, 20):
-        harvest_object_error = report.get('object_errors')[harvest_object_error_key]['errors']
+        harvest_object_error = report.get(
+            'object_errors')[harvest_object_error_key]['errors']
+
         for error in harvest_object_error:
-            obj_error += error['message']
+            obj_errors.append(error['message'])
 
     for harvest_gather_error in islice(report.get('gather_errors'), 0, 20):
-        job_error += harvest_gather_error['message'] + '\n'
+        job_errors.append(harvest_gather_error['message'])
 
-    if (obj_error != '' or job_error != ''):
-        msg += toolkit._('Error Summary')
-        msg += '\n'
+    if source.get('organization'):
+        organization = source['organization']['name']
+    else:
+        organization = 'Not specified'
 
-    if (obj_error != ''):
-        msg += toolkit._('Document Error')
-        msg += '\n' + obj_error + '\n\n'
+    harvest_configuration = source.get('config')
 
-    if (job_error != ''):
-        msg += toolkit._('Job Errors')
-        msg += '\n' + job_error + '\n\n'
+    if harvest_configuration in [None, '', '{}']:
+        harvest_configuration = 'Not specified'
 
-    if obj_error or job_error:
-        msg += '\n--\n'
-        msg += toolkit._('You are receiving this email because you are currently set-up as Administrator for {0}.'
-                         ' Please do not reply to this email as it was sent from a non-monitored address.')\
-            .format(config.get('ckan.site_title'))
+    errors = job_errors + obj_errors
 
-        recipients = []
+    extra_vars = {
+        'organization': organization,
+        'site_title': config.get('ckan.site_title'),
+        'site_url': config.get('ckan.site_url'),
+        'job_url': toolkit.url_for(
+            'harvest_job_show',
+            source=source['id'],
+            id=last_job['id']),
+        'harvest_source_title': source['title'],
+        'harvest_configuration': harvest_configuration,
+        'job_finished': last_job['finished'],
+        'job_id': last_job['id'],
+        'job_created': last_job['created'],
+        'records_in_error': str(last_job['stats'].get('errored', 0)),
+        'records_added': str(last_job['stats'].get('added', 0)),
+        'records_deleted': str(last_job['stats'].get('deleted', 0)),
+        'records_updated': str(last_job['stats'].get('updated', 0)),
+        'packages': packages,
+        'error_summary_title': toolkit._('Error Summary'),
+        'obj_errors_title': toolkit._('Document Error'),
+        'job_errors_title': toolkit._('Job Errors'),
+        'obj_errors': obj_errors,
+        'job_errors': job_errors,
+        'errors': errors,
+    }
 
-        # gather sysadmins
-        model = context['model']
-        sysadmins = model.Session.query(model.User).filter(
-            model.User.sysadmin == True  # noqa: E712
-        ).all()
-        for sysadmin in sysadmins:
-            recipients.append({
-                'name': sysadmin.name,
-                'email': sysadmin.email
-            })
+    return extra_vars
 
-        # gather organization-admins
-        if source.get('organization'):
-            members = get_action('member_list')(context, {
-                'id': source['organization']['id'],
-                'object_type': 'user',
-                'capacity': 'admin'
-            })
-            for member in members:
-                member_details = get_action('user_show')(context, {'id': member[0]})
-                if member_details['email']:
-                    recipients.append({
-                        'name': member_details['name'],
-                        'email': member_details['email']
-                    })
 
-        for recipient in recipients:
-            email = {'recipient_name': recipient['name'],
-                     'recipient_email': recipient['email'],
-                     'subject': config.get('ckan.site_title') + ' - Harvesting Job - Error Notification',
-                     'body': msg}
+def prepare_summary_mail(context, source_id, status):
+    extra_vars = get_mail_extra_vars(context, source_id, status)
+    body = render_jinja2('emails/summary_email.txt', extra_vars)
 
-            try:
-                mailer.mail_recipient(**email)
-            except mailer.MailerException:
-                log.error('Sending Harvest-Notification-Mail failed. Message: ' + msg)
-            except Exception as e:
-                log.error(e)
-                raise
+    if str(status['last_job']['stats'].get('errored', 0)) == '0':
+        subject = '{} - Harvesting Job Successful - Summary Notification'\
+                  .format(config.get('ckan.site_title'))
+    else:
+        subject = '{} - Harvesting Job with Errors - Summary Notification'\
+                  .format(config.get('ckan.site_title'))
+
+    return subject, body
+
+
+def prepare_error_mail(context, source_id, status):
+    extra_vars = get_mail_extra_vars(context, source_id, status)
+    body = render_jinja2('emails/error_email.txt', extra_vars)
+    subject = '{} - Harvesting Job - Error Notification'\
+              .format(config.get('ckan.site_title'))
+
+    return subject, body
+
+
+def send_mail(context, source_id, subject, body):
+    source = get_action('harvest_source_show')(context, {'id': source_id})
+    recipients = []
+
+    # gather sysadmins
+    model = context['model']
+    sysadmins = model.Session.query(model.User).filter(
+        model.User.sysadmin == True  # noqa: E712
+    ).all()
+
+    for sysadmin in sysadmins:
+        recipients.append({
+            'name': sysadmin.name,
+            'email': sysadmin.email
+        })
+
+    # gather organization-admins
+    if source.get('organization'):
+        members = get_action('member_list')(context, {
+            'id': source['organization']['id'],
+            'object_type': 'user',
+            'capacity': 'admin'
+        })
+
+        for member in members:
+            member_details = get_action(
+                'user_show')(context, {'id': member[0]})
+
+            if member_details['email']:
+                recipients.append({
+                    'name': member_details['name'],
+                    'email': member_details['email']
+                })
+
+    for recipient in recipients:
+        email = {'recipient_name': recipient['name'],
+                 'recipient_email': recipient['email'],
+                 'subject': subject,
+                 'body': body}
+
+        try:
+            mailer.mail_recipient(**email)
+        except mailer.MailerException:
+            log.error(
+                'Sending Harvest-Notification-Mail failed. Message: ' + body)
+        except Exception as e:
+            log.error(e)
+            raise
 
 
 def harvest_send_job_to_gather_queue(context, data_dict):
