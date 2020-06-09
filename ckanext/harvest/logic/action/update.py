@@ -9,6 +9,7 @@ import datetime
 
 from ckantoolkit import config
 from sqlalchemy import and_, or_
+from six.moves.urllib.parse import urljoin
 
 from ckan.lib.search.index import PackageSearchIndex
 from ckan.plugins import PluginImplementations
@@ -667,16 +668,15 @@ def harvest_jobs_run(context, data_dict):
                     notify_all = toolkit.asbool(config.get('ckan.harvest.status_mail.all'))
                     notify_errors = toolkit.asbool(config.get('ckan.harvest.status_mail.errored'))
                     last_job_errors = status['last_job']['stats'].get('errored', 0)
-
-                    if notify_all:
-                        subject, body = prepare_summary_mail(context, job_obj.source.id, status)
-                        log.info('Sending summary email')
-                        send_mail(context, job_obj.source.id, subject, body)
-                    elif notify_errors and last_job_errors > 0:
-                        subject, body = prepare_error_mail(context, job_obj.source_id, status)
-                        log.info('Sending error mail')
-                        send_mail(context, job_obj.source.id, subject, body)
+                    log.info('Notifications: All:{} On error:{} Errors:{}'.format(notify_all, notify_errors, last_job_errors))
                     
+                    if notify_all:
+                        if last_job_errors > 0:
+                            send_error_email(context, job_obj.source_id, status)
+                        else:
+                            send_summary_email(context, job_obj.source.id, status)
+                    elif notify_errors and last_job_errors > 0:
+                        send_error_email(context, job_obj.source.id, status)
                 else:
                     log.debug('Ongoing job:%s source:%s',
                               job['id'], job['source_id'])
@@ -693,16 +693,7 @@ def harvest_jobs_run(context, data_dict):
 
 def get_mail_extra_vars(context, source_id, status):
     last_job = status['last_job']
-    harvest_objects = get_action(
-        'harvest_object_list')(context, {'id': source_id})
-    packages = []
     
-    for harvest_object in harvest_objects:
-        object_info = get_action(
-            'harvest_object_show')(context, {'id': harvest_object})
-
-        packages.append(object_info.get('package'))
-
     source = get_action('harvest_source_show')(context, {'id': source_id})
     report = get_action(
         'harvest_job_report')(context, {'id': status['last_job']['id']})
@@ -731,14 +722,14 @@ def get_mail_extra_vars(context, source_id, status):
 
     errors = job_errors + obj_errors
 
+    site_url = config.get('ckan.site_url')
+    job_url = toolkit.url_for('harvest_job_show', source=source['id'], id=last_job['id'])
+    full_job_url = urljoin(site_url, job_url)
     extra_vars = {
         'organization': organization,
         'site_title': config.get('ckan.site_title'),
-        'site_url': config.get('ckan.site_url'),
-        'job_url': toolkit.url_for(
-            'harvest_job_show',
-            source=source['id'],
-            id=last_job['id']),
+        'site_url': site_url,
+        'job_url': full_job_url,
         'harvest_source_title': source['title'],
         'harvest_configuration': harvest_configuration,
         'job_finished': last_job['finished'],
@@ -748,7 +739,6 @@ def get_mail_extra_vars(context, source_id, status):
         'records_added': str(last_job['stats'].get('added', 0)),
         'records_deleted': str(last_job['stats'].get('deleted', 0)),
         'records_updated': str(last_job['stats'].get('updated', 0)),
-        'packages': packages,
         'error_summary_title': toolkit._('Error Summary'),
         'obj_errors_title': toolkit._('Document Error'),
         'job_errors_title': toolkit._('Job Errors'),
@@ -759,20 +749,13 @@ def get_mail_extra_vars(context, source_id, status):
 
     return extra_vars
 
-
 def prepare_summary_mail(context, source_id, status):
     extra_vars = get_mail_extra_vars(context, source_id, status)
     body = render_jinja2('emails/summary_email.txt', extra_vars)
-
-    if str(status['last_job']['stats'].get('errored', 0)) == '0':
-        subject = '{} - Harvesting Job Successful - Summary Notification'\
+    subject = '{} - Harvesting Job Successful - Summary Notification'\
                   .format(config.get('ckan.site_title'))
-    else:
-        subject = '{} - Harvesting Job with Errors - Summary Notification'\
-                  .format(config.get('ckan.site_title'))
-
+    
     return subject, body
-
 
 def prepare_error_mail(context, source_id, status):
     extra_vars = get_mail_extra_vars(context, source_id, status)
@@ -782,6 +765,13 @@ def prepare_error_mail(context, source_id, status):
 
     return subject, body
 
+def send_summary_email(context, source_id, status):
+    subject, body = prepare_summary_mail(context, source_id, status)
+    send_mail(context, source_id, subject, body)
+
+def send_error_email(context, source_id, status):
+    subject, body = prepare_error_mail(context, source_id, status)
+    send_mail(context, source_id, subject, body)
 
 def send_mail(context, source_id, subject, body):
     source = get_action('harvest_source_show')(context, {'id': source_id})
