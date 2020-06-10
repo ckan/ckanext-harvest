@@ -670,13 +670,10 @@ def harvest_jobs_run(context, data_dict):
                     last_job_errors = status['last_job']['stats'].get('errored', 0)
                     log.info('Notifications: All:{} On error:{} Errors:{}'.format(notify_all, notify_errors, last_job_errors))
                     
-                    if notify_all:
-                        if last_job_errors > 0:
-                            send_error_email(context, job_obj.source_id, status)
-                        else:
-                            send_summary_email(context, job_obj.source.id, status)
-                    elif notify_errors and last_job_errors > 0:
+                    if last_job_errors > 0 and (notify_all or notify_errors):
                         send_error_email(context, job_obj.source.id, status)
+                    elif notify_all:
+                        send_summary_email(context, job_obj.source.id, status)
                 else:
                     log.debug('Ongoing job:%s source:%s',
                               job['id'], job['source_id'])

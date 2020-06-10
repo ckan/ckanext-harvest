@@ -191,7 +191,7 @@ If you want to send an email when a **Harvest Job fails**, you can set the follo
 
     ckan.harvest.status_mail.errored = True
 
-If you want to send an email when **all Harvest Jobs finish** (whether or not it failed), you can set the following configuration option in the ini file:
+If you want to send an email when **completed Harvest Jobs finish** (whether or not it failed), you can set the following configuration option in the ini file:
 
     ckan.harvest.status_mail.all = True
 
