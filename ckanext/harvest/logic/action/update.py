@@ -12,7 +12,7 @@ from sqlalchemy import and_, or_
 from six.moves.urllib.parse import urljoin
 
 from ckan.lib.search.index import PackageSearchIndex
-from ckan.plugins import PluginImplementations
+from ckan.plugins import toolkit, PluginImplementations, IActions
 from ckan.logic import get_action
 from ckanext.harvest.interfaces import IHarvester
 from ckan.lib.search.common import SearchIndexError, make_connection
@@ -20,8 +20,6 @@ from ckan.lib.search.common import SearchIndexError, make_connection
 
 from ckan.model import Package
 from ckan import logic
-from ckan.plugins import toolkit
-
 
 from ckan.logic import NotFound, check_access
 
@@ -810,17 +808,15 @@ def get_recipients(context, source_id):
                 })
 
     # allow plugins to add custom recipients 
-    try:
-        fn = toolkit.get_action('add_extra_notification_recipients')
-    except KeyError:
-        fn = None
-    
-    if fn is not None:
-        data_dict = {'source_id': source_id}
-        new_recipients = fn(context, data_dict)
-        if len(new_recipients) > 0:
-            log.info('New recipients added to notification: {}'.format(new_recipients))
-            recipients += new_recipients
+    for p in PluginImplementations(IActions):
+        actions = p.get_actions()
+        if 'add_extra_notification_recipients' in actions.keys():
+            fn = actions['add_extra_notification_recipients']    
+            data_dict = {'source_id': source_id}
+            new_recipients = fn(context, data_dict)
+            if len(new_recipients) > 0:
+                log.info('New recipients added to notification: {}'.format(new_recipients))
+                recipients += new_recipients
     
     return recipients
 
