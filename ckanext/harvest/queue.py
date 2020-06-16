@@ -203,7 +203,16 @@ class RedisPublisher(object):
         value = json.dumps(body)
         # remove if already there
         if self.routing_key == get_gather_routing_key():
-            self.redis.lrem(self.routing_key, 0, value)
+            # it appears that both types of call are possible within the redis library depending on which version used
+            # for now support both versions
+            # https://github.com/andymccurdy/redis-py#client-classes-redis-and-strictredis
+            try:
+                self.redis.lrem(self.routing_key, 0, value)
+            except redis.ResponseError as e:
+                if 'value is not an integer' in e.message:
+                    self.redis.lrem(self.routing_key, value, 0)
+                else:
+                    raise
         self.redis.rpush(self.routing_key, value)
 
     def close(self):
@@ -447,6 +456,16 @@ def fetch_callback(channel, method, header, body):
         obj.state = "ERROR"
         obj.save()
         log.error('Too many consecutive retries for object {0}'.format(obj.id))
+        channel.basic_ack(method.delivery_tag)
+        return False
+
+    # check if job has been set to finished 
+    job = HarvestJob.get(obj.harvest_job_id)
+    if job.status == 'Finished':
+        obj.state = "ERROR"
+        obj.report_status = "errored"
+        obj.save()
+        log.error('Job {0} was aborted or timed out, object {1} set to error'.format(job.id, obj.id))
         channel.basic_ack(method.delivery_tag)
         return False
 

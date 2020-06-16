@@ -222,7 +222,12 @@ def harvest_source_extra_validator(key, data, errors, context):
 def harvest_source_convert_from_config(key, data, errors, context):
     config = data[key]
     if config:
-        config_dict = json.loads(config)
+        try:
+            config_dict = json.loads(config)
+        except ValueError as e:
+            log.error('Wrong JSON provided config, skipping')
+            data[key] = None
+            return
         for key, value in config_dict.items():
             data[(key,)] = value
 

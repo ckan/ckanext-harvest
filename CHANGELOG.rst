@@ -11,6 +11,25 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_
 Unreleased_
 ***********
 
+***********
+1.3.0_ - 2020-06-04
+***********
+
+Changed
+-------
+
+- Support for Python 3 #392
+- Add option for job timeout #403
+- Add support for limiting number of results and filtering by organization in harvest_source_list #403
+
+Fixed
+-----
+
+- Fix support for different Redis client libraries #403
+- Fix force_import option in run_test command #402
+- Fix show object #395
+- Fix handling of exceptions in controller #390
+
 
 ***********
 1.2.1_ - 2020-01-22
@@ -209,7 +228,9 @@ Categories
 - ``Fixed`` for any bug fixes.
 - ``Security`` to invite users to upgrade in case of vulnerabilities.
 
-.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.2.0...HEAD
+.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.3.0...HEAD
+.. _1.3.0: https://github.com/ckan/ckanext-harvest/compare/v1.2.1...v1.3.0
+.. _1.2.1: https://github.com/ckan/ckanext-harvest/compare/v1.2.0...v1.2.1
 .. _1.2.0: https://github.com/ckan/ckanext-harvest/compare/v1.1.4...v1.2.0
 .. _1.1.4: https://github.com/ckan/ckanext-harvest/compare/v1.1.3...v1.1.4
 .. _1.1.3: https://github.com/ckan/ckanext-harvest/compare/v1.1.2...v1.1.3
