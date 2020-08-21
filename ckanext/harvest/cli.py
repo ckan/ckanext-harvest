@@ -108,7 +108,11 @@ def clear(ctx, id):
 
 @source.command()
 @click.argument(u"id", metavar=u"SOURCE_ID_OR_NAME", required=False)
-@click.argument(u"keep_actual", default=False, required=False)
+@click.option(
+    "-k",
+    "--keep-actual",
+    default=False
+)
 @click.pass_context
 def clear_history(ctx, id, keep_actual):
     """If no source id is given the history for all harvest sources
