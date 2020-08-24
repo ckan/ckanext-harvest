@@ -7,7 +7,6 @@ import datetime
 from ckan import logic
 from ckan.plugins import PluginImplementations
 from ckanext.harvest.interfaces import IHarvester
-from ckan.common import request
 
 import ckan.plugins as p
 from ckan.logic import NotFound, check_access, side_effect_free
@@ -126,7 +125,8 @@ def harvest_source_list(context, data_dict):
     TODO: Use package search
     '''
 
-    organization_id = request.params.get('organization_id')
+
+    organization_id = data_dict.get('organization_id')
     limit = config.get('ckan.harvest.harvest_source_limit', 100)
 
     sources = _get_sources_for_user(context, data_dict, organization_id=organization_id, limit=limit)
