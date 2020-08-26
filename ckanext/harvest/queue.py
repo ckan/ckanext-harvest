@@ -169,8 +169,8 @@ def resubmit_objects():
 
     for object_id, in waiting_objects:
         if not redis.get(object_id):
-            log.debug('Re-sent object {} to the fetch queue'.format(object_id[0]))
-            publisher.send({'harvest_object_id': object_id[0]})
+            log.debug('Re-sent object {} to the fetch queue'.format(object_id))
+            publisher.send({'harvest_object_id': object_id})
 
 
 class Publisher(object):
