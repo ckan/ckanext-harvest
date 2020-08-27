@@ -11,7 +11,7 @@ fi
 
 if (( $CKAN_MINOR_VERSION >= 9 ))
 then
-    pytest --ckan-ini=subdir/test.ini --cov=ckanext.harvest ckanext/harvest/tests
+    pytest --ckan-ini=subdir/test.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
 else
     nosetests --ckan --nologcapture --with-pylons=subdir/test-nose.ini --with-coverage --cover-package=ckanext.harvest --cover-inclusive --cover-erase --cover-tests ckanext/harvest/tests/nose
 fi
