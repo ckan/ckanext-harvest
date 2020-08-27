@@ -49,15 +49,15 @@ docker run --name ckan-solr -p 8983:8983 -d openknowledge/ckan-solr:6.6
 sed -i -e 's/solr_url.*/solr_url = http:\/\/127.0.0.1:8983\/solr\/ckan-2.8/' ckan/test-core.ini
 
 echo "Setting up Postgres..."
-export PGVERSION="$(pg_lsclusters | grep online | awk '{print $1}')"
-export PGPORT="$(pg_lsclusters | grep online | awk '{print $3}')"
-echo "Using Postgres $PGVERSION on port $PGPORT"
-if [ $PGPORT != "5432" ]
+export PG_VERSION="$(pg_lsclusters | grep online | awk '{print $1}')"
+export PG_PORT="$(pg_lsclusters | grep online | awk '{print $3}')"
+echo "Using Postgres $PGVERSION on port $PG_PORT"
+if [ $PG_PORT != "5432" ]
 then
 	echo "Using non-standard Postgres port, updating configuration..."
-	sed -i -e 's/postgresql:\/\/ckan_default:pass@localhost\/ckan_test/postgresql:\/\/ckan_default:pass@localhost:$PGPORT\/ckan_test/' ckan/test-core.ini
-	sed -i -e 's/postgresql:\/\/ckan_default:pass@localhost\/datastore_test/postgresql:\/\/ckan_default:pass@localhost:$PGPORT\/datastore_test/' ckan/test-core.ini
-	sed -i -e 's/postgresql:\/\/datastore_default:pass@localhost\/datastore_test/postgresql:\/\/datastore_default:pass@localhost:$PGPORT\/datastore_test/' ckan/test-core.ini
+	sed -i -e 's/postgresql:\/\/ckan_default:pass@localhost\/ckan_test/postgresql:\/\/ckan_default:pass@localhost:$PG_PORT\/ckan_test/' ckan/test-core.ini
+	sed -i -e 's/postgresql:\/\/ckan_default:pass@localhost\/datastore_test/postgresql:\/\/ckan_default:pass@localhost:$PG_PORT\/datastore_test/' ckan/test-core.ini
+	sed -i -e 's/postgresql:\/\/datastore_default:pass@localhost\/datastore_test/postgresql:\/\/datastore_default:pass@localhost:$PG_PORT\/datastore_test/' ckan/test-core.ini
 fi
 
 
