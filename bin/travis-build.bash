@@ -29,6 +29,11 @@ else
     echo "CKAN version: ${CKAN_TAG#ckan-}"
 fi
 
+if [ -f requirement-setuptools.txt ]
+then
+    pip install -r requirement-setuptools.txt
+fi
+
 python setup.py develop
 
 if (( $CKAN_MINOR_VERSION >= 9 )) && (( $PYTHON_MAJOR_VERSION == 2 ))
