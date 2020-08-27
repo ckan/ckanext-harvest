@@ -1,3 +1,5 @@
+os: linux
+dist: focal
 language: python
 
 services:
@@ -6,8 +8,6 @@ services:
 
 install: bash bin/travis-build.bash
 script: bash bin/travis-run.bash
-
-dist: focal
 
 stages:
   - Flake8
@@ -44,7 +44,7 @@ jobs:
           sources:
             - sourceline: 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main'
           packages:
-            - postgresql-client-11
+            - postgresql-11
 
     - python: "2.7"
       env: CKANVERSION=2.7
@@ -54,7 +54,7 @@ jobs:
           sources:
             - sourceline: 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main'
           packages:
-            - postgresql-client-11
+            - postgresql-11
 
     - python: "2.7"
       env: CKANVERSION=2.6
@@ -64,7 +64,7 @@ jobs:
           sources:
             - sourceline: 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main'
           packages:
-            - postgresql-client-11
+            - postgresql-11
 
 
 cache:
