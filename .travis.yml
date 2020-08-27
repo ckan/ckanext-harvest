@@ -1,13 +1,13 @@
 language: python
+
 services:
     - redis
     - postgresql
+
 install: bash bin/travis-build.bash
 script: bash bin/travis-run.bash
 
-# the new trusty images of Travis cause build errors with psycopg2, see https://github.com/travis-ci/travis-ci/issues/8897
-dist: trusty
-group: deprecated-2017Q4
+dist: focal
 
 stages:
   - Tests
