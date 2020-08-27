@@ -47,7 +47,7 @@ pip install -r dev-requirements.txt
 cd -
 
 echo "Setting up Solr..."
-docker run -n ckan-solr -p 8983:8983 openknowledge/ckan-solr:6.6
+docker run --name ckan-solr -p 8983:8983 -d openknowledge/ckan-solr:6.6
 sed -i -e 's/solr_url.*/solr_url = http:\/\/127.0.0.1:8983\/solr\/ckan-2.8' ckan/test-core.ini
 
 echo "Creating the PostgreSQL user and database..."
