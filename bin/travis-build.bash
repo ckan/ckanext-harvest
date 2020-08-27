@@ -73,7 +73,6 @@ python setup.py develop
 echo "Moving test.ini into a subdir... (because the core ini file is referenced as ../ckan/test-core.ini)"
 mkdir subdir
 mv test.ini subdir
-mv test-nose.ini subdir
 
 
 if (( $CKAN_MINOR_VERSION >= 9 ))
