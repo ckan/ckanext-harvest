@@ -13,5 +13,4 @@ fi
 export PYTHON_MAJOR_VERSION=${TRAVIS_PYTHON_VERSION%.*}
 
 psql --version
-
-service postgresql status
+pg_lsclusters
