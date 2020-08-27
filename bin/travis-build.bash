@@ -12,6 +12,11 @@ fi
 
 export PYTHON_MAJOR_VERSION=${TRAVIS_PYTHON_VERSION%.*}
 
+echo "Setting up Postgres"
+echo "Starting Postgres $PGVERSION"
+/etc/init.d/postgresql stop
+/etc/init.d/postgresql start $PGVERSION
+
 
 echo "Installing CKAN and its Python dependencies..."
 git clone https://github.com/ckan/ckan
