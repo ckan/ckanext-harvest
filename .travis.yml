@@ -49,22 +49,22 @@ jobs:
     - python: "2.7"
       env: CKANVERSION=2.7
       addons:
-        postgresql: '11'
+        postgresql: '10'
         apt:
           sources:
             - sourceline: 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main'
           packages:
-            - postgresql-11
+            - postgresql-10
 
     - python: "2.7"
       env: CKANVERSION=2.6
       addons:
-        postgresql: '11'
+        postgresql: '10'
         apt:
           sources:
             - sourceline: 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main'
           packages:
-            - postgresql-11
+            - postgresql-10
 
 
 cache:
