@@ -3,7 +3,6 @@ language: python
 services:
     - docker
     - redis
-    - postgresql
 
 install: bash bin/travis-build.bash
 script: bash bin/travis-run.bash
@@ -44,11 +43,29 @@ jobs:
 
     - stage: Tests
       python: "2.7"
-      env: CKANVERSION=2.8 PGVERSION=11
+      env: CKANVERSION=2.8
+      addons:
+        postgresql: '11'
+        apt:
+          packages:
+            - postgresql-client-11
+
     - python: "2.7"
-      env: CKANVERSION=2.7 PGVERSION=11
+      env: CKANVERSION=2.7
+      addons:
+        postgresql: '11'
+        apt:
+          packages:
+            - postgresql-client-11
+
     - python: "2.7"
-      env: CKANVERSION=2.6 PGVERSION=11
+      env: CKANVERSION=2.6
+      addons:
+        postgresql: '11'
+        apt:
+          packages:
+            - postgresql-client-11
+
 
 cache:
   directories:

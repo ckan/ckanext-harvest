@@ -12,10 +12,6 @@ fi
 
 export PYTHON_MAJOR_VERSION=${TRAVIS_PYTHON_VERSION%.*}
 
-echo "Setting up Postgres"
-echo "Starting Postgres $PGVERSION"
-service postgresql stop && service postgresql start $PGVERSION
-service postgresql status
 
 
 echo "Installing CKAN and its Python dependencies..."
