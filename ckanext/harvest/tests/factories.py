@@ -6,6 +6,8 @@ from ckan.plugins import toolkit
 
 class HarvestSource(factory.Factory):
 
+    FACTORY_FOR = harvest_model.HarvestSource
+
     class Meta:
         model = harvest_model.HarvestSource
 
@@ -42,6 +44,8 @@ class HarvestSourceObj(HarvestSource):
 
 class HarvestJob(factory.Factory):
 
+    FACTORY_FOR = harvest_model.HarvestJob
+
     class Meta:
         model = harvest_model.HarvestJob
 
@@ -71,6 +75,8 @@ class HarvestJobObj(HarvestJob):
 
 
 class HarvestObject(factory.Factory):
+
+    FACTORY_FOR = harvest_model.HarvestObject
 
     class Meta:
         model = harvest_model.HarvestObject
