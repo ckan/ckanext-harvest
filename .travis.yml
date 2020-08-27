@@ -8,12 +8,6 @@ install: bash bin/travis-build.bash
 script: bash bin/travis-run.bash
 
 dist: focal
-addons:
-  apt:
-    sources:
-        - sourceline: 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main'
-    packages:
-        - postgresql-11
 
 stages:
   - Flake8
@@ -47,6 +41,8 @@ jobs:
       addons:
         postgresql: '11'
         apt:
+          sources:
+            - sourceline: 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main'
           packages:
             - postgresql-client-11
 
@@ -55,6 +51,8 @@ jobs:
       addons:
         postgresql: '11'
         apt:
+          sources:
+            - sourceline: 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main'
           packages:
             - postgresql-client-11
 
@@ -63,6 +61,8 @@ jobs:
       addons:
         postgresql: '11'
         apt:
+          sources:
+            - sourceline: 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main'
           packages:
             - postgresql-client-11
 
