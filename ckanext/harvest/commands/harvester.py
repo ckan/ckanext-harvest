@@ -2,6 +2,8 @@ from __future__ import print_function
 
 import sys
 
+import six
+
 from ckan import model
 from ckan.logic import get_action, ValidationError
 
