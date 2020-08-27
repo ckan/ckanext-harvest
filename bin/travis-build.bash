@@ -13,10 +13,6 @@ fi
 export PYTHON_MAJOR_VERSION=${TRAVIS_PYTHON_VERSION%.*}
 
 
-echo "Installing the packages that CKAN requires..."
-sudo apt-get update -qq
-sudo apt-get install solr-jetty
-
 echo "Installing CKAN and its Python dependencies..."
 git clone https://github.com/ckan/ckan
 cd ckan
@@ -48,7 +44,7 @@ cd -
 
 echo "Setting up Solr..."
 docker run --name ckan-solr -p 8983:8983 -d openknowledge/ckan-solr:6.6
-sed -i -e 's/solr_url.*/solr_url = http:\/\/127.0.0.1:8983\/solr\/ckan-2.8' ckan/test-core.ini
+sed -i -e 's/solr_url.*/solr_url = http:\/\/127.0.0.1:8983\/solr\/ckan-2.8/' ckan/test-core.ini
 
 echo "Creating the PostgreSQL user and database..."
 sudo -u postgres psql -c "CREATE USER ckan_default WITH PASSWORD 'pass';"
