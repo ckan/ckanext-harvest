@@ -29,6 +29,11 @@ else
     echo "CKAN version: ${CKAN_TAG#ckan-}"
 fi
 
+if [ -f requirement-setuptools.txt]
+then
+    pip install -r requirement-setuptools.txt
+fi
+
 python setup.py develop
 
 if (( $CKAN_MINOR_VERSION >= 9 )) && (( $PYTHON_MAJOR_VERSION == 2 ))
@@ -42,13 +47,8 @@ pip install -r dev-requirements.txt
 cd -
 
 echo "Setting up Solr..."
-# solr is multicore for tests on ckan master now, but it's easier to run tests
-# on Travis single-core still.
-# see https://github.com/ckan/ckan/issues/2972
-sed -i -e 's/solr_url.*/solr_url = http:\/\/127.0.0.1:8983\/solr/' ckan/test-core.ini
-printf "NO_START=0\nJETTY_HOST=127.0.0.1\nJETTY_PORT=8983\nJAVA_HOME=$JAVA_HOME" | sudo tee /etc/default/jetty
-sudo cp ckan/ckan/config/solr/schema.xml /etc/solr/conf/schema.xml
-sudo service jetty restart
+docker run -n ckan-solr -p 8983:8983 openknowledge/ckan-solr:6.6
+sed -i -e 's/solr_url.*/solr_url = http:\/\/127.0.0.1:8983\/solr\/ckan-2.8' ckan/test-core.ini
 
 echo "Creating the PostgreSQL user and database..."
 sudo -u postgres psql -c "CREATE USER ckan_default WITH PASSWORD 'pass';"
