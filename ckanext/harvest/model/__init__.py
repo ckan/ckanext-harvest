@@ -79,6 +79,14 @@ def setup():
         if "harvest_job_id_idx" not in index_names:
             log.debug('Creating index for harvest_object')
             Index("harvest_job_id_idx", harvest_object_table.c.harvest_job_id).create()
+        
+        if "harvest_source_id_idx" not in index_names:
+            log.debug('Creating index for harvest source')
+            Index("harvest_source_id_idx", harvest_object_table.c.harvest_source_id).create()
+        
+        if "package_id_idx" not in index_names:
+            log.debug('Creating index for package')
+            Index("package_id_idx", harvest_object_table.c.package_id).create()
 
 
 class HarvestError(Exception):
@@ -288,6 +296,8 @@ def define_harvester_tables():
         # report_status: 'added', 'updated', 'not modified', 'deleted', 'errored'
         Column('report_status', types.UnicodeText, nullable=True),
         Index('harvest_job_id_idx', 'harvest_job_id'),
+        Index('harvest_source_id_idx', 'harvest_source_id'),
+        Index('package_id_idx', 'package_id'),
     )
 
     # New table
