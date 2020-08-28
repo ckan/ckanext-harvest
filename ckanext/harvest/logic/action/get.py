@@ -291,7 +291,7 @@ def harvest_object_list(context, data_dict):
     query = session.query(HarvestObject)
 
     if source_id:
-        query = query.filter(HarvestObject.source_id == source_id)
+        query = query.filter(HarvestObject.harvest_source_id == source_id)
 
     if only_current:
         query = query.filter(
