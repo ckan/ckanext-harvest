@@ -30,13 +30,19 @@ jobs:
 
     - stage: Tests
       python: "3.6"
+      services:
+          - postgres
       env: CKANVERSION=master
 
     - python: "2.7"
       env: CKANVERSION=2.9
+      services:
+          - postgres
 
     - python: "3.6"
       env: CKANVERSION=2.9
+      services:
+          - postgres
 
     - python: "2.7"
       env: CKANVERSION=2.8
