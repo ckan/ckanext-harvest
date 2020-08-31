@@ -12,7 +12,6 @@ fi
 
 export PYTHON_MAJOR_VERSION=${TRAVIS_PYTHON_VERSION%.*}
 
-
 echo "Installing CKAN and its Python dependencies..."
 git clone https://github.com/ckan/ckan
 cd ckan
@@ -44,14 +43,26 @@ pip install -r dev-requirements.txt
 cd -
 
 echo "Setting up Solr..."
-docker run --name ckan-solr -p 8983:8983 -d openknowledge/ckan-solr:6.6
-sed -i -e 's/solr_url.*/solr_url = http:\/\/127.0.0.1:8983\/solr\/ckan-2.8/' ckan/test-core.ini
+docker run --name ckan-solr -p 8983:8983 -d openknowledge/ckan-solr-dev:$CKANVERSION
+
+echo "Setting up Postgres..."
+export PG_VERSION="$(pg_lsclusters | grep online | awk '{print $1}')"
+export PG_PORT="$(pg_lsclusters | grep online | awk '{print $3}')"
+echo "Using Postgres $PGVERSION on port $PG_PORT"
+if [ $PG_PORT != "5432" ]
+then
+	echo "Using non-standard Postgres port, updating configuration..."
+	sed -i -e "s/postgresql:\/\/ckan_default:pass@localhost\/ckan_test/postgresql:\/\/ckan_default:pass@localhost:$PG_PORT\/ckan_test/" ckan/test-core.ini
+	sed -i -e "s/postgresql:\/\/ckan_default:pass@localhost\/datastore_test/postgresql:\/\/ckan_default:pass@localhost:$PG_PORT\/datastore_test/" ckan/test-core.ini
+	sed -i -e "s/postgresql:\/\/datastore_default:pass@localhost\/datastore_test/postgresql:\/\/datastore_default:pass@localhost:$PG_PORT\/datastore_test/" ckan/test-core.ini
+fi
+
 
 echo "Creating the PostgreSQL user and database..."
-sudo -u postgres psql -c "CREATE USER ckan_default WITH PASSWORD 'pass';"
-sudo -u postgres psql -c "CREATE USER datastore_default WITH PASSWORD 'pass';"
-sudo -u postgres psql -c 'CREATE DATABASE ckan_test WITH OWNER ckan_default;'
-sudo -u postgres psql -c 'CREATE DATABASE datastore_test WITH OWNER ckan_default;'
+sudo -u postgres psql -p $PG_PORT -c "CREATE USER ckan_default WITH PASSWORD 'pass';"
+sudo -u postgres psql -p $PG_PORT -c "CREATE USER datastore_default WITH PASSWORD 'pass';"
+sudo -u postgres psql -p $PG_PORT -c 'CREATE DATABASE ckan_test WITH OWNER ckan_default;'
+sudo -u postgres psql -p $PG_PORT -c 'CREATE DATABASE datastore_test WITH OWNER ckan_default;'
 
 echo "Initialising the database..."
 cd ckan
@@ -74,7 +85,7 @@ echo "Moving test.ini into a subdir... (because the core ini file is referenced 
 mkdir subdir
 mv test.ini subdir
 
-
+echo "Setting up additional requirements..."
 if (( $CKAN_MINOR_VERSION >= 9 ))
 then
     ckan -c subdir/test.ini harvester initdb
