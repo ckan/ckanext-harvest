@@ -33,16 +33,23 @@ jobs:
       env: CKANVERSION=master
       services:
           - postgresql
+          - redis
+          - docker
 
     - python: "2.7"
       env: CKANVERSION=2.9
       services:
           - postgresql
+          - redis
+          - docker
+
 
     - python: "3.6"
       env: CKANVERSION=2.9
       services:
           - postgresql
+          - redis
+          - docker
 
     - python: "2.7"
       env: CKANVERSION=2.8

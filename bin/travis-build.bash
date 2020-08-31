@@ -12,8 +12,6 @@ fi
 
 export PYTHON_MAJOR_VERSION=${TRAVIS_PYTHON_VERSION%.*}
 
-
-
 echo "Installing CKAN and its Python dependencies..."
 git clone https://github.com/ckan/ckan
 cd ckan
@@ -87,7 +85,7 @@ echo "Moving test.ini into a subdir... (because the core ini file is referenced 
 mkdir subdir
 mv test.ini subdir
 
-
+echo "Setting up additional requirements..."
 if (( $CKAN_MINOR_VERSION >= 9 ))
 then
     ckan -c subdir/test.ini harvester initdb
