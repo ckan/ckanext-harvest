@@ -228,6 +228,20 @@ def clear_harvest_source_history(source_id):
             len(cleared_sources_dicts))
 
 
+def abort_failed_jobs(job_life_span, include, exclude):
+    context = {
+        "model": model,
+        "user": _admin_user()["name"],
+        "session": model.Session,
+    }
+    result = tk.get_action("harvest_abort_failed_jobs")(context, {
+        "life_span": job_life_span,
+        "include": include,
+        "exclude": exclude
+    })
+    print(result)
+
+
 def purge_queues():
     from ckanext.harvest.queue import purge_queues as purge
 

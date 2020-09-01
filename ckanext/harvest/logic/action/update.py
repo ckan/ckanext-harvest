@@ -234,6 +234,80 @@ def harvest_source_clear(context, data_dict):
     return {'id': harvest_source_id}
 
 
+def harvest_abort_failed_jobs(context, data_dict):
+    session = context['session']
+
+    try:
+        life_span = int(data_dict.get('life_span'))
+    except ValueError:
+        life_span = 7
+
+    include_sid = []
+    exclude_sid = []
+    include = data_dict.get('include')
+
+    if include:
+        include_sid = set(_id for _id in include.split(','))
+
+    # TODO: if included sources provided do we want to use exclude?
+    if data_dict.get('exclude') and not include:
+        exclude_sid = set((_id for _id in data_dict.get('exclude').split(',')))
+
+    # lifespan is based on source update frequency
+    update_map = {
+        'DAILY': 1,
+        'WEEKLY': 7,
+        'BIWEEKLY': 14,
+        'MONTHLY': 30,
+        'MANUAL': life_span,
+        'ALWAYS': life_span
+    }
+
+    current_time = datetime.datetime.utcnow()
+
+    # get all running jobs
+    jobs_list = session.query(HarvestJob.id,
+                              HarvestJob.source_id,
+                              HarvestJob.created) \
+        .filter(HarvestJob.status == 'Running') \
+        .all()
+
+    # filter out not included source job's
+    if include_sid:
+        jobs_list = [
+            job for job in jobs_list
+            if job.source_id in include_sid
+        ]
+
+    if not jobs_list:
+        return 'There is no jobs to abort'
+
+    aborted_counter = 0
+    for job in jobs_list:
+        harvest_source = session.query(HarvestSource.frequency) \
+                                .filter(HarvestSource.id == job.source_id) \
+                                .first()
+
+        life_span = update_map.get(harvest_source.frequency)
+        if not life_span:
+            raise Exception('Frequency {freq} not recognised'.format(
+                freq=harvest_source.frequency))
+
+        expire_date = current_time - datetime.timedelta(days=life_span)
+
+        if not include_sid and job.source_id in exclude_sid:
+            log.info('Excluding source: {}'.format(job.source_id))
+            continue
+        # if job is running too long, abort it
+        if job.created < expire_date:
+            log.info(get_action('harvest_job_abort')(context, {'id': job.id}))
+            aborted_counter += 1
+        else:
+            log.info('{} running less then {} days. Skipping...'.format(job.id, life_span))
+    else:
+        return 'Done. Aborted jobs: {}'.format(aborted_counter)
+
+
 def harvest_sources_job_history_clear(context, data_dict):
     '''
     Clears the history for all active harvest sources. All jobs and objects related to a harvest source will

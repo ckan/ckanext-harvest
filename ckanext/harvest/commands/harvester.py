@@ -77,6 +77,14 @@ class Harvester(CkanCommand):
       harvester purge_queues
         - removes all jobs from fetch and gather queue
 
+      harvester abort_failed_jobs {job_life_span} [--include={source_id}] [--exclude={source_id}]
+        - abort all jobs which are in a "limbo state" where the job has
+          run with errors but the harvester run command will not mark it
+          as finished, and therefore you cannot run another job.
+
+          job_life_span determines from what moment
+          the job must be considered as failed
+
       harvester clean_harvest_log
         - Clean-up mechanism for the harvest log table.
           You can configure the time frame through the configuration
@@ -164,6 +172,24 @@ class Harvester(CkanCommand):
  the 16 harvest object segments to import. e.g. 15af will run segments 1,5,a,f""",
         )
 
+        self.parser.add_option(
+            "-i",
+            "--include",
+            dest="include_sources",
+            default=False,
+            help="""If source_id provided as included, then only it's failed jobs will be aborted.
+            You can use comma as a separator to provide multiple source_id's""",
+        )
+
+        self.parser.add_option(
+            "-e",
+            "--exclude",
+            dest="exclude_sources",
+            default=False,
+            help="""If source_id provided as excluded, all sources failed jobs, except for that
+            will be aborted. You can use comma as a separator to provide multiple source_id's""",
+        )
+
     def command(self):
         self._load_config()
 
@@ -211,6 +237,8 @@ class Harvester(CkanCommand):
             utils.fetch_consumer()
         elif cmd == "purge_queues":
             self.purge_queues()
+        elif cmd == "abort_failed_jobs":
+            self.abort_failed_jobs()
         elif cmd == "initdb":
             self.initdb()
         elif cmd == "import":
@@ -397,3 +425,14 @@ class Harvester(CkanCommand):
 
     def clean_harvest_log(self):
         utils.clean_harvest_log()
+
+    def abort_failed_jobs(self):
+        job_life_span = False
+        if len(self.args) >= 2:
+            job_life_span = six.text_type(self.args[1])
+
+        utils.abort_failed_jobs(
+            job_life_span,
+            include=self.options.include_sources,
+            exclude=self.options.exclude_sources
+        )
