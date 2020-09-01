@@ -429,7 +429,7 @@ class Harvester(CkanCommand):
     def abort_failed_jobs(self):
         job_life_span = False
         if len(self.args) >= 2:
-            job_life_span = unicode(self.args[1])
+            job_life_span = six.text_type(self.args[1])
 
         utils.abort_failed_jobs(
             job_life_span,
