@@ -2,6 +2,8 @@ from __future__ import print_function
 
 import sys
 
+import six
+
 from ckan import model
 from ckan.logic import get_action, ValidationError
 
@@ -235,23 +237,23 @@ class Harvester(CkanCommand):
     def create_harvest_source(self):
 
         if len(self.args) >= 2:
-            name = unicode(self.args[1])
+            name = six.text_type(self.args[1])
         else:
             print("Please provide a source name")
             sys.exit(1)
         if len(self.args) >= 3:
-            url = unicode(self.args[2])
+            url = six.text_type(self.args[2])
         else:
             print("Please provide a source URL")
             sys.exit(1)
         if len(self.args) >= 4:
-            type = unicode(self.args[3])
+            type = six.text_type(self.args[3])
         else:
             print("Please provide a source type")
             sys.exit(1)
 
         if len(self.args) >= 5:
-            title = unicode(self.args[4])
+            title = six.text_type(self.args[4])
         else:
             title = None
         if len(self.args) >= 6:
@@ -261,17 +263,17 @@ class Harvester(CkanCommand):
         else:
             active = True
         if len(self.args) >= 7:
-            owner_org = unicode(self.args[6])
+            owner_org = six.text_type(self.args[6])
         else:
             owner_org = None
         if len(self.args) >= 8:
-            frequency = unicode(self.args[7])
+            frequency = six.text_type(self.args[7])
             if not frequency:
                 frequency = "MANUAL"
         else:
             frequency = "MANUAL"
         if len(self.args) >= 9:
-            source_config = unicode(self.args[8])
+            source_config = six.text_type(self.args[8])
         else:
             source_config = None
         try:
@@ -288,14 +290,14 @@ class Harvester(CkanCommand):
     def clear_harvest_source_history(self):
         source_id = None
         if len(self.args) >= 2:
-            source_id = unicode(self.args[1])
+            source_id = six.text_type(self.args[1])
 
         print(utils.clear_harvest_source_history(source_id))
 
     def show_harvest_source(self):
 
         if len(self.args) >= 2:
-            source_id_or_name = unicode(self.args[1])
+            source_id_or_name = six.text_type(self.args[1])
         else:
             print("Please provide a source name")
             sys.exit(1)
@@ -303,7 +305,7 @@ class Harvester(CkanCommand):
 
     def remove_harvest_source(self):
         if len(self.args) >= 2:
-            source_id_or_name = unicode(self.args[1])
+            source_id_or_name = six.text_type(self.args[1])
         else:
             print("Please provide a source id")
             sys.exit(1)
@@ -311,7 +313,7 @@ class Harvester(CkanCommand):
 
     def clear_harvest_source(self):
         if len(self.args) >= 2:
-            source_id_or_name = unicode(self.args[1])
+            source_id_or_name = six.text_type(self.args[1])
         else:
             print("Please provide a source id")
             sys.exit(1)
@@ -327,7 +329,7 @@ class Harvester(CkanCommand):
 
     def create_harvest_job(self):
         if len(self.args) >= 2:
-            source_id_or_name = unicode(self.args[1])
+            source_id_or_name = six.text_type(self.args[1])
         else:
             print("Please provide a source id")
             sys.exit(1)
@@ -338,7 +340,7 @@ class Harvester(CkanCommand):
 
     def job_abort(self):
         if len(self.args) >= 2:
-            job_or_source_id_or_name = unicode(self.args[1])
+            job_or_source_id_or_name = six.text_type(self.args[1])
         else:
             print("Please provide a job id or source name/id")
             sys.exit(1)
@@ -353,7 +355,7 @@ class Harvester(CkanCommand):
         if len(self.args) >= 2:
             if len(self.args) >= 3 and self.args[2].startswith('force-import='):
                 force_import = self.args[2].split('=')[-1]
-            source_id_or_name = unicode(self.args[1])
+            source_id_or_name = six.text_type(self.args[1])
         else:
             print("Please provide a source id")
             sys.exit(1)
@@ -363,7 +365,7 @@ class Harvester(CkanCommand):
     def import_stage(self):
 
         if len(self.args) >= 2:
-            source_id_or_name = unicode(self.args[1])
+            source_id_or_name = six.text_type(self.args[1])
             context = {
                 "model": model,
                 "session": model.Session,

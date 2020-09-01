@@ -377,10 +377,7 @@ def run_test_harvester(source_id_or_name, force_import):
             print('\nSource "{0}" apparently has a "Running" job:\n{1}'.format(
                 source.get("name") or source["id"], running_jobs))
 
-            if six.PY2:
-                resp = raw_input("Abort it? (y/n)")
-            else:
-                resp = input("Abort it? (y/n)")
+            resp = six.moves.input("Abort it? (y/n)")
             if not resp.lower().startswith("y"):
                 sys.exit(1)
             job_dict = tk.get_action("harvest_job_abort")(
