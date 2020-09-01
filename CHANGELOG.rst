@@ -12,6 +12,23 @@ Unreleased_
 ***********
 
 ***********
+1.3.1_ - 2020-09-01
+***********
+
+Changed
+-------
+
+- Abort failed jobs CLI command #398
+
+Fixed
+-----
+
+- Fix Redis conflict with core workers
+- Fix harvest source list reference
+- Fix and improve test suite, remove nose tests
+
+
+***********
 1.3.0_ - 2020-06-04
 ***********
 
