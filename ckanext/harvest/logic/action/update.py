@@ -666,7 +666,7 @@ def harvest_jobs_run(context, data_dict):
                     notify_all = toolkit.asbool(config.get('ckan.harvest.status_mail.all'))
                     notify_errors = toolkit.asbool(config.get('ckan.harvest.status_mail.errored'))
                     last_job_errors = status['last_job']['stats'].get('errored', 0)
-                    log.info('Notifications: All:{} On error:{} Errors:{}'.format(notify_all, notify_errors, last_job_errors))
+                    log.debug('Notifications: All:{} On error:{} Errors:{}'.format(notify_all, notify_errors, last_job_errors))
                     
                     if last_job_errors > 0 and (notify_all or notify_errors):
                         send_error_email(context, job_obj.source.id, status)
@@ -815,7 +815,7 @@ def get_recipients(context, source_id):
             data_dict = {'source_id': source_id}
             new_recipients = fn(context, data_dict)
             if len(new_recipients) > 0:
-                log.info('New recipients added to notification: {}'.format(new_recipients))
+                log.debug('New recipients added to notification: {}'.format(new_recipients))
                 recipients += new_recipients
     
     return recipients
