@@ -88,6 +88,10 @@ def setup():
             log.debug('Creating index for package')
             Index("package_id_idx", harvest_object_table.c.package_id).create()
         
+        if "guid_idx" not in index_names:
+            log.debug('Creating index for guid')
+            Index("guid_idx", harvest_object_table.c.guid).create()
+        
         index_names = [index['name'] for index in inspector.get_indexes("harvest_object_extra")]
         if "harvest_object_id_idx" not in index_names:
             log.debug('Creating index for harvest_object_extra')
@@ -303,6 +307,7 @@ def define_harvester_tables():
         Index('harvest_job_id_idx', 'harvest_job_id'),
         Index('harvest_source_id_idx', 'harvest_source_id'),
         Index('package_id_idx', 'package_id'),
+        Index('guid_idx', 'guid'),
     )
 
     # New table
