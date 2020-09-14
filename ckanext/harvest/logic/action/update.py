@@ -761,63 +761,14 @@ def prepare_error_mail(context, source_id, status):
 
 def send_summary_email(context, source_id, status):
     subject, body = prepare_summary_mail(context, source_id, status)
-    recipients = get_recipients(context, source_id)
+    recipients = toolkit.get_action('harvest_get_notifications_recipients')(context, {'source_id': source_id})
     send_mail(recipients, subject, body)
 
 def send_error_email(context, source_id, status):
     subject, body = prepare_error_mail(context, source_id, status)
-    recipients = get_recipients(context, source_id)
+    recipients = toolkit.get_action('harvest_get_notifications_recipients')(context, {'source_id': source_id})
     send_mail(recipients, subject, body)
 
-def get_recipients(context, source_id):
-    """ get all recipients for a harvest source
-        Return a list of dicts like {'name': 'Jhon', 'email': jhon@source.com'} """
-        
-    source = get_action('harvest_source_show')(context, {'id': source_id})
-    recipients = []
-
-    # gather sysadmins
-    model = context['model']
-    sysadmins = model.Session.query(model.User).filter(
-        model.User.sysadmin == True  # noqa: E712
-    ).all()
-
-    for sysadmin in sysadmins:
-        recipients.append({
-            'name': sysadmin.name,
-            'email': sysadmin.email
-        })
-
-    # gather organization-admins
-    if source.get('organization'):
-        members = get_action('member_list')(context, {
-            'id': source['organization']['id'],
-            'object_type': 'user',
-            'capacity': 'admin'
-        })
-
-        for member in members:
-            member_details = get_action(
-                'user_show')(context, {'id': member[0]})
-
-            if member_details['email']:
-                recipients.append({
-                    'name': member_details['name'],
-                    'email': member_details['email']
-                })
-
-    # allow plugins to add custom recipients 
-    for p in PluginImplementations(IActions):
-        actions = p.get_actions()
-        if 'add_extra_notification_recipients' in actions.keys():
-            fn = actions['add_extra_notification_recipients']    
-            data_dict = {'source_id': source_id}
-            new_recipients = fn(context, data_dict)
-            if len(new_recipients) > 0:
-                log.debug('New recipients added to notification: {}'.format(new_recipients))
-                recipients += new_recipients
-    
-    return recipients
 
 def send_mail(recipients, subject, body):
     
