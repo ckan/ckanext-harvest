@@ -881,6 +881,35 @@ following steps with the one you are using.
    This particular example will perform clean-up each day at 05 AM.
    You can tweak the value according to your needs.
 
+Extensible actions
+==================
+
+Recipients on harvest jobs notifications
+----------------------------------------
+
+:code:`harvest_get_notifications_recipients`: you can *chain* this action from another extension to change 
+the recipients for harvest jobs notifications.
+
+.. code-block:: python
+
+  @toolkit.chained_action
+  def harvest_get_notifications_recipients(up_func, context, data_dict):
+      """ Harvester plugin notify by default about harvest jobs only to 
+              admin users of the related organization.
+              Also allow to add custom recipients with this function.
+              
+          Return a list of dicts with name and email like
+              {'name': 'John', 'email': 'john@source.com'} """
+
+      recipients = up_func(context, data_dict)
+      new_recipients = []
+
+      # you custom logic to add new_recipients here
+      # new_recipients.append({'name': 'Harvester Admin', 'email': 'admin@harvester-team.com'})
+      # recipients += new_recipients
+      return recipients
+
+
 Tests
 =====
 
@@ -900,6 +929,7 @@ Here are some common errors and solutions:
 
 * ``(OperationalError) near "SET": syntax error``
   You are testing with SQLite as the database, but the CKAN Harvester needs PostgreSQL. Specify test-core.ini instead of test.ini.
+
 
 Harvest API
 =====
