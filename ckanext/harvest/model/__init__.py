@@ -176,9 +176,13 @@ class HarvestJob(HarvestDomainObject):
         
         return query
     
-    def get_last_completed_object_time(self):
+    def get_last_action_time(self):
         last_object = self.get_last_finished_object()
-        return None if last_object is None else last_object.import_finished
+        if last_object is not None:
+            return last_object.import_finished
+        if self.gather_finished is not None:
+            return self.gather_finished
+        return self.created
 
     def get_gather_errors(self):
         query = Session.query(HarvestGatherError)\

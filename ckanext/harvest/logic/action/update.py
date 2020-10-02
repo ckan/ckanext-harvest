@@ -610,10 +610,7 @@ def harvest_jobs_run(context, data_dict):
         for job in jobs:
             job_obj = HarvestJob.get(job['id'])
             if timeout:
-                last_time = job_obj.get_last_completed_object_time()
-                if last_time is None:
-                    last_time = job_obj.created
-
+                last_time = job_obj.get_last_action_time()
                 now = datetime.datetime.now()
                 if now - last_time > datetime.timedelta(minutes=int(timeout)):
                     msg = 'Job timeout: Last object for job %s is taking longer than %s minutes' % (job['id'], timeout)
