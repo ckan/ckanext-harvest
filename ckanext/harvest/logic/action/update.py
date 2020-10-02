@@ -613,9 +613,11 @@ def harvest_jobs_run(context, data_dict):
                 last_time = job_obj.get_last_action_time()
                 now = datetime.datetime.now()
                 if now - last_time > datetime.timedelta(minutes=int(timeout)):
-                    msg = 'Job timeout: Last object for job %s is taking longer than %s minutes' % (job['id'], timeout)
-                    log.error(msg)
-
+                    msg = 'Job {} timeout ({} minutes)\n'.format(job_obj.id, timeout)
+                    msg += '\tJob created: {}\n'.format(job_obj.created)
+                    msg += '\tJob gather finished: {}\n'.format(job_obj.created)
+                    msg += '\tJob last action time: {}\n'.format(last_time)
+                    
                     job_obj.status = u'Finished'
                     job_obj.finished = now
                     job_obj.save()
