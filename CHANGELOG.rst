@@ -11,6 +11,19 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_
 Unreleased_
 ***********
 
+
+
+
+***********
+1.3.2_ - 2020-10-08
+***********
+
+Changed
+-------
+
+- Calculate timeouts based on last finished object instead of job creation time #418
+
+
 ***********
 1.3.1_ - 2020-09-01
 ***********
@@ -245,7 +258,9 @@ Categories
 - ``Fixed`` for any bug fixes.
 - ``Security`` to invite users to upgrade in case of vulnerabilities.
 
-.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.3.0...HEAD
+.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.3.2...HEAD
+.. _1.3.2: https://github.com/ckan/ckanext-harvest/compare/v1.3.1...v1.3.2
+.. _1.3.1: https://github.com/ckan/ckanext-harvest/compare/v1.3.0...v1.3.1
 .. _1.3.0: https://github.com/ckan/ckanext-harvest/compare/v1.2.1...v1.3.0
 .. _1.2.1: https://github.com/ckan/ckanext-harvest/compare/v1.2.0...v1.2.1
 .. _1.2.0: https://github.com/ckan/ckanext-harvest/compare/v1.1.4...v1.2.0
