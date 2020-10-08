@@ -211,6 +211,8 @@ The timeout value is in minutes, so 1440 represents 24 hours.
 Any jobs which are timed out will create an error message for the user to see.
 
 If you don't specify this setting, the default will be False and there will be no timeout on harvest jobs.
+This timeout value is compared to the completion time of the last object in the job.
+
 
 Command line interface
 ======================
