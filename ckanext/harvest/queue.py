@@ -167,8 +167,14 @@ def resubmit_objects():
         .filter_by(state='WAITING') \
         .all()
 
+    objects_in_queue = []
+    fetch_routing_key = get_fetch_routing_key()
+
+    objects_in_queue = [json.loads(o)['harvest_object_id']
+                        for o in redis.lrange(fetch_routing_key, 0, -1)]
+
     for object_id, in waiting_objects:
-        if not redis.get(object_id):
+        if object_id not in objects_in_queue:
             log.debug('Re-sent object {} to the fetch queue'.format(object_id))
             publisher.send({'harvest_object_id': object_id})
 

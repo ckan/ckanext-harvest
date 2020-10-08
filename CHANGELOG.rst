@@ -11,6 +11,8 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_
 Unreleased_
 ***********
 
+- Fix resubmitting harvest objects to Redis fetch queue #421
+
 ***********
 1.3.1_ - 2020-09-01
 ***********
