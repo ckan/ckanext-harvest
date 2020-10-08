@@ -170,12 +170,8 @@ def resubmit_objects():
     objects_in_queue = []
     fetch_routing_key = get_fetch_routing_key()
 
-    for i in range(redis.llen(fetch_routing_key)):
-        item = redis.lpop(fetch_routing_key)
-        objects_in_queue.append(
-            json.loads(item)['harvest_object_id']
-        )
-        redis.rpush(fetch_routing_key, item)
+    objects_in_queue = [json.loads(o)['harvest_object_id']
+                        for o in redis.lrange(fetch_routing_key, 0, -1)]
 
     for object_id, in waiting_objects:
         if object_id not in objects_in_queue:
