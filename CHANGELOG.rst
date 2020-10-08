@@ -12,8 +12,6 @@ Unreleased_
 ***********
 
 
-
-
 ***********
 1.3.2_ - 2020-10-08
 ***********
@@ -22,6 +20,11 @@ Changed
 -------
 
 - Calculate timeouts based on last finished object instead of job creation time #418
+
+Fixed
+-----
+
+- Fix resubmitting harvest objects to Redis fetch queue #421
 
 
 ***********
