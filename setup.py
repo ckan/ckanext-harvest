@@ -39,6 +39,9 @@ setup(
             test_harvester2=ckanext.harvest.tests.test_queue2:MockHarvester
             test_action_harvester=ckanext.harvest.tests.test_action:MockHarvesterForActionTests
 
+        [ckan.click_command]
+            harvester = ckanext.harvest.cli:harvester
+
         [paste.paster_command]
             harvester = ckanext.harvest.commands.harvester:Harvester
         [babel.extractors]
