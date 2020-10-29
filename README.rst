@@ -94,7 +94,7 @@ Configuration
 
 Run the following command to create the necessary tables in the database (ensuring the pyenv is activated):
 
-ON CKAN == 2.9::
+ON CKAN >= 2.9::
 
     (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester initdb
 
@@ -323,7 +323,7 @@ The following operations can be run from the command line as described underneat
 
 The commands should be run with the pyenv activated and refer to your CKAN configuration file:
 
-ON CKAN == 2.9::
+ON CKAN >= 2.9::
 
     (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester --help
 
@@ -713,7 +713,7 @@ handles the gathering and another one that handles the fetching and importing.
 To start the consumers run the following command (make sure you have your
 python environment activated):
 
-ON CKAN == 2.9::
+ON CKAN >= 2.9::
 
       (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester gather_consumer
 
@@ -723,7 +723,7 @@ ON CKAN <= 2.8::
 
 On another terminal, run the following command:
 
-ON CKAN == 2.9::
+ON CKAN >= 2.9::
 
       (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester fetch_consumer
 
@@ -734,7 +734,7 @@ ON CKAN <= 2.8::
 Finally, on a third console, run the following command to start any
 pending harvesting jobs:
 
-ON CKAN == 2.9::
+ON CKAN >= 2.9::
 
       (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester run
 
@@ -757,7 +757,7 @@ circumstance, ensure that the gather & fetch consumers are running and have
 nothing more to consume, and then run this abort command with the name or id of
 the harvest source:
 
-ON CKAN == 2.9::
+ON CKAN >= 2.9::
 
       (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester job_abort {source-id/name}
 
@@ -806,7 +806,7 @@ following steps with the one you are using.
    Create a file named ``/etc/supervisor/conf.d/ckan_harvesting.conf``, and
    copy the following contents:
 
-   ON CKAN == 2.9::
+   ON CKAN >= 2.9::
 
         ; ===============================
         ; ckan harvester
@@ -938,7 +938,7 @@ following steps with the one you are using.
    Paste this line into your crontab, again replacing the paths to paster and
    the ini file with yours:
 
-   ON CKAN == 2.9::
+   ON CKAN >= 2.9::
 
     # m  h  dom mon dow   command
     */15 *  *   *   *     /usr/lib/ckan/default/bin/ckan -c /etc/ckan/default/ckan.ini harvester run
@@ -959,7 +959,7 @@ following steps with the one you are using.
    Paste this line into your crontab, again replacing the paths to paster/ckan and
    the ini file with yours:
 
-   ON CKAN == 2.9::
+   ON CKAN >= 2.9::
 
     # m  h  dom mon dow   command
       0  5  *   *   *     /usr/lib/ckan/default/bin/ckan -c /etc/ckan/default/ckan.ini harvester clean_harvest_log
