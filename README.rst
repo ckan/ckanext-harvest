@@ -92,7 +92,13 @@ config option (or ``default``) will be used to namespace the relevant things:
 Configuration
 =============
 
-Run the following command to create the necessary tables in the database (ensuring the pyenv is activated)::
+Run the following command to create the necessary tables in the database (ensuring the pyenv is activated):
+
+ON CKAN >= 2.9::
+
+    (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester initdb
+
+ON CKAN <= 2.8::
 
     (pyenv) $ paster --plugin=ckanext-harvest harvester initdb --config=/etc/ckan/default/production.ini
 
@@ -315,7 +321,15 @@ The following operations can be run from the command line as described underneat
       harvester reindex
         - reindexes the harvest source datasets
 
-The commands should be run with the pyenv activated and refer to your CKAN configuration file::
+The commands should be run with the pyenv activated and refer to your CKAN configuration file:
+
+ON CKAN >= 2.9::
+
+    (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester --help
+
+    (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester sources
+
+ON CKAN <= 2.8::
 
       (pyenv) $ paster --plugin=ckanext-harvest harvester sources --config=/etc/ckan/default/production.ini
 
@@ -697,16 +711,34 @@ normal method in production systems and scales well.
 In this case, the harvesting extension uses two different queues: one that
 handles the gathering and another one that handles the fetching and importing.
 To start the consumers run the following command (make sure you have your
-python environment activated)::
+python environment activated):
+
+ON CKAN >= 2.9::
+
+      (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester gather_consumer
+
+ON CKAN <= 2.8::
 
       (pyenv) $ paster --plugin=ckanext-harvest harvester gather_consumer --config=/etc/ckan/default/production.ini
 
-On another terminal, run the following command::
+On another terminal, run the following command:
+
+ON CKAN >= 2.9::
+
+      (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester fetch_consumer
+
+ON CKAN <= 2.8::
 
       (pyenv) $ paster --plugin=ckanext-harvest harvester fetch_consumer --config=/etc/ckan/default/production.ini
 
 Finally, on a third console, run the following command to start any
-pending harvesting jobs::
+pending harvesting jobs:
+
+ON CKAN >= 2.9::
+
+      (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester run
+
+ON CKAN <= 2.8::
 
       (pyenv) $ paster --plugin=ckanext-harvest harvester run --config=/etc/ckan/default/production.ini
 
@@ -723,7 +755,13 @@ finished, and therefore you cannot run another job. This is due to particular
 harvester not handling errors correctly e.g. during development. In this
 circumstance, ensure that the gather & fetch consumers are running and have
 nothing more to consume, and then run this abort command with the name or id of
-the harvest source::
+the harvest source:
+
+ON CKAN >= 2.9::
+
+      (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester job_abort {source-id/name}
+
+ON CKAN <= 2.8::
 
       (pyenv) $ paster --plugin=ckanext-harvest harvester job_abort {source-id/name} --config=/etc/ckan/default/production.ini
 
@@ -766,7 +804,44 @@ following steps with the one you are using.
    stored in ``/etc/supervisor/conf.d``.
 
    Create a file named ``/etc/supervisor/conf.d/ckan_harvesting.conf``, and
-   copy the following contents::
+   copy the following contents:
+
+   ON CKAN >= 2.9::
+
+        ; ===============================
+        ; ckan harvester
+        ; ===============================
+
+        [program:ckan_gather_consumer]
+
+        command=/usr/lib/ckan/default/bin/ckan --config=/etc/ckan/default/ckan.ini harvester gather_consumer
+
+        ; user that owns virtual environment.
+        user=ckan
+
+        numprocs=1
+        stdout_logfile=/var/log/ckan/std/gather_consumer.log
+        stderr_logfile=/var/log/ckan/std/gather_consumer.log
+        autostart=true
+        autorestart=true
+        startsecs=10
+
+        [program:ckan_fetch_consumer]
+
+        command=/usr/lib/ckan/default/bin/ckan --config=/etc/ckan/default/ckan.ini harvester fetch_consumer
+
+        ; user that owns virtual environment.
+        user=ckan
+
+        numprocs=1
+        stdout_logfile=/var/log/ckan/std/fetch_consumer.log
+        stderr_logfile=/var/log/ckan/std/fetch_consumer.log
+        autostart=true
+        autorestart=true
+        startsecs=10
+
+
+   ON CKAN <= 2.8::
 
 
         ; ===============================
@@ -861,7 +936,14 @@ following steps with the one you are using.
    processes to be run with (`ckan` in our example).
 
    Paste this line into your crontab, again replacing the paths to paster and
-   the ini file with yours::
+   the ini file with yours:
+
+   ON CKAN >= 2.9::
+
+    # m  h  dom mon dow   command
+    */15 *  *   *   *     /usr/lib/ckan/default/bin/ckan -c /etc/ckan/default/ckan.ini harvester run
+
+   ON CKAN <= 2.8::
 
     # m  h  dom mon dow   command
     */15 *  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester run --config=/etc/ckan/default/production.ini
@@ -874,8 +956,15 @@ following steps with the one you are using.
 
     sudo crontab -e -u ckan
 
-   Paste this line into your crontab, again replacing the paths to paster and
-   the ini file with yours::
+   Paste this line into your crontab, again replacing the paths to paster/ckan and
+   the ini file with yours:
+
+   ON CKAN >= 2.9::
+
+    # m  h  dom mon dow   command
+      0  5  *   *   *     /usr/lib/ckan/default/bin/ckan -c /etc/ckan/default/ckan.ini harvester clean_harvest_log
+
+   ON CKAN <= 2.8::
 
     # m  h  dom mon dow   command
       0  5  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-harvest harvester clean_harvest_log --config=/etc/ckan/default/production.ini
