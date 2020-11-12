@@ -11,6 +11,9 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_
 Unreleased_
 ***********
 
+Added
+-----
+- CKAN Harvester option to include/exclude tags #425
 
 ***********
 1.3.2_ - 2020-10-08

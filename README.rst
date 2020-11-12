@@ -441,6 +441,11 @@ field. The currently supported configuration options are:
 *   groups_filter_exclude: Exactly the same as organizations_filter_exclude but for
     groups.
 
+*   tags_filter_include: Exactly the same as organizations_filter_include but for
+    groups.
+
+*   tags_filter_exclude: Exactly the same as organizations_filter_exclude but for
+    groups.
 
 Here is an example of a configuration object (the one that must be entered in
 the configuration field)::

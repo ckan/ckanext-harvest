@@ -161,6 +161,24 @@ class TestCkanHarvester(object):
         assert 'dataset1-id' in results_by_guid
         assert mock_ckan.DATASETS[1]['id'] not in results_by_guid
 
+    def test_exclude_tags(self):
+        config = {'tags_filter_exclude': ['test-tag']}
+        results_by_guid = run_harvest(
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
+        assert 'dataset1-id' not in results_by_guid
+        assert mock_ckan.DATASETS[1]['id'] in results_by_guid
+
+    def test_include_tags(self):
+        config = {'tags_filter_include': ['test-tag']}
+        results_by_guid = run_harvest(
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester(),
+            config=json.dumps(config))
+        assert 'dataset1-id' in results_by_guid
+        assert mock_ckan.DATASETS[1]['id'] not in results_by_guid
+
     def test_remote_groups_create(self):
         config = {'remote_groups': 'create'}
         results_by_guid = run_harvest(
