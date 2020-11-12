@@ -155,6 +155,11 @@ class CKANHarvester(HarvesterBase):
                 raise ValueError('Harvest configuration cannot contain both '
                                  'groups_filter_include and groups_filter_exclude')
 
+            if 'tags_filter_include' in config_obj \
+                    and 'tags_filter_exclude' in config_obj:
+                raise ValueError('Harvest configuration cannot contain both '
+                                 'tags_filter_include and tags_filter_exclude')
+
             if 'user' in config_obj:
                 # Check if user exists
                 context = {'model': model, 'user': toolkit.c.user}
@@ -211,6 +216,15 @@ class CKANHarvester(HarvesterBase):
         elif groups_filter_exclude:
             fq_terms.extend(
                 '-groups:%s' % group_name for group_name in groups_filter_exclude)
+
+        tags_filter_include = self.config.get('tags_filter_include', [])
+        tags_filter_exclude = self.config.get('tags_filter_exclude', [])
+        if tags_filter_include:
+            fq_terms.append(' OR '.join(
+                'tags:"%s"' % tag_name for tag_name in tags_filter_include))
+        elif tags_filter_exclude:
+            fq_terms.extend(
+                '-tags:"%s"' % tag_name for tag_name in tags_filter_exclude)
 
         # Ideally we can request from the remote CKAN only those datasets
         # modified since the last completely successful harvest.
