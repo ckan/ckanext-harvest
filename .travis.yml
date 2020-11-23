@@ -10,7 +10,6 @@ install: bash bin/travis-build.bash
 script: bash bin/travis-run.bash
 
 stages:
-  - Flake8
   - Tests
 
 jobs:
