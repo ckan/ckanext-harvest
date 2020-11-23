@@ -1,7 +1,7 @@
 {% import 'macros/form.html' as form %}
 
 
-{% set type = 'asset' if h.ckan_version() > '2.9' else 'resource' %}
+{% set type = 'asset' if h.ckan_version().split('.')[1] | int >= 9 else 'resource' %}
 {% include 'harvest/snippets/harvest_extra_field_' ~ type ~ '.html' %}
 
 <form id="source-new" class="form-horizontal dataset-form {{ h.bootstrap_version() }}" method="post" >
