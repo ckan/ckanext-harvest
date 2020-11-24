@@ -28,29 +28,36 @@ jobs:
         # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
         - flake8 . --count --max-line-length=127 --statistics --exclude ckan --exit-zero
 
-#    - stage: Tests
-#      python: "3.6"
-#      env: CKANVERSION=master
-#      services:
-#          - postgresql
-#          - redis
-#          - docker
-#
     - stage: Tests
-      python: "2.7"
-      env: CKANVERSION=2.9
-      services:
-          - postgresql
-          - redis
-          - docker
+      python: "3.6"
+      env: CKANVERSION=master
+      addons:
+        postgresql: '12'
+        apt:
+          sources:
+            - sourceline: 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main'
+          packages:
+            - postgresql-12
 
+    - python: "2.7"
+      env: CKANVERSION=2.9
+      addons:
+        postgresql: '12'
+        apt:
+          sources:
+            - sourceline: 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main'
+          packages:
+            - postgresql-12
 
     - python: "3.6"
       env: CKANVERSION=2.9
-      services:
-          - postgresql
-          - redis
-          - docker
+      addons:
+        postgresql: '12'
+        apt:
+          sources:
+            - sourceline: 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main'
+          packages:
+            - postgresql-12
 
     - python: "2.7"
       env: CKANVERSION=2.8
@@ -81,6 +88,9 @@ jobs:
             - sourceline: 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main'
           packages:
             - postgresql-9.6
+  allow_failures:
+      python: "3.6"
+      env: CKANVERSION=master
 
 
 cache:
