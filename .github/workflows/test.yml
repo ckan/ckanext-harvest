@@ -27,7 +27,7 @@ jobs:
         pwd
         ls -la /srv/app/
     - name: CKAN?
-      run: ckan user -c test-ga.ini
+      run: ckan -c test-ga.ini user
     - name: install reqs
       run: |
         pip install -r pip-requirements.txt
