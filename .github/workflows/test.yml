@@ -5,6 +5,19 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: openknowledge/ckan-dev:2.9
+    services:
+      solr:
+        image: openknowledge/ckan-solr-dev:2.9
+        ports:
+            - 8983:8983
+      postgres:
+        image: postgres:12
+        ports:
+            - 5432:5432
+      redis:
+          image: redis:3
+          ports:
+              - 6379:6379
     steps:  
     - uses: actions/checkout@v2
     - name: What OS is running
