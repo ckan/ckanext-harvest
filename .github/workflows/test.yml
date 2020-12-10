@@ -11,7 +11,7 @@ jobs:
       run: uname -a
     - name: things
       run: |
-        ls -la /github/workspace/
+        pwd
         ls -la /srv/app/
     - name: CKAN?
       run: ckan user -c /srv/app/production.ini
