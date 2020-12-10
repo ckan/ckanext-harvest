@@ -7,10 +7,10 @@ jobs:
       image: openknowledge/ckan-dev:2.9
     services:
       solr:
-        image: openknowledge/ckan-solr-dev:2.9
+        image: ckan/ckan-solr-dev:2.9
         ports:
             - 8983:8983
-      postgres:
+      ckan-postgres:
         image: postgres:12
         ports:
             - 5432:5432
