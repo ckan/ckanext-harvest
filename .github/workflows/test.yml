@@ -20,15 +20,16 @@ jobs:
               - 6379:6379
     steps:  
     - uses: actions/checkout@v2
-    - name: What OS is running
-      run: uname -a
     - name: things
       run: |
         pwd
         ls -la /srv/app/
-    - name: CKAN?
-      run: ckan -c test-ga.ini user
     - name: install reqs
       run: |
         pip install -r pip-requirements.txt
         pip install -e .
+    - name: CKAN?
+      run: |
+        ckan -c test-ga.ini user
+        ckan -c test-ga.ini harvester initdb
+
