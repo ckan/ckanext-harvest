@@ -1,7 +1,8 @@
 name: Tests
 on: [push, pull_request]
 jobs:
-  testbox:
+  test-2.9-py2:
+    name: CKAN 2.9 (py2)
     runs-on: ubuntu-latest
     container:
       image: openknowledge/ckan-dev:2.9
@@ -10,6 +11,70 @@ jobs:
         image: ckan/ckan-solr-dev:2.9
       postgres:
         image: ckan/ckan-postgres-dev:2.9
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        # Set health checks to wait until postgres has started
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+          image: redis:3
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install requirements
+      run: |
+        pip install -r pip-requirements.txt
+        pip install -r dev-requirements.txt
+        pip install -e .
+    - name: CKAN?
+      run: |
+        ckan -c test-ga.ini db init
+        ckan -c test-ga.ini harvester initdb
+    - name: Run tests
+      run: pytest --ckan-ini=test-ga.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
+
+  test-2.8:
+    name: CKAN 2.8
+    runs-on: ubuntu-latest
+    container:
+      image: openknowledge/ckan-dev:2.8
+    services:
+      solr:
+        image: ckan/ckan-solr-dev:2.8
+      postgres:
+        image: ckan/ckan-postgres-dev:2.8
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        # Set health checks to wait until postgres has started
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+          image: redis:3
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install requirements
+      run: |
+        pip install -r pip-requirements.txt
+        pip install -r dev-requirements.txt
+        pip install -e .
+    - name: CKAN?
+      run: |
+        ckan -c test-ga.ini db init
+        ckan -c test-ga.ini harvester initdb
+    - name: Run tests
+      run: pytest --ckan-ini=test-ga.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
+
+  test-2.7:
+    name: CKAN 2.7
+    runs-on: ubuntu-latest
+    container:
+      image: openknowledge/ckan-dev:2.7
+    services:
+      solr:
+        image: ckan/ckan-solr-dev:2.7
+      postgres:
+        image: ckan/ckan-postgres-dev:2.7
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
