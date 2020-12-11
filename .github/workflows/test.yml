@@ -20,17 +20,14 @@ jobs:
           image: redis:3
     steps:
     - uses: actions/checkout@v2
-    - name: things
-      run: |
-        pwd
-        ls -la /srv/app/
-    - name: install reqs
+    - name: Install requirements
       run: |
         pip install -r pip-requirements.txt
+        pip install -r dev-requirements.txt
         pip install -e .
     - name: CKAN?
       run: |
         ckan -c test-ga.ini db init
-        ckan -c test-ga.ini user
         ckan -c test-ga.ini harvester initdb
-
+    - name: Run tests
+      run: pytest --ckan-ini=test-ga.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
