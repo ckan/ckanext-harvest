@@ -9,7 +9,7 @@ jobs:
       solr:
         image: ckan/ckan-solr-dev:2.9
       postgres:
-        image: postgres:12
+        image: ckan/ckan-postgres-dev:2.9
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -30,6 +30,7 @@ jobs:
         pip install -e .
     - name: CKAN?
       run: |
+        ckan -c test-ga.ini db init
         ckan -c test-ga.ini user
         ckan -c test-ga.ini harvester initdb
 
