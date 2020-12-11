@@ -60,8 +60,8 @@ jobs:
         pip install -e .
     - name: CKAN?
       run: |
-        paster --plugin=ckan -c test-ga.ini db init
-        paster --plugin=ckanext-harvest -c test-ga.ini harvester initdb
+        paster --plugin=ckan db init -c test-ga.ini 
+        paster --plugin=ckanext-harvest harvester initdb -c test-ga.ini 
     - name: Run tests
       run: pytest --ckan-ini=test-ga.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
 
@@ -92,7 +92,7 @@ jobs:
         pip install -e .
     - name: CKAN?
       run: |
-        paster --plugin=ckan -c test-ga.ini db init
-        paster --plugin=ckanext-harvest -c test-ga.ini harvester initdb
+        paster --plugin=ckan db init -c test-ga.ini 
+        paster --plugin=ckanext-harvest harvester initdb -c test-ga.ini 
     - name: Run tests
       run: pytest --ckan-ini=test-ga.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
