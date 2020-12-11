@@ -58,6 +58,8 @@ jobs:
         pip install -r pip-requirements.txt
         pip install -r dev-requirements.txt
         pip install -e .
+        # TODO: check best approach
+        pip install --upgrade pyOpenSSL==19.1.0 
     - name: CKAN?
       run: |
         paster --plugin=ckan db init -c test-ga.ini 
@@ -90,6 +92,8 @@ jobs:
         pip install -r pip-requirements.txt
         pip install -r dev-requirements.txt
         pip install -e .
+        # TODO: check best approach
+        pip install --upgrade pyOpenSSL==19.1.0 
     - name: CKAN?
       run: |
         paster --plugin=ckan db init -c test-ga.ini 
