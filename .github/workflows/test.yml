@@ -1,7 +1,7 @@
 name: Tests
 on: [push, pull_request]
 jobs:
-  test-2.9-py2:
+  test-29-py2:
     name: CKAN 2.9 (py2)
     runs-on: ubuntu-latest
     container:
@@ -33,7 +33,7 @@ jobs:
     - name: Run tests
       run: pytest --ckan-ini=test-ga.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
 
-  test-2.8:
+  test-28:
     name: CKAN 2.8
     runs-on: ubuntu-latest
     container:
@@ -65,7 +65,7 @@ jobs:
     - name: Run tests
       run: pytest --ckan-ini=test-ga.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
 
-  test-2.7:
+  test-27:
     name: CKAN 2.7
     runs-on: ubuntu-latest
     container:
