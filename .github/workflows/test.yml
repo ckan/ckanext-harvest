@@ -22,7 +22,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install requirements
       run: |
-        pip install -r pip-requirements-py2.txt
+        pip install -r pip-requirements.txt
         pip install -r dev-requirements.txt
         pip install -e .
     - name: CKAN?
@@ -53,7 +53,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install requirements
       run: |
-        pip install -r pip-requirements-py2.txt
+        pip install -r pip-requirements.txt
         pip install -r dev-requirements.txt
         pip install -e .
     - name: CKAN?
