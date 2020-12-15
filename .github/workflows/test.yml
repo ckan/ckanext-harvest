@@ -1,5 +1,38 @@
 name: Tests
 on: [push, pull_request]
+
+defaults:
+  postgres-conf: &postgres-conf
+    env:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+  install-requeriments: &install-requirements
+    name: Install requirements
+    run: |
+      pip install -r pip-requirements.txt
+      pip install -r dev-requirements.txt
+      pip install -e .
+
+  setup-extension: &setup-extension
+    name: Setup extension
+    run: |
+      ckan -c test-ga.ini db init
+      ckan -c test-ga.ini harvester initdb
+
+  setup-extension: &setup-extension-pre29
+    name: Setup extension
+      run: |
+        paster --plugin=ckan db init -c test-ga.ini
+        paster --plugin=ckanext-harvest harvester initdb -c test-ga.ini
+
+  run-tests: &run-tests
+    name: Run tests
+    run: pytest --ckan-ini=test-ga.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
+
+
 jobs:
   test-29-py3:
     name: CKAN 2.9 (py3)
@@ -11,26 +44,14 @@ jobs:
         image: ckan/ckan-solr-dev:2.9
       postgres:
         image: ckan/ckan-postgres-dev:2.9
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        <<: *postgres-conf
       redis:
           image: redis:3
     steps:
     - uses: actions/checkout@v2
-    - name: Install requirements
-      run: |
-        pip install -r pip-requirements.txt
-        pip install -r dev-requirements.txt
-        pip install -e .
-    - name: CKAN?
-      run: |
-        ckan -c test-ga.ini db init
-        ckan -c test-ga.ini harvester initdb
-    - name: Run tests
-      run: pytest --ckan-ini=test-ga.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
+    - <<: *install-requirements
+    - <<: *setup-extension
+    - <<: *run-tests
 
   test-29-py2:
     name: CKAN 2.9 (py2)
@@ -42,26 +63,14 @@ jobs:
         image: ckan/ckan-solr-dev:2.9
       postgres:
         image: ckan/ckan-postgres-dev:2.9
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        <<: *postgres-conf
       redis:
           image: redis:3
     steps:
     - uses: actions/checkout@v2
-    - name: Install requirements
-      run: |
-        pip install -r pip-requirements.txt
-        pip install -r dev-requirements.txt
-        pip install -e .
-    - name: CKAN?
-      run: |
-        ckan -c test-ga.ini db init
-        ckan -c test-ga.ini harvester initdb
-    - name: Run tests
-      run: pytest --ckan-ini=test-ga.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
+    - <<: *install-requirements
+    - <<: *setup-extension
+    - <<: *run-tests
 
   test-28:
     name: CKAN 2.8
@@ -73,26 +82,14 @@ jobs:
         image: ckan/ckan-solr-dev:2.8
       postgres:
         image: ckan/ckan-postgres-dev:2.8
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        <<: *postgres-conf
       redis:
           image: redis:3
     steps:
     - uses: actions/checkout@v2
-    - name: Install requirements
-      run: |
-        pip install -r pip-requirements.txt
-        pip install -r dev-requirements.txt
-        pip install -e .
-    - name: CKAN?
-      run: |
-        paster --plugin=ckan db init -c test-ga.ini 
-        paster --plugin=ckanext-harvest harvester initdb -c test-ga.ini 
-    - name: Run tests
-      run: pytest --ckan-ini=test-ga.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
+    - <<: *install-requirements
+    - <<: *setup-extension-pre29
+    - <<: *run-tests
 
   test-27:
     name: CKAN 2.7
@@ -104,23 +101,11 @@ jobs:
         image: ckan/ckan-solr-dev:2.7
       postgres:
         image: ckan/ckan-postgres-dev:2.7
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        <<: *postgres-conf
       redis:
           image: redis:3
     steps:
     - uses: actions/checkout@v2
-    - name: Install requirements
-      run: |
-        pip install -r pip-requirements.txt
-        pip install -r dev-requirements.txt
-        pip install -e .
-    - name: CKAN?
-      run: |
-        paster --plugin=ckan db init -c test-ga.ini 
-        paster --plugin=ckanext-harvest harvester initdb -c test-ga.ini 
-    - name: Run tests
-      run: pytest --ckan-ini=test-ga.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
+    - <<: *install-requirements
+    - <<: *setup-extension-pre29
+    - <<: *run-tests
