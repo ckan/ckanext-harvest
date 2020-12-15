@@ -7,15 +7,15 @@ jobs:
       matrix:
         ckan-version: [2.9, 2.9-py2, 2.8, 2.7]
 
-    name: CKAN {{ matrix.ckan-version }}
+    name: CKAN ${{ matrix.ckan-version }}
     runs-on: ubuntu-latest
     container:
-      image: openknowledge/ckan-dev:{{ matrix.ckan-version }}
+      image: openknowledge/ckan-dev:${{ matrix.ckan-version }}
     services:
       solr:
-        image: ckan/ckan-solr-dev:{{ matrix.ckan-version }}
+        image: ckan/ckan-solr-dev:${{ matrix.ckan-version }}
       postgres:
-        image: ckan/ckan-postgres-dev:{{ matrix.ckan-version }}
+        image: ckan/ckan-postgres-dev:${{ matrix.ckan-version }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
