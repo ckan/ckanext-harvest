@@ -2,7 +2,7 @@
 ckanext-harvest - Remote harvesting extension
 =============================================
 
-.. image:: https://github.com/ckan/ckanext-harvest/workflows/Tests/badge.svg
+.. image:: https://github.com/ckan/ckanext-harvest/workflows/Tests/badge.svg?branch=master
     :target: https://github.com/ckan/ckanext-harvest/actions
 
 This extension provides a common harvesting framework for ckan extensions
