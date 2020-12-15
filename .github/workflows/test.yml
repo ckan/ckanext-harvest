@@ -1,8 +1,20 @@
 name: Tests
 on: [push, pull_request]
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+          with:
+            python-version: '3.6'
+      - name: Install requirements
+        run: pip install flake8 pycodestyle
+      - name: Check syntax
+        run: flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics --exclude ckan
 
   test:
+    needs: lint
     strategy:
       matrix:
         ckan-version: [2.9, 2.9-py2, 2.8, 2.7]
@@ -40,7 +52,7 @@ jobs:
     - name: Setup extension (CKAN < 2.9)
       if: ${{ matrix.ckan-version == '2.7' || matrix.ckan-version == '2.8' }}
       run: |
-        paster --plugin=ckan db init -c test-ga.ini 
-        paster --plugin=ckanext-harvest harvester initdb -c test-ga.ini 
+        paster --plugin=ckan db init -c test-ga.ini
+        paster --plugin=ckanext-harvest harvester initdb -c test-ga.ini
     - name: Run tests
       run: pytest --ckan-ini=test-ga.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests
