@@ -22,11 +22,11 @@ defaults:
       ckan -c test-ga.ini db init
       ckan -c test-ga.ini harvester initdb
 
-  setup-extension-pre29: &setup-extension-pre29
+  setup-extension: &setup-extension-pre29
     name: Setup extension
-    run: |
-      paster --plugin=ckan db init -c test-ga.ini
-      paster --plugin=ckanext-harvest harvester initdb -c test-ga.ini
+      run: |
+        paster --plugin=ckan db init -c test-ga.ini
+        paster --plugin=ckanext-harvest harvester initdb -c test-ga.ini
 
   run-tests: &run-tests
     name: Run tests
