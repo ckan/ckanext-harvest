@@ -1,10 +1,11 @@
 name: Tests
 on: [push, pull_request]
 jobs:
+
   test:
     strategy:
       matrix:
-        ckan-version: [master, 2.9, 2.9-py2, 2.8, 2.7]
+        ckan-version: [2.9, 2.9-py2, 2.8, 2.7]
       fail-fast: false
 
     name: CKAN ${{ matrix.ckan-version }}
