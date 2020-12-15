@@ -11,6 +11,11 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_
 Unreleased_
 ***********
 
+Changed
+-------
+
+- Migrate tests from Travis CI to GitHub Actions
+
 
 ***********
 1.3.2_ - 2020-10-08
