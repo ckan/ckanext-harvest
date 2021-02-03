@@ -176,12 +176,31 @@ class HarvestJob(HarvestDomainObject):
         
         return query
     
+    def get_last_gathered_object(self):
+        ''' Determine the last gathered object in this job
+            Helpful to know if a job is running or not and
+              to avoid timeouts when the source is running
+        '''
+        
+        query = Session.query(HarvestObject)\
+                    .filter(HarvestObject.harvest_job_id == self.id)\
+                    .order_by(HarvestObject.gathered.desc())\
+                    .first()
+        
+        return query
+    
     def get_last_action_time(self):
         last_object = self.get_last_finished_object()
         if last_object is not None:
             return last_object.import_finished
+        
         if self.gather_finished is not None:
             return self.gather_finished
+        
+        last_gathered_object = self.get_last_gathered_object()
+        if last_gathered_object is not None:
+            return last_gathered_object.gathered
+        
         return self.created
 
     def get_gather_errors(self):
