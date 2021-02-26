@@ -82,8 +82,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
     def before_view(self, data_dict):
 
         # check_ckan_version should be more clever than this
-        if p.toolkit.check_ckan_version(max_version='2.1.99') and (
-           'type' not in data_dict or data_dict['type'] != DATASET_TYPE_NAME):
+        if 'type' not in data_dict or data_dict['type'] != DATASET_TYPE_NAME:
             # This is a normal dataset, check if it was harvested and if so, add
             # info about the HarvestObject and HarvestSource
             harvest_object = model.Session.query(HarvestObject) \
