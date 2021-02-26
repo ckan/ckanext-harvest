@@ -180,9 +180,9 @@ class TestCkanHarvester(object):
         # Check that the dataset extras has the harvest_object_id, harvest_source_id, and harvest_source_title
         dataset = call_action('package_show', {}, id=mock_ckan.DATASETS[0]['id'])
         extras_dict = dict((e['key'], e['value']) for e in dataset['extras'])
-        assert extras_dict['harvest_object_id']
-        assert extras_dict['harvest_source_id']
-        assert extras_dict['harvest_source_title']
+        assert 'harvest_object_id' in extras_dict
+        assert 'harvest_source_id' in extras_dict
+        assert 'harvest_source_title' in extras_dict
 
     def test_remote_groups_only_local(self):
         # Create an existing group
