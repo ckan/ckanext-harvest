@@ -28,7 +28,7 @@ class TestModelFunctions:
         assert_equal(job.get_last_finished_object(), ob2)
         assert_equal(job.get_last_action_time(), ob2.import_finished)
 
-        gather_errors = self.run(timeout=3, source=source, job=job) 
+        gather_errors = self.run(timeout=3, source=source, job=job)
         assert_equal(len(gather_errors), 1)
         assert_equal(job.status, 'Finished')
         gather_error = gather_errors[0]
@@ -41,14 +41,14 @@ class TestModelFunctions:
         self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=10)
         ob2 = self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=5)
         self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=15)
-        
+
         assert_equal(job.get_last_finished_object(), ob2)
         assert_equal(job.get_last_action_time(), ob2.import_finished)
 
-        gather_errors = self.run(timeout=7, source=source, job=job) 
+        gather_errors = self.run(timeout=7, source=source, job=job)
         assert_equal(len(gather_errors), 0)
         assert_equal(job.status, 'Finished')
-    
+
     def test_no_objects_job(self):
         """ Test a job that don't raise timeout """
         _, job = self.get_source()
@@ -118,12 +118,12 @@ class TestModelFunctions:
         source = harvest_factories.HarvestSourceObj(**SOURCE_DICT)
         try:
             job = harvest_factories.HarvestJobObj(source=source)
-        except HarvestJobExists: # not sure why
+        except HarvestJobExists:  # not sure why
             job = source.get_jobs()[0]
 
         job.status = 'Running'
         job.save()
-        
+
         jobs = source.get_jobs(status='Running')
         assert_in(job, jobs)
 

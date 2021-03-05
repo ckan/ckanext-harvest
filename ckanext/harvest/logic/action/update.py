@@ -486,14 +486,12 @@ def harvest_objects_import(context, data_dict):
             session.query(HarvestObject.id) \
                    .filter(HarvestObject.id == harvest_object_id)
     elif package_id_or_name:
-        last_objects_ids = \
-            session.query(HarvestObject.id) \
-                   .join(Package) \
-                   .filter(
-                HarvestObject.current == True  # noqa: E712
-            ).filter(Package.state == u'active') \
-                   .filter(or_(Package.id == package_id_or_name,
-                               Package.name == package_id_or_name))
+        last_objects_ids = (session.query(HarvestObject.id)
+                            .join(Package)
+                            .filter(HarvestObject.current == True)  # noqa: E712
+                            .filter(Package.state == u'active')
+                            .filter(or_(Package.id == package_id_or_name,
+                                        Package.name == package_id_or_name)))
         join_datasets = False
     else:
         last_objects_ids = \
@@ -625,7 +623,7 @@ def harvest_jobs_run(context, data_dict):
                     err = HarvestGatherError(message=msg, job=job_obj)
                     err.save()
                     log.info('Marking job as finished due to error: %s %s',
-                            job_obj.source.url, job_obj.id)
+                             job_obj.source.url, job_obj.id)
                     continue
 
             if job['gather_finished']:
@@ -768,6 +766,7 @@ def send_summary_email(context, source_id, status):
     subject, body = prepare_summary_mail(context, source_id, status)
     recipients = toolkit.get_action('harvest_get_notifications_recipients')(context, {'source_id': source_id})
     send_mail(recipients, subject, body)
+
 
 def send_error_email(context, source_id, status):
     subject, body = prepare_error_mail(context, source_id, status)

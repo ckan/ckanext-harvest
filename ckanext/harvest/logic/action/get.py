@@ -265,7 +265,7 @@ def harvest_object_show(context, data_dict):
         obj = model.Session.query(HarvestObject) \
             .filter(HarvestObject.package_id == pkg.id) \
             .filter(
-            HarvestObject.current == True  # noqa: E711
+            HarvestObject.current == True  # noqa: E712
         ).first()
     else:
         raise p.toolkit.ValidationError(
@@ -389,7 +389,7 @@ def _get_sources_for_user(context, data_dict, organization_id=None, limit=None):
         query = query.filter(or_(HarvestSource.next_run <= datetime.datetime.utcnow(),
                                  HarvestSource.next_run == None  # noqa: E711
                                  )
-                            )
+                             )
 
     user_obj = User.get(user)
     # Sysadmins will get all sources

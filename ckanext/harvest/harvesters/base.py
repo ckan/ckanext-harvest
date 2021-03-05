@@ -414,17 +414,15 @@ class HarvesterBase(SingletonPlugin):
     def last_error_free_job(cls, harvest_job):
         # TODO weed out cancelled jobs somehow.
         # look for jobs with no gather errors
-        jobs = \
-            model.Session.query(HarvestJob) \
-                 .filter(HarvestJob.source == harvest_job.source) \
-                 .filter(
-                HarvestJob.gather_started != None  # noqa: E711
-            ).filter(HarvestJob.status == 'Finished') \
-                .filter(HarvestJob.id != harvest_job.id) \
+        jobs = (model.Session.query(HarvestJob)
+                .filter(HarvestJob.source == harvest_job.source)
+                .filter(HarvestJob.gather_started != None)  # noqa: E711
+                .filter(HarvestJob.status == 'Finished')
+                .filter(HarvestJob.id != harvest_job.id)
                 .filter(
-                ~exists().where(
-                    HarvestGatherError.harvest_job_id == HarvestJob.id)) \
-                .order_by(HarvestJob.gather_started.desc())
+            ~exists().where(
+                HarvestGatherError.harvest_job_id == HarvestJob.id))
+                .order_by(HarvestJob.gather_started.desc()))
         # now check them until we find one with no fetch/import errors
         # (looping rather than doing sql, in case there are lots of objects
         # and lots of jobs)
