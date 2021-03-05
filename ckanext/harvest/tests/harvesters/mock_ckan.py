@@ -3,7 +3,6 @@ from __future__ import print_function
 import json
 import re
 import copy
-import urllib
 import six
 from six.moves.urllib.parse import unquote_plus
 

@@ -5,7 +5,6 @@ from ckan.tests import factories as ckan_factories
 from ckan import model
 from ckan.lib.base import config
 from ckan.plugins.toolkit import get_action
-from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 from ckanext.harvest.tests import factories as harvest_factories
 from ckanext.harvest.logic import HarvestJobExists
 
@@ -14,18 +13,18 @@ from ckanext.harvest.logic import HarvestJobExists
 @pytest.mark.ckan_config('ckan.plugins', 'harvest test_action_harvester')
 class TestModelFunctions:
     dataset_counter = 0
-    
+
     def test_timeout_jobs(self):
         """ Create harvest source, job and objects
             Validate we read the last object fished time
             Validate we raise timeout in harvest_jobs_run_action
             """
         source, job = self.get_source()
-        
-        ob1 = self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=10)
+
+        self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=10)
         ob2 = self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=5)
-        ob3 = self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=15)
-        
+        self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=15)
+
         assert_equal(job.get_last_finished_object(), ob2)
         assert_equal(job.get_last_action_time(), ob2.import_finished)
 
@@ -34,14 +33,14 @@ class TestModelFunctions:
         assert_equal(job.status, 'Finished')
         gather_error = gather_errors[0]
         assert_in('timeout', gather_error.message)
-    
+
     def test_no_timeout_jobs(self):
         """ Test a job that don't raise timeout """
         source, job = self.get_source()
 
-        ob1 = self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=10)
+        self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=10)
         ob2 = self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=5)
-        ob3 = self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=15)
+        self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=15)
         
         assert_equal(job.get_last_finished_object(), ob2)
         assert_equal(job.get_last_action_time(), ob2.import_finished)
@@ -74,10 +73,10 @@ class TestModelFunctions:
         """ Test get_last_action_time at gather stage """
         source, job = self.get_source()
 
-        ob1 = self.add_object(job=job, source=source, state='WAITING')
-        ob2 = self.add_object(job=job, source=source, state='WAITING')
+        self.add_object(job=job, source=source, state='WAITING')
+        self.add_object(job=job, source=source, state='WAITING')
         ob3 = self.add_object(job=job, source=source, state='WAITING')
-        
+
         assert_equal(job.get_last_gathered_object(), ob3)
         assert_equal(job.get_last_action_time(), ob3.gathered)
 
@@ -103,7 +102,7 @@ class TestModelFunctions:
         config['ckan.harvest.timeout'] = timeout
         harvest_jobs_run_action = get_action('harvest_jobs_run')
         harvest_jobs_run_action(context, data_dict)
-        
+
         return job.get_gather_errors()
 
     def get_source(self):
@@ -121,7 +120,7 @@ class TestModelFunctions:
             job = harvest_factories.HarvestJobObj(source=source)
         except HarvestJobExists: # not sure why
             job = source.get_jobs()[0]
-        
+
         job.status = 'Running'
         job.save()
         
@@ -129,7 +128,7 @@ class TestModelFunctions:
         assert_in(job, jobs)
 
         return source, job
-        
+
     def add_object(self, job, source, state, minutes_ago=0):
         now = datetime.utcnow()
         self.dataset_counter += 1

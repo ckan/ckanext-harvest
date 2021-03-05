@@ -135,5 +135,5 @@ def harvesters_info_show(context, data_dict):
 
 
 def harvest_get_notifications_recipients(context, data_dict):
-   # Only sysadmins can access this
+    # Only sysadmins can access this
     return {'success': False}

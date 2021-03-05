@@ -420,11 +420,11 @@ class HarvesterBase(SingletonPlugin):
                  .filter(
                 HarvestJob.gather_started != None  # noqa: E711
             ).filter(HarvestJob.status == 'Finished') \
-                 .filter(HarvestJob.id != harvest_job.id) \
-                 .filter(
-                     ~exists().where(
-                         HarvestGatherError.harvest_job_id == HarvestJob.id)) \
-                 .order_by(HarvestJob.gather_started.desc())
+                .filter(HarvestJob.id != harvest_job.id) \
+                .filter(
+                ~exists().where(
+                    HarvestGatherError.harvest_job_id == HarvestJob.id)) \
+                .order_by(HarvestJob.gather_started.desc())
         # now check them until we find one with no fetch/import errors
         # (looping rather than doing sql, in case there are lots of objects
         # and lots of jobs)

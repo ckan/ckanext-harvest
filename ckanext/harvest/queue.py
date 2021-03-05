@@ -465,7 +465,7 @@ def fetch_callback(channel, method, header, body):
         channel.basic_ack(method.delivery_tag)
         return False
 
-    # check if job has been set to finished 
+    # check if job has been set to finished
     job = HarvestJob.get(obj.harvest_job_id)
     if job.status == 'Finished':
         obj.state = "ERROR"

@@ -4,6 +4,7 @@ import ckan.plugins as p
 import ckanext.harvest.cli as cli
 import ckanext.harvest.views as views
 
+
 class MixinPlugin(p.SingletonPlugin):
     p.implements(p.IClick)
     p.implements(p.IBlueprint)

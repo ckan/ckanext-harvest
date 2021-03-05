@@ -12,7 +12,7 @@ from sqlalchemy import and_, or_
 from six.moves.urllib.parse import urljoin
 
 from ckan.lib.search.index import PackageSearchIndex
-from ckan.plugins import toolkit, PluginImplementations, IActions
+from ckan.plugins import toolkit, PluginImplementations
 from ckan.logic import get_action
 from ckanext.harvest.interfaces import IHarvester
 from ckan.lib.search.common import SearchIndexError, make_connection
@@ -29,7 +29,7 @@ from ckanext.harvest.utils import (
 from ckanext.harvest.queue import (
     get_gather_publisher, resubmit_jobs, resubmit_objects)
 
-from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject, HarvestGatherError, HarvestObjectError
+from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject, HarvestGatherError
 from ckanext.harvest.logic import HarvestJobExists
 from ckanext.harvest.logic.dictization import harvest_job_dictize
 
@@ -574,7 +574,7 @@ def harvest_jobs_run(context, data_dict):
     resubmits queue items if needed.
 
     If ckanext.harvest.timeout is set:
-    Check if the duration of the job is longer than ckanext.harvest.timeout, 
+    Check if the duration of the job is longer than ckanext.harvest.timeout,
     then mark that job as finished as there is probably an underlying issue with the harvest process.
 
     This should be called every few minutes (e.g. by a cron), or else jobs
@@ -617,7 +617,7 @@ def harvest_jobs_run(context, data_dict):
                     msg += '\tJob created: {}\n'.format(job_obj.created)
                     msg += '\tJob gather finished: {}\n'.format(job_obj.created)
                     msg += '\tJob last action time: {}\n'.format(last_time)
-                    
+
                     job_obj.status = u'Finished'
                     job_obj.finished = now
                     job_obj.save()
@@ -637,7 +637,7 @@ def harvest_jobs_run(context, data_dict):
                            .count()
 
                 if num_objects_in_progress == 0:
-                    
+
                     job_obj.status = u'Finished'
                     log.info('Marking job as finished %s %s',
                              job_obj.source.url, job_obj.id)
@@ -668,7 +668,7 @@ def harvest_jobs_run(context, data_dict):
                     notify_errors = toolkit.asbool(config.get('ckan.harvest.status_mail.errored'))
                     last_job_errors = status['last_job']['stats'].get('errored', 0)
                     log.debug('Notifications: All:{} On error:{} Errors:{}'.format(notify_all, notify_errors, last_job_errors))
-                    
+
                     if last_job_errors > 0 and (notify_all or notify_errors):
                         send_error_email(context, job_obj.source.id, status)
                     elif notify_all:
@@ -689,13 +689,13 @@ def harvest_jobs_run(context, data_dict):
 
 def get_mail_extra_vars(context, source_id, status):
     last_job = status['last_job']
-    
+
     source = get_action('harvest_source_show')(context, {'id': source_id})
     report = get_action(
         'harvest_job_report')(context, {'id': status['last_job']['id']})
     obj_errors = []
     job_errors = []
-    
+
     for harvest_object_error_key in islice(report.get('object_errors'), 0, 20):
         harvest_object_error = report.get(
             'object_errors')[harvest_object_error_key]['errors']
@@ -745,21 +745,24 @@ def get_mail_extra_vars(context, source_id, status):
 
     return extra_vars
 
+
 def prepare_summary_mail(context, source_id, status):
     extra_vars = get_mail_extra_vars(context, source_id, status)
     body = render_jinja2('emails/summary_email.txt', extra_vars)
     subject = '{} - Harvesting Job Successful - Summary Notification'\
-                  .format(config.get('ckan.site_title'))
-    
+        .format(config.get('ckan.site_title'))
+
     return subject, body
+
 
 def prepare_error_mail(context, source_id, status):
     extra_vars = get_mail_extra_vars(context, source_id, status)
     body = render_jinja2('emails/error_email.txt', extra_vars)
     subject = '{} - Harvesting Job - Error Notification'\
-              .format(config.get('ckan.site_title'))
+        .format(config.get('ckan.site_title'))
 
     return subject, body
+
 
 def send_summary_email(context, source_id, status):
     subject, body = prepare_summary_mail(context, source_id, status)
@@ -773,7 +776,7 @@ def send_error_email(context, source_id, status):
 
 
 def send_mail(recipients, subject, body):
-    
+
     for recipient in recipients:
         email = {'recipient_name': recipient['name'],
                  'recipient_email': recipient['email'],
@@ -927,7 +930,7 @@ def harvest_source_reindex(context, data_dict):
 
     defer_commit = context.get('defer_commit', False)
 
-    if 'extras_as_string'in context:
+    if 'extras_as_string' in context:
         del context['extras_as_string']
     context.update({'ignore_auth': True})
     package_dict = logic.get_action('harvest_source_show')(
