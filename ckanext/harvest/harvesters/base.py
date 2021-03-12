@@ -7,6 +7,7 @@ import six
 
 from sqlalchemy import exists, and_
 from sqlalchemy.sql import update, bindparam
+from sqlalchemy.orm import contains_eager
 
 from ckantoolkit import config
 
@@ -427,7 +428,7 @@ class HarvesterBase(SingletonPlugin):
                            HarvestObject.current == False,  # noqa: E712
                            HarvestObject.report_status != 'not modified'),
                       isouter=True)
-                .options(contains_eager=HarvestJob.objects)
+                .options(contains_eager(HarvestJob.objects))
                 .order_by(HarvestJob.gather_started.desc()))
         # now check them until we find one with no fetch/import errors
         # if objects count is 0, job was error free
