@@ -5,7 +5,7 @@ import re
 import uuid
 import six
 
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
 from sqlalchemy.sql import update, bindparam
 
 from ckantoolkit import config
@@ -422,15 +422,15 @@ class HarvesterBase(SingletonPlugin):
                 .filter(
             ~exists().where(
                 HarvestGatherError.harvest_job_id == HarvestJob.id))
+                .join(HarvestObject,
+                      and_(HarvestObject.harvest_job_id == HarvestJob.id,
+                           HarvestObject.current == False,  # noqa: E712
+                           HarvestObject.report_status != 'not modified'),
+                      isouter=True)
+                .options(contains_eager=HarvestJob.objects)
                 .order_by(HarvestJob.gather_started.desc()))
         # now check them until we find one with no fetch/import errors
-        # (looping rather than doing sql, in case there are lots of objects
-        # and lots of jobs)
+        # if objects count is 0, job was error free
         for job in jobs:
-            for obj in job.objects:
-                if obj.current is False and \
-                        obj.report_status != 'not modified':
-                    # unsuccessful, so go onto the next job
-                    break
-            else:
+            if len(job.objects) == 0:
                 return job
