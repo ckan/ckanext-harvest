@@ -424,9 +424,9 @@ class HarvesterBase(SingletonPlugin):
             ~exists().where(
                 HarvestGatherError.harvest_job_id == HarvestJob.id))
                 .outerjoin(HarvestObject,
-                      and_(HarvestObject.harvest_job_id == HarvestJob.id,
-                           HarvestObject.current == False,  # noqa: E712
-                           HarvestObject.report_status != 'not modified'))
+                           and_(HarvestObject.harvest_job_id == HarvestJob.id,
+                                HarvestObject.current == False,  # noqa: E712
+                                HarvestObject.report_status != 'not modified'))
                 .options(contains_eager(HarvestJob.objects))
                 .order_by(HarvestJob.gather_started.desc()))
         # now check them until we find one with no fetch/import errors
