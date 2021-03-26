@@ -1,4 +1,4 @@
 recursive-include ckanext/harvest/templates *
-recursive-include ckanext/harvest/fanstatic_library/styles *
+recursive-include ckanext/harvest/fanstatic_library *
 recursive-include ckanext/harvest/public *
 recursive-include ckanext/harvest/i18n *
