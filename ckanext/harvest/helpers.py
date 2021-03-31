@@ -114,8 +114,8 @@ def harvest_frequencies():
 
 
 def harvest_times():
-    return [{'text': p.toolkit._(f), 'value': f}
-            for f in UPDATE_TIMES]
+    return [{'text': time, 'value': time}
+            for time in UPDATE_TIMES]
 
 
 def harvest_default_time():

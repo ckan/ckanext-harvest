@@ -2,3 +2,8 @@ harvest_css:
   output: ckanext-harvest/%(version)s_harvest_css.css
   contents:
     - styles/harvest.css
+
+harvest_js:
+  output: ckanext-harvest/%(version)s_harvest_js.js
+  contents:
+    - js/harvest.js
