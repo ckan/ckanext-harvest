@@ -110,7 +110,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
         return search_params
 
     def before_index(self, pkg_dict):
-        
+
         if 'type' not in pkg_dict or pkg_dict['type'] != DATASET_TYPE_NAME:
             # This is a normal dataset, check if it was harvested and if so, add
             # info about the HarvestObject and HarvestSource
@@ -123,17 +123,16 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
             # when calling package_update or resource_update, which call
             # package_show
             if pkg_dict.get('extras'):
-                pkg_dict['extras'][:] = [e for e in [pkg_dict.get('extras', [])
-                                          if not e['key']
-                                          in ('harvest_object_id', 'harvest_source_id', 'harvest_source_title',)]
-
+                pkg_dict['extras'][:] = [e for e in pkg_dict.get('extras', [])
+                                         if not e['key']
+                                         in ('harvest_object_id', 'harvest_source_id', 'harvest_source_title',)]
+            else:
+                pkg_dict['extras'] = []
             # We only want to add these extras at index time so they are part
             # of the cached data_dict used to display, search results etc. We
             # don't want them added when editing the dataset, otherwise we get
             # duplicated key errors.
-            # The only way to detect indexing right now is checking that
-            # validate is set to False.
-            if harvest_object and not context.get('validate', True):
+            if harvest_object:
                 for key, value in [
                     ('harvest_object_id', harvest_object.id),
                     ('harvest_source_id', harvest_object.source.id),
@@ -141,8 +140,6 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
                         ]:
                     _add_extra(pkg_dict, key, value)
         return pkg_dict
-
-
 
     def after_show(self, context, data_dict):
 
