@@ -44,7 +44,19 @@
   </div>
 
   {{ form.select('frequency', id='field-frequency', label=_('Update frequency'), options=h.harvest_frequencies(), selected=data.frequency, error=errors.frequency) }}
-  {{ form.select('time', id='field-time', label=_('Update time'), options=h.harvest_times(), selected=data.time or h.harvest_default_time(), error=errors.time) }}
+
+  <div class="control-group control-select">
+    <label class="control-label" for="field-time">{{ _('Update time') }}</label>
+    <div class="controls ">
+    <select id="field-time" name="time">
+      {% set selected = data.time or h.harvest_default_time() %}
+      {% for option in h.harvest_times() %}
+        <option value="{{ option.value }}" class="local-time" data-module="automatic-local-time" data-time="{{ option.text }} +0000" {% if option.value == selected %} selected{% endif %}>{{ option.text }}</option>
+      {% endfor %}
+    </select>
+    <i class="fa fa-question-circle icon-question-sign muted" title="Harvest times are stored in UTC format, daylight savings time changes will not apply" data-toggle="tooltip"></i>
+    </div>
+  </div>
 
   {% block extra_config %}
   {{ form.textarea('config', id='field-config', label=_('Configuration'), value=data.config, error=errors.config) }}
