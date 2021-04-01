@@ -1,0 +1,12 @@
+{% ckan_extends %}
+
+{% block header_account_logged %}
+  {% if c.userobj.sysadmin %}
+    <li>
+      <a href="{{ h.url_for('/harvest') }}" title="{{ _('Harvest') }}">
+        <i class="fa fa-leaf icon-leaf"></i>
+      </a>
+    </li>
+  {% endif %}
+  {{ super() }}
+{% endblock %}
