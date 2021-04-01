@@ -19,6 +19,7 @@ from ckan.model.package import Package
 
 
 UPDATE_FREQUENCIES = ['MANUAL', 'MONTHLY', 'WEEKLY', 'BIWEEKLY', 'DAILY', 'ALWAYS']
+UPDATE_TIMES = [datetime.time(i).strftime('%I:%M %p') for i in range(24)]
 
 log = logging.getLogger(__name__)
 
@@ -69,6 +70,12 @@ def setup():
         log.debug('Harvest tables already exist')
         # Check if existing tables need to be updated
         inspector = Inspector.from_engine(engine)
+
+        columns = inspector.get_columns('harvest_source')
+        column_names = [column['name'] for column in columns]
+        if 'time' not in column_names:
+            log.debug('Harvest tables need to be updated')
+            migrate_add_harvest_times()
 
         # Check if harvest_log table exist - needed for existing users
         if 'harvest_log' not in inspector.get_table_names():
@@ -316,6 +323,7 @@ def define_harvester_tables():
         Column('user_id', types.UnicodeText, default=u''),
         Column('publisher_id', types.UnicodeText, default=u''),
         Column('frequency', types.UnicodeText, default=u'MANUAL'),
+        Column('time', types.UnicodeText, default=u''),
         Column('next_run', types.DateTime),
     )
     # Was harvesting_job
@@ -489,6 +497,16 @@ def define_harvester_tables():
     )
 
     event.listen(HarvestObject, 'before_insert', harvest_object_before_insert_listener)
+
+
+def migrate_add_harvest_times():
+    log.debug('Migrating harvest tables to add harvest times. This may take a while...')
+    conn = Session.connection()
+
+    statement = "ALTER TABLE harvest_source ADD COLUMN time text;"
+    conn.execute(statement)
+    Session.commit()
+    log.info('Harvest tables migrated to add harvest times')
 
 
 class PackageIdHarvestSourceIdMismatch(Exception):

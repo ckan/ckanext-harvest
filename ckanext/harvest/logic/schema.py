@@ -45,6 +45,7 @@ def harvest_source_schema():
         'private': [ignore_missing, boolean_validator],
         'organization': [ignore_missing],
         'frequency': [ignore_missing, six.text_type, harvest_source_frequency_exists, convert_to_extras],
+        'time': [ignore_missing, convert_to_extras],
         'state': [ignore_missing],
         'config': [ignore_missing, harvest_source_config_validator, convert_to_extras],
         'extras': default_extras_schema(),
@@ -86,6 +87,7 @@ def harvest_source_show_package_schema():
     schema.update({
         'source_type': [convert_from_extras, ignore_missing],
         'frequency': [convert_from_extras, ignore_missing],
+        'time': [convert_from_extras, ignore_missing],
         'config': [convert_from_extras, harvest_source_convert_from_config, ignore_missing],
         'metadata_created': [],
         'metadata_modified': [],

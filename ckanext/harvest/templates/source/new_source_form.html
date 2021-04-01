@@ -44,6 +44,7 @@
   </div>
 
   {{ form.select('frequency', id='field-frequency', label=_('Update frequency'), options=h.harvest_frequencies(), selected=data.frequency, error=errors.frequency) }}
+  {{ form.select('time', id='field-time', label=_('Update time'), options=h.harvest_times(), selected=data.time or h.harvest_default_time(), error=errors.time) }}
 
   {% block extra_config %}
   {{ form.textarea('config', id='field-config', label=_('Configuration'), value=data.config, error=errors.config) }}
