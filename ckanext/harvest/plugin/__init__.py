@@ -6,6 +6,7 @@ from logging import getLogger
 
 from six import string_types, text_type
 from collections import OrderedDict
+import string
 
 from ckan import logic
 from ckan import model
@@ -139,6 +140,28 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
                     ('harvest_source_title', harvest_object.source.title),
                         ]:
                     _add_extra(pkg_dict, key, value)
+            TYPE_FIELD = "entity_type"
+            KEY_CHARS = string.digits + string.letters + "_-"
+            SOLR_FIELDS = [TYPE_FIELD, "res_url", "text", "urls", "indexed_ts", "site_id"]
+            RESERVED_FIELDS = SOLR_FIELDS + ["tags", "groups", "res_name", "res_description",
+                                             "res_format", "res_url", "res_type"]
+            if (not pkg_dict.get('state') or 'deleted' in pkg_dict.get('state')):
+                return self.delete_package(pkg_dict)
+
+            index_fields = RESERVED_FIELDS + pkg_dict.keys()
+
+            # include the extras in the main namespace
+            extras = pkg_dict.get('extras', [])
+            for extra in extras:
+                key, value = extra['key'], extra['value']
+                if isinstance(value, (tuple, list)):
+                    value = " ".join(map(text_type, value))
+                key = ''.join([c for c in key if c in KEY_CHARS])
+                pkg_dict['extras_' + key] = value
+                if key not in index_fields:
+                    pkg_dict[key] = value
+            pkg_dict.pop('extras', None)
+            
         return pkg_dict
 
     def after_show(self, context, data_dict):
