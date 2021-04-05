@@ -6,7 +6,6 @@ from logging import getLogger
 
 from six import string_types, text_type
 from collections import OrderedDict
-import string
 
 from ckan import logic
 from ckan import model
