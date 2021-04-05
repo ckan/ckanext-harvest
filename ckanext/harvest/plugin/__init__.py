@@ -161,7 +161,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
                 if key not in index_fields:
                     pkg_dict[key] = value
             pkg_dict.pop('extras', None)
-            
+
         return pkg_dict
 
     def after_show(self, context, data_dict):
