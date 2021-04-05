@@ -354,6 +354,9 @@ def _add_extra(data_dict, key, value):
     if 'extras' not in data_dict:
         data_dict['extras'] = []
 
+    if 'extras_' + key not in data_dict:
+        data_dict['extras_' + key] = []
+
     data_dict['extras_' + key].append({
         'key': key, 'value': value, 'state': u'active'
     })
