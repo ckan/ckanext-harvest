@@ -45,7 +45,7 @@
 
   {{ form.select('frequency', id='field-frequency', label=_('Update frequency'), options=h.harvest_frequencies(), selected=data.frequency, error=errors.frequency) }}
 
-  <div class="control-group control-select">
+  <div class="form-group control-group control-select">
     <label class="control-label" for="field-time">{{ _('Update time') }}</label>
     <div class="controls ">
     <select id="field-time" name="time">

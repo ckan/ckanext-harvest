@@ -4,6 +4,10 @@ harvest_css:
     - styles/harvest.css
 
 harvest_js:
+  filters: rjsmin
   output: ckanext-harvest/%(version)s_harvest_js.js
+  extra:
+    preload:
+      - base/main
   contents:
     - js/harvest.js
