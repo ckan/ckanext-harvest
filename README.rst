@@ -271,14 +271,14 @@ The following operations can be run from the command line as described underneat
           the gather queue. Also checks running jobs - if finished it
           changes their status to Finished.
 
-      harvester run_test {source-id/name}
+      harvester run-test {source-id/name}
         - runs a harvest - for testing only.
           This does all the stages of the harvest (creates job, gather, fetch,
           import) without involving the web UI or the queue backends. This is
           useful for testing a harvester without having to fire up
           gather/fetch_consumer processes, as is done in production.
           
-      harvester run_test {source-id/name} force-import=guid1,guid2...
+      harvester run-test {source-id/name} force-import=guid1,guid2...
         - In order to force an import of particular datasets, useful to 
           target a dataset for dev purposes or when forcing imports on other environments.
 
@@ -677,18 +677,18 @@ Running the harvest jobs
 
 There are two ways to run a harvest:
 
-1. ``harvester run_test`` for the command-line, suitable for testing
+1. ``harvester run-test`` for the command-line, suitable for testing
 2. ``harvester run`` used by the Web UI and scheduled runs
 
-harvester run_test
+harvester run-test
 ------------------
 
-You can run a harvester simply using the ``run_test`` command. This is handy
+You can run a harvester simply using the ``run-test`` command. This is handy
 for running a harvest with one command in the console and see all the output
 in-line. It runs the gather, fetch and import stages all in the same process.
 You must ensure that you have pip installed ``dev-requirements.txt`` 
 in ``/home/ckan/ckan/lib/default/src/ckanext-harvest`` before using the
-``run_test`` command.
+``run-test`` command.
   
 This is useful for developing a harvester because you can insert break-points
 in your harvester, and rerun a harvest without having to restart the
