@@ -242,7 +242,7 @@ The following operations can be run from the command line as described underneat
         - clears all datasets, jobs and objects related to a harvest source,
           but keeps the source itself
 
-      harvester clearsource_history [{source-id}]
+      harvester clearsource-history [{source-id}]
         - If no source id is given the history for all harvest sources (maximum is 1000)
           will be cleared.
           Clears all jobs and objects related to a harvest source, but keeps the source
@@ -260,7 +260,7 @@ The following operations can be run from the command line as described underneat
       harvester jobs
         - lists harvest jobs
 
-      harvester job_abort {source-id/name}
+      harvester job-abort {source-id/name}
         - marks a job as "Aborted" so that the source can be restarted afresh.
           It ensures that the job's harvest objects status are also marked
           finished. You should ensure that neither the job nor its objects are
@@ -282,18 +282,18 @@ The following operations can be run from the command line as described underneat
         - In order to force an import of particular datasets, useful to 
           target a dataset for dev purposes or when forcing imports on other environments.
 
-      harvester gather_consumer
+      harvester gather-consumer
         - starts the consumer for the gathering queue
 
-      harvester fetch_consumer
+      harvester fetch-consumer
         - starts the consumer for the fetching queue
 
-      harvester purge_queues
+      harvester purge-queues
         - removes all jobs from fetch and gather queue
           WARNING: if using Redis, this command purges all data in the current
           Redis database
 
-      harvester clean_harvest_log
+      harvester clean-harvest-log
         - Clean-up mechanism for the harvest log table.
           You can configure the time frame through the configuration
           parameter 'ckan.harvest.log_timeframe'. The default time frame is 30 days
