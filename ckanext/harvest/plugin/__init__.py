@@ -111,36 +111,34 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
     def before_index(self, pkg_dict):
 
-        if 'type' not in pkg_dict or pkg_dict['type'] != DATASET_TYPE_NAME:
-            # This is a normal dataset, check if it was harvested and if so, add
-            # info about the HarvestObject and HarvestSource
+        harvest_object = model.Session.query(HarvestObject) \
+                .filter(HarvestObject.package_id == pkg_dict['id']) \
+                .filter(HarvestObject.current == True).first() # noqa
 
-            harvest_object = model.Session.query(HarvestObject) \
-                    .filter(HarvestObject.package_id == pkg_dict['id']) \
-                    .filter(HarvestObject.current == True).first() # noqa
+        if harvest_object:
 
-            # If the harvest extras are there, remove them. This can happen eg
-            # when calling package_update or resource_update, which call
-            # package_show
-            if pkg_dict.get('extras'):
-                pkg_dict['extras'][:] = [e for e in pkg_dict.get('extras', [])
-                                         if not e['key']
-                                         in ('harvest_object_id', 'harvest_source_id', 'harvest_source_title',)]
-            else:
-                pkg_dict['extras'] = []
-            # We only want to add these extras at index time so they are part
-            # of the cached data_dict used to display, search results etc. We
-            # don't want them added when editing the dataset, otherwise we get
-            # duplicated key errors.
-            if harvest_object:
-                for key, value in [
-                    ('harvest_object_id', harvest_object.id),
-                    ('harvest_source_id', harvest_object.source.id),
-                    ('harvest_source_title', harvest_object.source.title),
-                        ]:
-                    _add_extra(pkg_dict, key, value)
+            data_dict = json.loads(pkg_dict['data_dict'])
 
-        return pkg_dict
+            validated_data_dict = json.loads(pkg_dict['validated_data_dict'])
+
+            harvest_extras = [
+                ('harvest_object_id', harvest_object.id),
+                ('harvest_source_id', harvest_object.source.id),
+                ('harvest_source_title', harvest_object.source.title),
+            ]
+
+            for key, value in harvest_extras:
+
+                data_dict['extras'].append({'key': key, 'value': value})
+
+                validated_data_dict['extras'].append({'key': key, 'value': value})
+
+                pkg_dict[f'extras_{key}'] = value
+
+            pkg_dict['data_dict'] = json.dumps(data_dict)
+            pkg_dict['validated_data_dict'] = json.dumps(validated_data_dict)
+ 
+        return pkg_dict        
 
     def after_show(self, context, data_dict):
 
@@ -160,36 +158,6 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
                 status_action = p.toolkit.get_action(st_action_name)
 
             data_dict['status'] = status_action(context, {'id': source.id})
-
-        # elif 'type' not in data_dict or data_dict['type'] != DATASET_TYPE_NAME:
-        #     # This is a normal dataset, check if it was harvested and if so, add
-        #     # info about the HarvestObject and HarvestSource
-
-        #     harvest_object = model.Session.query(HarvestObject) \
-        #             .filter(HarvestObject.package_id == data_dict['id']) \
-        #             .filter(HarvestObject.current == True).first() # noqa
-
-        #     # If the harvest extras are there, remove them. This can happen eg
-        #     # when calling package_update or resource_update, which call
-        #     # package_show
-        #     if data_dict.get('extras'):
-        #         data_dict['extras'][:] = [e for e in data_dict.get('extras', [])
-        #                                   if not e['key']
-        #                                   in ('harvest_object_id', 'harvest_source_id', 'harvest_source_title',)]
-
-        #     # We only want to add these extras at index time so they are part
-        #     # of the cached data_dict used to display, search results etc. We
-        #     # don't want them added when editing the dataset, otherwise we get
-        #     # duplicated key errors.
-        #     # The only way to detect indexing right now is checking that
-        #     # validate is set to False.
-        #     if harvest_object and not context.get('validate', True):
-        #         for key, value in [
-        #             ('harvest_object_id', harvest_object.id),
-        #             ('harvest_source_id', harvest_object.source.id),
-        #             ('harvest_source_title', harvest_object.source.title),
-        #                 ]:
-        #             _add_extra(data_dict, key, value)
 
         return data_dict
 
@@ -348,18 +316,6 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
         return OrderedDict([('frequency', 'Frequency'),
                             ('source_type', 'Type'),
                             ])
-
-
-def _add_extra(data_dict, key, value):
-    if 'extras' not in data_dict:
-        data_dict['extras'] = []
-
-    if 'extras_' + key not in data_dict:
-        data_dict['extras_' + key] = []
-
-    data_dict['extras_' + key].append({
-        'key': key, 'value': value, 'state': u'active'
-    })
 
 
 def _get_logic_functions(module_root, logic_functions={}):
