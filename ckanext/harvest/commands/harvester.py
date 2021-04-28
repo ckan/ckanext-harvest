@@ -35,10 +35,14 @@ class Harvester(CkanCommand):
           but keeps the source itself
 
       harvester clearsource_history [{source-id}]
-        - If no source id is given the history for all harvest sources (maximum is 1000) will be cleared.
-          Clears all jobs and objects related to a harvest source, but keeps the source itself.
-          The datasets imported from the harvest source will NOT be deleted!!!
-          If a source id is given, it only clears the history of the harvest source with the given source id.
+        - clears the history for all active harvest sources (up to a maximum of
+          1000 sources), or specify a specific harvest source to clear just
+          that one. All jobs and objects related to the harvest source(s) will
+          be cleared, but it keeps the source itself. This is useful to clean
+          history of long running harvest sources to start again fresh.
+          Warning: The datasets imported from the harvest source will NOT be deleted.
+          They will be disassociated with the harvest source, so if you harvest again
+          it'll create duplicate datasets.
 
       harvester sources [all]
         - lists harvest sources

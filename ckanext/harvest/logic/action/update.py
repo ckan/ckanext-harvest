@@ -309,11 +309,14 @@ def harvest_abort_failed_jobs(context, data_dict):
 
 def harvest_sources_job_history_clear(context, data_dict):
     '''
-    Clears the history for all active harvest sources. All jobs and objects related to a harvest source will
-    be cleared, but keeps the source itself.
-    This is useful to clean history of long running harvest sources to start again fresh.
-    The datasets imported from the harvest source will NOT be deleted!!!
+    Clears the history for all active harvest sources (up to a maximum of
+    1000 sources). All jobs and objects related to a harvest source will be
+    cleared, but it keeps the source itself. This is useful to clean history of
+    long running harvest sources to start again fresh.
 
+    Warning: The datasets imported from the harvest source will NOT be deleted.
+    They will be disassociated with the harvest source, so if you harvest again
+    it'll create duplicate datasets.
     '''
     check_access('harvest_sources_clear', context, data_dict)
 
@@ -338,7 +341,10 @@ def harvest_source_job_history_clear(context, data_dict):
     '''
     Clears all jobs and objects related to a harvest source, but keeps the source itself.
     This is useful to clean history of long running harvest sources to start again fresh.
-    The datasets imported from the harvest source will NOT be deleted!!!
+
+    Warning: The datasets imported from the harvest source will NOT be deleted.
+    They will be disassociated with the harvest source, so if you harvest again
+    it'll create duplicate datasets.
 
     :param id: the id of the harvest source to clear
     :type id: string
