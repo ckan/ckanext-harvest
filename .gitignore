@@ -14,3 +14,4 @@ node_modules
 *.project
 .eggs
 .idea/
+.vscode/

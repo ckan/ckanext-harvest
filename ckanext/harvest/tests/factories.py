@@ -5,7 +5,12 @@ from ckan.plugins import toolkit
 
 
 class HarvestSource(factory.Factory):
+
     FACTORY_FOR = harvest_model.HarvestSource
+
+    class Meta:
+        model = harvest_model.HarvestSource
+
     _return_type = 'dict'
 
     name = factory.Sequence(lambda n: 'test_source_{n}'.format(n=n))
@@ -30,7 +35,7 @@ class HarvestSource(factory.Factory):
         if cls._return_type == 'dict':
             return source_dict
         else:
-            return cls.FACTORY_FOR.get(source_dict['id'])
+            return harvest_model.HarvestSource.get(source_dict['id'])
 
 
 class HarvestSourceObj(HarvestSource):
@@ -38,7 +43,12 @@ class HarvestSourceObj(HarvestSource):
 
 
 class HarvestJob(factory.Factory):
+
     FACTORY_FOR = harvest_model.HarvestJob
+
+    class Meta:
+        model = harvest_model.HarvestJob
+
     _return_type = 'dict'
 
     source = factory.SubFactory(HarvestSourceObj)
@@ -57,7 +67,7 @@ class HarvestJob(factory.Factory):
         if cls._return_type == 'dict':
             return job_dict
         else:
-            return cls.FACTORY_FOR.get(job_dict['id'])
+            return harvest_model.HarvestJob.get(job_dict['id'])
 
 
 class HarvestJobObj(HarvestJob):
@@ -65,7 +75,12 @@ class HarvestJobObj(HarvestJob):
 
 
 class HarvestObject(factory.Factory):
+
     FACTORY_FOR = harvest_model.HarvestObject
+
+    class Meta:
+        model = harvest_model.HarvestObject
+
     _return_type = 'dict'
 
     # source = factory.SubFactory(HarvestSourceObj)
@@ -87,7 +102,7 @@ class HarvestObject(factory.Factory):
         if cls._return_type == 'dict':
             return job_dict
         else:
-            return cls.FACTORY_FOR.get(job_dict['id'])
+            return harvest_model.HarvestObject.get(job_dict['id'])
 
 
 class HarvestObjectObj(HarvestObject):

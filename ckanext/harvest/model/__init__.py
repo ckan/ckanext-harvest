@@ -79,6 +79,23 @@ def setup():
         if "harvest_job_id_idx" not in index_names:
             log.debug('Creating index for harvest_object')
             Index("harvest_job_id_idx", harvest_object_table.c.harvest_job_id).create()
+        
+        if "harvest_source_id_idx" not in index_names:
+            log.debug('Creating index for harvest source')
+            Index("harvest_source_id_idx", harvest_object_table.c.harvest_source_id).create()
+        
+        if "package_id_idx" not in index_names:
+            log.debug('Creating index for package')
+            Index("package_id_idx", harvest_object_table.c.package_id).create()
+        
+        if "guid_idx" not in index_names:
+            log.debug('Creating index for guid')
+            Index("guid_idx", harvest_object_table.c.guid).create()
+        
+        index_names = [index['name'] for index in inspector.get_indexes("harvest_object_extra")]
+        if "harvest_object_id_idx" not in index_names:
+            log.debug('Creating index for harvest_object_extra')
+            Index("harvest_object_id_idx", harvest_object_extra_table.c.harvest_object_id).create()
 
 
 class HarvestError(Exception):
@@ -120,6 +137,16 @@ class HarvestSource(HarvestDomainObject):
 
     def __str__(self):
         return self.__repr__().encode('ascii', 'ignore')
+    
+    def get_jobs(self, status=None):
+        """ get the running jobs for this source """
+        
+        query = Session.query(HarvestJob).filter(HarvestJob.source_id == self.id)
+
+        if status is not None:
+            query = query.filter(HarvestJob.status == status)
+
+        return query.all()
 
 
 class HarvestJob(HarvestDomainObject):
@@ -133,7 +160,36 @@ class HarvestJob(HarvestDomainObject):
        (``HarvestObjectError``) are stored in the ``harvest_object_error``
        table.
     '''
-    pass
+    
+    def get_last_finished_object(self):
+        ''' Determine the last finished object in this job
+            Helpful to know if a job is running or not and 
+              to avoid timeouts when the source is running
+        '''
+        
+        query = Session.query(HarvestObject)\
+                    .filter(HarvestObject.harvest_job_id == self.id)\
+                    .filter(HarvestObject.state == "COMPLETE")\
+                    .filter(HarvestObject.import_finished.isnot(None))\
+                    .order_by(HarvestObject.import_finished.desc())\
+                    .first()
+        
+        return query
+    
+    def get_last_action_time(self):
+        last_object = self.get_last_finished_object()
+        if last_object is not None:
+            return last_object.import_finished
+        if self.gather_finished is not None:
+            return self.gather_finished
+        return self.created
+
+    def get_gather_errors(self):
+        query = Session.query(HarvestGatherError)\
+                    .filter(HarvestGatherError.harvest_job_id == self.id)\
+                    .order_by(HarvestGatherError.created.desc())
+        
+        return query.all()
 
 
 class HarvestObject(HarvestDomainObject):
@@ -288,6 +344,9 @@ def define_harvester_tables():
         # report_status: 'added', 'updated', 'not modified', 'deleted', 'errored'
         Column('report_status', types.UnicodeText, nullable=True),
         Index('harvest_job_id_idx', 'harvest_job_id'),
+        Index('harvest_source_id_idx', 'harvest_source_id'),
+        Index('package_id_idx', 'package_id'),
+        Index('guid_idx', 'guid'),
     )
 
     # New table
@@ -298,6 +357,7 @@ def define_harvester_tables():
         Column('harvest_object_id', types.UnicodeText, ForeignKey('harvest_object.id')),
         Column('key', types.UnicodeText),
         Column('value', types.UnicodeText),
+        Index('harvest_object_id_idx', 'harvest_object_id'),
     )
 
     # New table

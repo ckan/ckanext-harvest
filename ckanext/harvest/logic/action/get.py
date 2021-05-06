@@ -7,7 +7,6 @@ import datetime
 from ckan import logic
 from ckan.plugins import PluginImplementations
 from ckanext.harvest.interfaces import IHarvester
-from ckan.common import request
 
 import ckan.plugins as p
 from ckan.logic import NotFound, check_access, side_effect_free
@@ -126,7 +125,8 @@ def harvest_source_list(context, data_dict):
     TODO: Use package search
     '''
 
-    organization_id = request.params.get('organization_id')
+
+    organization_id = data_dict.get('organization_id')
     limit = config.get('ckan.harvest.harvest_source_limit', 100)
 
     sources = _get_sources_for_user(context, data_dict, organization_id=organization_id, limit=limit)
@@ -291,7 +291,7 @@ def harvest_object_list(context, data_dict):
     query = session.query(HarvestObject)
 
     if source_id:
-        query = query.filter(HarvestObject.source_id == source_id)
+        query = query.filter(HarvestObject.harvest_source_id == source_id)
 
     if only_current:
         query = query.filter(
@@ -417,3 +417,45 @@ def _get_sources_for_user(context, data_dict, organization_id=None, limit=None):
     sources = query.limit(limit).all() if limit else query.all()
 
     return sources
+
+def harvest_get_notifications_recipients(context, data_dict):
+    """ get all recipients for a harvest source
+        Return a list of dicts like {'name': 'Jhon', 'email': jhon@source.com'} """
+    
+    check_access('harvest_get_notifications_recipients', context, data_dict)
+
+    source_id = data_dict['source_id']
+    source = p.toolkit.get_action('harvest_source_show')(context, {'id': source_id})
+    recipients = []
+
+    # gather sysadmins
+    model = context['model']
+    sysadmins = model.Session.query(model.User).filter(
+        model.User.sysadmin == True  # noqa: E712
+    ).all()
+
+    for sysadmin in sysadmins:
+        recipients.append({
+            'name': sysadmin.name,
+            'email': sysadmin.email
+        })
+
+    # gather organization-admins
+    if source.get('organization'):
+        members = p.toolkit.get_action('member_list')(context, {
+            'id': source['organization']['id'],
+            'object_type': 'user',
+            'capacity': 'admin'
+        })
+
+        for member in members:
+            member_details = p.toolkit.get_action(
+                'user_show')(context, {'id': member[0]})
+
+            if member_details['email']:
+                recipients.append({
+                    'name': member_details['name'],
+                    'email': member_details['email']
+                })
+    
+    return recipients
