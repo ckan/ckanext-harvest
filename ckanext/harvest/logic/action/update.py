@@ -672,7 +672,8 @@ def harvest_jobs_run(context, data_dict):
                     log.debug('Notifications: All:{} On error:{} Errors:{}'.format(notify_all, notify_errors, last_job_errors))
                     
                     if last_job_errors > 0 and (notify_all or notify_errors):
-                        send_error_email(context, job_obj.source.id, status)
+                        send_error_mail_ncar(context, job_obj)
+                        #get_mail_extra_vars(context, job_obj.source.id, status)
                     elif notify_all:
                         send_summary_email(context, job_obj.source.id, status)
                 else:
