@@ -11,6 +11,22 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_
 Unreleased_
 ***********
 
+***********
+1.3.3_ - 2021-03-26
+***********
+
+Changed
+-------
+
+- Migrate tests from Travis CI to GitHub Actions
+- Optimize last error free job detection #437
+
+Fixed
+-----
+- Improve timeout detection #431
+- Check if Redis key is available #432
+- Include webassets.yml in MANIFEST
+
 
 ***********
 1.3.2_ - 2020-10-08

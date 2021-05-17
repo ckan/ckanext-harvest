@@ -111,7 +111,7 @@ def harvest_source_show_status(context, data_dict):
         .join(harvest_model.HarvestObject) \
         .filter(harvest_model.HarvestObject.harvest_source_id == source.id) \
         .filter(
-        harvest_model.HarvestObject.current == True  # noqa: E711
+        harvest_model.HarvestObject.current == True  # noqa: E712
     ).filter(model.Package.state == u'active') \
         .filter(model.Package.private == False)
     out['total_datasets'] = packages.count()
@@ -124,7 +124,6 @@ def harvest_source_list(context, data_dict):
     '''
     TODO: Use package search
     '''
-
 
     organization_id = data_dict.get('organization_id')
     limit = config.get('ckan.harvest.harvest_source_limit', 100)
@@ -266,7 +265,7 @@ def harvest_object_show(context, data_dict):
         obj = model.Session.query(HarvestObject) \
             .filter(HarvestObject.package_id == pkg.id) \
             .filter(
-            HarvestObject.current == True  # noqa: E711
+            HarvestObject.current == True  # noqa: E712
         ).first()
     else:
         raise p.toolkit.ValidationError(
@@ -390,7 +389,7 @@ def _get_sources_for_user(context, data_dict, organization_id=None, limit=None):
         query = query.filter(or_(HarvestSource.next_run <= datetime.datetime.utcnow(),
                                  HarvestSource.next_run == None  # noqa: E711
                                  )
-                            )
+                             )
 
     user_obj = User.get(user)
     # Sysadmins will get all sources
@@ -418,10 +417,11 @@ def _get_sources_for_user(context, data_dict, organization_id=None, limit=None):
 
     return sources
 
+
 def harvest_get_notifications_recipients(context, data_dict):
     """ get all recipients for a harvest source
         Return a list of dicts like {'name': 'Jhon', 'email': jhon@source.com'} """
-    
+
     check_access('harvest_get_notifications_recipients', context, data_dict)
 
     source_id = data_dict['source_id']
@@ -457,5 +457,5 @@ def harvest_get_notifications_recipients(context, data_dict):
                     'name': member_details['name'],
                     'email': member_details['email']
                 })
-    
+
     return recipients

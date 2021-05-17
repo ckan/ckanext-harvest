@@ -1,5 +1,4 @@
 import pytest
-import six
 from mock import patch
 
 from ckanext.harvest.model import HarvestObject, HarvestObjectExtra
@@ -333,12 +332,7 @@ class TestHarvestCorruptRedis(object):
 
             assert mock_log_error.call_count == 1
             args, _ = mock_log_error.call_args_list[0]
-            if six.PY2:
-                assert "cannot concatenate 'str' and 'NoneType' objects" in args[1]
-            else:
-                assert "must be str, not NoneType" in str(args[1])
-
-
+            assert "concatenate" in str(args[1])
 
         finally:
             redis.delete('ckanext-harvest:some-random-key-2')

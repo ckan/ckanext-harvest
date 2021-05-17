@@ -5,8 +5,9 @@ import re
 import uuid
 import six
 
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
 from sqlalchemy.sql import update, bindparam
+from sqlalchemy.orm import contains_eager
 
 from ckantoolkit import config
 
@@ -414,25 +415,22 @@ class HarvesterBase(SingletonPlugin):
     def last_error_free_job(cls, harvest_job):
         # TODO weed out cancelled jobs somehow.
         # look for jobs with no gather errors
-        jobs = \
-            model.Session.query(HarvestJob) \
-                 .filter(HarvestJob.source == harvest_job.source) \
-                 .filter(
-                HarvestJob.gather_started != None  # noqa: E711
-            ).filter(HarvestJob.status == 'Finished') \
-                 .filter(HarvestJob.id != harvest_job.id) \
-                 .filter(
-                     ~exists().where(
-                         HarvestGatherError.harvest_job_id == HarvestJob.id)) \
-                 .order_by(HarvestJob.gather_started.desc())
+        jobs = (model.Session.query(HarvestJob)
+                .filter(HarvestJob.source == harvest_job.source)
+                .filter(HarvestJob.gather_started != None)  # noqa: E711
+                .filter(HarvestJob.status == 'Finished')
+                .filter(HarvestJob.id != harvest_job.id)
+                .filter(
+            ~exists().where(
+                HarvestGatherError.harvest_job_id == HarvestJob.id))
+                .outerjoin(HarvestObject,
+                           and_(HarvestObject.harvest_job_id == HarvestJob.id,
+                                HarvestObject.current == False,  # noqa: E712
+                                HarvestObject.report_status != 'not modified'))
+                .options(contains_eager(HarvestJob.objects))
+                .order_by(HarvestJob.gather_started.desc()))
         # now check them until we find one with no fetch/import errors
-        # (looping rather than doing sql, in case there are lots of objects
-        # and lots of jobs)
+        # if objects count is 0, job was error free
         for job in jobs:
-            for obj in job.objects:
-                if obj.current is False and \
-                        obj.report_status != 'not modified':
-                    # unsuccessful, so go onto the next job
-                    break
-            else:
+            if len(job.objects) == 0:
                 return job

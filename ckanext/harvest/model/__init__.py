@@ -79,19 +79,19 @@ def setup():
         if "harvest_job_id_idx" not in index_names:
             log.debug('Creating index for harvest_object')
             Index("harvest_job_id_idx", harvest_object_table.c.harvest_job_id).create()
-        
+
         if "harvest_source_id_idx" not in index_names:
             log.debug('Creating index for harvest source')
             Index("harvest_source_id_idx", harvest_object_table.c.harvest_source_id).create()
-        
+
         if "package_id_idx" not in index_names:
             log.debug('Creating index for package')
             Index("package_id_idx", harvest_object_table.c.package_id).create()
-        
+
         if "guid_idx" not in index_names:
             log.debug('Creating index for guid')
             Index("guid_idx", harvest_object_table.c.guid).create()
-        
+
         index_names = [index['name'] for index in inspector.get_indexes("harvest_object_extra")]
         if "harvest_object_id_idx" not in index_names:
             log.debug('Creating index for harvest_object_extra')
@@ -137,10 +137,10 @@ class HarvestSource(HarvestDomainObject):
 
     def __str__(self):
         return self.__repr__().encode('ascii', 'ignore')
-    
+
     def get_jobs(self, status=None):
         """ get the running jobs for this source """
-        
+
         query = Session.query(HarvestJob).filter(HarvestJob.source_id == self.id)
 
         if status is not None:
@@ -160,35 +160,54 @@ class HarvestJob(HarvestDomainObject):
        (``HarvestObjectError``) are stored in the ``harvest_object_error``
        table.
     '''
-    
+
     def get_last_finished_object(self):
         ''' Determine the last finished object in this job
-            Helpful to know if a job is running or not and 
+            Helpful to know if a job is running or not and
               to avoid timeouts when the source is running
         '''
-        
+
         query = Session.query(HarvestObject)\
-                    .filter(HarvestObject.harvest_job_id == self.id)\
-                    .filter(HarvestObject.state == "COMPLETE")\
-                    .filter(HarvestObject.import_finished.isnot(None))\
-                    .order_by(HarvestObject.import_finished.desc())\
-                    .first()
-        
+            .filter(HarvestObject.harvest_job_id == self.id)\
+            .filter(HarvestObject.state == "COMPLETE")\
+            .filter(HarvestObject.import_finished.isnot(None))\
+            .order_by(HarvestObject.import_finished.desc())\
+            .first()
+
         return query
-    
+
+    def get_last_gathered_object(self):
+        ''' Determine the last gathered object in this job
+            Helpful to know if a job is running or not and
+              to avoid timeouts when the source is running
+        '''
+
+        query = Session.query(HarvestObject)\
+            .filter(HarvestObject.harvest_job_id == self.id)\
+            .order_by(HarvestObject.gathered.desc())\
+            .first()
+
+        return query
+
     def get_last_action_time(self):
         last_object = self.get_last_finished_object()
         if last_object is not None:
             return last_object.import_finished
+
         if self.gather_finished is not None:
             return self.gather_finished
+
+        last_gathered_object = self.get_last_gathered_object()
+        if last_gathered_object is not None:
+            return last_gathered_object.gathered
+
         return self.created
 
     def get_gather_errors(self):
         query = Session.query(HarvestGatherError)\
                     .filter(HarvestGatherError.harvest_job_id == self.id)\
                     .order_by(HarvestGatherError.created.desc())
-        
+
         return query.all()
 
 

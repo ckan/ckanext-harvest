@@ -3,6 +3,7 @@
 import ckan.plugins as p
 from ckanext.harvest.utils import DATASET_TYPE_NAME
 
+
 class MixinPlugin(p.SingletonPlugin):
     p.implements(p.IRoutes, inherit=True)
 

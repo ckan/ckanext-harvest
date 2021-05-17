@@ -1,8 +1,8 @@
-from sqlalchemy import distinct, func, text
+from sqlalchemy import func, text
 
-from ckan.model import Package, Group
+from ckan.model import Group
 from ckan import logic
-from ckanext.harvest.model import (HarvestSource, HarvestJob, HarvestObject,
+from ckanext.harvest.model import (HarvestJob, HarvestObject,
                                    HarvestGatherError, HarvestObjectError)
 
 
@@ -110,8 +110,6 @@ def _get_source_status(source, context):
     '''
     TODO: Deprecated, use harvest_source_show_status instead
     '''
-
-    model = context.get('model')
 
     out = dict()
 

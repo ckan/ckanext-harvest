@@ -70,7 +70,7 @@ def show(ctx, id):
     try:
         with flask_app.test_request_context():
             result = utils.show_harvest_source(id)
-    except tk.ObjectNotFound as e:
+    except tk.ObjectNotFound:
         tk.error_shout(u"Source <{}> not found.".format(id))
         raise click.Abort()
     click.echo(result)
@@ -186,7 +186,7 @@ def job_abort(ctx, id):
     with flask_app.test_request_context():
         try:
             result = utils.abort_job(id)
-        except tk.ObjectNotFound as e:
+        except tk.ObjectNotFound:
             tk.error_shout(u"Job not found.")
             ctx.abort()
 
@@ -344,7 +344,7 @@ def import_stage(
                 package_id,
                 segments,
             )
-        except tk.ObjectNotFound as e:
+        except tk.ObjectNotFound:
             tk.error_shout(u"Source <{}> not found.".format(id))
 
 

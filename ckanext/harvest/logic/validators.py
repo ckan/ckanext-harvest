@@ -224,7 +224,7 @@ def harvest_source_convert_from_config(key, data, errors, context):
     if config:
         try:
             config_dict = json.loads(config)
-        except ValueError as e:
+        except ValueError:
             log.error('Wrong JSON provided config, skipping')
             data[key] = None
             return
