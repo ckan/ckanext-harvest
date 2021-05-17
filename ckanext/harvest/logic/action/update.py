@@ -670,8 +670,9 @@ def harvest_jobs_run(context, data_dict):
                     log.debug('Notifications: All:{} On error:{} Errors:{}'.format(notify_all, notify_errors, last_job_errors))
 
                     if last_job_errors > 0 and (notify_all or notify_errors):
-                        send_error_mail_ncar(context, job_obj)
+                        #send_error_mail_ncar(context, job_obj)
                         #get_mail_extra_vars(context, job_obj.source.id, status)
+                        send_error_email(context, job_obj.source.id, status)
                     elif notify_all:
                         send_summary_email(context, job_obj.source.id, status)
                 else:
@@ -724,9 +725,12 @@ def get_mail_extra_vars(context, source_id, status):
     else:
         organization = 'Not specified'
 
+    msg += 'For help, please contact the NCAR Data Stewardship Coordinator (mailto:datahelp@ucar.edu).\n\n\n'
+
     harvest_configuration = source.get('config')
 
-    msg += 'For help, please contact the NCAR Data Stewardship Coordinator (mailto:datahelp@ucar.edu).\n\n\n'
+    if harvest_configuration in [None, '', '{}']:
+        harvest_configuration = 'Not specified'
 
     errors = job_errors + obj_errors
 
@@ -787,16 +791,18 @@ def send_error_email(context, source_id, status):
     recipients = toolkit.get_action('harvest_get_notifications_recipients')(context, {'source_id': source_id})
     send_mail(recipients, subject, body)
 
-    for harvest_object_error_key in islice(report.get('object_errors'), 0, 20):
-        harvest_object_error = report.get('object_errors')[harvest_object_error_key]['errors']
-        harvest_object_url = report.get('object_errors')[harvest_object_error_key]['original_url']
-        for error in harvest_object_error:
-            obj_error += harvest_object_url + ' :\n\n'
-            obj_error += error['message']
-            if error['line']:
-                obj_error += ' (line ' + str(error['line']) + ')\n\n'
-            else:
-                obj_error += '\n'
+
+#   for harvest_object_error_key in islice(report.get('object_errors'), 0, 20):
+#       harvest_object_error = report.get('object_errors')[harvest_object_error_key]['errors']
+#       harvest_object_url = report.get('object_errors')[harvest_object_error_key]['original_url']
+#       for error in harvest_object_error:
+#           obj_error += harvest_object_url + ' :\n\n'
+#           obj_error += error['message']
+#           if error['line']:
+#               obj_error += ' (line ' + str(error['line']) + ')\n\n'
+#           else:
+#               obj_error += '\n'
+
 
 def send_mail(recipients, subject, body):
 
