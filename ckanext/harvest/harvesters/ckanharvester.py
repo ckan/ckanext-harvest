@@ -11,7 +11,6 @@ from ckan import model
 from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
 from ckan.plugins import toolkit
-import ckan.lib.plugins as lib_plugins
 
 from ckanext.harvest.model import HarvestObject
 from .base import HarvesterBase
@@ -547,43 +546,6 @@ class CKANHarvester(HarvesterBase):
                 resource.pop('revision_id', None)
 
             package_dict = self.modify_package_dict(package_dict, harvest_object)
-
-            # validate packages if needed
-            validate_packages = True
-            if validate_packages:
-                if 'type' not in package_dict:
-                    package_plugin = lib_plugins.lookup_package_plugin()
-                    try:
-                        # use first type as default if user didn't provide type
-                        package_type = package_plugin.package_types()[0]
-                    except (AttributeError, IndexError):
-                        package_type = 'dataset'
-                        # in case a 'dataset' plugin was registered w/o fallback
-                        package_plugin = lib_plugins.lookup_package_plugin(package_type)
-                    package_dict['type'] = package_type
-                else:
-                    package_plugin = lib_plugins.lookup_package_plugin(package_dict['type'])
-
-
-                errors = {}
-                # if package has been previously imported
-                try:
-                    existing_package_dict = self._find_existing_package(package_dict)
-
-                    if not 'metadata_modified' in package_dict or \
-                            package_dict['metadata_modified'] > existing_package_dict.get('metadata_modified'):
-                        schema = package_plugin.update_package_schema()
-                        data, errors = lib_plugins.plugin_validate(
-                            package_plugin, base_context, package_dict, schema, 'package_update')
-
-                except NotFound:
-
-                    schema = package_plugin.create_package_schema()
-                    data, errors = lib_plugins.plugin_validate(
-                        package_plugin, base_context, package_dict, schema, 'package_create')
-
-                if errors:
-                    raise ValidationError(errors)
 
             result = self._create_or_update_package(
                 package_dict, harvest_object, package_dict_form='package_show')
