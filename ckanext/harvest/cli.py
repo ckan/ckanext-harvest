@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import print_function
 
-import ckantoolkit as tk
+import ckan.plugins.toolkit as tk
 import click
 
 import ckanext.harvest.utils as utils

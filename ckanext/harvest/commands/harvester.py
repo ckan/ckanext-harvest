@@ -1,13 +1,13 @@
 from __future__ import print_function
 
 import sys
-
 import six
 
 from ckan import model
 from ckan.logic import get_action, ValidationError
 
-from ckantoolkit import CkanCommand
+from ckan.lib.cli import CkanCommand
+
 
 import ckanext.harvest.utils as utils
 
@@ -129,7 +129,7 @@ class Harvester(CkanCommand):
 
     def __init__(self, name):
 
-        super(Harvester, self).__init__(name)
+        super().__init__(name)
 
         self.parser.add_option(
             "-j",
@@ -256,7 +256,7 @@ class Harvester(CkanCommand):
             print("Command {0} not recognized".format(cmd))
 
     def _load_config(self):
-        super(Harvester, self)._load_config()
+        super()._load_config()
 
     def initdb(self):
         utils.initdb()

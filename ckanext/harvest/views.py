@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import ckantoolkit as tk
+import ckan.plugins.toolkit as tk
 from flask import Blueprint, make_response
 
 import ckanext.harvest.utils as utils

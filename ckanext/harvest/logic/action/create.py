@@ -23,7 +23,8 @@ check_access = toolkit.check_access
 
 
 class InactiveSource(Exception):
-    pass
+    def __init__(self,  *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 def harvest_source_create(context, data_dict):

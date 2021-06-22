@@ -1,6 +1,20 @@
+import pathlib
+
+import pkg_resources
+import setuptools
+
 from setuptools import setup, find_packages
 
 version = '1.3.3'
+
+
+with pathlib.Path('pip-requirements.txt').open() as requirements_txt:
+    install_requires = [
+        str(requirement)
+        for requirement
+        in pkg_resources.parse_requirements(requirements_txt)
+    ]
+
 
 setup(
     name='ckanext-harvest',
@@ -18,10 +32,8 @@ setup(
     namespace_packages=['ckanext'],
     include_package_data=True,
     zip_safe=False,
-    install_requires=[
-            # dependencies are specified in pip-requirements.txt
-            # instead of here
-    ],
+    python_requires=">=3.7",
+    install_requires=install_requires,
     tests_require=[
         'nose',
         'mock',

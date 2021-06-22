@@ -1,4 +1,7 @@
+-r pip-requirements.txt
+
 pytest-ckan
 pytest-cov
 factory-boy>=2
 mock
+pika-stubs==0.1.3

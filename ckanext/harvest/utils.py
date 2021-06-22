@@ -12,19 +12,13 @@ import ckan.lib.helpers as h
 import ckan.plugins.toolkit as tk
 import six
 from ckan import model
-from ckantoolkit import _
-from six import StringIO
+from ckan.common import _, c, g, config, request, session, json
+
+from io import StringIO
 
 from ckanext.harvest.logic import HarvestJobExists, HarvestSourceInactiveError
 
-try:
-    # Python 2.7
-    xml_parser_exception = etree.ParseError
-except AttributeError:
-    # Python 2.6
-    from xml.parsers import expat
-
-    xml_parser_exception = expat.ExpatError
+xml_parser_exception = etree.ParseError
 
 log = logging.getLogger(__name__)
 
@@ -290,8 +284,8 @@ def create_job(source_id_or_name):
 
     output = StringIO()
     _print_harvest_job(job, output)
-    jobs = tk.get_action("harvest_job_list")(context, {"status": u"New"})
-    print(_there_are("harvest job", jobs, condition=u"New"), file=output)
+    jobs = tk.get_action("harvest_job_list")(context, {"status": "New"})
+    print(_there_are("harvest job", jobs, condition="New"), file=output)
     return output.getvalue()
 
 
@@ -478,7 +472,6 @@ def reindex():
 
 def clean_harvest_log():
     from datetime import datetime, timedelta
-    from ckantoolkit import config
     from ckanext.harvest.model import clean_harvest_log
 
     # Log time frame - in days
@@ -696,8 +689,8 @@ def delete_view(id):
 
         context['clear_source'] = tk.request.params.get('clear',
                                                         '').lower() in (
-                                                            u'true',
-                                                            u'1',
+                                                            'true',
+                                                            '1',
                                                         )
 
         tk.get_action('harvest_source_delete')(context, {'id': id})
@@ -742,7 +735,7 @@ def object_show_view(id, ref_type, response):
                     re.sub(r'<\?xml(.*)\?>', '', content.encode('utf-8')))
             response.content_type = 'application/xml; charset=utf-8'
             if '<?xml' not in content.split('\n')[0]:
-                content = u'<?xml version="1.0" encoding="UTF-8"?>\n' + content
+                content = '<?xml version="1.0" encoding="UTF-8"?>\n' + content
 
         except xml_parser_exception:
             try:
