@@ -5,6 +5,7 @@ from ckan import logic
 from ckan import model
 import ckan.lib.helpers as h
 import ckan.plugins as p
+from ckan.logic import NotFound
 
 from ckanext.harvest.model import UPDATE_FREQUENCIES, UPDATE_TIMES
 from ckanext.harvest.utils import (
@@ -157,3 +158,16 @@ def bootstrap_version():
             'bs2' if
             p.toolkit.config.get('ckan.base_public_folder') == 'public-bs2'
             else 'bs3')
+
+
+def get_latest_job(harvest_id):
+    context = {'model': model, 'session': model.Session, 'user': p.toolkit.c.user or p.toolkit.c.author}
+    try:
+        hs = logic.get_action('harvest_source_show')(context, {'id': harvest_id})
+        last_job = hs.get('status', {}).get('last_job', {})
+        if not last_job:
+            return {}
+        job = logic.get_action('harvest_job_show')(context, {'id': last_job.get('id')})
+        return job
+    except NotFound:
+        return {}
