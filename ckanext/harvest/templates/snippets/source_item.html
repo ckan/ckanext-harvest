@@ -22,85 +22,22 @@ Example:
 {% set url = h.url_for('harvest_admin', id=source.name) if within_organization else h.url_for('harvest_read', id=source.name) %}
 
 <li class="{{ item_class or "dataset-item" }}">
-  <div class="dataset-content">
-    <h3 class="dataset-heading">
-      {{ h.link_to(h.truncate(title, truncate_title), url) }}
-      {% if source.get(state, '').startswith('draft') %}
-        <span class="label label-info">{{ _('Draft') }}</span>
-      {% elif source.get(state, '').startswith('deleted') %}
-        <span class="label label-important">{{ _('Deleted') }}</span>
-      {% endif %}
-
-        {% set stats = job.stats %}
-
-        {% if job.status == 'Finished' %}
-            <p>
-    <span class="label label-important" data-diff="error">
-      {% if 'errored' in stats and stats['errored'] > 0 %}
-          {{ h.link_to("{} {}".format(stats['errored'], _('errors')), h.url_for('harvest_job_show', source=source.get('id'), id=job['id'])) }}
-      {% else %}
-          0 {{ _('errors') }}
-      {% endif %}
-    </span>
-                {% for action in ['added', 'updated', 'deleted', 'not modified'] %}
-                    <span class="label" data-diff="{{ action }}">
-        {% if action in stats and stats[action] > 0 %}
-            {{ stats[action] }}
-        {% else %}
-            0
-        {% endif %}
-                        {{ _(action) }}
-      </span>
-                {% endfor %}
-            </p>
-        {% endif %}
-
-        <h3 class="hide-heading">{{ _('Details') }}</h3>
-        <table class="table table-striped table-bordered table-condensed">
-            <colgroup>
-                <col width="15">
-                <col width="85">
-            </colgroup>
-            <tr>
-                <th>{{ _('Created') }}</th>
-                <td>
-        <span class="automatic-local-datetime" data-datetime="{{ h.render_datetime(job.created, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
-            {{ h.render_datetime(job.created, with_hours=True) }}
-        </span>
-                </td>
-            </tr>
-            <tr>
-                <th>{{ _('Started') }}</th>
-                <td>
-        <span class="automatic-local-datetime" data-datetime="{{ h.render_datetime(job.gather_started, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
-            {{ h.render_datetime(job.gather_started, with_hours=True) }}
-        </span>
-                </td>
-            </tr>
-            <tr>
-                <th>{{ _('Finished') }}</th>
-                <td>
-        <span class="automatic-local-datetime" data-datetime="{{ h.render_datetime(job.finished, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
-            {{ h.render_datetime(job.finished, with_hours=True) }}
-        </span>
-                </td>
-            </tr>
-            <tr>
-                <th>{{ _('Status') }}</th>
-                <td>{{ _(job.status) }}</td>
-            </tr>
-            <tr>
-                <th>{{ _('Organization') }}</th>
-                <td>{{ h.link_to(source.organization.title or source.organization.name, h.url_for('organization_read', id=source.organization.name)) }}</td>
-            </tr>
-        </table>
-    </h3>
-
-    <p class="muted">
-      {% if source.status %}
-        {{ _('Datasets') }}: {{ source.status.total_datasets }}
-      {% endif %}
-    </p>
-
-  </div>
+    <div class="dataset-content">
+        <h3 class="dataset-heading">
+            {{ h.link_to(h.truncate(title, truncate_title), url) }}
+            {% if not job %}
+                <p class="muted">
+                    {% if source.status %}
+                        {{ _('Datasets') }}: {{ source.status.total_datasets }}
+                    {% endif %}
+                    {% if not within_organization and source.organization %}
+                        &mdash; {{ _('Organization') }}:
+                        {{ h.link_to(source.organization.title or source.organization.name, h.url_for('organization_read', id=source.organization.name)) }}</a>
+                    {% endif %}
+                </p>
+            {% else %}
+                {% snippet 'snippets/harvest_source_job_details.html', job=job, source=source %}
+            {% endif %}
+        </h3>
+    </div>
 </li>
