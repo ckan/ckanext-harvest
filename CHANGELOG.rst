@@ -10,6 +10,8 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_
 ***********
 Unreleased_
 ***********
+- Changes function calls to `render_jinja2` over to `render` as the former is
+  no longer used.
 
 ***********
 1.3.3_ - 2021-03-26
