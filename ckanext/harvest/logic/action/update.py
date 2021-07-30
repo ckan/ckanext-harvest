@@ -16,7 +16,7 @@ from ckan.plugins import toolkit, PluginImplementations
 from ckan.logic import get_action
 from ckanext.harvest.interfaces import IHarvester
 from ckan.lib.search.common import SearchIndexError, make_connection
-from ckan.lib.base import render_jinja2
+from ckan.lib.base import render
 
 from ckan.model import Package
 from ckan import logic
@@ -746,7 +746,7 @@ def get_mail_extra_vars(context, source_id, status):
 
 def prepare_summary_mail(context, source_id, status):
     extra_vars = get_mail_extra_vars(context, source_id, status)
-    body = render_jinja2('emails/summary_email.txt', extra_vars)
+    body = render('emails/summary_email.txt', extra_vars)
     subject = '{} - Harvesting Job Successful - Summary Notification'\
         .format(config.get('ckan.site_title'))
 
@@ -755,7 +755,7 @@ def prepare_summary_mail(context, source_id, status):
 
 def prepare_error_mail(context, source_id, status):
     extra_vars = get_mail_extra_vars(context, source_id, status)
-    body = render_jinja2('emails/error_email.txt', extra_vars)
+    body = render('emails/error_email.txt', extra_vars)
     subject = '{} - Harvesting Job - Error Notification'\
         .format(config.get('ckan.site_title'))
 
