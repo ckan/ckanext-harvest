@@ -2,22 +2,22 @@
 
 {% if job.status == 'Finished' %}
     <p>
-    <span class="label label-important" data-diff="error">
-      {% if 'errored' in stats and stats['errored'] > 0 %}
-          {{ h.link_to("{} {}".format(stats['errored'], _('errors')), h.url_for('harvest_job_show', source=source.get('id'), id=job['id'])) }}
-      {% else %}
-          0 {{ _('errors') }}
-      {% endif %}
-    </span>
+        <span class="label label-important" data-diff="error">
+            {% if 'errored' in stats and stats['errored'] > 0 %}
+                {{ h.link_to("{} {}".format(stats['errored'], _('errors')), h.url_for('harvest_job_show', source=source.get('id'), id=job['id'])) }}
+            {% else %}
+                0 {{ _('errors') }}
+            {% endif %}
+        </span>
         {% for action in ['added', 'updated', 'deleted', 'not modified'] %}
             <span class="label" data-diff="{{ action }}">
-        {% if action in stats and stats[action] > 0 %}
-            {{ stats[action] }}
-        {% else %}
-            0
-        {% endif %}
+                {% if action in stats and stats[action] > 0 %}
+                    {{ stats[action] }}
+                {% else %}
+                    0
+                {% endif %}
                 {{ _(action) }}
-      </span>
+            </span>
         {% endfor %}
     </p>
 {% endif %}
@@ -38,15 +38,15 @@
         </td>
     </tr>
     {% if job.gather_started %}
-    <tr>
-        <th>{{ _('Started') }}</th>
-        <td>
-        <span class="automatic-local-datetime"
-              data-datetime="{{ h.render_datetime(job.gather_started, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
-            {{ h.render_datetime(job.gather_started, with_hours=True) }}
-        </span>
-        </td>
-    </tr>
+        <tr>
+            <th>{{ _('Started') }}</th>
+            <td>
+            <span class="automatic-local-datetime"
+                  data-datetime="{{ h.render_datetime(job.gather_started, date_format='%Y-%m-%dT%H:%M:%S%z') }}">
+                {{ h.render_datetime(job.gather_started, with_hours=True) }}
+            </span>
+            </td>
+        </tr>
     {% endif %}
     {% if job.finished %}
         <tr>
