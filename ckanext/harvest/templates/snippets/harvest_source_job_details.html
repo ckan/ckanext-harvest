@@ -1,9 +1,3 @@
-{% if source.get(state, '').startswith('draft') %}
-    <span class="label label-info">{{ _('Draft') }}</span>
-{% elif source.get(state, '').startswith('deleted') %}
-    <span class="label label-important">{{ _('Deleted') }}</span>
-{% endif %}
-
 {% set stats = job.stats %}
 
 {% if job.status == 'Finished' %}
