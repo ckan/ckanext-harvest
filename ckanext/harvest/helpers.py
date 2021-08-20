@@ -160,12 +160,15 @@ def bootstrap_version():
 
 def get_latest_job(harvest_id):
     context = {'model': model, 'session': model.Session, 'user': p.toolkit.c.user or p.toolkit.c.author}
+    hs = p.toolkit.get_action('harvest_source_show')(context, {'id': harvest_id})
+    last_job = hs.get('status', {}).get('last_job', {})
+    job = get_job(context, last_job.get('id')) if last_job else {}
+    return job
+
+
+def get_job(context, job_id):
     try:
-        hs = p.toolkit.get_action('harvest_source_show')(context, {'id': harvest_id})
-        last_job = hs.get('status', {}).get('last_job', {})
-        if not last_job:
-            return {}
-        job = p.toolkit.get_action('harvest_job_show')(context, {'id': last_job.get('id')})
-        return job
+        job = p.toolkit.get_action('harvest_job_show')(context, {'id': job_id})
     except (p.toolkit.ObjectNotFound, p.toolkit.NotAuthorized):
         return {}
+    return job
