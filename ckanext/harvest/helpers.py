@@ -1,7 +1,6 @@
 
 import datetime
 
-from ckan import logic
 from ckan import model
 import ckan.lib.helpers as h
 import ckan.plugins as p
@@ -56,7 +55,7 @@ def package_list_for_source(source_id):
         if (harvest_source and owner_org in user_member_of_orgs):
             context['ignore_capacity_check'] = True
 
-    query = logic.get_action('package_search')(context, search_dict)
+    query = p.toolkit.get_action('package_search')(context, search_dict)
 
     base_url = h.url_for('{0}_read'.format(DATASET_TYPE_NAME), id=source_id)
 
@@ -92,13 +91,13 @@ def package_count_for_source(source_id):
     fq = '+harvest_source_id:"{0}"'.format(source_id)
     search_dict = {'fq': fq}
     context = {'model': model, 'session': model.Session}
-    result = logic.get_action('package_search')(context, search_dict)
+    result = p.toolkit.get_action('package_search')(context, search_dict)
     return result.get('count', 0)
 
 
 def harvesters_info():
     context = {'model': model, 'user': p.toolkit.c.user or p.toolkit.c.author}
-    return logic.get_action('harvesters_info_show')(context, {})
+    return p.toolkit.get_action('harvesters_info_show')(context, {})
 
 
 def harvester_types():
@@ -130,7 +129,7 @@ def link_for_harvest_object(id=None, guid=None, text=None):
 
     if guid:
         context = {'model': model, 'user': p.toolkit.c.user or p.toolkit.c.author}
-        obj = logic.get_action('harvest_object_show')(context, {'id': guid, 'attr': 'guid'})
+        obj = p.toolkit.get_action('harvest_object_show')(context, {'id': guid, 'attr': 'guid'})
         id = obj.id
 
     url = h.url_for('harvest_object_show', id=id)
@@ -157,3 +156,19 @@ def bootstrap_version():
             'bs2' if
             p.toolkit.config.get('ckan.base_public_folder') == 'public-bs2'
             else 'bs3')
+
+
+def get_latest_job(harvest_id):
+    context = {'model': model, 'session': model.Session, 'user': p.toolkit.c.user or p.toolkit.c.author}
+    hs = p.toolkit.get_action('harvest_source_show')(context, {'id': harvest_id})
+    last_job = hs.get('status', {}).get('last_job', {})
+    job = get_job(context, last_job.get('id')) if last_job else {}
+    return job
+
+
+def get_job(context, job_id):
+    try:
+        job = p.toolkit.get_action('harvest_job_show')(context, {'id': job_id})
+    except (p.toolkit.ObjectNotFound, p.toolkit.NotAuthorized):
+        return {}
+    return job

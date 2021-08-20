@@ -18,6 +18,7 @@ Example:
 {% set truncate_title = truncate_title or 80 %}
 {% set title = source.title or source.name %}
 {% set source_type = h.get_pkg_dict_extra(source, 'source_type') %}
+{% set job = h.get_latest_job(source.get('id')) %}
 {% set url = h.url_for('harvest_admin', id=source.name) if within_organization else h.url_for('harvest_read', id=source.name) %}
 
 <li class="{{ item_class or "dataset-item" }}">
@@ -30,21 +31,17 @@ Example:
         <span class="label label-important">{{ _('Deleted') }}</span>
       {% endif %}
     </h3>
-
-    {% if source.notes %}
-      <p>{{ source.notes }}</p>
+    {% if not job %}
+      <p class="muted">
+        {% if source.status %}
+          {{ _('Datasets') }}: {{ source.status.total_datasets }}
+        {% endif %}
+        {% if not within_organization and source.organization %}
+          &mdash; {{ _('Organization') }}: {{ h.link_to(source.organization.title or source.organization.name, h.url_for('organization_read', id=source.organization.name)) }}
+        {% endif %}
+      </p>
     {% else %}
-      <p class="empty">{{ _('There is no description for this harvest source') }}</p>
+      {% snippet 'snippets/harvest_source_job_details.html', job=job, source=source %}
     {% endif %}
-
-    <p class="muted">
-      {% if source.status %}
-        {{ _('Datasets') }}: {{ source.status.total_datasets }}
-      {% endif %}
-      {% if not within_organization and source.organization %}
-      &mdash; {{ _('Organization') }}: {{ h.link_to(source.organization.title or source.organization.name, h.url_for('organization_read', id=source.organization.name)) }}</a>
-      {% endif %}
-    </p>
-
   </div>
 </li>
