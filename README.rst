@@ -242,7 +242,7 @@ The following operations can be run from the command line as described underneat
         - clears all datasets, jobs and objects related to a harvest source,
           but keeps the source itself
 
-      harvester clearsource_history [{source-id}]
+      harvester clearsource-history [{source-id}]
         - If no source id is given the history for all harvest sources (maximum is 1000)
           will be cleared.
           Clears all jobs and objects related to a harvest source, but keeps the source
@@ -260,7 +260,7 @@ The following operations can be run from the command line as described underneat
       harvester jobs
         - lists harvest jobs
 
-      harvester job_abort {source-id/name}
+      harvester job-abort {source-id/name}
         - marks a job as "Aborted" so that the source can be restarted afresh.
           It ensures that the job's harvest objects status are also marked
           finished. You should ensure that neither the job nor its objects are
@@ -271,29 +271,29 @@ The following operations can be run from the command line as described underneat
           the gather queue. Also checks running jobs - if finished it
           changes their status to Finished.
 
-      harvester run_test {source-id/name}
+      harvester run-test {source-id/name}
         - runs a harvest - for testing only.
           This does all the stages of the harvest (creates job, gather, fetch,
           import) without involving the web UI or the queue backends. This is
           useful for testing a harvester without having to fire up
           gather/fetch_consumer processes, as is done in production.
           
-      harvester run_test {source-id/name} force-import=guid1,guid2...
+      harvester run-test {source-id/name} force-import=guid1,guid2...
         - In order to force an import of particular datasets, useful to 
           target a dataset for dev purposes or when forcing imports on other environments.
 
-      harvester gather_consumer
+      harvester gather-consumer
         - starts the consumer for the gathering queue
 
-      harvester fetch_consumer
+      harvester fetch-consumer
         - starts the consumer for the fetching queue
 
-      harvester purge_queues
+      harvester purge-queues
         - removes all jobs from fetch and gather queue
           WARNING: if using Redis, this command purges all data in the current
           Redis database
 
-      harvester clean_harvest_log
+      harvester clean-harvest-log
         - Clean-up mechanism for the harvest log table.
           You can configure the time frame through the configuration
           parameter 'ckan.harvest.log_timeframe'. The default time frame is 30 days
@@ -677,18 +677,18 @@ Running the harvest jobs
 
 There are two ways to run a harvest:
 
-1. ``harvester run_test`` for the command-line, suitable for testing
+1. ``harvester run-test`` for the command-line, suitable for testing
 2. ``harvester run`` used by the Web UI and scheduled runs
 
-harvester run_test
+harvester run-test
 ------------------
 
-You can run a harvester simply using the ``run_test`` command. This is handy
+You can run a harvester simply using the ``run-test`` command. This is handy
 for running a harvest with one command in the console and see all the output
 in-line. It runs the gather, fetch and import stages all in the same process.
 You must ensure that you have pip installed ``dev-requirements.txt`` 
 in ``/home/ckan/ckan/lib/default/src/ckanext-harvest`` before using the
-``run_test`` command.
+``run-test`` command.
   
 This is useful for developing a harvester because you can insert break-points
 in your harvester, and rerun a harvest without having to restart the
