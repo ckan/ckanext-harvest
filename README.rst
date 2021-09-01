@@ -332,6 +332,8 @@ ON CKAN >= 2.9::
 ON CKAN <= 2.8::
 
       (pyenv) $ paster --plugin=ckanext-harvest harvester sources --config=/etc/ckan/default/production.ini
+      
+**Note that on CKAN >= 2.9 all commands with an underscore in their name changed.** They now use a hyphen instead of an underscore (e.g. ``gather_consumer`` changed to ``gather-consumer``).
 
 Authorization
 =============
