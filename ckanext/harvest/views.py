@@ -61,7 +61,7 @@ harvester.add_url_rule(
 )
 harvester.add_url_rule("/" + utils.DATASET_TYPE_NAME + "/refresh/<id>",
                        view_func=refresh,
-                       methods=(u'POST', ))
+                       methods=(u'POST', u'GET'))
 harvester.add_url_rule(
     "/" + utils.DATASET_TYPE_NAME + "/admin/<id>",
     view_func=admin,
@@ -72,7 +72,7 @@ harvester.add_url_rule(
 )
 harvester.add_url_rule("/" + utils.DATASET_TYPE_NAME + "/clear/<id>",
                        view_func=clear,
-                       methods=(u'POST', ))
+                       methods=(u'POST', u'GET'))
 harvester.add_url_rule(
     "/" + utils.DATASET_TYPE_NAME + "/<source>/job",
     view_func=job_list,
