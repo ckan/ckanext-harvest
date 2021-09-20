@@ -120,7 +120,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
                 validated_data_dict['extras'].append({'key': key, 'value': value})
 
-                pkg_dict[f'extras_{key}'] = value
+                pkg_dict['extras_{}'.format('key')] = value
 
             pkg_dict['data_dict'] = json.dumps(data_dict)
             pkg_dict['validated_data_dict'] = json.dumps(validated_data_dict)
