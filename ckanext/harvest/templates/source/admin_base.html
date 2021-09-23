@@ -58,7 +58,8 @@
 {% endblock %}
 
 {% block page_header_tabs %}
-  {% if h.ckan_version().split('.')[1] | int >= 9 %}
+  {% set ckan_version = h.ckan_version().split('.')[1] %}
+  {% if ckan_version | int >= 9 %}
     {{ h.build_nav_icon('harvester.admin', _('Dashboard'), id=harvest_source.name, icon='dashboard') }}
     {{ h.build_nav_icon('harvester.job_list'.format(c.dataset_type), _('Jobs'), source=harvest_source.name, icon='reorder') }}
     {{ h.build_nav_icon(c.dataset_type ~ '.edit', _('Edit'), id=harvest_source.name, icon='edit') }}
