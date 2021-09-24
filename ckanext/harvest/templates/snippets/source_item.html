@@ -17,7 +17,7 @@ Example:
 {% set ckan_version = h.ckan_version().split('.')[1] %}
 {% set truncate = truncate or 180 %}
 {% set truncate_title = truncate_title or 80 %}
-{% set title = source.title or source.name %}
+{% set title = source['title'] or source['name'] %}
 {% set source_type = h.get_pkg_dict_extra(source, 'source_type') %}
 {% set url = h.url_for('harvest_admin', id=source.name) if within_organization else h.url_for('harvest_read', id=source.name) %}
 
@@ -25,7 +25,7 @@ Example:
   <div class="dataset-content">
     <h3 class="dataset-heading">
       {% if ckan_version | int >= 9 %}
-        {{ h.link_to(title|truncate(80),  url) }}
+        {{ h.link_to(title|truncate(truncate_title),  url) }}
       {% else %}
         {{ h.link_to(h.truncate(title, truncate_title), url) }}
       {% endif %}
