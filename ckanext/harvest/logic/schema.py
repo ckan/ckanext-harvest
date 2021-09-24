@@ -29,6 +29,19 @@ else:
         if_empty_same_as,
     )
 
+from ckanext.harvest.logic.validators import (
+    harvest_source_url_validator,
+    harvest_source_type_exists,
+    harvest_source_config_validator,
+    harvest_source_extra_validator,
+    harvest_source_frequency_exists,
+    dataset_type_exists,
+    harvest_source_convert_from_config,
+    harvest_source_id_exists,
+    harvest_job_exists,
+    harvest_object_extras_validator,
+)
+
 
 def harvest_source_schema():
 
