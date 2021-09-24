@@ -12,25 +12,22 @@ from ckan.logic.validators import (package_id_exists,
                                    )
 from ckan.logic.converters import convert_to_extras, convert_from_extras
 
-from ckan.lib.navl.validators import (ignore_missing,
-                                      not_empty,
-                                      ignore,
-                                      if_empty_same_as,
-                                      unicode_safe
-                                      )
-
-from ckanext.harvest.logic.validators import (harvest_source_url_validator,
-                                              harvest_source_type_exists,
-                                              harvest_source_config_validator,
-                                              harvest_source_extra_validator,
-                                              harvest_source_frequency_exists,
-                                              dataset_type_exists,
-                                              harvest_source_convert_from_config,
-                                              harvest_source_id_exists,
-                                              harvest_job_exists,
-                                              harvest_object_extras_validator,
-                                              )
-ckan_version = h.ckan_version().split('.')[1]
+ckan_version = int(h.ckan_version().split(".")[1])
+if ckan_version >= 9:
+    from ckan.lib.navl.validators import (
+        ignore_missing,
+        not_empty,
+        ignore,
+        if_empty_same_as,
+        unicode_safe,
+    )
+else:
+    from ckan.lib.navl.validators import (
+        ignore_missing,
+        not_empty,
+        ignore,
+        if_empty_same_as,
+    )
 
 
 def harvest_source_schema():
@@ -39,37 +36,46 @@ def harvest_source_schema():
         'id': [
             ignore_missing,
             unicode_safe if ckan_version >= 9 else six.text_type,
-            package_id_exists],
+            package_id_exists
+            ],
         'type': [
             dataset_type_exists,
-            unicode_safe if ckan_version >= 9 else six.text_type],
+            unicode_safe if ckan_version >= 9 else six.text_type
+            ],
         'url': [
             not_empty,
             unicode_safe if ckan_version >= 9 else six.text_type,
-            harvest_source_url_validator],
+            harvest_source_url_validator
+            ],
         'name': [
             not_empty,
             unicode_safe if ckan_version >= 9 else six.text_type,
-            name_validator, package_name_validator],
+            name_validator, package_name_validator
+            ],
         'source_type': [
             not_empty,
             unicode_safe if ckan_version >= 9 else six.text_type,
-            harvest_source_type_exists, convert_to_extras],
+            harvest_source_type_exists, convert_to_extras
+            ],
         'title': [
             if_empty_same_as("name"),
-            unicode_safe if ckan_version >= 9 else six.text_type],
+            unicode_safe if ckan_version >= 9 else six.text_type
+            ],
         'notes': [
             ignore_missing,
-            unicode_safe if ckan_version >= 9 else six.text_type],
+            unicode_safe if ckan_version >= 9 else six.text_type
+            ],
         'owner_org': [
             owner_org_validator,
-            unicode_safe if ckan_version >= 9 else six.text_type],
+            unicode_safe if ckan_version >= 9 else six.text_type
+            ],
         'private': [ignore_missing, boolean_validator],
         'organization': [ignore_missing],
         'frequency': [
             ignore_missing,
             unicode_safe if ckan_version >= 9 else six.text_type,
-            harvest_source_frequency_exists, convert_to_extras],
+            harvest_source_frequency_exists, convert_to_extras
+            ],
         'state': [ignore_missing],
         'config': [ignore_missing, harvest_source_config_validator, convert_to_extras],
         'extras': default_extras_schema(),
@@ -103,8 +109,8 @@ def harvest_source_update_package_schema():
     schema['owner_org'] = [
         ignore_missing,
         owner_org_validator,
-        unicode_safe if ckan_version >= 9 else six.text_type]
-
+        unicode_safe if ckan_version >= 9 else six.text_type
+        ]
     return schema
 
 
@@ -135,13 +141,16 @@ def harvest_object_create_schema():
     schema = {
         'guid': [
             ignore_missing,
-            unicode_safe if ckan_version >= 9 else six.text_type],
+            unicode_safe if ckan_version >= 9 else six.text_type
+            ],
         'content': [
             ignore_missing,
-            unicode_safe if ckan_version >= 9 else six.text_type],
+            unicode_safe if ckan_version >= 9 else six.text_type
+            ],
         'state': [
             ignore_missing,
-            unicode_safe if ckan_version >= 9 else six.text_type],
+            unicode_safe if ckan_version >= 9 else six.text_type
+            ],
         'job_id': [harvest_job_exists],
         'source_id': [ignore_missing, harvest_source_id_exists],
         'package_id': [ignore_missing, package_id_exists],
