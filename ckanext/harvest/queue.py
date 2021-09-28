@@ -26,7 +26,7 @@ USERID = 'guest'
 PASSWORD = 'guest'
 HOSTNAME = 'localhost'
 VIRTUAL_HOST = '/'
-MQ_TYPE = 'amqp'
+MQ_TYPE = 'redis'
 REDIS_PORT = 6379
 REDIS_DB = 0
 
