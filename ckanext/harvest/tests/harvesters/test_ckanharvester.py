@@ -171,6 +171,19 @@ class TestCkanHarvester(object):
         # Check that the remote group was created locally
         call_action('group_show', {}, id=mock_ckan.GROUPS[0]['id'])
 
+    def test_harvest_info_in_package_show(self):
+        results_by_guid = run_harvest(
+            url='http://localhost:%s' % mock_ckan.PORT,
+            harvester=CKANHarvester())
+        assert 'dataset1-id' in results_by_guid
+
+        # Check that the dataset extras has the harvest_object_id, harvest_source_id, and harvest_source_title
+        dataset = call_action('package_show', {"for_view": True}, id=mock_ckan.DATASETS[0]['id'])
+        extras_dict = dict((e['key'], e['value']) for e in dataset['extras'])
+        assert 'harvest_object_id' in extras_dict
+        assert 'harvest_source_id' in extras_dict
+        assert 'harvest_source_title' in extras_dict
+
     def test_remote_groups_only_local(self):
         # Create an existing group
         Group(id='group1-id', name='group1')
