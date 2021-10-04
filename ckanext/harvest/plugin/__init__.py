@@ -109,18 +109,25 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
             for key, value in harvest_extras:
 
-                # If the harvest extras are there, remove them. This can happen eg
-                # when calling package_update or resource_update, which call
-                # package_show
+                # If the harvest extras are there, remove them. This can 
+                # happen eg when calling package_update or resource_update,
+                # which call package_show
                 if data_dict.get('extras'):
                     data_dict['extras'][:] = [e for e in data_dict.get('extras', [])
+                                              if not e['key'] in harvest_extras]
+
+                if validated_data_dict.get('extras'):
+                    validated_data_dict['extras'][:] = [e for e in validated_data_dict.get('extras', [])
                                               if not e['key'] in harvest_extras]
 
                 data_dict['extras'].append({'key': key, 'value': value})
 
                 validated_data_dict['extras'].append({'key': key, 'value': value})
-
-                pkg_dict['extras_{}'.format('key')] = value
+                # The commented line isn't cataloged correctly, if we pass the
+                # basic key the extras are prepended and the system works as
+                # expected.
+                # pkg_dict['extras_{0}'.format(key)] = value
+                pkg_dict[key] = value
 
             pkg_dict['data_dict'] = json.dumps(data_dict)
             pkg_dict['validated_data_dict'] = json.dumps(validated_data_dict)
