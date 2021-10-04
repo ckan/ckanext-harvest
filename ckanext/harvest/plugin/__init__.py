@@ -129,7 +129,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
             for key, value in harvest_extras:
 
-                # If the harvest extras are there, remove them. This can 
+                # If the harvest extras are there, remove them. This can
                 # happen eg when calling package_update or resource_update,
                 # which call package_show
                 if data_dict.get('extras'):
@@ -138,7 +138,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
                 if validated_data_dict.get('extras'):
                     validated_data_dict['extras'][:] = [e for e in validated_data_dict.get('extras', [])
-                                              if not e['key'] in harvest_extras]
+                                                        if not e['key'] in harvest_extras]
 
                 data_dict['extras'].append({'key': key, 'value': value})
 
