@@ -133,7 +133,7 @@ def harvest_source_extra_fields():
     for harvester in p.PluginImplementations(IHarvester):
         if not hasattr(harvester, 'extra_schema'):
             continue
-        fields[harvester.info()['name']] = harvester.extra_schema().keys()
+        fields[harvester.info()['name']] = list(harvester.extra_schema().keys())
     return fields
 
 
