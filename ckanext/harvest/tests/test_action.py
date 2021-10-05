@@ -80,7 +80,7 @@ class HarvestSourceActionBase():
 
         with pytest.raises(ValidationError) as e:
             helpers.call_action(self.action, **source_dict)
-        # breakpoint()
+
         for key in ('name', 'url', 'source_type'):
             assert e.value.error_dict[key] == [u'Missing value']
 
@@ -180,7 +180,6 @@ class TestHarvestSourceActionUpdate(HarvestSourceFixtureMixin,
             "frequency": "MONTHLY",
             "config": json.dumps({"custom_option": ["c", "d"]})
         })
-        breakpoint()
         result = helpers.call_action(
             'harvest_source_update', **source_dict)
 
