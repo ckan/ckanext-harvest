@@ -47,7 +47,6 @@
           (_('Last Modified'), 'metadata_modified desc'),
           (_('Popular'), 'views_recent desc') if g.tracking_enabled else (false, false) ]
         %}
-        {{ h.set_items_per_page(c.page) }}
         {% snippet 'snippets/search_form.html', type='harvest', query=c.q, sorting=sorting, sorting_selected=c.sort_by_selected, count=c.page.item_count, facets=facets, show_empty=request.params, error=c.query_error, placeholder=_("Search harvest sources...") %}
 
         {{ h.snippet('snippets/source_list.html', sources=c.page.items, show_organization=true) }}

@@ -172,7 +172,3 @@ def get_job(context, job_id):
     except (p.toolkit.ObjectNotFound, p.toolkit.NotAuthorized):
         return {}
     return job
-
-
-def set_items_per_page(page):
-    page.items_per_page = 50
