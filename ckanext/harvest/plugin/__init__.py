@@ -116,7 +116,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
                 harvest_not_found_validated = True
                 if not data_dict.get('extras'):
                     data_dict['extras'] = []
-                    
+
                 for e in data_dict.get('extras'):
                     if e.get('key') == key:
                         e.update({'value': value})
@@ -126,7 +126,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
                 if not validated_data_dict.get('extras'):
                     validated_data_dict['extras'] = []
-                
+
                 for e in validated_data_dict.get('extras'):
                     if e.get('key') == key:
                         e.update({'value': value})
