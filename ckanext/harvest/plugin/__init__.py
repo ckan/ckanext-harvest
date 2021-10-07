@@ -109,20 +109,31 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
             for key, value in harvest_extras:
 
-                # If the harvest extras are there, remove them. This can
+                # If the harvest extras are there, update them. This can
                 # happen eg when calling package_update or resource_update,
                 # which call package_show
-                if data_dict.get('extras'):
-                    data_dict['extras'][:] = [e for e in data_dict.get('extras', [])
-                                              if not e['key'] in harvest_extras]
+                harvest_not_found = True
+                harvest_not_found_validated = True
+                if not data_dict.get('extras'):
+                    data_dict['extras'] = []
 
-                if validated_data_dict.get('extras'):
-                    validated_data_dict['extras'][:] = [e for e in validated_data_dict.get('extras', [])
-                                                        if not e['key'] in harvest_extras]
+                for e in data_dict.get('extras'):
+                    if e.get('key') == key:
+                        e.update({'value': value})
+                        harvest_not_found = False
+                if(harvest_not_found):
+                    data_dict['extras'].append({'key': key, 'value': value})
 
-                data_dict['extras'].append({'key': key, 'value': value})
+                if not validated_data_dict.get('extras'):
+                    validated_data_dict['extras'] = []
 
-                validated_data_dict['extras'].append({'key': key, 'value': value})
+                for e in validated_data_dict.get('extras'):
+                    if e.get('key') == key:
+                        e.update({'value': value})
+                        harvest_not_found_validated = False
+                if(harvest_not_found_validated):
+                    validated_data_dict['extras'].append({'key': key, 'value': value})
+
                 # The commented line isn't cataloged correctly, if we pass the
                 # basic key the extras are prepended and the system works as
                 # expected.
