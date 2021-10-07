@@ -119,16 +119,15 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
                         if e.get('key') == key:
                             e.update({'value': value})
                             harvest_not_found = False
+                    if(harvest_not_found):
+                        data_dict['extras'].append({'key': key, 'value': value})
                 if validated_data_dict.get('extras'):
                     for e in validated_data_dict.get('extras'):
                         if e.get('key') == key:
                             e.update({'value': value})
                             harvest_not_found_validated = False
-
-                if(harvest_not_found):
-                    data_dict['extras'].append({'key': key, 'value': value})
-                if(harvest_not_found_validated):
-                    validated_data_dict['extras'].append({'key': key, 'value': value})
+                    if(harvest_not_found_validated):
+                        validated_data_dict['extras'].append({'key': key, 'value': value})
 
                 # The commented line isn't cataloged correctly, if we pass the
                 # basic key the extras are prepended and the system works as
