@@ -31,6 +31,8 @@ ignore = tk.get_validator("ignore")
 if_empty_same_as = tk.get_validator("if_empty_same_as")
 
 ckan_version = int(h.ckan_version().split(".")[1])
+
+
 def unicode_safe(value):
     if ckan_version >= 9:
         from ckan.lib.navl.validators import unicode_only as core_unicode_safe
@@ -112,7 +114,7 @@ def harvest_source_show_package_schema():
 
 def harvest_object_create_schema():
     schema = {
-        'guid': [ignore_missing,unicode_safe],
+        'guid': [ignore_missing, unicode_safe],
         'content': [ignore_missing, unicode_safe],
         'state': [ignore_missing, unicode_safe],
         'job_id': [harvest_job_exists],
