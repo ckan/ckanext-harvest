@@ -31,6 +31,7 @@ Example:
         <span class="label label-important">{{ _('Deleted') }}</span>
       {% endif %}
     </h3>
+
     {% if not job %}
       <p class="muted">
         {% if source.status %}
@@ -41,7 +42,9 @@ Example:
         {% endif %}
       </p>
     {% else %}
+      <span>{{ _('Last Harvest Job')}}</span>
       {% snippet 'snippets/harvest_source_job_details.html', job=job, source=source %}
     {% endif %}
+
   </div>
 </li>

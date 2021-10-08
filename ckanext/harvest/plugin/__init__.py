@@ -308,6 +308,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
         return OrderedDict([('frequency', 'Frequency'),
                             ('source_type', 'Type'),
+                            ('organization', 'Organization'),
                             ])
 
     def organization_facets(self, facets_dict, organization_type, package_type):
@@ -317,6 +318,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
         return OrderedDict([('frequency', 'Frequency'),
                             ('source_type', 'Type'),
+                            ('organization', 'Organization'),
                             ])
 
 
