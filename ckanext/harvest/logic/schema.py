@@ -35,7 +35,7 @@ ckan_version = int(h.ckan_version().split(".")[1])
 
 def unicode_safe(value):
     if ckan_version >= 9:
-        from ckan.lib.navl.validators import unicode_only as core_unicode_safe
+        from ckan.lib.navl.validators import unicode_safe as core_unicode_safe
         return core_unicode_safe(value)
     else:
         return six.text_type(value)
