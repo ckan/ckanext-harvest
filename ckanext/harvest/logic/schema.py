@@ -25,7 +25,7 @@ from ckanext.harvest.logic.validators import (
     harvest_job_exists,
     harvest_object_extras_validator,
 )
-ignore_missing = tk.get_validator("ignore_mising")
+ignore_missing = tk.get_validator("ignore_missing")
 not_empty = tk.get_validator("not_empty")
 ignore = tk.get_validator("ignore")
 if_empty_same_as = tk.get_validator("if_empty_same_as")
