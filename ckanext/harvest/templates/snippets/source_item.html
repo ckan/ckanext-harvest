@@ -23,16 +23,16 @@ Example:
 
 <li class="{{ item_class or "dataset-item" }}">
   <div class="dataset-content">
-    {% if not job %}
-        <h3 class="dataset-heading">
+    <h3 class="dataset-heading">
+      {{ h.link_to(h.truncate(title, truncate_title), url) }}
+      {% if source.get(state, '').startswith('draft') %}
+        <span class="label label-info">{{ _('Draft') }}</span>
+      {% elif source.get(state, '').startswith('deleted') %}
+        <span class="label label-important">{{ _('Deleted') }}</span>
+      {% endif %}
+    </h3>
 
-            {{ h.link_to(h.truncate(title, truncate_title), url)}}
-            {% if source.get(state, '').startswith('draft') %}
-                <span class="label label-info">{{ _('Draft') }}</span>
-            {% elif source.get(state, '').startswith('deleted') %}
-                <span class="label label-important">{{ _('Deleted') }}</span>
-            {% endif %}
-        </h3>
+    {% if not job %}
       <p class="muted">
         {% if source.status %}
           {{ _('Datasets') }}: {{ source.status.total_datasets }}
@@ -42,17 +42,9 @@ Example:
         {% endif %}
       </p>
     {% else %}
-
-        <h3 class="dataset-heading">
-            <span>{{ _('Last Harvest Job for ')}}</span>
-            {{ h.link_to(h.truncate(title, truncate_title), url)}}
-            {% if source.get(state, '').startswith('draft') %}
-                <span class="label label-info">{{ _('Draft') }}</span>
-            {% elif source.get(state, '').startswith('deleted') %}
-                <span class="label label-important">{{ _('Deleted') }}</span>
-            {% endif %}
-        </h3>
-        {% snippet 'snippets/harvest_source_job_details.html', job=job, source=source %}
+      <span>{{ _('Last Harvest Job')}}</span>
+      {% snippet 'snippets/harvest_source_job_details.html', job=job, source=source %}
     {% endif %}
+
   </div>
 </li>
