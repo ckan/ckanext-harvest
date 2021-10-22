@@ -321,6 +321,9 @@ class HarvesterBase(SingletonPlugin):
                     package_dict.setdefault('name',
                                             existing_package_dict['name'])
 
+                    for field in p.toolkit.aslist(config.get('ckan.harvest.not_overwrite_fields')):
+                        if field in existing_package_dict:
+                            package_dict[field] = existing_package_dict[field]
                     new_package = p.toolkit.get_action(
                         'package_update' if package_dict_form == 'package_show'
                         else 'package_update_rest')(context, package_dict)
