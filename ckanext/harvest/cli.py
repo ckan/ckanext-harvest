@@ -273,10 +273,10 @@ def run_test(ctx, id, force_import=None):
 
     """
     if force_import:
-        force_import_val = force_import.split('=')[-1]
+        force_import = force_import.split('=')[-1]
     flask_app = ctx.meta["flask_app"]
     with flask_app.test_request_context():
-        utils.run_test_harvester(id, force_import_val)
+        utils.run_test_harvester(id, force_import)
 
 
 @harvester.command("import")
