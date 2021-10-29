@@ -23,7 +23,7 @@ Example:
 <li class="{{ item_class or "dataset-item" }}">
   <div class="dataset-content">
     <h3 class="dataset-heading">
-      {{ h.link_to(h.truncate(title, truncate_title), url) }}
+      {{ h.link_to(title|truncate(truncate_title), url) }}
       {% if source.get(state, '').startswith('draft') %}
         <span class="label label-info">{{ _('Draft') }}</span>
       {% elif source.get(state, '').startswith('deleted') %}
