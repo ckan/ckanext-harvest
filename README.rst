@@ -228,10 +228,10 @@ The following operations can be run from the command line as described underneat
       harvester initdb
         - Creates the necessary tables in the database
 
-      harvester source {name} {url} {type} [{title}] [{active}] [{owner_org}] [{frequency}] [{config}]
+      harvester source create {name} {url} {type} [{title}] [{active}] [{owner_org}] [{frequency}] [{config}]
         - create new harvest source
 
-      harvester source {source-id/name}
+      harvester source show {source-id/name}
         - shows a harvest source
 
       harvester rmsource {source-id/name}
