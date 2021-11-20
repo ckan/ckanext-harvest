@@ -91,6 +91,11 @@ class TestHarvestQueue(object):
 
     def test_01_basic_harvester(self):
 
+        if config.get('ckan.harvest.mq.type') == 'redis':
+            # make sure that there are no old elements in the redis db
+            redis = queue.get_connection()
+            redis.flushdb()
+
         # make sure queues/exchanges are created first and are empty
         consumer = queue.get_gather_consumer()
         consumer_fetch = queue.get_fetch_consumer()
@@ -257,6 +262,7 @@ class TestHarvestQueue(object):
         '''
         if config.get('ckan.harvest.mq.type') != 'redis':
             pytest.skip()
+        # make sure that there are no old elements in the redis db
         redis = queue.get_connection()
         fetch_routing_key = queue.get_fetch_routing_key()
         redis.flushdb()
