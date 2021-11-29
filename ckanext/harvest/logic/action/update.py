@@ -614,7 +614,7 @@ def harvest_jobs_run(context, data_dict):
             job_obj = HarvestJob.get(job['id'])
             if timeout:
                 last_time = job_obj.get_last_action_time()
-                now = datetime.datetime.now()
+                now = datetime.datetime.utcnow()
                 if now - last_time > datetime.timedelta(minutes=int(timeout)):
                     msg = 'Job {} timeout ({} minutes)\n'.format(job_obj.id, timeout)
                     msg += '\tJob created: {}\n'.format(job_obj.created)
