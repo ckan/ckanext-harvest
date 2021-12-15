@@ -322,6 +322,8 @@ def harvest_sources_job_history_clear(context, data_dict):
     '''
     check_access('harvest_sources_clear', context, data_dict)
 
+    keep_actual = data_dict.get('keep_actual', False)
+
     job_history_clear_results = []
     # We assume that the maximum of 1000 (hard limit) rows should be enough
     result = logic.get_action('package_search')(context, {'fq': '+dataset_type:harvest', 'rows': 1000})
@@ -329,7 +331,8 @@ def harvest_sources_job_history_clear(context, data_dict):
     if harvest_packages:
         for data_dict in harvest_packages:
             try:
-                clear_result = get_action('harvest_source_job_history_clear')(context, {'id': data_dict['id']})
+                clear_result = get_action('harvest_source_job_history_clear')(
+                    context, {'id': data_dict['id'], 'keep_actual': keep_actual})
                 job_history_clear_results.append(clear_result)
             except NotFound:
                 # Ignoring not existent harvest sources because of a possibly corrupt search index
@@ -352,6 +355,7 @@ def harvest_source_job_history_clear(context, data_dict):
     check_access('harvest_source_clear', context, data_dict)
 
     harvest_source_id = data_dict.get('id', None)
+    keep_actual = data_dict.get('keep_actual', False)
 
     source = HarvestSource.get(harvest_source_id)
     if not source:
@@ -362,17 +366,51 @@ def harvest_source_job_history_clear(context, data_dict):
 
     model = context['model']
 
-    sql = '''begin;
-    delete from harvest_object_error where harvest_object_id
-     in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
-    delete from harvest_object_extra where harvest_object_id
-     in (select id from harvest_object where harvest_source_id = '{harvest_source_id}');
-    delete from harvest_object where harvest_source_id = '{harvest_source_id}';
-    delete from harvest_gather_error where harvest_job_id
-     in (select id from harvest_job where source_id = '{harvest_source_id}');
-    delete from harvest_job where source_id = '{harvest_source_id}';
-    commit;
-    '''.format(harvest_source_id=harvest_source_id)
+    if keep_actual:
+        sql = '''BEGIN;
+        DELETE FROM harvest_object_error WHERE harvest_object_id
+         IN (SELECT id FROM harvest_object AS obj WHERE harvest_source_id = '{harvest_source_id}'
+             AND current != true
+             AND (NOT EXISTS (SELECT id FROM harvest_job WHERE id = obj.harvest_job_id
+                              AND status = 'Running'))
+             AND (NOT EXISTS (SELECT id FROM harvest_object WHERE harvest_job_id = obj.harvest_job_id
+                              AND current = true))
+             );
+        DELETE FROM harvest_object_extra WHERE harvest_object_id
+         IN (SELECT id FROM harvest_object AS obj WHERE harvest_source_id = '{harvest_source_id}'
+             AND current != true
+             AND (NOT EXISTS (SELECT id FROM harvest_job WHERE id = obj.harvest_job_id
+                              AND status = 'Running'))
+             AND (NOT EXISTS (SELECT id FROM harvest_object WHERE harvest_job_id = obj.harvest_job_id
+                              AND current = true))
+            );
+        DELETE FROM harvest_object AS obj WHERE harvest_source_id = '{harvest_source_id}'
+         AND current != true
+         AND (NOT EXISTS (SELECT id FROM harvest_job WHERE id = obj.harvest_job_id
+                          AND status = 'Running'))
+         AND (NOT EXISTS (SELECT id FROM harvest_object WHERE harvest_job_id = obj.harvest_job_id
+                          AND current = true));
+        DELETE FROM harvest_gather_error WHERE harvest_job_id
+         IN (SELECT id FROM harvest_job AS job WHERE source_id = '{harvest_source_id}'
+             AND job.status != 'Running'
+             AND NOT EXISTS (SELECT id FROM harvest_object WHERE harvest_job_id = job.id));
+        DELETE FROM harvest_job AS job WHERE source_id = '{harvest_source_id}'
+         AND job.status != 'Running'
+         AND NOT EXISTS (SELECT id FROM harvest_object WHERE harvest_job_id = job.id);
+        COMMIT;
+        '''.format(harvest_source_id=harvest_source_id)
+    else:
+        sql = '''BEGIN;
+        DELETE FROM harvest_object_error WHERE harvest_object_id
+         IN (SELECT id FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}');
+        DELETE FROM harvest_object_extra WHERE harvest_object_id
+         IN (SELECT id FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}');
+        DELETE FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}';
+        DELETE FROM harvest_gather_error WHERE harvest_job_id
+         IN (SELECT id FROM harvest_job WHERE source_id = '{harvest_source_id}');
+        DELETE FROM harvest_job WHERE source_id = '{harvest_source_id}';
+        COMMIT;
+        '''.format(harvest_source_id=harvest_source_id)
 
     model.Session.execute(sql)
 
