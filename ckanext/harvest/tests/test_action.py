@@ -328,7 +328,7 @@ class TestActions():
         assert dataset_from_db_2
         assert dataset_from_db_2.id == dataset_2['id']
 
-    def test_harvest_sources_job_history_clear_keep_actual(self):
+    def test_harvest_sources_job_history_clear_keep_current(self):
         # prepare
         data_dict = SOURCE_DICT.copy()
         source_1 = factories.HarvestSourceObj(**data_dict)
@@ -354,7 +354,7 @@ class TestActions():
         context = {'model': model, 'session': model.Session,
                    'ignore_auth': True, 'user': ''}
         result = get_action('harvest_sources_job_history_clear')(
-            context, {'keep_actual': True})
+            context, {'keep_current': True})
 
         # verify
         assert sorted(result, key=lambda item: item['id']) == sorted(
@@ -373,7 +373,7 @@ class TestActions():
         assert not harvest_model.HarvestJob.get(job_2.id)
         assert not harvest_model.HarvestObject.get(object_2_.id)
 
-    def test_harvest_source_job_history_clear_keep_actual(self):
+    def test_harvest_source_job_history_clear_keep_current(self):
         # prepare
         source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
         job = factories.HarvestJobObj(source=source)
@@ -398,7 +398,7 @@ class TestActions():
         context = {'model': model, 'session': model.Session,
                    'ignore_auth': True, 'user': ''}
         result = get_action('harvest_source_job_history_clear')(
-            context, {'id': source.id, 'keep_actual': True})
+            context, {'id': source.id, 'keep_current': True})
 
         # verify
         assert result == {'id': source.id}
@@ -416,7 +416,7 @@ class TestActions():
         assert dataset_from_db_2
         assert dataset_from_db_2.id == dataset2['id']
 
-    def test_harvest_source_job_history_clear_keep_actual_finished_jobs(self):
+    def test_harvest_source_job_history_clear_keep_current_finished_jobs(self):
         # prepare
         source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
         job = factories.HarvestJobObj(source=source)
@@ -440,7 +440,7 @@ class TestActions():
         context = {'model': model, 'session': model.Session,
                    'ignore_auth': True, 'user': ''}
         result = get_action('harvest_source_job_history_clear')(
-            context, {'id': source.id, 'keep_actual': True})
+            context, {'id': source.id, 'keep_current': True})
 
         # verify
         assert result == {'id': source.id}
@@ -457,7 +457,7 @@ class TestActions():
         assert dataset_from_db_2
         assert dataset_from_db_2.id == dataset2['id']
 
-    def test_harvest_source_job_history_clear_keep_actual_running_job(self):
+    def test_harvest_source_job_history_clear_keep_current_running_job(self):
         # Both jobs contain current objects
         # prepare
         source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
@@ -489,7 +489,7 @@ class TestActions():
         context = {'model': model, 'session': model.Session,
                    'ignore_auth': True, 'user': ''}
         result = get_action('harvest_source_job_history_clear')(
-            context, {'id': source.id, 'keep_actual': True})
+            context, {'id': source.id, 'keep_current': True})
 
         # verify that both jobs still exists
         assert result == {'id': source.id}
