@@ -299,6 +299,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
                 'bootstrap_version': harvest_helpers.bootstrap_version,
                 'get_harvest_source': harvest_helpers.get_harvest_source,
                 'get_latest_job': harvest_helpers.get_latest_job,
+                'errors_view': harvest_helpers.errors_view,
                 }
 
     def dataset_facets(self, facets_dict, package_type):

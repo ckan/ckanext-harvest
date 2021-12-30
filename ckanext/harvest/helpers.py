@@ -172,3 +172,14 @@ def get_job(context, job_id):
     except (p.toolkit.ObjectNotFound, p.toolkit.NotAuthorized):
         return {}
     return job
+
+
+def errors_view(sources):
+    context = {'model': model, 'session': model.Session, 'user': p.toolkit.c.user}
+    job_reports = []
+    for s in sources:
+        last_job = get_latest_job(s['id'])
+        job = p.toolkit.get_action('harvest_job_show')(context, {'id': last_job['id']})
+        job['source_name'] = s['name']
+        job_reports.append(job)
+    return job_reports

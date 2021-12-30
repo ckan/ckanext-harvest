@@ -1,0 +1,9 @@
+{% set authorized_user = h.check_access('harvest_source_create') %}
+
+{% if authorized_user %}
+  <a href="{{ h.current_url() + '?show_errors=true' if '?' not in h.current_url() else h.current_url() + '&show_errors=true'}}" class="btn btn-small">
+    <i class="fa fa-plus-square icon-check"></i>
+      {{ _('Show Harvest Erorrs') }}
+  </a>
+{% endif %}
+

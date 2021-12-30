@@ -30,7 +30,9 @@
         {% block page_primary_action %}
           <div class="page_primary_action">
             {{ h.snippet('snippets/add_source_button.html', dataset_type=c.dataset_type) }}
+            {{ h.snippet('snippets/show_errors_button.html', dataset_type=c.dataset_type) }}
           </div>
+
         {% endblock %}
 
         {% set facets = {
@@ -49,7 +51,12 @@
         %}
         {% snippet 'snippets/search_form.html', type='harvest', query=c.q, sorting=sorting, sorting_selected=c.sort_by_selected, count=c.page.item_count, facets=facets, show_empty=request.params, error=c.query_error, placeholder=_("Search harvest sources...") %}
 
-        {{ h.snippet('snippets/source_list.html', sources=c.page.items, show_organization=true) }}
+      {% if facets.get('fields', {}).get('show_errors', ['false'])[0] == 'true' %}
+          {{ h.snippet('snippets/source_errors_list.html', sources=c.page.items, show_organization=true) }}
+      {% else %}
+          {{ h.snippet('snippets/source_list.html', sources=c.page.items, show_organization=true) }}
+      {% endif %}
+
 
       </div>
 
