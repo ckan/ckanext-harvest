@@ -258,6 +258,15 @@ class TestActions():
         object_ = factories.HarvestObjectObj(job=job, source=source,
                                              package_id=dataset['id'])
 
+        data_dict = SOURCE_DICT.copy()
+        data_dict['name'] = 'another-source'
+        data_dict['url'] = 'http://another-url'
+        source2 = factories.HarvestSourceObj(**data_dict)
+        job2 = factories.HarvestJobObj(source=source2)
+        dataset2 = ckan_factories.Dataset()
+        object_2_ = factories.HarvestObjectObj(job=job2, source=source2,
+                                               package_id=dataset2['id'])
+
         # execute
         context = {'session': model.Session,
                    'ignore_auth': True, 'user': ''}
@@ -266,13 +275,19 @@ class TestActions():
 
         # verify
         assert result == {'id': source.id}
-        source = harvest_model.HarvestSource.get(source.id)
-        assert source
+        assert harvest_model.HarvestSource.get(source.id)
         assert harvest_model.HarvestJob.get(job.id) is None
         assert harvest_model.HarvestObject.get(object_.id) is None
         dataset_from_db = model.Package.get(dataset['id'])
-        assert dataset_from_db, 'is None'
+        assert dataset_from_db
         assert dataset_from_db.id == dataset['id']
+        # source2 and related objects are untouched
+        assert harvest_model.HarvestSource.get(source2.id)
+        assert harvest_model.HarvestJob.get(job2.id)
+        assert harvest_model.HarvestObject.get(object_2_.id)
+        dataset_from_db_2 = model.Package.get(dataset2['id'])
+        assert dataset_from_db_2
+        assert dataset_from_db_2.id == dataset2['id']
 
     def test_harvest_sources_job_history_clear(self):
         # prepare
@@ -300,20 +315,197 @@ class TestActions():
         # verify
         assert sorted(result, key=lambda item: item['id']) == sorted(
             [{'id': source_1.id}, {'id': source_2.id}], key=lambda item: item['id'])
-        source_1 = harvest_model.HarvestSource.get(source_1.id)
-        assert source_1
+        assert harvest_model.HarvestSource.get(source_1.id)
         assert harvest_model.HarvestJob.get(job_1.id) is None
         assert harvest_model.HarvestObject.get(object_1_.id) is None
         dataset_from_db_1 = model.Package.get(dataset_1['id'])
-        assert dataset_from_db_1, 'is None'
+        assert dataset_from_db_1
         assert dataset_from_db_1.id == dataset_1['id']
-        source_2 = harvest_model.HarvestSource.get(source_1.id)
-        assert source_2
+        assert harvest_model.HarvestSource.get(source_2.id)
         assert harvest_model.HarvestJob.get(job_2.id) is None
         assert harvest_model.HarvestObject.get(object_2_.id) is None
         dataset_from_db_2 = model.Package.get(dataset_2['id'])
-        assert dataset_from_db_2, 'is None'
+        assert dataset_from_db_2
         assert dataset_from_db_2.id == dataset_2['id']
+
+    def test_harvest_sources_job_history_clear_keep_current(self):
+        # prepare
+        data_dict = SOURCE_DICT.copy()
+        source_1 = factories.HarvestSourceObj(**data_dict)
+        data_dict['name'] = 'another-source'
+        data_dict['url'] = 'http://another-url'
+        source_2 = factories.HarvestSourceObj(**data_dict)
+
+        job_1 = factories.HarvestJobObj(source=source_1)
+        dataset_1 = ckan_factories.Dataset()
+        object_1_ = factories.HarvestObjectObj(job=job_1, source=source_1,
+                                               package_id=dataset_1['id'])
+
+        job_2 = factories.HarvestJobObj(source=source_2)
+        # creating harvest_object with empty package_id
+        object_2_ = factories.HarvestObjectObj(job=job_2, source=source_2,
+                                               package_id=None)
+
+        setattr(object_1_, 'report_status', 'added')
+        setattr(object_1_, 'current', True)
+        model.Session.commit()
+
+        # execute
+        context = {'model': model, 'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+        result = get_action('harvest_sources_job_history_clear')(
+            context, {'keep_current': True})
+
+        # verify
+        assert sorted(result, key=lambda item: item['id']) == sorted(
+            [{'id': source_1.id}, {'id': source_2.id}], key=lambda item: item['id'])
+
+        # dataset, related source, object and job still persist!
+        assert harvest_model.HarvestSource.get(source_1.id)
+        assert harvest_model.HarvestJob.get(job_1.id)
+        assert harvest_model.HarvestObject.get(object_1_.id)
+        dataset_from_db_1 = model.Package.get(dataset_1['id'])
+        assert dataset_from_db_1
+        assert dataset_from_db_1.id == dataset_1['id']
+
+        # second source persist, but job and object was deleted
+        assert harvest_model.HarvestSource.get(source_2.id)
+        assert not harvest_model.HarvestJob.get(job_2.id)
+        assert not harvest_model.HarvestObject.get(object_2_.id)
+
+    def test_harvest_source_job_history_clear_keep_current(self):
+        # prepare
+        source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
+        job = factories.HarvestJobObj(source=source)
+        dataset = ckan_factories.Dataset()
+        object_ = factories.HarvestObjectObj(job=job, source=source,
+                                             package_id=dataset['id'])
+
+        data_dict = SOURCE_DICT.copy()
+        data_dict['name'] = 'another-source'
+        data_dict['url'] = 'http://another-url'
+        source2 = factories.HarvestSourceObj(**data_dict)
+        job2 = factories.HarvestJobObj(source=source2)
+        dataset2 = ckan_factories.Dataset()
+        object_2_ = factories.HarvestObjectObj(job=job2, source=source2,
+                                               package_id=dataset2['id'])
+
+        setattr(object_, 'report_status', 'added')
+        setattr(object_, 'current', True)
+        model.Session.commit()
+
+        # execute
+        context = {'model': model, 'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+        result = get_action('harvest_source_job_history_clear')(
+            context, {'id': source.id, 'keep_current': True})
+
+        # verify
+        assert result == {'id': source.id}
+        assert harvest_model.HarvestSource.get(source.id)
+        assert harvest_model.HarvestJob.get(job.id)
+        assert harvest_model.HarvestObject.get(object_.id)
+        dataset_from_db = model.Package.get(dataset['id'])
+        assert dataset_from_db
+        assert dataset_from_db.id == dataset['id']
+        # source2 and related objects are untouched
+        assert harvest_model.HarvestSource.get(source2.id)
+        assert harvest_model.HarvestJob.get(job2.id)
+        assert harvest_model.HarvestObject.get(object_2_.id)
+        dataset_from_db_2 = model.Package.get(dataset2['id'])
+        assert dataset_from_db_2
+        assert dataset_from_db_2.id == dataset2['id']
+
+    def test_harvest_source_job_history_clear_keep_current_finished_jobs(self):
+        # prepare
+        source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
+        job = factories.HarvestJobObj(source=source)
+        setattr(job, 'status', 'Finished')
+        setattr(job, 'finished', datetime.datetime.utcnow()-datetime.timedelta(days=2))
+
+        dataset = ckan_factories.Dataset()
+        object_ = factories.HarvestObjectObj(job=job, source=source,
+                                             package_id=dataset['id'])
+
+        job2 = factories.HarvestJobObj(source=source)
+        setattr(job2, 'finished', datetime.datetime.utcnow()-datetime.timedelta(days=1))
+        setattr(job2, 'status', 'Finished')
+        dataset2 = ckan_factories.Dataset()
+        object_2_ = factories.HarvestObjectObj(job=job2, source=source,
+                                               package_id=dataset2['id'])
+        setattr(object_2_, 'current', True)
+        model.Session.commit()
+
+        # execute
+        context = {'model': model, 'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+        result = get_action('harvest_source_job_history_clear')(
+            context, {'id': source.id, 'keep_current': True})
+
+        # verify
+        assert result == {'id': source.id}
+        assert harvest_model.HarvestSource.get(source.id)
+        assert not harvest_model.HarvestJob.get(job.id)
+        assert not harvest_model.HarvestObject.get(object_.id)
+        dataset_from_db = model.Package.get(dataset['id'])
+        assert dataset_from_db
+        assert dataset_from_db.id == dataset['id']
+        # job2 and related objects are untouched
+        assert harvest_model.HarvestJob.get(job2.id)
+        assert harvest_model.HarvestObject.get(object_2_.id)
+        dataset_from_db_2 = model.Package.get(dataset2['id'])
+        assert dataset_from_db_2
+        assert dataset_from_db_2.id == dataset2['id']
+
+    def test_harvest_source_job_history_clear_keep_current_running_job(self):
+        # Both jobs contain current objects
+        # prepare
+        source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
+        job1 = factories.HarvestJobObj(source=source)
+        setattr(job1, 'status', 'Finished')
+        setattr(job1, 'finished', datetime.datetime.utcnow()-datetime.timedelta(days=1))
+
+        dataset1 = ckan_factories.Dataset()
+        dataset2 = ckan_factories.Dataset()
+
+        object_1_ = factories.HarvestObjectObj(job=job1, source=source,
+                                               package_id=dataset1['id'])
+        setattr(object_1_, 'current', False)
+        object_2_ = factories.HarvestObjectObj(job=job1, source=source,
+                                               package_id=dataset2['id'])
+        setattr(object_2_, 'current', True)
+
+        job2 = factories.HarvestJobObj(source=source)
+        setattr(job2, 'status', 'Running')
+        object_3_ = factories.HarvestObjectObj(job=job2, source=source,
+                                               package_id=dataset1['id'])
+        setattr(object_3_, 'current', True)
+        object_4_ = factories.HarvestObjectObj(job=job2, source=source,
+                                               package_id=dataset2['id'])
+        setattr(object_4_, 'current', False)
+        model.Session.commit()
+
+        # execute
+        context = {'model': model, 'session': model.Session,
+                   'ignore_auth': True, 'user': ''}
+        result = get_action('harvest_source_job_history_clear')(
+            context, {'id': source.id, 'keep_current': True})
+
+        # verify that both jobs still exists
+        assert result == {'id': source.id}
+        assert harvest_model.HarvestSource.get(source.id)
+        assert harvest_model.HarvestJob.get(job1.id)
+        assert harvest_model.HarvestObject.get(object_1_.id)
+        assert harvest_model.HarvestObject.get(object_2_.id)
+        dataset_from_db = model.Package.get(dataset1['id'])
+        assert dataset_from_db
+        assert dataset_from_db.id == dataset1['id']
+        assert harvest_model.HarvestJob.get(job2.id)
+        assert harvest_model.HarvestObject.get(object_3_.id)
+        assert harvest_model.HarvestObject.get(object_4_.id)
+        dataset_from_db_2 = model.Package.get(dataset2['id'])
+        assert dataset_from_db_2
+        assert dataset_from_db_2.id == dataset2['id']
 
     def test_harvest_abort_failed_jobs_without_failed_jobs(self):
         # prepare

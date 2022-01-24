@@ -34,11 +34,13 @@ class Harvester(CkanCommand):
         - clears all datasets, jobs and objects related to a harvest source,
           but keeps the source itself
 
-      harvester clearsource_history [{source-id}]
+      harvester clearsource_history [{source-id}] [-k]
         - If no source id is given the history for all harvest sources (maximum is 1000) will be cleared.
           Clears all jobs and objects related to a harvest source, but keeps the source itself.
           The datasets imported from the harvest source will NOT be deleted!!!
           If a source id is given, it only clears the history of the harvest source with the given source id.
+
+          To keep the currently active jobs use the -k option.
 
       harvester sources [all]
         - lists harvest sources
@@ -190,6 +192,14 @@ class Harvester(CkanCommand):
             will be aborted. You can use comma as a separator to provide multiple source_id's""",
         )
 
+        self.parser.add_option(
+            "-k",
+            "--keep-current",
+            dest="keep_current",
+            default=False,
+            help="Do not delete relevant harvest objects",
+        )
+
     def command(self):
         self._load_config()
 
@@ -316,11 +326,12 @@ class Harvester(CkanCommand):
         print(result)
 
     def clear_harvest_source_history(self):
+        keep_current = bool(self.options.keep_current)
         source_id = None
         if len(self.args) >= 2:
             source_id = six.text_type(self.args[1])
 
-        print(utils.clear_harvest_source_history(source_id))
+        print(utils.clear_harvest_source_history(source_id, keep_current))
 
     def show_harvest_source(self):
 

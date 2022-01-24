@@ -206,7 +206,7 @@ def clear_harvest_source(source_id_or_name):
     tk.get_action("harvest_source_clear")(context, {"id": source["id"]})
 
 
-def clear_harvest_source_history(source_id):
+def clear_harvest_source_history(source_id, keep_current):
 
     context = {
         "model": model,
@@ -215,15 +215,19 @@ def clear_harvest_source_history(source_id):
     }
     if source_id is not None:
         tk.get_action("harvest_source_job_history_clear")(context, {
-            "id": source_id
+            "id": source_id,
+            "keep_current": keep_current
         })
         return "Cleared job history of harvest source: {0}".format(source_id)
     else:
         # Purge queues, because we clean all harvest jobs and
         # objects in the database.
-        purge_queues()
+        if not keep_current:
+            purge_queues()
         cleared_sources_dicts = tk.get_action(
-            "harvest_sources_job_history_clear")(context, {})
+            "harvest_sources_job_history_clear")(context, {
+                "keep_current": keep_current
+            })
         return "Cleared job history for all harvest sources: {0} source(s)".format(
             len(cleared_sources_dicts))
 

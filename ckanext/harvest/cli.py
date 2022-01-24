@@ -108,8 +108,13 @@ def clear(ctx, id):
 
 @source.command()
 @click.argument(u"id", metavar=u"SOURCE_ID_OR_NAME", required=False)
+@click.option(
+    "-k",
+    "--keep-current",
+    default=False
+)
 @click.pass_context
-def clear_history(ctx, id):
+def clear_history(ctx, id, keep_current):
     """If no source id is given the history for all harvest sources
     (maximum is 1000) will be cleared.
 
@@ -122,7 +127,7 @@ def clear_history(ctx, id):
     flask_app = ctx.meta["flask_app"]
 
     with flask_app.test_request_context():
-        result = utils.clear_harvest_source_history(id)
+        result = utils.clear_harvest_source_history(id, bool(keep_current))
     click.secho(result, fg="green")
 
 
