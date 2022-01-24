@@ -10,8 +10,26 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_
 ***********
 Unreleased_
 ***********
+
+***********
+1.3.4_ - 2021-12-01
+***********
+
+Changed
+-------
+
 - Changes function calls to `render_jinja2` over to `render` as the former is
   no longer used.
+- Set the default value for MQ_TYPE to redis #463
+
+Fixed
+-----
+
+- Fix JSON serialization for Python3 #450
+- Make `Rehavest` and `Clear` buttons work again #452
+- Fix error when running run-test #466
+- Fix timeout calculation #482
+
 
 ***********
 1.3.3_ - 2021-03-26
