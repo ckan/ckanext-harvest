@@ -12,15 +12,16 @@ Unreleased_
 ***********
 
 ***********
-1.3.4_ - 2021-12-01
+1.3.4_ - 2022-01-24
 ***********
 
 Changed
 -------
 
 - Changes function calls to `render_jinja2` over to `render` as the former is
-  no longer used.
+  no longer used. #459
 - Set the default value for MQ_TYPE to redis #463
+- Add option `keep-current` to `clearsource_history` command #484
 
 Fixed
 -----
@@ -29,6 +30,7 @@ Fixed
 - Make `Rehavest` and `Clear` buttons work again #452
 - Fix error when running run-test #466
 - Fix timeout calculation #482
+- Fix harvest extras for packages #458
 
 
 ***********
