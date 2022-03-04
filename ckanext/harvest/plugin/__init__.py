@@ -245,7 +245,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
                      'ckanext-harvest so you should set ckan.legacy_templates '
                      'option to True any more.')
 
-        templates_base = config.get('ckan.base_templates_folder')
+        templates_base = config.get('ckan.base_templates_folder', 'templates')
 
         p.toolkit.add_template_directory(config, '../{}'.format(templates_base))
         p.toolkit.add_public_directory(config, '../public')
