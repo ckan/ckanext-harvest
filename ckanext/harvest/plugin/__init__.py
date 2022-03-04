@@ -250,8 +250,8 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
         p.toolkit.add_resource('../public/ckanext/harvest/javascript', 'harvest-extra-field')
 
         if p.toolkit.check_ckan_version(min_version='2.9.0'):
-            mappings = config.get('ckan.legacy_route_mappings', {})
-            if isinstance(mappings, string_types):
+            mappings = config.get('ckan.legacy_route_mappings') or {}
+            if mappings and isinstance(mappings, string_types):
                 mappings = json.loads(mappings)
 
             mappings.update({
