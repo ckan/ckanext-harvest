@@ -220,6 +220,16 @@ If you don't specify this setting, the default will be False and there will be n
 This timeout value is compared to the completion time of the last object in the job.
 
 
+Avoid overwriting certain fields (optional)
+===========================================
+
+If you want to skip some fields from being changed because of the harvesting, you can add a list of field that should not be overwritten to ``not_overwrite_fields`` in the ini file.
+This is useful in case you want to add additional fields to the harvested datasets, or if you want to alter them after they have harvested.
+For example, in case you want to retain changes made by the users to the fields ``decription`` and ``tags``:
+
+    ckan.harvest.not_overwrite_fields = description tags
+
+
 Command line interface
 ======================
 
