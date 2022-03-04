@@ -1,0 +1,40 @@
+{% extends "source/admin_base.html" %}
+
+{% block breadcrumb_content %}
+  <li>{{ h.nav_link(_('Harvest Sources'), named_route='{0}_search'.format(c.dataset_type)) }}</li>
+  <li class="active">{{ h.nav_link(_('Create Harvest Source'), named_route='{0}_new'.format(c.dataset_type)) }}</li>
+{% endblock %}
+
+{% block actions_content %}
+{% endblock %}
+
+{% block subtitle %}{{ _('Create harvest source') }}{% endblock %}
+
+{% block primary_content %}
+  <section class="module">
+    <div class="module-content">
+        {% if c.form %}
+          {# CKAN < 2.3 #}
+          {{ c.form | safe }}
+        {% else %}
+          {{- h.snippet(form_snippet, c=c, **form_vars) -}}
+        {% endif %}
+    </div>
+  </section>
+{% endblock %}
+
+{% block secondary_content %}
+  <section class="module module-narrow">
+    <h2 class="module-heading"><i class="fa fa-lg fa-info-circle icon-large icon-info-sign"></i> {{ _('Harvest sources') }}</h2>
+    <div class="module-content">
+      <p>
+        {% trans %}
+        Harvest sources allow importing remote metadata into this catalog.
+        Remote sources can be other catalogs such as other CKAN instances, CSW
+        servers or Web Accessible Folders (WAF) (depending on the actual
+        harvesters enabled for this instance).
+        {% endtrans %}
+      </p>
+    </div>
+  </section>
+{% endblock %}

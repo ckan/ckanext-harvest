@@ -1,0 +1,64 @@
+{% extends "source/read_base.html" %}
+
+{% block breadcrumb_content_root_selected %}{% endblock %}
+
+{% block breadcrumb_content %}
+  {{ super() }}
+  <li class="active"><a href="">{{ _('Admin') }}</a></li>
+{% endblock %}
+
+{% block action_links %}
+  {% if harvest_source.status and harvest_source.status.last_job and (harvest_source.status.last_job.status == 'New' or harvest_source.status.last_job.status == 'Running') %}
+    <a class="btn btn-default disabled" rel="tooltip" title="There already is an unrun job for this source"><i class="fa fa-lg fa-refresh icon-refresh icon-large"></i> Reharvest</a>
+  {% else %}
+    {% set locale = h.dump_json({'content': _('This will re-run the harvesting for this source. Any updates at the source will overwrite the local datasets. Sources with a large number of datasets may take a significant amount of time to finish harvesting. Please confirm you would like us to start reharvesting.')}) %}
+
+      <a href="{{ h.url_for('harvest_refresh', id=harvest_source.id) }}" class="btn btn-default" data-module="confirm-action" data-module-i18n="{{ locale }}"
+         title="{{ _('Start a new harvesting job for this harvest source now') }}">
+        <i class="fa fa-refresh icon-refresh"></i>
+        {{ _('Reharvest') }}
+      </a>
+
+  {% endif %}
+  {% if harvest_source.status and harvest_source.status.last_job and (harvest_source.status.last_job.status == 'Running') %}
+
+      <a href="{{ h.url_for('harvest_job_abort', source=harvest_source.name, id=harvest_source.status.last_job.id) }}" class="btn btn-default" title="Stop this Job">
+        <i class="fa fa-ban icon-ban-circle"></i>
+        {{ _('Stop') }}
+      </a>
+
+  {% endif %}
+    {% set locale = h.dump_json({'content': _('Warning: This will remove all datasets for this source, as well as all previous job reports. Are you sure you want to continue?')}) %}
+
+      <a href="{{ h.url_for('harvest_clear', id=harvest_source.id) }}" class="btn btn-default" data-module="confirm-action" data-module-i18n="{{ locale }}"
+         title="{{ _('Delete all harvest jobs and existing datasets from this source') }}">
+        {{ _('Clear') }}
+      </a>
+
+
+
+       <a href="{{ h.url_for('{0}_read'.format(c.dataset_type), id=harvest_source.id) }}" class="btn btn-default">
+        <i class="fa fa-eye eye-open"></i>
+        {{ _('View harvest source') }}
+      </a>
+
+
+{% endblock %}
+
+{# CKAN 2.0 #}
+{% block actions_content %}
+  {{ self.action_links() }}
+{% endblock %}
+
+{# CKAN 2.1 #}
+{% block content_action %}
+  <div class="content_action btn-group">
+    {{ self.action_links() }}
+  </div>
+{% endblock %}
+
+{% block page_header_tabs %}
+  {{ h.build_nav_icon('{0}_admin'.format(c.dataset_type), _('Dashboard'), id=harvest_source.name, icon='dashboard') }}
+  {{ h.build_nav_icon('harvest_job_list'.format(c.dataset_type), _('Jobs'), source=harvest_source.name, icon='reorder') }}
+  {{ h.build_nav_icon('{0}_edit'.format(c.dataset_type), _('Edit'), id=harvest_source.name, icon='edit') }}
+{% endblock %}

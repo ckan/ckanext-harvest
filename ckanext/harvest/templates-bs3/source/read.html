@@ -1,0 +1,8 @@
+{% extends "source/read_base.html" %}
+
+{% block primary_content_inner %}
+  <section class="module-content">
+    <h1 class="hide-heading">{{ _('Datasets') }}</h1>
+    {{ h.package_list_for_source(harvest_source.id)  }}
+  </section>
+{% endblock %}

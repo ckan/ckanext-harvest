@@ -1,0 +1,18 @@
+{% extends "source/admin_base.html" %}
+
+{% block primary_content_inner %}
+  <section class="module-content">
+    <h1>{{ _('Last Harvest Job') }}</h1>
+    {% if harvest_source.status and harvest_source.status.last_job %}
+      {% snippet "snippets/job_details.html", job=harvest_source.status.last_job %}
+      <div class="form-actions">
+          <a href="{{ h.url_for('harvest_job_show_last', source=harvest_source.name) }}" class="btn pull-right btn-default">
+          <i class="fa fa-briefcase icon-briefcase"></i>
+          {{ _('View full job report')  }}
+        </a>
+      </div>
+    {% else %}
+      <p class="empty">{{ _('No jobs yet for this source') }}</p>
+    {% endif %}
+  </section>
+{% endblock %}

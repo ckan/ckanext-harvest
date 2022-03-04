@@ -1,0 +1,17 @@
+{% extends "source/admin_base.html" %}
+
+{% block subtitle %}{{ _('Edit harvest source') }}{% endblock %}
+
+{% block primary_content_inner %}
+
+  <div class="module-content">
+    {% block form %}
+      {% if c.form %}
+        {# CKAN < 2.3 #}
+        {{ c.form | safe }}
+      {% else %}
+        {{- h.snippet(form_snippet, c=c, **form_vars) -}}
+      {% endif %}
+    {% endblock %}
+  </div>
+{% endblock %}
