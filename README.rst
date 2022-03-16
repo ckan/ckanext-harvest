@@ -220,6 +220,16 @@ If you don't specify this setting, the default will be False and there will be n
 This timeout value is compared to the completion time of the last object in the job.
 
 
+Avoid overwriting certain fields (optional)
+===========================================
+
+If you want to skip some fields from being changed because of the harvesting, you can add a list of field that should not be overwritten to ``not_overwrite_fields`` in the ini file.
+This is useful in case you want to add additional fields to the harvested datasets, or if you want to alter them after they have harvested.
+For example, in case you want to retain changes made by the users to the fields ``decription`` and ``tags``:
+
+    ckan.harvest.not_overwrite_fields = description tags
+
+
 Command line interface
 ======================
 
@@ -242,13 +252,15 @@ The following operations can be run from the command line as described underneat
         - clears all datasets, jobs and objects related to a harvest source,
           but keeps the source itself
 
-      harvester clearsource-history [{source-id}]
+      harvester clearsource-history [{source-id}] [-k]
         - If no source id is given the history for all harvest sources (maximum is 1000)
           will be cleared.
           Clears all jobs and objects related to a harvest source, but keeps the source
           itself. The datasets imported from the harvest source will **NOT** be deleted!!!
           If a source id is given, it only clears the history of the harvest source with
           the given source id.
+
+          To keep the currently active jobs use the -k option.
 
       harvester sources [all]
         - lists harvest sources

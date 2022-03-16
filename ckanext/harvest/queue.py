@@ -132,14 +132,16 @@ def resubmit_jobs():
     # fetch queue
     harvest_object_pending = redis.keys(get_fetch_routing_key() + ':*')
     for key in harvest_object_pending:
-        redis_key = redis.get(key)
-        if redis_key is None:
-            log.info('Fetch Queue: Redis cannot get key {}'.format(key))
+        redis_value = redis.get(key)
+        if redis_value is None:
+            log.info('Fetch Queue: Redis cannot get value for key {}'.format(key))
             continue
         date_of_key = datetime.datetime.strptime(
-            redis_key, "%Y-%m-%d %H:%M:%S.%f")
+            redis_value, "%Y-%m-%d %H:%M:%S.%f")
+        log.debug('[Fetch queue]: Check key {} with value {}'.format(key, date_of_key))
         # 3 minutes for fetch and import max
         if (datetime.datetime.now() - date_of_key).seconds > 180:
+            log.debug('[Fetch queue]: Re-new harvest object with KEY {} in redis'.format(key))
             redis.rpush(get_fetch_routing_key(),
                         json.dumps({'harvest_object_id': key.split(':')[-1]})
                         )
@@ -148,14 +150,16 @@ def resubmit_jobs():
     # gather queue
     harvest_jobs_pending = redis.keys(get_gather_routing_key() + ':*')
     for key in harvest_jobs_pending:
-        redis_key = redis.get(key)
-        if redis_key is None:
-            log.info('Gather Queue: Redis cannot get key {}'.format(key))
+        redis_value = redis.get(key)
+        if redis_value is None:
+            log.info('Gather Queue: Redis cannot get value for key {}'.format(key))
             continue
         date_of_key = datetime.datetime.strptime(
-            redis_key, "%Y-%m-%d %H:%M:%S.%f")
+            redis_value, "%Y-%m-%d %H:%M:%S.%f")
+        log.debug('[Gather queue]: Check key {} with value {}'.format(key, date_of_key))
         # 3 hours for a gather
         if (datetime.datetime.now() - date_of_key).seconds > 7200:
+            log.debug('[Gather queue]: Re-new harvest job with KEY {} in redis'.format(key))
             redis.rpush(get_gather_routing_key(),
                         json.dumps({'harvest_job_id': key.split(':')[-1]})
                         )
@@ -185,6 +189,8 @@ def resubmit_objects():
         if object_id not in objects_in_queue:
             log.debug('Re-sent object {} to the fetch queue'.format(object_id))
             publisher.send({'harvest_object_id': object_id})
+
+    publisher.close()
 
 
 class Publisher(object):

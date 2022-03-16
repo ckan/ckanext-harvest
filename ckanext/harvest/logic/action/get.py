@@ -113,7 +113,9 @@ def harvest_source_show_status(context, data_dict):
         .filter(
         harvest_model.HarvestObject.current == True  # noqa: E712
     ).filter(model.Package.state == u'active') \
-        .filter(model.Package.private == False)
+        .filter(
+        model.Package.private == False  # noqa: E712
+    )
     out['total_datasets'] = packages.count()
 
     return out
