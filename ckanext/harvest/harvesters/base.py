@@ -274,11 +274,13 @@ class HarvesterBase(SingletonPlugin):
         use the output of package_show logic function (maybe keeping support
         for rest api based dicts
         '''
+        from ckanext.harvest.logic.schema import unicode_safe
+
         assert package_dict_form in ('rest', 'package_show')
         try:
             # Change default schema
             schema = default_create_package_schema()
-            schema['id'] = [ignore_missing, six.text_type]
+            schema['id'] = [ignore_missing, unicode_safe]
             schema['__junk'] = [ignore]
 
             # Check API version
