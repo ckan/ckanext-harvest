@@ -3,7 +3,6 @@
 import logging
 import re
 import uuid
-import six
 
 from sqlalchemy import exists, and_
 from sqlalchemy.sql import update, bindparam
