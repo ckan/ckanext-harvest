@@ -29,7 +29,9 @@ from ckanext.harvest.utils import (
 
 if p.toolkit.check_ckan_version(min_version='2.9.0'):
     from ckanext.harvest.plugin.flask_plugin import MixinPlugin
-else:
+elif p.toolkit.check_ckan_version(min_version='2.10.0'):
+    from ckanext.harvest.plugin.harvest_plugin_extended import MixinPlugin
+else: 
     from ckanext.harvest.plugin.pylons_plugin import MixinPlugin
 
 log = getLogger(__name__)
@@ -61,6 +63,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
     # IPackageController
 
+    # CKAN <= 2.9
     def after_create(self, context, data_dict):
         if 'type' in data_dict and data_dict['type'] == DATASET_TYPE_NAME and not self.startup:
             # Create an actual HarvestSource object
