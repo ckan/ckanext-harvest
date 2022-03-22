@@ -1,7 +1,7 @@
-'''this plugin exists because the interface methods for 
-IPackageController was renamed (e.g) after_create 
+"""this plugin exists because the interface methods for
+IPackageController was renamed (e.g) after_create
 to after_dataset_create in CKAN 2.10.0
-see more in (https://github.com/ckan/ckan/pull/6501)'''
+see more in (https://github.com/ckan/ckan/pull/6501)"""
 
 import json
 import logging
@@ -24,7 +24,6 @@ log = logging.getLogger(__name__)
 
 class MixinPlugin(p.SingletonPlugin):
     p.implements(p.IPackageController, inherit=True)
-
 
     # IPackageController
 
