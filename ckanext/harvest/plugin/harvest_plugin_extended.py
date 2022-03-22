@@ -64,12 +64,9 @@ class MixinPlugin(p.SingletonPlugin):
 
     def before_dataset_index(self, pkg_dict):
 
-        harvest_object = (
-            model.Session.query(HarvestObject)
-            .filter(HarvestObject.package_id == pkg_dict["id"])
-            .filter(HarvestObject.current == True)
-            .first()
-        )  # noqa
+        harvest_object = model.Session.query(HarvestObject) \
+            .filter(HarvestObject.package_id == pkg_dict["id"]) \
+            .filter(HarvestObject.current == True).first() # noqa
 
         if harvest_object:
 
