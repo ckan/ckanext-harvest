@@ -37,7 +37,7 @@
         <label class="radio">
           <input type="radio" name="source_type" value="{{ harvester['name'] }}" {{ "checked " if checked }} data-module="harvest-type-change">
           {{ harvester['title'] }}
-          <i class="fa fa-question-circle icon-question-sign muted" title="{{ harvester['description'] }}" data-toggle="tooltip"></i>
+          <i class="fa fa-question-circle icon-question-sign muted" title="{{ harvester['description'] }}" data-bs-toggle="tooltip" data-toggle="tooltip"></i>
         </label>
       {% endfor %}
     </div>
@@ -95,7 +95,7 @@
         {% set locale_delete = h.dump_json({'content': _('This will flag the source as deleted but keep all its datasets and previous jobs. Are you sure you want to delete this harvest source?')}) %}
         {% set locale_clear = h.dump_json({'content': _('Warning: Apart from deleting this source, this command will remove all its datasets, as well as all previous job reports. Are you sure you want to continue?')}) %}
   <div class="dropdown btn-group">
-    <a href="#" class="btn btn-danger dropdown-toggle" data-toggle="dropdown">
+    <a href="#" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" data-toggle="dropdown">
       {{ _('Delete') }}
       <span class="caret"></span>
     </a>
