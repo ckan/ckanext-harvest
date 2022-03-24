@@ -1,9 +1,0 @@
-{% ckan_extends %}
-
-{% block styles %}
-    {{ super() }}
-
-    {% set type = 'asset' if h.ckan_version().split('.')[1] | int >= 9 else 'resource' %}
-    {% include 'harvest/snippets/harvest_' ~ type ~ '.html' %}
-
-{% endblock %}
