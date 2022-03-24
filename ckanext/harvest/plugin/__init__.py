@@ -29,8 +29,6 @@ from ckanext.harvest.utils import (
 
 if p.toolkit.check_ckan_version(min_version='2.9.0'):
     from ckanext.harvest.plugin.flask_plugin import MixinPlugin
-elif p.toolkit.check_ckan_version(min_version='2.10.0'):
-    from ckanext.harvest.plugin.harvest_plugin_extended import MixinPlugin
 else:
     from ckanext.harvest.plugin.pylons_plugin import MixinPlugin
 
