@@ -244,10 +244,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
             log.warn('Old genshi templates not supported any more by '
                      'ckanext-harvest so you should set ckan.legacy_templates '
                      'option to True any more.')
-
-        templates_base = config.get('ckan.base_templates_folder', 'templates')
-
-        p.toolkit.add_template_directory(config, '../{}'.format(templates_base))
+        p.toolkit.add_template_directory(config, '../templates')
         p.toolkit.add_public_directory(config, '../public')
         p.toolkit.add_resource('../fanstatic_library', 'ckanext-harvest')
         p.toolkit.add_resource('../public/ckanext/harvest/javascript', 'harvest-extra-field')
