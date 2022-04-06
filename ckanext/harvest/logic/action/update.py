@@ -17,12 +17,6 @@ from ckan.logic import get_action
 from ckanext.harvest.interfaces import IHarvester
 from ckan.lib.search.common import SearchIndexError, make_connection
 
-# Use render_jinja2 when work with CKAN core <= 2.9.4
-try:
-    from ckan.lib.base import render_jinja2 as render
-except ImportError:
-    from ckan.lib.base import render
-
 from ckan.model import Package
 from ckan import logic
 
@@ -43,6 +37,11 @@ from ckanext.harvest.logic.action.get import (
 
 import ckan.lib.mailer as mailer
 from itertools import islice
+
+if toolkit.check_ckan_version(min_version='2.9.0'):
+    from ckan.plugins.toolkit import render
+else:
+    from ckan.lib.base import render_jinja2 as render
 
 log = logging.getLogger(__name__)
 
