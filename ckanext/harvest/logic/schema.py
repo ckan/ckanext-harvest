@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import ckan.plugins as p
-import ckan.lib.helpers as h
 import ckan.plugins.toolkit as tk
 
 from ckan.logic.schema import default_extras_schema
