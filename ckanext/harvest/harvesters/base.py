@@ -3,7 +3,6 @@
 import logging
 import re
 import uuid
-import six
 
 from sqlalchemy import exists, and_
 from sqlalchemy.sql import update, bindparam
@@ -24,6 +23,7 @@ from ckanext.harvest.model import (HarvestObject, HarvestGatherError,
 
 from ckan.plugins.core import SingletonPlugin, implements
 from ckanext.harvest.interfaces import IHarvester
+from ckanext.harvest.logic.schema import unicode_safe
 
 if p.toolkit.check_ckan_version(min_version='2.3'):
     from ckan.lib.munge import munge_tag
@@ -278,7 +278,7 @@ class HarvesterBase(SingletonPlugin):
         try:
             # Change default schema
             schema = default_create_package_schema()
-            schema['id'] = [ignore_missing, six.text_type]
+            schema['id'] = [ignore_missing, unicode_safe]
             schema['__junk'] = [ignore]
 
             # Check API version
