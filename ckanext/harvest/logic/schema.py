@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import ckan.plugins as p
-import six
 import ckan.lib.helpers as h
 import ckan.plugins.toolkit as tk
 
