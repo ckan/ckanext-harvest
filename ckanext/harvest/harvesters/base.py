@@ -23,6 +23,7 @@ from ckanext.harvest.model import (HarvestObject, HarvestGatherError,
 
 from ckan.plugins.core import SingletonPlugin, implements
 from ckanext.harvest.interfaces import IHarvester
+from ckanext.harvest.logic.schema import unicode_safe
 
 if p.toolkit.check_ckan_version(min_version='2.3'):
     from ckan.lib.munge import munge_tag
@@ -273,8 +274,6 @@ class HarvesterBase(SingletonPlugin):
         use the output of package_show logic function (maybe keeping support
         for rest api based dicts
         '''
-        from ckanext.harvest.logic.schema import unicode_safe
-
         assert package_dict_form in ('rest', 'package_show')
         try:
             # Change default schema
