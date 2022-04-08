@@ -12,6 +12,7 @@ from ckan.logic.validators import (package_id_exists,
                                    boolean_validator,
                                    )
 from ckan.logic.converters import convert_to_extras, convert_from_extras
+from ckantoolkit import unicode_safe
 
 from ckanext.harvest.logic.validators import (
     harvest_source_url_validator,
@@ -29,16 +30,6 @@ ignore_missing = tk.get_validator("ignore_missing")
 not_empty = tk.get_validator("not_empty")
 ignore = tk.get_validator("ignore")
 if_empty_same_as = tk.get_validator("if_empty_same_as")
-
-ckan_version = int(h.ckan_version().split(".")[1])
-
-
-def unicode_safe(value):
-    if ckan_version >= 9:
-        from ckan.lib.navl.validators import unicode_safe as core_unicode_safe
-        return core_unicode_safe(value)
-    else:
-        return six.text_type(value)
 
 
 def harvest_source_schema():

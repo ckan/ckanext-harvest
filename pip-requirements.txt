@@ -1,4 +1,4 @@
-ckantoolkit==0.0.3
+ckantoolkit==0.0.6
 pika>=1.1.0
 pyOpenSSL==18.0.0
 redis
