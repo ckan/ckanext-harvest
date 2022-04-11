@@ -58,7 +58,14 @@
 {% endblock %}
 
 {% block page_header_tabs %}
-  {{ h.build_nav_icon('{0}_admin'.format(c.dataset_type), _('Dashboard'), id=harvest_source.name, icon='dashboard') }}
-  {{ h.build_nav_icon('harvest_job_list'.format(c.dataset_type), _('Jobs'), source=harvest_source.name, icon='reorder') }}
-  {{ h.build_nav_icon('{0}_edit'.format(c.dataset_type), _('Edit'), id=harvest_source.name, icon='edit') }}
+  {% set ckan_version = h.ckan_version().split('.')[1] %}
+  {% if ckan_version | int >= 9 %}
+    {{ h.build_nav_icon('harvester.admin', _('Dashboard'), id=harvest_source.name, icon='dashboard') }}
+    {{ h.build_nav_icon('harvester.job_list', _('Jobs'), source=harvest_source.name, icon='reorder') }}
+    {{ h.build_nav_icon(c.dataset_type ~ '.edit', _('Edit'), id=harvest_source.name, icon='edit') }}
+  {% else %}
+    {{ h.build_nav_icon('{0}_admin'.format(c.dataset_type), _('Dashboard'), id=harvest_source.name, icon='dashboard') }}
+    {{ h.build_nav_icon('{0}_job_list'.format(c.dataset_type), _('Jobs'), source=harvest_source.name, icon='reorder') }}
+    {{ h.build_nav_icon('{0}_edit'.format(c.dataset_type), _('Edit'), id=harvest_source.name, icon='edit') }}
+  {% endif %}
 {% endblock %}

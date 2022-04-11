@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-
-import six
 import ckan.plugins as p
+import ckan.plugins.toolkit as tk
 
 from ckan.logic.schema import default_extras_schema
 from ckan.logic.validators import (package_id_exists,
@@ -11,40 +10,40 @@ from ckan.logic.validators import (package_id_exists,
                                    boolean_validator,
                                    )
 from ckan.logic.converters import convert_to_extras, convert_from_extras
+from ckantoolkit import unicode_safe
 
-from ckan.lib.navl.validators import (ignore_missing,
-                                      not_empty,
-                                      ignore,
-                                      if_empty_same_as,
-                                      )
-
-from ckanext.harvest.logic.validators import (harvest_source_url_validator,
-                                              harvest_source_type_exists,
-                                              harvest_source_config_validator,
-                                              harvest_source_extra_validator,
-                                              harvest_source_frequency_exists,
-                                              dataset_type_exists,
-                                              harvest_source_convert_from_config,
-                                              harvest_source_id_exists,
-                                              harvest_job_exists,
-                                              harvest_object_extras_validator,
-                                              )
+from ckanext.harvest.logic.validators import (
+    harvest_source_url_validator,
+    harvest_source_type_exists,
+    harvest_source_config_validator,
+    harvest_source_extra_validator,
+    harvest_source_frequency_exists,
+    dataset_type_exists,
+    harvest_source_convert_from_config,
+    harvest_source_id_exists,
+    harvest_job_exists,
+    harvest_object_extras_validator,
+)
+ignore_missing = tk.get_validator("ignore_missing")
+not_empty = tk.get_validator("not_empty")
+ignore = tk.get_validator("ignore")
+if_empty_same_as = tk.get_validator("if_empty_same_as")
 
 
 def harvest_source_schema():
 
     schema = {
-        'id': [ignore_missing, six.text_type, package_id_exists],
-        'type': [dataset_type_exists, six.text_type],
-        'url': [not_empty, six.text_type, harvest_source_url_validator],
-        'name': [not_empty, six.text_type, name_validator, package_name_validator],
-        'source_type': [not_empty, six.text_type, harvest_source_type_exists, convert_to_extras],
-        'title': [if_empty_same_as("name"), six.text_type],
-        'notes': [ignore_missing, six.text_type],
-        'owner_org': [owner_org_validator, six.text_type],
+        'id': [ignore_missing, unicode_safe, package_id_exists],
+        'type': [dataset_type_exists, unicode_safe],
+        'url': [not_empty, unicode_safe, harvest_source_url_validator],
+        'name': [not_empty, unicode_safe, name_validator, package_name_validator],
+        'source_type': [not_empty, unicode_safe, harvest_source_type_exists, convert_to_extras],
+        'title': [if_empty_same_as("name"), unicode_safe],
+        'notes': [ignore_missing, unicode_safe],
+        'owner_org': [owner_org_validator, unicode_safe],
         'private': [ignore_missing, boolean_validator],
         'organization': [ignore_missing],
-        'frequency': [ignore_missing, six.text_type, harvest_source_frequency_exists, convert_to_extras],
+        'frequency': [ignore_missing, unicode_safe, harvest_source_frequency_exists, convert_to_extras],
         'state': [ignore_missing],
         'config': [ignore_missing, harvest_source_config_validator, convert_to_extras],
         'extras': default_extras_schema(),
@@ -75,8 +74,7 @@ def harvest_source_create_package_schema():
 def harvest_source_update_package_schema():
 
     schema = harvest_source_create_package_schema()
-    schema['owner_org'] = [ignore_missing, owner_org_validator, six.text_type]
-
+    schema['owner_org'] = [ignore_missing, owner_org_validator, unicode_safe]
     return schema
 
 
@@ -105,9 +103,9 @@ def harvest_source_show_package_schema():
 
 def harvest_object_create_schema():
     schema = {
-        'guid': [ignore_missing, six.text_type],
-        'content': [ignore_missing, six.text_type],
-        'state': [ignore_missing, six.text_type],
+        'guid': [ignore_missing, unicode_safe],
+        'content': [ignore_missing, unicode_safe],
+        'state': [ignore_missing, unicode_safe],
         'job_id': [harvest_job_exists],
         'source_id': [ignore_missing, harvest_source_id_exists],
         'package_id': [ignore_missing, package_id_exists],

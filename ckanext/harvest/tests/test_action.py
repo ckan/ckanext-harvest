@@ -81,7 +81,7 @@ class HarvestSourceActionBase():
         with pytest.raises(ValidationError) as e:
             helpers.call_action(self.action, **source_dict)
 
-        for key in ('name', 'title', 'url', 'source_type'):
+        for key in ('name', 'url', 'source_type'):
             assert e.value.error_dict[key] == [u'Missing value']
 
     def test_invalid_unknown_type(self):
@@ -180,7 +180,6 @@ class TestHarvestSourceActionUpdate(HarvestSourceFixtureMixin,
             "frequency": "MONTHLY",
             "config": json.dumps({"custom_option": ["c", "d"]})
         })
-
         result = helpers.call_action(
             'harvest_source_update', **source_dict)
 
