@@ -169,6 +169,12 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
             pkg_dict["data_dict"] = json.dumps(data_dict)
             pkg_dict["validated_data_dict"] = json.dumps(validated_data_dict)
 
+        if isinstance(pkg_dict.get('status'), dict):
+            try:
+                pkg_dict['status'] = json.dumps(pkg_dict['status'])
+            except ValueError:
+                pkg_dict.pop('status', None)
+
         return pkg_dict
 
     def after_dataset_show(self, context, data_dict):
