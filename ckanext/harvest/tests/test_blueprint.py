@@ -63,9 +63,12 @@ class TestBlueprint():
         source_obj = harvest_factories.HarvestSourceObj()
         job = harvest_factories.HarvestJob(source=source_obj)
 
+        sysadmin = factories.Sysadmin()
+        env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
+
         url = url_for('harvest_admin', id=source_obj.id)
 
-        response = app.get(url, extra_environ=self.extra_environ)
+        response = app.get(url, extra_environ=env)
 
         _assert_in_body(source_obj.title, response)
 
@@ -85,9 +88,12 @@ class TestBlueprint():
 
         job = harvest_factories.HarvestJob()
 
+        sysadmin = factories.Sysadmin()
+        env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
+
         url = url_for('harvest_job_list', source=job['source_id'])
 
-        response = app.get(url, extra_environ=self.extra_environ)
+        response = app.get(url, extra_environ=env)
 
         _assert_in_body(job['id'], response)
 
@@ -95,9 +101,12 @@ class TestBlueprint():
 
         job = harvest_factories.HarvestJob()
 
+        sysadmin = factories.Sysadmin()
+        env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
+
         url = url_for('harvest_job_show_last', source=job['source_id'])
 
-        response = app.get(url, extra_environ=self.extra_environ)
+        response = app.get(url, extra_environ=env)
 
         _assert_in_body(job['id'], response)
 
