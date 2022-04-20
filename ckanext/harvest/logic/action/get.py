@@ -454,7 +454,7 @@ def harvest_get_notifications_recipients(context, data_dict):
             member_details = p.toolkit.get_action(
                 'user_show')(context, {'id': member[0]})
 
-            if member_details['email']:
+            if member_details.get('email', None):
                 recipients.append({
                     'name': member_details['name'],
                     'email': member_details['email']
