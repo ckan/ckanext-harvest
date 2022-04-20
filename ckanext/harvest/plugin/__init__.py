@@ -4,7 +4,7 @@ import os
 import json
 from logging import getLogger
 
-from six import string_types, text_type
+from six import string_types
 from collections import OrderedDict
 
 from ckan import logic
@@ -169,6 +169,12 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
             pkg_dict["data_dict"] = json.dumps(data_dict)
             pkg_dict["validated_data_dict"] = json.dumps(validated_data_dict)
 
+        if isinstance(pkg_dict.get('status'), dict):
+            try:
+                pkg_dict['status'] = json.dumps(pkg_dict['status'])
+            except ValueError:
+                pkg_dict.pop('status', None)
+
         return pkg_dict
 
     def after_dataset_show(self, context, data_dict):
@@ -226,11 +232,10 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
         Returns the schema for mapping package data from a form to a format
         suitable for the database.
         '''
-        from ckanext.harvest.logic.schema import harvest_source_create_package_schema
+        from ckanext.harvest.logic.schema import harvest_source_create_package_schema, unicode_safe
         schema = harvest_source_create_package_schema()
         if self.startup:
-            schema['id'] = [text_type]
-
+            schema['id'] = [unicode_safe]
         return schema
 
     def update_package_schema(self):
