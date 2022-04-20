@@ -12,6 +12,24 @@ Unreleased_
 ***********
 
 ***********
+1.4.0_ - 2022-04-20
+***********
+
+Changed
+-------
+
+- Add ckan.harvest.not_overwrite_fields #472
+- Support for Bootstrap 5 templates #490
+- Support for CKAN 2.10 #492 #496
+
+Fixed
+-----
+
+- Fix JSONDecode error #489
+- Check if email exists before sending notification #498
+
+
+***********
 1.3.4_ - 2022-01-24
 ***********
 
