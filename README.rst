@@ -729,7 +729,7 @@ python environment activated):
 
 ON CKAN >= 2.9::
 
-      (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester gather_consumer
+      (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester gather-consumer
 
 ON CKAN <= 2.8::
 
@@ -739,7 +739,7 @@ On another terminal, run the following command:
 
 ON CKAN >= 2.9::
 
-      (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester fetch_consumer
+      (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester fetch-consumer
 
 ON CKAN <= 2.8::
 
@@ -773,7 +773,7 @@ the harvest source:
 
 ON CKAN >= 2.9::
 
-      (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester job_abort {source-id/name}
+      (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester job-abort {source-id/name}
 
 ON CKAN <= 2.8::
 
@@ -828,7 +828,7 @@ following steps with the one you are using.
 
         [program:ckan_gather_consumer]
 
-        command=/usr/lib/ckan/default/bin/ckan --config=/etc/ckan/default/ckan.ini harvester gather_consumer
+        command=/usr/lib/ckan/default/bin/ckan --config=/etc/ckan/default/ckan.ini harvester gather-consumer
 
         ; user that owns virtual environment.
         user=ckan
@@ -842,7 +842,7 @@ following steps with the one you are using.
 
         [program:ckan_fetch_consumer]
 
-        command=/usr/lib/ckan/default/bin/ckan --config=/etc/ckan/default/ckan.ini harvester fetch_consumer
+        command=/usr/lib/ckan/default/bin/ckan --config=/etc/ckan/default/ckan.ini harvester fetch-consumer
 
         ; user that owns virtual environment.
         user=ckan
@@ -976,7 +976,7 @@ following steps with the one you are using.
    ON CKAN >= 2.9::
 
     # m  h  dom mon dow   command
-      0  5  *   *   *     /usr/lib/ckan/default/bin/ckan -c /etc/ckan/default/ckan.ini harvester clean_harvest_log
+      0  5  *   *   *     /usr/lib/ckan/default/bin/ckan -c /etc/ckan/default/ckan.ini harvester clean-harvest-log
 
    ON CKAN <= 2.8::
 
