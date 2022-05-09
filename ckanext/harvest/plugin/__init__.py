@@ -302,6 +302,12 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
             })
             # https://github.com/ckan/ckan/pull/4521
             config['ckan.legacy_route_mappings'] = json.dumps(mappings)
+            p.toolkit.add_ckan_admin_tab(
+            p.toolkit.config,
+            'harvest.search',
+            'Harvesters',
+            config_var='ckan.admin_tabs'
+        )
 
     # IActions
 
