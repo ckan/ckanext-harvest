@@ -307,7 +307,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
                 'harvest.search',
                 p.toolkit._('Harvesters'),
                 config_var='ckan.admin_tabs'
-        )
+            )
 
     # IActions
 
