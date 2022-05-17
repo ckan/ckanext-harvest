@@ -313,15 +313,13 @@ def harvest_abort_failed_jobs(context, data_dict):
 
 def harvest_sources_job_history_clear(context, data_dict):
     '''
-    Clears the history for all active harvest sources. All jobs and objects related to a harvest source will
-    be cleared, but keeps the source itself.
+    Clears the history for all active harvest sources. All jobs and objects related to completed harvests will
+    be cleared, but keeps the source itself and the most recently harvested objects.
     This is useful to clean history of long running harvest sources to start again fresh.
     The datasets imported from the harvest source will NOT be deleted!!!
 
     '''
     check_access('harvest_sources_clear', context, data_dict)
-
-    keep_current = data_dict.get('keep_current', False)
 
     job_history_clear_results = []
     # We assume that the maximum of 1000 (hard limit) rows should be enough
@@ -331,7 +329,7 @@ def harvest_sources_job_history_clear(context, data_dict):
         for data_dict in harvest_packages:
             try:
                 clear_result = get_action('harvest_source_job_history_clear')(
-                    context, {'id': data_dict['id'], 'keep_current': keep_current})
+                    context, {'id': data_dict['id']})
                 job_history_clear_results.append(clear_result)
             except NotFound:
                 # Ignoring not existent harvest sources because of a possibly corrupt search index
@@ -343,7 +341,7 @@ def harvest_sources_job_history_clear(context, data_dict):
 
 def harvest_source_job_history_clear(context, data_dict):
     '''
-    Clears all jobs and objects related to a harvest source, but keeps the source itself.
+    Clears all jobs and objects related to a harvest source's completed jobs.
     This is useful to clean history of long running harvest sources to start again fresh.
     The datasets imported from the harvest source will NOT be deleted!!!
 
@@ -354,7 +352,6 @@ def harvest_source_job_history_clear(context, data_dict):
     check_access('harvest_source_clear', context, data_dict)
 
     harvest_source_id = data_dict.get('id', None)
-    keep_current = data_dict.get('keep_current', False)
 
     source = HarvestSource.get(harvest_source_id)
     if not source:
@@ -365,49 +362,26 @@ def harvest_source_job_history_clear(context, data_dict):
 
     model = context['model']
 
-    if keep_current:
-        sql = '''BEGIN;
+    sql = '''BEGIN;
         DELETE FROM harvest_object_error WHERE harvest_object_id
          IN (SELECT id FROM harvest_object AS obj WHERE harvest_source_id = '{harvest_source_id}'
              AND current != true
              AND (NOT EXISTS (SELECT id FROM harvest_job WHERE id = obj.harvest_job_id
-                              AND status = 'Running'))
-             AND (NOT EXISTS (SELECT id FROM harvest_object WHERE harvest_job_id = obj.harvest_job_id
-                              AND current = true))
-             );
+                              AND status = 'Running')));
         DELETE FROM harvest_object_extra WHERE harvest_object_id
          IN (SELECT id FROM harvest_object AS obj WHERE harvest_source_id = '{harvest_source_id}'
              AND current != true
              AND (NOT EXISTS (SELECT id FROM harvest_job WHERE id = obj.harvest_job_id
-                              AND status = 'Running'))
-             AND (NOT EXISTS (SELECT id FROM harvest_object WHERE harvest_job_id = obj.harvest_job_id
-                              AND current = true))
-            );
+                              AND status = 'Running')));
         DELETE FROM harvest_object AS obj WHERE harvest_source_id = '{harvest_source_id}'
          AND current != true
          AND (NOT EXISTS (SELECT id FROM harvest_job WHERE id = obj.harvest_job_id
-                          AND status = 'Running'))
-         AND (NOT EXISTS (SELECT id FROM harvest_object WHERE harvest_job_id = obj.harvest_job_id
-                          AND current = true));
+                          AND status = 'Running'));
         DELETE FROM harvest_gather_error WHERE harvest_job_id
          IN (SELECT id FROM harvest_job AS job WHERE source_id = '{harvest_source_id}'
-             AND job.status != 'Running'
-             AND NOT EXISTS (SELECT id FROM harvest_object WHERE harvest_job_id = job.id));
+             AND job.status != 'Running');
         DELETE FROM harvest_job AS job WHERE source_id = '{harvest_source_id}'
-         AND job.status != 'Running'
-         AND NOT EXISTS (SELECT id FROM harvest_object WHERE harvest_job_id = job.id);
-        COMMIT;
-        '''.format(harvest_source_id=harvest_source_id)
-    else:
-        sql = '''BEGIN;
-        DELETE FROM harvest_object_error WHERE harvest_object_id
-         IN (SELECT id FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}');
-        DELETE FROM harvest_object_extra WHERE harvest_object_id
-         IN (SELECT id FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}');
-        DELETE FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}';
-        DELETE FROM harvest_gather_error WHERE harvest_job_id
-         IN (SELECT id FROM harvest_job WHERE source_id = '{harvest_source_id}');
-        DELETE FROM harvest_job WHERE source_id = '{harvest_source_id}';
+         AND job.status != 'Running';
         COMMIT;
         '''.format(harvest_source_id=harvest_source_id)
 
