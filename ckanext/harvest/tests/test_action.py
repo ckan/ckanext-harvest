@@ -353,7 +353,7 @@ class TestActions():
         context = {'model': model, 'session': model.Session,
                    'ignore_auth': True, 'user': ''}
         result = get_action('harvest_sources_job_history_clear')(
-            context)
+            context, {})
 
         # verify
         assert sorted(result, key=lambda item: item['id']) == sorted(
