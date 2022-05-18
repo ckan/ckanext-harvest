@@ -113,7 +113,7 @@ def clear_history(ctx, id):
     """If no source id is given the history for all harvest sources
     (maximum is 1000) will be cleared.
 
-    Clears all jobs and current objects related to a harvest source, but keeps
+    Clears all jobs and out-of-date objects related to a harvest source, but keeps
     the source itself and a history of what has been harvested already.
     The datasets imported from the harvest source will NOT be deleted!!!
 
