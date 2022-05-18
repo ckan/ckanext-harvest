@@ -491,12 +491,12 @@ class TestActions():
         result = get_action('harvest_source_job_history_clear')(
             context, {'id': source.id})
 
-        # verify that second job still exists but first one does not
+        # verify that second job still exists but first one and its objects do not
         assert result == {'id': source.id}
         assert harvest_model.HarvestSource.get(source.id)
         assert not harvest_model.HarvestJob.get(job1.id)
-        assert harvest_model.HarvestObject.get(object_1_.id)
-        assert harvest_model.HarvestObject.get(object_2_.id)
+        assert not harvest_model.HarvestObject.get(object_1_.id)
+        assert not harvest_model.HarvestObject.get(object_2_.id)
         dataset_from_db = model.Package.get(dataset1['id'])
         assert dataset_from_db
         assert dataset_from_db.id == dataset1['id']
