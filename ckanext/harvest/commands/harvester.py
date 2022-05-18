@@ -190,14 +190,6 @@ class Harvester(CkanCommand):
             will be aborted. You can use comma as a separator to provide multiple source_id's""",
         )
 
-        self.parser.add_option(
-            "-k",
-            "--keep-current",
-            dest="keep_current",
-            default=False,
-            help="Do not delete relevant harvest objects",
-        )
-
     def command(self):
         self._load_config()
 
@@ -324,12 +316,11 @@ class Harvester(CkanCommand):
         print(result)
 
     def clear_harvest_source_history(self):
-        keep_current = bool(self.options.keep_current)
         source_id = None
         if len(self.args) >= 2:
             source_id = unicode_safe(self.args[1])
 
-        print(utils.clear_harvest_source_history(source_id, keep_current))
+        print(utils.clear_harvest_source_history(source_id))
 
     def show_harvest_source(self):
 

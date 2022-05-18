@@ -327,7 +327,7 @@ class TestActions():
         assert dataset_from_db_2
         assert dataset_from_db_2.id == dataset_2['id']
 
-    def test_harvest_sources_job_history_clear_keep_current(self):
+    def test_harvest_sources_job_history_clear(self):
         # prepare
         data_dict = SOURCE_DICT.copy()
         source_1 = factories.HarvestSourceObj(**data_dict)
@@ -372,7 +372,7 @@ class TestActions():
         assert not harvest_model.HarvestJob.get(job_2.id)
         assert not harvest_model.HarvestObject.get(object_2_.id)
 
-    def test_harvest_source_job_history_clear_keep_current(self):
+    def test_harvest_source_job_history_clear(self):
         # prepare
         source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
         job = factories.HarvestJobObj(source=source)
