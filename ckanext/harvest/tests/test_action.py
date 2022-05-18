@@ -415,7 +415,7 @@ class TestActions():
         assert dataset_from_db_2
         assert dataset_from_db_2.id == dataset2['id']
 
-    def test_harvest_source_job_history_clear_keep_current_finished_jobs(self):
+    def test_harvest_source_job_history_clear_deletes_current_finished_jobs(self):
         # prepare
         source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
         job = factories.HarvestJobObj(source=source)
@@ -449,8 +449,9 @@ class TestActions():
         dataset_from_db = model.Package.get(dataset['id'])
         assert dataset_from_db
         assert dataset_from_db.id == dataset['id']
-        # job2 and related objects are untouched
-        assert harvest_model.HarvestJob.get(job2.id)
+
+        # job2 is deleted, but harvest objects are kept
+        assert harvest_model.HarvestJob is None
         assert harvest_model.HarvestObject.get(object_2_.id)
         dataset_from_db_2 = model.Package.get(dataset2['id'])
         assert dataset_from_db_2
