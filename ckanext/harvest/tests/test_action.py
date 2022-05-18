@@ -353,15 +353,15 @@ class TestActions():
         context = {'model': model, 'session': model.Session,
                    'ignore_auth': True, 'user': ''}
         result = get_action('harvest_sources_job_history_clear')(
-            context, {'keep_current': True})
+            context)
 
         # verify
         assert sorted(result, key=lambda item: item['id']) == sorted(
             [{'id': source_1.id}, {'id': source_2.id}], key=lambda item: item['id'])
 
-        # dataset, related source, object and job still persist!
+        # dataset, related source, object still persist, job is deleted!
         assert harvest_model.HarvestSource.get(source_1.id)
-        assert harvest_model.HarvestJob.get(job_1.id)
+        assert harvest_model.HarvestJob is None
         assert harvest_model.HarvestObject.get(object_1_.id)
         dataset_from_db_1 = model.Package.get(dataset_1['id'])
         assert dataset_from_db_1
@@ -402,7 +402,7 @@ class TestActions():
         # verify
         assert result == {'id': source.id}
         assert harvest_model.HarvestSource.get(source.id)
-        assert harvest_model.HarvestJob.get(job.id)
+        assert harvest_model.HarvestJob is None
         assert harvest_model.HarvestObject.get(object_.id)
         dataset_from_db = model.Package.get(dataset['id'])
         assert dataset_from_db
