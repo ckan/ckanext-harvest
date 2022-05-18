@@ -361,7 +361,7 @@ class TestActions():
 
         # dataset, related source, object still persist, job is deleted!
         assert harvest_model.HarvestSource.get(source_1.id)
-        assert harvest_model.HarvestJob is None
+        assert not harvest_model.HarvestJob.get(job_1.id)
         assert harvest_model.HarvestObject.get(object_1_.id)
         dataset_from_db_1 = model.Package.get(dataset_1['id'])
         assert dataset_from_db_1
@@ -397,12 +397,12 @@ class TestActions():
         context = {'model': model, 'session': model.Session,
                    'ignore_auth': True, 'user': ''}
         result = get_action('harvest_source_job_history_clear')(
-            context, {'id': source.id, 'keep_current': True})
+            context, {'id': source.id})
 
         # verify
         assert result == {'id': source.id}
         assert harvest_model.HarvestSource.get(source.id)
-        assert harvest_model.HarvestJob is None
+        assert not harvest_model.HarvestJob.get(job.id)
         assert harvest_model.HarvestObject.get(object_.id)
         dataset_from_db = model.Package.get(dataset['id'])
         assert dataset_from_db
@@ -439,7 +439,7 @@ class TestActions():
         context = {'model': model, 'session': model.Session,
                    'ignore_auth': True, 'user': ''}
         result = get_action('harvest_source_job_history_clear')(
-            context, {'id': source.id, 'keep_current': True})
+            context, {'id': source.id})
 
         # verify
         assert result == {'id': source.id}
@@ -451,7 +451,7 @@ class TestActions():
         assert dataset_from_db.id == dataset['id']
 
         # job2 is deleted, but harvest objects are kept
-        assert harvest_model.HarvestJob is None
+        assert not harvest_model.HarvestJob.get(job2.id)
         assert harvest_model.HarvestObject.get(object_2_.id)
         dataset_from_db_2 = model.Package.get(dataset2['id'])
         assert dataset_from_db_2
@@ -489,12 +489,12 @@ class TestActions():
         context = {'model': model, 'session': model.Session,
                    'ignore_auth': True, 'user': ''}
         result = get_action('harvest_source_job_history_clear')(
-            context, {'id': source.id, 'keep_current': True})
+            context, {'id': source.id})
 
         # verify that second job still exists but first one does not
         assert result == {'id': source.id}
         assert harvest_model.HarvestSource.get(source.id)
-        assert harvest_model.HarvestJob is None
+        assert not harvest_model.HarvestJob.get(job.id)
         assert harvest_model.HarvestObject.get(object_1_.id)
         assert harvest_model.HarvestObject.get(object_2_.id)
         dataset_from_db = model.Package.get(dataset1['id'])
