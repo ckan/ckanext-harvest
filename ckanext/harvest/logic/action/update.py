@@ -313,8 +313,8 @@ def harvest_abort_failed_jobs(context, data_dict):
 
 def harvest_sources_job_history_clear(context, data_dict):
     '''
-    Clears the history for all active harvest sources. All jobs and objects related to completed harvests will
-    be cleared, but keeps the source itself and the most recently harvested objects.
+    Clears the history for all active harvest sources. All jobs and artifacts related to completed harvests will
+    be cleared, but keeps the source itself and the most current, recently harvested datasets.
     This is useful to clean history of long running harvest sources to start again fresh.
     The datasets imported from the harvest source will NOT be deleted!!!
 
