@@ -450,9 +450,13 @@ def harvest_get_notifications_recipients(context, data_dict):
             'capacity': 'admin'
         })
 
+        # Get access to email address by running action as admin user
+        context['user'] = 'admin'
         for member in members:
-            member_details = p.toolkit.get_action(
-                'user_show')(context, {'id': member[0]})
+            member_details = p.toolkit.get_action('user_show')(context, {
+                   'id': member[0],
+                   'include_plugin_extras': True
+            })
 
             if member_details.get('email', None):
                 recipients.append({
