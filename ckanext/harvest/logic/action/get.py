@@ -436,11 +436,14 @@ def harvest_get_notifications_recipients(context, data_dict):
         model.User.sysadmin == True  # noqa: E712
     ).all()
 
+    # Send mail to all sysadmins with a non-empty email address
     for sysadmin in sysadmins:
-        recipients.append({
-            'name': sysadmin.name,
-            'email': sysadmin.email
-        })
+        email_address = sysadmin.email
+        if email_address and email_address.strip():
+            recipients.append({
+                'name': sysadmin.name,
+                'email': sysadmin.email
+            })
 
     # gather organization-admins
     if source.get('organization'):
