@@ -461,10 +461,11 @@ def harvest_get_notifications_recipients(context, data_dict):
                    'include_plugin_extras': True
             })
 
-            if member_details.get('email', None):
+            email_address = member_details.get('email', None)
+            if email_address and email_address.strip():
                 recipients.append({
                     'name': member_details['name'],
-                    'email': member_details['email']
+                    'email': email_address
                 })
 
     return recipients
