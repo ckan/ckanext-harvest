@@ -49,7 +49,7 @@ running a version lower than 2.0.
 4. Install the python modules required by the extension (adjusting the path according to where ckanext-harvest was installed in the previous step)::
 
      (pyenv) $ cd /usr/lib/ckan/default/src/ckanext-harvest/
-     (pyenv) $ pip install -r pip-requirements.txt
+     (pyenv) $ pip install -r requirements.txt
 
 5. Make sure the CKAN configuration ini file contains the harvest main plugin, as
    well as the harvester for CKAN instances if you need it (included with the extension)::

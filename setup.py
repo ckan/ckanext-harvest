@@ -19,7 +19,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-            # dependencies are specified in pip-requirements.txt
+            # dependencies are specified in requirements.txt
             # instead of here
     ],
     tests_require=[
