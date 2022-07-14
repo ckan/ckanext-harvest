@@ -16,10 +16,6 @@ def _assert_in_body(string, response):
 @pytest.mark.usefixtures('clean_db', 'clean_index', 'harvest_setup')
 class TestBlueprint():
 
-    def setup(self):
-        sysadmin = factories.Sysadmin()
-        self.extra_environ = {'REMOTE_USER': sysadmin['name'].encode('ascii')}
-
     def test_index_page_is_rendered(self, app):
 
         source1 = harvest_factories.HarvestSource()
@@ -33,8 +29,10 @@ class TestBlueprint():
     def test_new_form_is_rendered(self, app):
 
         url = url_for('harvest_new')
+        sysadmin = factories.Sysadmin()
+        env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
 
-        response = app.get(url, extra_environ=self.extra_environ)
+        response = app.get(url, extra_environ=env)
 
         _assert_in_body('<form id="source-new"', response)
 
@@ -43,8 +41,10 @@ class TestBlueprint():
         source = harvest_factories.HarvestSource()
 
         url = url_for('harvest_edit', id=source['id'])
+        sysadmin = factories.Sysadmin()
+        env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
 
-        response = app.get(url, extra_environ=self.extra_environ)
+        response = app.get(url, extra_environ=env)
 
         _assert_in_body('<form id="source-new"', response)
 
@@ -53,8 +53,10 @@ class TestBlueprint():
         source = harvest_factories.HarvestSource()
 
         url = url_for('harvest_read', id=source['name'])
+        sysadmin = factories.Sysadmin()
+        env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
 
-        response = app.get(url, extra_environ=self.extra_environ)
+        response = app.get(url, extra_environ=env)
 
         _assert_in_body(source['name'], response)
 
@@ -79,8 +81,10 @@ class TestBlueprint():
         source = harvest_factories.HarvestSource()
 
         url = url_for('harvest_about', id=source['name'])
+        sysadmin = factories.Sysadmin()
+        env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
 
-        response = app.get(url, extra_environ=self.extra_environ)
+        response = app.get(url, extra_environ=env)
 
         _assert_in_body(source['name'], response)
 
@@ -116,7 +120,9 @@ class TestBlueprint():
 
         url = url_for(
             'harvest_job_show', source=job['source_id'], id=job['id'])
+        sysadmin = factories.Sysadmin()
+        env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
 
-        response = app.get(url, extra_environ=self.extra_environ)
+        response = app.get(url, extra_environ=env)
 
         _assert_in_body(job['id'], response)
