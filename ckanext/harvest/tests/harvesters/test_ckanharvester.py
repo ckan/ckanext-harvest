@@ -2,7 +2,10 @@ from __future__ import absolute_import
 import copy
 
 import json
-from mock import patch, MagicMock, Mock
+try:
+    from unittest.mock import patch, MagicMock, Mock
+except ImportError:
+    from mock import patch, MagicMock, Mock
 import pytest
 from requests.exceptions import HTTPError, RequestException
 

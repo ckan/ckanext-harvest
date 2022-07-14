@@ -1,7 +1,11 @@
 import re
 
 import pytest
-from mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
+
 
 from ckanext.harvest.harvesters.base import HarvesterBase, munge_tag
 from ckantoolkit.tests import factories
