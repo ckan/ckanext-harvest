@@ -437,10 +437,11 @@ def harvest_get_notifications_recipients(context, data_dict):
     ).all()
 
     for sysadmin in sysadmins:
-        recipients.append({
-            'name': sysadmin.name,
-            'email': sysadmin.email
-        })
+        if sysadmin.email:
+            recipients.append({
+                'name': sysadmin.name,
+                'email': sysadmin.email
+            })
 
     # gather organization-admins
     if source.get('organization'):
