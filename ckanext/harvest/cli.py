@@ -108,26 +108,23 @@ def clear(ctx, id):
 
 @source.command()
 @click.argument(u"id", metavar=u"SOURCE_ID_OR_NAME", required=False)
-@click.option(
-    "-k",
-    "--keep-current",
-    default=False
-)
 @click.pass_context
-def clear_history(ctx, id, keep_current):
+def clear_history(ctx, id):
     """If no source id is given the history for all harvest sources
     (maximum is 1000) will be cleared.
 
-    Clears all jobs and objects related to a harvest source, but keeps
-    the source itself.  The datasets imported from the harvest source
-    will NOT be deleted!!!  If a source id is given, it only clears
+    Clears all jobs and out-of-date objects related to a harvest source, but keeps
+    the source itself and a history of what has been harvested already.
+    The datasets imported from the harvest source will NOT be deleted!!!
+
+    If a source id is given, it only clears
     the history of the harvest source with the given source id.
 
     """
     flask_app = ctx.meta["flask_app"]
 
     with flask_app.test_request_context():
-        result = utils.clear_harvest_source_history(id, bool(keep_current))
+        result = utils.clear_harvest_source_history(id)
     click.secho(result, fg="green")
 
 

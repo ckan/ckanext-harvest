@@ -28,6 +28,7 @@ __all__ = [
     'HarvestObject', 'harvest_object_table',
     'HarvestGatherError', 'harvest_gather_error_table',
     'HarvestObjectError', 'harvest_object_error_table',
+    'HarvestObjectExtra', 'harvest_object_extra_table',
     'HarvestLog', 'harvest_log_table'
 ]
 
@@ -356,7 +357,7 @@ def define_harvester_tables():
         Column('state', types.UnicodeText, default=u'WAITING'),
         Column('metadata_modified_date', types.DateTime),
         Column('retry_times', types.Integer, default=0),
-        Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id')),
+        Column('harvest_job_id', types.UnicodeText, ForeignKey('harvest_job.id', ondelete='SET NULL'), nullable=True),
         Column('harvest_source_id', types.UnicodeText, ForeignKey('harvest_source.id')),
         Column('package_id', types.UnicodeText, ForeignKey('package.id', deferrable=True),
                nullable=True),
