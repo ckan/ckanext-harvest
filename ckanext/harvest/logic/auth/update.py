@@ -49,6 +49,25 @@ def harvest_source_clear(context, data_dict):
     return harvest_source_update(context, data_dict)
 
 
+def purge_harvest_sources(context, data_dict):
+    '''
+        Authorization check for purging for all harvest sources
+        Only sysadmins can do it
+    '''
+    if not user_is_sysadmin(context):
+        return {'success': False, 'msg': pt._('Only sysadmins can purge for all harvest source')}
+    else:
+        return {'success': True}
+
+
+def purge_harvest_source(context, data_dict):
+    '''
+        Authorization check for purging a harvest source
+        It forwards to harvest_source_update
+    '''
+    return harvest_source_update(context, data_dict)
+
+
 def harvest_objects_import(context, data_dict):
     '''
         Authorization check reimporting all harvest objects

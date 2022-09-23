@@ -33,6 +33,10 @@ def clear(id):
     return utils.clear_view(id)
 
 
+def purge(id):
+    return utils.purge_view(id)
+
+
 def job_list(source):
     return utils.job_list_view(source)
 
@@ -72,6 +76,9 @@ harvester.add_url_rule(
 )
 harvester.add_url_rule("/" + utils.DATASET_TYPE_NAME + "/clear/<id>",
                        view_func=clear,
+                       methods=(u'POST', u'GET'))
+harvester.add_url_rule("/" + utils.DATASET_TYPE_NAME + "/purge/<id>",
+                       view_func=purge,
                        methods=(u'POST', u'GET'))
 harvester.add_url_rule(
     "/" + utils.DATASET_TYPE_NAME + "/<source>/job",
