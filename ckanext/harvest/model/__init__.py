@@ -97,6 +97,11 @@ def setup():
             log.debug('Creating index for harvest_object_extra')
             Index("harvest_object_id_idx", harvest_object_extra_table.c.harvest_object_id).create()
 
+        index_names = [index['name'] for index in inspector.get_indexes("harvest_object_error")]
+        if "harvest_error_harvest_object_id_idx" not in index_names:
+            log.debug('Creating index for harvest_object_error')
+            Index("harvest_error_harvest_object_id_idx", harvest_object_error_table.c.harvest_object_id).create()
+
 
 class HarvestError(Exception):
     pass
@@ -398,6 +403,7 @@ def define_harvester_tables():
         Column('stage', types.UnicodeText),
         Column('line', types.Integer),
         Column('created', types.DateTime, default=datetime.datetime.utcnow),
+        Index('harvest_error_harvest_object_id_idx', 'harvest_object_id'),
     )
     # Harvest Log table
     harvest_log_table = Table(
