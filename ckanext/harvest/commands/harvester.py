@@ -240,7 +240,10 @@ class Harvester(CkanCommand):
         elif cmd == "run_test":
             self.run_test_harvest()
         elif cmd == "gather_consumer":
-            utils.gather_consumer()
+            translate_lang = None
+            if len(self.args) >= 2:
+                translate_lang = unicode_safe(self.args[1])
+            utils.gather_consumer(translate_lang)
         elif cmd == "fetch_consumer":
             utils.fetch_consumer()
         elif cmd == "purge_queues":

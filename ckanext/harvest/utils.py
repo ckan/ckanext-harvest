@@ -325,7 +325,7 @@ def abort_job(job_or_source_id_or_name):
     return "Job status: {0}".format(job["status"])
 
 
-def gather_consumer():
+def gather_consumer(translate_lang):
     import logging
     from ckanext.harvest.queue import (
         get_gather_consumer,
@@ -337,7 +337,7 @@ def gather_consumer():
     consumer = get_gather_consumer()
     for method, header, body in consumer.consume(
             queue=get_gather_queue_name()):
-        gather_callback(consumer, method, header, body)
+        gather_callback(consumer, method, header, body, translate_lang)
 
 
 def fetch_consumer():

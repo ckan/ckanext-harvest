@@ -4,3 +4,4 @@ enum34; python_version < '3.0'  # Required by pika
 redis
 requests>=2.11.1
 six>=1.12.0
+deep-translator>=1.8.3

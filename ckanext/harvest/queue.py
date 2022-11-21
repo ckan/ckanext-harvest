@@ -336,7 +336,7 @@ def get_consumer(queue_name, routing_key):
         return RedisConsumer(connection, routing_key)
 
 
-def gather_callback(channel, method, header, body):
+def gather_callback(channel, method, header, body, translate_lang):
 
     try:
         id = json.loads(body)['harvest_job_id']
@@ -371,6 +371,7 @@ def gather_callback(channel, method, header, body):
     harvester = get_harvester(job.source.type)
     if harvester:
         try:
+            job.translate_lang = translate_lang
             harvest_object_ids = gather_stage(harvester, job)
         except (Exception, KeyboardInterrupt):
             channel.basic_ack(method.delivery_tag)

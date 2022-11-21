@@ -266,6 +266,11 @@ class CKANHarvester(HarvesterBase):
 
         # Create harvest objects for each dataset
         try:
+            # Initialize translator
+            log.debug('Translation language: %s', harvest_job.translate_lang)
+            if harvest_job.translate_lang:
+                self.init_translate(harvest_job.translate_lang)
+
             package_ids = set()
             object_ids = []
             for pkg_dict in pkg_dicts:
@@ -276,6 +281,8 @@ class CKANHarvester(HarvesterBase):
                              pkg_dict['id'])
                     continue
                 package_ids.add(pkg_dict['id'])
+                if harvest_job.translate_lang:
+                    self.translate_pakage(pkg_dict)
 
                 log.debug('Creating HarvestObject for %s %s',
                           pkg_dict['name'], pkg_dict['id'])

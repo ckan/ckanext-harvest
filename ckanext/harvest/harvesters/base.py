@@ -8,6 +8,8 @@ from sqlalchemy import exists, and_
 from sqlalchemy.sql import update, bindparam
 from sqlalchemy.orm import contains_eager
 
+from deep_translator import GoogleTranslator
+
 from ckantoolkit import config
 
 from ckan import plugins as p
@@ -61,6 +63,8 @@ class HarvesterBase(SingletonPlugin):
     config = None
 
     _user_name = None
+
+    translator = None
 
     @classmethod
     def _gen_new_name(cls, title, existing_name=None,
@@ -208,6 +212,97 @@ class HarvesterBase(SingletonPlugin):
         self._user_name = self._site_user['name']
 
         return self._user_name
+
+    def split_string(self, text, limit, sep=' '):
+        '''
+        Split text into paragraphs limited to a specific number of characters
+        '''
+        words = text.split()
+        if max(map(len, words)) > limit:
+            raise ValueError("limit is too small")
+        res, part, others = [], words[0], words[1:]
+        for word in others:
+            if len(sep) + len(word) > limit - len(part):
+                res.append(part)
+                part = word
+            else:
+                part += sep + word
+        if part:
+            res.append(part)
+        return res
+
+    def translate(self, text) -> str:
+        '''
+        Translate text
+        '''
+        if text and isinstance(text, str) and text.strip()\
+               and not text.isnumeric():
+            # Google translate free plan is limited to 5000 characters per request
+            trans = ''
+            for chunk in self.split_string(text=text, limit=5000):
+                trans += self.translator.translate(chunk) + ' '
+            return trans.strip()
+        return text
+
+    def init_translate(self, language):
+        '''
+        Init translator's target language
+        '''
+        self.translator = GoogleTranslator(source='auto', target=language)
+
+    def can_translate(self, key) -> bool:
+        return key != 'id' and key != 'name' and key != 'type' and key != 'state'\
+               and not key.endswith('_id') and not key.startswith("id_")
+
+    def translate_pakage(self, pkg_dict):
+        '''
+        Translate dataset first level content and its groups and tags
+        '''
+        # translate dataset attributes except the id
+        for key, value in pkg_dict.items():
+            if isinstance(value, str) and self.can_translate(key):
+                try:
+                    pkg_dict.update({key: self.translate(value)})
+                    log.debug('Translated dataset field: %s = %s (%s)', key, pkg_dict[key], value)
+                except Exception as e:
+                    log.debug('Failed to translate dataset field: %s = %s, error: %s', key, value, e.message)
+
+        if 'groups' in pkg_dict:
+            for group_ in pkg_dict['groups']:
+                # translate all groups attributes except the id
+                for key, value in group_.items():
+                    if key != 'id':
+                        try:
+                            group_.update({key: self.translate(value)})
+                            log.debug('Translated group field: %s = %s (%s)', key, group_[key], value)
+                        except Exception as e:
+                            log.debug('Failed to translate group field: %s = %s, error: %s', key, value, e.message)
+
+        if 'tags' in pkg_dict:
+            for tag_ in pkg_dict['tags']:
+                # translate all tags attributes except the id
+                for key, value in tag_.items():
+                    if key != 'id':
+                        try:
+                            translated_tag = self.translate(value)
+                            if translated_tag:
+                                tag_.update({key: munge_tag(translated_tag)})
+                            log.debug('Translated tag field: %s = %s (%s)', key, tag_[key], value)
+                        except Exception as e:
+                            log.debug('Failed to translate tag field: %s = %s, error: %s', key, value, e.message)
+
+    def translate_org(self, org):
+        '''
+        Translate organization
+        '''
+        for key, value in org.items():
+            if key != 'id':
+                try:
+                    org.update({key: self.translate(value)})
+                    log.debug('Translated org field: %s = %s (%s)', key, org[key], value)
+                except Exception as e:
+                    log.debug('Failed to translate org field: %s = %s, error: %s', key, value,
+                              e.message)
 
     def _create_harvest_objects(self, remote_ids, harvest_job):
         '''

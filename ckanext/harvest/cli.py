@@ -234,11 +234,18 @@ def purge_queues():
 
 
 @harvester.command()
-def gather_consumer():
+@click.option(
+    "-t",
+    "--translate",
+    default=None,
+    help="""Translate dataset content to a specific language.
+    Language code is ISO 639-1 which is the alpha-2 code""",
+)
+def gather_consumer(translate_lang):
     """Starts the consumer for the gathering queue.
 
     """
-    utils.gather_consumer()
+    utils.gather_consumer(translate_lang)
 
 
 @harvester.command()
