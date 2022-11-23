@@ -272,6 +272,9 @@ The following operations can be run from the command line as described underneat
       harvester jobs
         - lists harvest jobs
 
+      harvester jobs-abort
+        - abort all harvest jobs
+
       harvester job-abort {source-id/name}
         - marks a job as "Aborted" so that the source can be restarted afresh.
           It ensures that the job's harvest objects status are also marked

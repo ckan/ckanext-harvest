@@ -53,6 +53,12 @@ class MixinPlugin(p.SingletonPlugin):
             action="list_jobs",
         )
         map.connect(
+            "harvest_jobs_abort",
+            "/" + DATASET_TYPE_NAME + "/{source}/job",
+            controller=controller,
+            action="abort_all_job",
+        )
+        map.connect(
             "harvest_job_show_last",
             "/" + DATASET_TYPE_NAME + "/{source}/job/last",
             controller=controller,

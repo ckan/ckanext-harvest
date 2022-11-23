@@ -177,6 +177,18 @@ def jobs(ctx):
 
 
 @harvester.command()
+@click.pass_context
+def jobs_abort(ctx):
+    """Abort all harvest jobs.
+
+    """
+    flask_app = ctx.meta["flask_app"]
+    with flask_app.test_request_context():
+        result = utils.abort_all_jobs()
+    click.echo(result)
+
+
+@harvester.command()
 @click.argument("id", metavar="SOURCE_OR_JOB_ID")
 @click.pass_context
 def job_abort(ctx, id):

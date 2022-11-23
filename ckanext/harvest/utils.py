@@ -313,6 +313,18 @@ def list_jobs():
     return output.getvalue()
 
 
+def abort_all_jobs():
+    context = {
+        "model": model,
+        "user": _admin_user()["name"],
+        "session": model.Session,
+    }
+    jobs = tk.get_action("harvest_job_list")(context, {})
+
+    for job in jobs:
+        abort_job(job.get("id"))
+
+
 def abort_job(job_or_source_id_or_name):
     context = {
         "model": model,

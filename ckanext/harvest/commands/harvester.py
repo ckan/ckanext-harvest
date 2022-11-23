@@ -233,6 +233,8 @@ class Harvester(CkanCommand):
             self.create_harvest_job()
         elif cmd == "jobs":
             self.list_harvest_jobs()
+        elif cmd == "jobs_abort":
+            self.abort_harvest_jobs()
         elif cmd == "job_abort":
             self.job_abort()
         elif cmd == "run":
@@ -377,6 +379,9 @@ class Harvester(CkanCommand):
 
     def list_harvest_jobs(self):
         print(utils.list_jobs())
+
+    def abort_harvest_jobs(self):
+        print(utils.abort_all_jobs())
 
     def job_abort(self):
         if len(self.args) >= 2:
