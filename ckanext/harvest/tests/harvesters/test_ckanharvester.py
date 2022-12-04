@@ -323,11 +323,10 @@ class TestCkanHarvester(object):
                 config=json.dumps(config))
         assert 'default_extras must be a dictionary' in str(harvest_context.value)
 
-    @patch('ckanext.harvest.harvesters.ckanharvester.pyopenssl.inject_into_urllib3')
     @patch('ckanext.harvest.harvesters.ckanharvester.CKANHarvester.config')
     @patch('ckanext.harvest.harvesters.ckanharvester.requests.get', side_effect=RequestException('Test.value'))
     def test_get_content_handles_request_exception(
-        self, mock_requests_get, mock_config, mock_pyopenssl_inject
+        self, mock_requests_get, mock_config
     ):
         mock_config.return_value = {}
 
@@ -345,11 +344,10 @@ class TestCkanHarvester(object):
             self.request = Mock()
             self.request.url = "http://test.example.gov.uk"
 
-    @patch('ckanext.harvest.harvesters.ckanharvester.pyopenssl.inject_into_urllib3')
     @patch('ckanext.harvest.harvesters.ckanharvester.CKANHarvester.config')
     @patch('ckanext.harvest.harvesters.ckanharvester.requests.get', side_effect=MockHTTPError())
     def test_get_content_handles_http_error(
-        self, mock_requests_get, mock_config, mock_pyopenssl_inject
+        self, mock_requests_get, mock_config
     ):
         mock_config.return_value = {}
 

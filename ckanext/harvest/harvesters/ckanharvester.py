@@ -4,7 +4,6 @@ import requests
 from requests.exceptions import HTTPError, RequestException
 
 import datetime
-from urllib3.contrib import pyopenssl
 
 from six.moves.urllib.parse import urlencode
 from ckan import model
@@ -40,8 +39,6 @@ class CKANHarvester(HarvesterBase):
         api_key = self.config.get('api_key')
         if api_key:
             headers['Authorization'] = api_key
-
-        pyopenssl.inject_into_urllib3()
 
         try:
             http_request = requests.get(url, headers=headers)
