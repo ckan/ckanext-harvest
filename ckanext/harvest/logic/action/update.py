@@ -3,6 +3,7 @@
 import hashlib
 import json
 import six
+import html
 
 import logging
 import datetime
@@ -798,6 +799,7 @@ def prepare_summary_mail(context, source_id, status):
 def prepare_error_mail(context, source_id, status):
     extra_vars = get_mail_extra_vars(context, source_id, status)
     body = render('emails/error_email.txt', extra_vars)
+    body = html.unescape(body)
     subject = '{} - Harvesting Job - Error Notification'\
         .format(config.get('ckan.site_title'))
 
