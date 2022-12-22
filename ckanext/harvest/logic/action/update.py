@@ -804,7 +804,7 @@ def prepare_error_mail(context, source_id, status):
     elif six.PY2:
         import HTMLParser
         body = HTMLParser.HTMLParser().unescape(body)
-    
+
     subject = '{} - Harvesting Job - Error Notification'\
         .format(config.get('ckan.site_title'))
 
