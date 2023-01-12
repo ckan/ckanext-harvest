@@ -12,6 +12,17 @@ Unreleased_
 ***********
 
 ***********
+1.4.2_ - 2023-01-12
+***********
+
+Changed
+-------
+
+- Add DB index harvest_error_harvest_object_id_idx #514
+- Remove pyopenssl requirement c87309a
+- Add CSRF protection to new source form #516
+
+***********
 1.4.1_ - 2022-09-20
 ***********
 
