@@ -798,6 +798,13 @@ def prepare_summary_mail(context, source_id, status):
 def prepare_error_mail(context, source_id, status):
     extra_vars = get_mail_extra_vars(context, source_id, status)
     body = render('emails/error_email.txt', extra_vars)
+    if six.PY34:
+        import html
+        body = html.unescape(body)
+    elif six.PY2:
+        import HTMLParser
+        body = HTMLParser.HTMLParser().unescape(body)
+
     subject = '{} - Harvesting Job - Error Notification'\
         .format(config.get('ckan.site_title'))
 
