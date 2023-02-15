@@ -120,7 +120,10 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
         harvest_object = model.Session.query(HarvestObject) \
             .filter(HarvestObject.package_id == pkg_dict["id"]) \
-            .filter(HarvestObject.current == True).first() # noqa
+            .filter(
+                HarvestObject.current == True # noqa
+            ).order_by(HarvestObject.import_finished.desc()) \
+            .first()
 
         if harvest_object:
 
