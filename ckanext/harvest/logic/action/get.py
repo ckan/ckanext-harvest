@@ -267,8 +267,9 @@ def harvest_object_show(context, data_dict):
         obj = model.Session.query(HarvestObject) \
             .filter(HarvestObject.package_id == pkg.id) \
             .filter(
-            HarvestObject.current == True  # noqa: E712
-        ).first()
+                HarvestObject.current == True  # noqa: E712
+            ).order_by(HarvestObject.import_finished.desc()) \
+            .first()
     else:
         raise p.toolkit.ValidationError(
             'Please provide either an "id" or a "dataset_id" parameter')
