@@ -278,7 +278,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
     def update_config(self, config):
         p.toolkit.add_template_directory(config, 'templates')
         p.toolkit.add_public_directory(config, 'public')
-        p.toolkit.add_resource('fanstatic_library', 'ckanext-harvest')
+        p.toolkit.add_resource('assets', 'ckanext-harvest')
         p.toolkit.add_resource('public/ckanext/harvest/javascript', 'harvest-extra-field')
 
         if p.toolkit.check_ckan_version(min_version='2.9.0'):
