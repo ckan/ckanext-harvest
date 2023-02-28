@@ -13,11 +13,7 @@ from ckan import model
 import ckan.plugins as p
 from ckan.lib.plugins import DefaultDatasetForm
 
-try:
-    from ckan.lib.plugins import DefaultTranslation
-except ImportError:
-    class DefaultTranslation():
-        pass
+from ckan.lib.plugins import DefaultTranslation
 
 import ckanext.harvest
 from ckanext.harvest.model import setup as model_setup
@@ -28,10 +24,7 @@ from ckanext.harvest.utils import (
     DATASET_TYPE_NAME
 )
 
-if p.toolkit.check_ckan_version(min_version='2.9.0'):
-    from ckanext.harvest.plugin.flask_plugin import MixinPlugin
-else:
-    from ckanext.harvest.plugin.pylons_plugin import MixinPlugin
+from ckanext.harvest.plugin.flask_plugin import MixinPlugin
 
 log = getLogger(__name__)
 assert not log.disabled
@@ -47,8 +40,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
     p.implements(p.IPackageController, inherit=True)
     p.implements(p.ITemplateHelpers)
     p.implements(p.IFacets, inherit=True)
-    if p.toolkit.check_ckan_version(min_version='2.5.0'):
-        p.implements(p.ITranslation, inherit=True)
+    p.implements(p.ITranslation, inherit=True)
 
     startup = False
 
@@ -274,13 +266,6 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
         self.startup = False
 
     def update_config(self, config):
-        if not p.toolkit.check_ckan_version(min_version='2.0'):
-            assert 0, 'CKAN before 2.0 not supported by ckanext-harvest - '\
-                'genshi templates not supported any more'
-        if p.toolkit.asbool(config.get('ckan.legacy_templates', False)):
-            log.warn('Old genshi templates not supported any more by '
-                     'ckanext-harvest so you should set ckan.legacy_templates '
-                     'option to True any more.')
         p.toolkit.add_template_directory(config, '../templates')
         p.toolkit.add_public_directory(config, '../public')
         p.toolkit.add_resource('../fanstatic_library', 'ckanext-harvest')
