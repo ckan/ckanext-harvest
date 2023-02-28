@@ -2,10 +2,8 @@
 
 import os
 import json
-import six
 from logging import getLogger
 
-from six import string_types
 from collections import OrderedDict
 
 from ckan import logic
@@ -113,7 +111,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
 
         fq = search_params.get("fq", "")
         if "dataset_type:harvest" not in fq:
-            fq = "{0} -dataset_type:harvest".format(fq.encode('utf8') if six.PY2 else fq)
+            fq = "{0} -dataset_type:harvest".format(fq)
             search_params.update({"fq": fq})
 
         return search_params

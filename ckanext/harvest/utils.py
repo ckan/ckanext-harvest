@@ -10,21 +10,11 @@ import xml.etree.ElementTree as etree
 
 import ckan.lib.helpers as h
 import ckan.plugins.toolkit as tk
-import six
 from ckan import model
 from ckantoolkit import _
-from six import StringIO
+from io import StringIO
 
 from ckanext.harvest.logic import HarvestJobExists, HarvestSourceInactiveError
-
-try:
-    # Python 2.7
-    xml_parser_exception = etree.ParseError
-except AttributeError:
-    # Python 2.6
-    from xml.parsers import expat
-
-    xml_parser_exception = expat.ExpatError
 
 log = logging.getLogger(__name__)
 
@@ -394,8 +384,7 @@ def run_test_harvester(source_id_or_name, force_import):
         if running_jobs:
             print('\nSource "{0}" apparently has a "Running" job:\n{1}'.format(
                 source.get("name") or source["id"], running_jobs))
-
-            resp = six.moves.input("Abort it? (y/n)")
+            resp = input("Abort it? (y/n)")
             if not resp.lower().startswith("y"):
                 sys.exit(1)
             job_dict = tk.get_action("harvest_job_abort")(
@@ -748,7 +737,7 @@ def object_show_view(id, ref_type, response):
             if '<?xml' not in content.split('\n')[0]:
                 content = u'<?xml version="1.0" encoding="UTF-8"?>\n' + content
 
-        except xml_parser_exception:
+        except etree.ParseError:
             try:
                 json.loads(obj['content'])
                 response.content_type = 'application/json; charset=utf-8'
@@ -757,7 +746,11 @@ def object_show_view(id, ref_type, response):
                 pass
 
         response.headers['Content-Length'] = len(content)
-        return (response, six.ensure_str(content))
+
+        if isinstance(content, bytes):
+            content = content.decode("utf-8")
+
+        return (response, content)
 
     except tk.ObjectNotFound as e:
         return tk.abort(404, _(str(e)))
