@@ -16,6 +16,7 @@ from ckan.lib.plugins import DefaultDatasetForm
 from ckan.lib.plugins import DefaultTranslation
 
 import ckanext.harvest
+from ckanext.harvest import cli, views
 from ckanext.harvest.model import setup as model_setup
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 from ckanext.harvest.log import DBLogHandler
@@ -24,14 +25,13 @@ from ckanext.harvest.utils import (
     DATASET_TYPE_NAME
 )
 
-from ckanext.harvest.plugin.flask_plugin import MixinPlugin
-
 log = getLogger(__name__)
 assert not log.disabled
 
 
-class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
-
+class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
+    p.implements(p.IClick)
+    p.implements(p.IBlueprint)
     p.implements(p.IConfigurable)
     p.implements(p.IConfigurer, inherit=True)
     p.implements(p.IActions)
@@ -43,6 +43,16 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
     p.implements(p.ITranslation, inherit=True)
 
     startup = False
+
+    # IClick
+
+    def get_commands(self):
+        return cli.get_commands()
+
+    # IBlueprint
+
+    def get_blueprint(self):
+        return views.get_blueprints()
 
     # ITranslation
     def i18n_directory(self):
@@ -266,10 +276,10 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
         self.startup = False
 
     def update_config(self, config):
-        p.toolkit.add_template_directory(config, '../templates')
-        p.toolkit.add_public_directory(config, '../public')
-        p.toolkit.add_resource('../fanstatic_library', 'ckanext-harvest')
-        p.toolkit.add_resource('../public/ckanext/harvest/javascript', 'harvest-extra-field')
+        p.toolkit.add_template_directory(config, 'templates')
+        p.toolkit.add_public_directory(config, 'public')
+        p.toolkit.add_resource('fanstatic_library', 'ckanext-harvest')
+        p.toolkit.add_resource('public/ckanext/harvest/javascript', 'harvest-extra-field')
 
         if p.toolkit.check_ckan_version(min_version='2.9.0'):
             mappings = config.get('ckan.legacy_route_mappings') or {}
