@@ -16,7 +16,7 @@
         <li class="dataset-item">
           <div class="dataset-content">
             <h3 class="dataset-heading">
-                <a href="{{ h.url_for('harvest_job_show', source=harvest_source.name, id=job.id) }}">
+                <a href="{{ h.url_for('harvester.job_show', source=harvest_source.name, id=job.id) }}">
                 {{ _('Job: ') }} {{ job.id }}
               </a>
               {% if job.status != 'Finished' %}

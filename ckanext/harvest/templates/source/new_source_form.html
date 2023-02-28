@@ -17,7 +17,7 @@
   {{ form.input('title', id='field-title', label=_('Title'), placeholder=_('eg. A descriptive title'), value=data.title, error=errors.title, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
 
   {% set prefix = 'harvest' %}
-  {% set domain = h.url_for('{0}_read'.format(c.dataset_type), id='', qualified=true) %}
+  {% set domain = h.url_for('{0}.read'.format(c.dataset_type), id='', qualified=true) %}
   {% set domain = domain|replace("http://", "")|replace("https://", "") %}
   {% set attrs = {'data-module': 'slug-preview-slug', 'data-module-prefix': domain, 'data-module-placeholder': '<harvest-source>'} %}
 

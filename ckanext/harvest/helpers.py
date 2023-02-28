@@ -57,7 +57,7 @@ def package_list_for_source(source_id):
     query = logic.get_action('package_search')(context, search_dict)
 
     base_url = h.url_for(
-        '{0}_read'.format(DATASET_TYPE_NAME),
+        '{0}.read'.format(DATASET_TYPE_NAME),
         id=harvest_source['name']
     )
 
@@ -124,7 +124,7 @@ def link_for_harvest_object(id=None, guid=None, text=None):
         obj = logic.get_action('harvest_object_show')(context, {'id': guid, 'attr': 'guid'})
         id = obj.id
 
-    url = h.url_for('harvest_object_show', id=id)
+    url = h.url_for('harvest.object_show', id=id)
     text = text or guid or id
     link = '<a href="{url}">{text}</a>'.format(url=url, text=text)
 

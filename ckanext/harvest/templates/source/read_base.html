@@ -7,7 +7,7 @@
       {% if harvest_source.notes %}
         <p>
           {{ h.markdown_extract(harvest_source.notes, 180) }}
-          {{ h.nav_link(_('read more'), named_route='{0}_about'.format(c.dataset_type), id=harvest_source.name) }}
+          {{ h.nav_link(_('read more'), named_route='harvester.about', id=harvest_source.name) }}
         </p>
       {% else %}
         <p class="empty">{{ _('There is no description for this harvest source') }}</p>
@@ -29,7 +29,7 @@
         {% block content_action %}
           <div class="content_action">
             {% if h.check_access('harvest_source_update', {'id':harvest_source.id }) %}
-              {{ h.nav_link(_('Admin'), named_route='{0}_admin'.format(c.dataset_type), id=harvest_source.name, class_='btn btn-primary', icon='wrench')}}
+              {{ h.nav_link(_('Admin'), named_route='harvester.admin', id=harvest_source.name, class_='btn btn-primary', icon='wrench')}}
             {% endif %}
           </div>
         {% endblock %}

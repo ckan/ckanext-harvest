@@ -759,7 +759,7 @@ def get_mail_extra_vars(context, source_id, status):
     errors = job_errors + obj_errors
 
     site_url = config.get('ckan.site_url')
-    job_url = toolkit.url_for('harvest_job_show', source=source['id'], id=last_job['id'])
+    job_url = toolkit.url_for('harvest.job_show', source=source['id'], id=last_job['id'])
     full_job_url = urljoin(site_url, job_url)
     extra_vars = {
         'organization': organization,

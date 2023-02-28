@@ -281,27 +281,6 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
         p.toolkit.add_resource('assets', 'ckanext-harvest')
         p.toolkit.add_resource('public/ckanext/harvest/javascript', 'harvest-extra-field')
 
-        if p.toolkit.check_ckan_version(min_version='2.9.0'):
-            mappings = config.get('ckan.legacy_route_mappings') or {}
-            if mappings and isinstance(mappings, string_types):
-                mappings = json.loads(mappings)
-
-            mappings.update({
-                'harvest_read': 'harvest.read',
-                'harvest_edit': 'harvest.edit',
-            })
-            bp_routes = [
-                "delete", "refresh", "admin", "about",
-                "clear", "job_list", "job_show_last", "job_show",
-                "job_abort", "object_show"
-            ]
-            mappings.update({
-                'harvest_' + route: 'harvester.' + route
-                for route in bp_routes
-            })
-            # https://github.com/ckan/ckan/pull/4521
-            config['ckan.legacy_route_mappings'] = json.dumps(mappings)
-
     # IActions
 
     def get_actions(self):

@@ -28,7 +28,7 @@ class TestBlueprint():
 
     def test_new_form_is_rendered(self, app):
 
-        url = url_for('harvest_new')
+        url = url_for('harvest.new')
         sysadmin = factories.Sysadmin()
         env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
 
@@ -40,7 +40,7 @@ class TestBlueprint():
 
         source = harvest_factories.HarvestSource()
 
-        url = url_for('harvest_edit', id=source['id'])
+        url = url_for('harvest.edit', id=source['id'])
         sysadmin = factories.Sysadmin()
         env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
 
@@ -52,7 +52,7 @@ class TestBlueprint():
 
         source = harvest_factories.HarvestSource()
 
-        url = url_for('harvest_read', id=source['name'])
+        url = url_for('harvest.read', id=source['name'])
         sysadmin = factories.Sysadmin()
         env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
 
@@ -68,7 +68,7 @@ class TestBlueprint():
         sysadmin = factories.Sysadmin()
         env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
 
-        url = url_for('harvest_admin', id=source_obj.id)
+        url = url_for('harvester.admin', id=source_obj.id)
 
         response = app.get(url, extra_environ=env)
 
@@ -80,7 +80,7 @@ class TestBlueprint():
 
         source = harvest_factories.HarvestSource()
 
-        url = url_for('harvest_about', id=source['name'])
+        url = url_for('harvester.about', id=source['name'])
         sysadmin = factories.Sysadmin()
         env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
 
@@ -95,7 +95,7 @@ class TestBlueprint():
         sysadmin = factories.Sysadmin()
         env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
 
-        url = url_for('harvest_job_list', source=job['source_id'])
+        url = url_for('harvester.job_list', source=job['source_id'])
 
         response = app.get(url, extra_environ=env)
 
@@ -108,7 +108,7 @@ class TestBlueprint():
         sysadmin = factories.Sysadmin()
         env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
 
-        url = url_for('harvest_job_show_last', source=job['source_id'])
+        url = url_for('harvester.job_show_last', source=job['source_id'])
 
         response = app.get(url, extra_environ=env)
 
@@ -119,7 +119,7 @@ class TestBlueprint():
         job = harvest_factories.HarvestJob()
 
         url = url_for(
-            'harvest_job_show', source=job['source_id'], id=job['id'])
+            'harvester.job_show', source=job['source_id'], id=job['id'])
         sysadmin = factories.Sysadmin()
         env = {"REMOTE_USER": sysadmin['name'].encode('ascii')}
 
