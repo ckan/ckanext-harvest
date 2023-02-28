@@ -38,10 +38,7 @@ from ckanext.harvest.logic.action.get import (
 import ckan.lib.mailer as mailer
 from itertools import islice
 
-if toolkit.check_ckan_version(min_version='2.9.0'):
-    from ckan.plugins.toolkit import render
-else:
-    from ckan.lib.base import render_jinja2 as render
+from ckan.plugins.toolkit import render
 
 log = logging.getLogger(__name__)
 

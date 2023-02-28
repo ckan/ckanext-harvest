@@ -138,13 +138,3 @@ def harvest_source_extra_fields():
             continue
         fields[harvester.info()['name']] = list(harvester.extra_schema().keys())
     return fields
-
-
-def bootstrap_version():
-    if p.toolkit.check_ckan_version(max_version='2.7.99'):
-        return 'bs2'
-    else:
-        return (
-            'bs2' if
-            p.toolkit.config.get('ckan.base_public_folder') == 'public-bs2'
-            else 'bs3')
