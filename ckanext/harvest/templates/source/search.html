@@ -8,23 +8,7 @@
 {% endblock %}
 
 
-{% if g.ckan_base_version.startswith('2.0') %}
-  {# CKAN 2.0 #}
-
-  {% block add_action_content %}
-    {{ h.snippet('snippets/add_source_button.html', dataset_type=c.dataset_type) }}
-  {% endblock %}
-{% endif %}
-
 {% block primary_content %}
-  {% if g.ckan_base_version.startswith('2.0') %}
-    {# CKAN 2.0 #}
-
-    {% include 'source/search_2.0.html' %}
-
-  {% else %}
-    {# > CKAN 2.0 #}
-
     <section class="module">
       <div class="module-content">
         {% block page_primary_action %}
@@ -56,9 +40,7 @@
       {{ c.page.pager(q=c.q) }}
     </section>
 
-  {% endif %}
-
-{% endblock %}
+    {% endblock %}
 
 
 

@@ -1,10 +1,8 @@
 {% import 'macros/form.html' as form %}
 
+{% include 'harvest/snippets/harvest_extra_field_asset.html' %}
 
-{% set type = 'asset' if h.ckan_version().split('.')|map('int')|list >= [2, 9, 0] else 'resource' %}
-{% include 'harvest/snippets/harvest_extra_field_' ~ type ~ '.html' %}
-
-<form id="source-new" class="form-horizontal dataset-form {{ h.bootstrap_version() }}" method="post" >
+<form id="source-new" class="form-horizontal {{ h.bootstrap_version() }}" method="post" >
 
   {% block errors %}{{ form.errors(error_summary) }}{% endblock %}
 
@@ -14,7 +12,7 @@
       </span>
   {% endcall %}
 
-{{ h.csrf_input() if 'csrf_input' in h }}
+  {{ h.csrf_input() if 'csrf_input' in h }}
 
   {{ form.input('title', id='field-title', label=_('Title'), placeholder=_('eg. A descriptive title'), value=data.title, error=errors.title, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
 
