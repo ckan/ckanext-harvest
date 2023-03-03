@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import ckan.plugins as p
 import ckan.plugins.toolkit as tk
 
 from ckan.logic.schema import default_extras_schema
@@ -53,10 +52,6 @@ def harvest_source_schema():
     extras_schema['__extras'] = [ignore]
 
     schema['extras'] = extras_schema
-
-    if p.toolkit.check_ckan_version('2.2'):
-        from ckan.logic.validators import datasets_with_no_organization_cannot_be_private
-        schema['private'].append(datasets_with_no_organization_cannot_be_private)
 
     return schema
 
