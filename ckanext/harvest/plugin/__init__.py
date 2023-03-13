@@ -138,8 +138,11 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
         already exist in the root schema.
 
         Note: If another extension adds any harvest extra to the `package_show`
-        schema then this method will add them again in the `extras` field to avoid
+        schema then this method will not add them again in the `extras` field to avoid
         validation errors when updating a package.
+
+        If the harvest extra has been added to the root schema, then we will not update
+        them since it is responsibility of the package validators to do it.
         """
         # Fix to support Solr8
         if isinstance(pkg_dict.get('status'), dict):
@@ -180,7 +183,8 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
         # Add harvest extras to main indexed pkg_dict
         for key, value in harvest_extras:
-            pkg_dict[key] = value
+            if key not in pkg_dict.keys():
+                pkg_dict[key] = value
 
         pkg_dict["data_dict"] = json.dumps(data_dict)
         pkg_dict["validated_data_dict"] = json.dumps(validated_data_dict)
