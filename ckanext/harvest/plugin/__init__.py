@@ -134,11 +134,11 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
         This method will add or update harvest related metadata in `pkg_dict`,
         `data_dict` and `validated_data_dict` so it can be obtained when
         calling package_show API (that depends on Solr data). This metadata will
-        be stored in the `extra` field of the dictionaries.
+        be stored in the `extras` field of the dictionaries ONLY if it does not
+        already exist in the root schema.
 
-        By default all harvest metadata will go in the extra field. If
-        another extension adds any of them to the `package_show` schema
-        then it will not be added again in the `extras` field to avoid
+        Note: If another extension adds any harvest extra to the `package_show`
+        schema then this method will add them again in the `extras` field to avoid
         validation errors when updating a package.
         """
         # Fix to support Solr8
@@ -164,7 +164,6 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
             ("harvest_source_title", harvest_object.source.title),
         ]
 
-        # Add harvest extras to data_dict
         data_dict = json.loads(pkg_dict["data_dict"])
         for key, value in harvest_extras:
             if key in data_dict.keys():
@@ -172,7 +171,6 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
                 continue
             self._add_or_update_harvest_metadata(key, value, data_dict)
 
-        # Add harvest extras to validated_data_dict
         validated_data_dict = json.loads(pkg_dict["validated_data_dict"])
         for key, value in harvest_extras:
             if key in validated_data_dict.keys():
