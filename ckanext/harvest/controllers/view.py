@@ -22,6 +22,9 @@ class ViewController(BaseController):
     def clear(self, id):
         return utils.clear_view(id)
 
+    def purge(id):
+        return utils.purge_view(id)
+
     def show_object(self, id, ref_type='object'):
         _, content = utils.object_show_view(id, ref_type, response)
         return content

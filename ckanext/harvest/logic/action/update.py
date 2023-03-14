@@ -237,6 +237,39 @@ def harvest_source_clear(context, data_dict):
     return {'id': harvest_source_id}
 
 
+def purge_harvest_source(context, data_dict):
+    '''
+    Clears all datasets, jobs and objects related to a harvest source, includes
+    the source itself.  This is useful to clean history of long running
+    harvest sources to start again fresh.
+    :param id: the id of the harvest source to clear
+    :type id: string
+    '''
+
+    check_access('purge_harvest_source', context, data_dict)
+
+    harvest_source_id = data_dict.get('id')
+
+    source = HarvestSource.get(harvest_source_id)
+    if not source:
+        log.error('Harvest source %s does not exist', harvest_source_id)
+        raise NotFound('Harvest source %s does not exist' % harvest_source_id)
+
+    # Clears all datasets, jobs and objects related to a harvest source
+    get_action('harvest_source_clear')(context, data_dict)
+
+    harvest_source_id = source.id
+
+    # Delete harvest source itself
+    source.delete()
+    # Refresh the index for this source to update the status object
+    get_action('harvest_source_reindex')(context, {'id': harvest_source_id})
+    # Purge the dataset itself
+    get_action("dataset_purge")(context, {'id': harvest_source_id})
+
+    return {'id': harvest_source_id}
+
+
 def harvest_abort_failed_jobs(context, data_dict):
     session = context['session']
 

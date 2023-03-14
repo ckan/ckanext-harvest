@@ -108,8 +108,13 @@
         </a>
       </li>
       <li>
-        <a href="{% url_for 'harvest_delete', id=data.name %}?clear=True" data-module="confirm-action" data-module-i18n="{{ locale_clear }}">
+        <a href="{% url_for 'harvest_delete', id=data.name %}?clear=True">
           {{ _('Delete and clear source') }}
+        </a>
+      </li>
+      <li>
+        <a href="{% url_for 'harvest_delete', id=data.name %}?purge=True">
+          {{ _('Delete and purge source') }}
         </a>
       </li>
     </ul>

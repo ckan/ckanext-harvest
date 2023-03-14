@@ -307,7 +307,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
             })
             bp_routes = [
                 "delete", "refresh", "admin", "about",
-                "clear", "job_list", "job_show_last", "job_show",
+                "clear", "purge", "job_list", "job_show_last", "job_show",
                 "job_abort", "object_show"
             ]
             mappings.update({

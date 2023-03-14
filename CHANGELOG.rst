@@ -10,6 +10,16 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_
 ***********
 Unreleased_
 ***********
+Changed
+-------
+
+- Add a new list item "Deleted and purge source" in templates/source/new_source_form.html that can purge the harvest source
+ 
+
+Fixed
+-----
+
+- remove confirm action in list item "Deleted and clear source" because confirm action will make cause the delete view can not pass the "clear = true"
 
 ***********
 1.4.2_ - 2023-01-12
