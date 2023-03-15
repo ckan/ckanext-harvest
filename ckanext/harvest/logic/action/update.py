@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import hashlib
+import html
 import json
-import six
 
 import logging
 import datetime
 
 from ckantoolkit import config
 from sqlalchemy import and_, or_
-from six.moves.urllib.parse import urljoin
+from urllib.parse import urljoin
 
 from ckan.lib.search.index import PackageSearchIndex
 from ckan.plugins import toolkit, PluginImplementations
@@ -38,10 +38,7 @@ from ckanext.harvest.logic.action.get import (
 import ckan.lib.mailer as mailer
 from itertools import islice
 
-if toolkit.check_ckan_version(min_version='2.9.0'):
-    from ckan.plugins.toolkit import render
-else:
-    from ckan.lib.base import render_jinja2 as render
+from ckan.plugins.toolkit import render
 
 log = logging.getLogger(__name__)
 
@@ -549,8 +546,10 @@ def harvest_objects_import(context, data_dict):
     last_objects_count = 0
 
     for obj_id in last_objects_ids:
-        if segments and \
-                str(hashlib.md5(six.ensure_binary(obj_id[0])).hexdigest())[0] not in segments:
+        _id = obj_id[0]
+        if isinstance(_id, str):
+            _id = _id.encode()
+        if segments and str(hashlib.md5(_id).hexdigest())[0] not in segments:
             continue
 
         obj = session.query(HarvestObject).get(obj_id)
@@ -759,7 +758,7 @@ def get_mail_extra_vars(context, source_id, status):
     errors = job_errors + obj_errors
 
     site_url = config.get('ckan.site_url')
-    job_url = toolkit.url_for('harvest_job_show', source=source['id'], id=last_job['id'])
+    job_url = toolkit.url_for('harvest.job_show', source=source['id'], id=last_job['id'])
     full_job_url = urljoin(site_url, job_url)
     extra_vars = {
         'organization': organization,
@@ -798,12 +797,7 @@ def prepare_summary_mail(context, source_id, status):
 def prepare_error_mail(context, source_id, status):
     extra_vars = get_mail_extra_vars(context, source_id, status)
     body = render('emails/error_email.txt', extra_vars)
-    if six.PY34:
-        import html
-        body = html.unescape(body)
-    elif six.PY2:
-        import HTMLParser
-        body = HTMLParser.HTMLParser().unescape(body)
+    body = html.unescape(body)
 
     subject = '{} - Harvesting Job - Error Notification'\
         .format(config.get('ckan.site_title'))

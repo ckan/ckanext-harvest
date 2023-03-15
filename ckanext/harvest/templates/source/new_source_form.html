@@ -1,10 +1,8 @@
 {% import 'macros/form.html' as form %}
 
+{% asset 'harvest-extra-field/main' %}
 
-{% set type = 'asset' if h.ckan_version().split('.')|map('int')|list >= [2, 9, 0] else 'resource' %}
-{% include 'harvest/snippets/harvest_extra_field_' ~ type ~ '.html' %}
-
-<form id="source-new" class="form-horizontal dataset-form {{ h.bootstrap_version() }}" method="post" >
+<form id="source-new" class="form-horizontal" method="post" >
 
   {% block errors %}{{ form.errors(error_summary) }}{% endblock %}
 
@@ -14,12 +12,12 @@
       </span>
   {% endcall %}
 
-{{ h.csrf_input() if 'csrf_input' in h }}
+  {{ h.csrf_input() if 'csrf_input' in h }}
 
   {{ form.input('title', id='field-title', label=_('Title'), placeholder=_('eg. A descriptive title'), value=data.title, error=errors.title, classes=['control-full'], attrs={'data-module': 'slug-preview-target'}) }}
 
   {% set prefix = 'harvest' %}
-  {% set domain = h.url_for('{0}_read'.format(c.dataset_type), id='', qualified=true) %}
+  {% set domain = h.url_for('{0}.read'.format(c.dataset_type), id='', qualified=true) %}
   {% set domain = domain|replace("http://", "")|replace("https://", "") %}
   {% set attrs = {'data-module': 'slug-preview-slug', 'data-module-prefix': domain, 'data-module-placeholder': '<harvest-source>'} %}
 

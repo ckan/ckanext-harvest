@@ -3,17 +3,12 @@ from __future__ import print_function
 import json
 import re
 import copy
-import six
-from six.moves.urllib.parse import unquote_plus
+from urllib.parse import unquote_plus
 
 from threading import Thread
 
-if six.PY2:
-    from SimpleHTTPServer import SimpleHTTPRequestHandler
-    from SocketServer import TCPServer
-else:
-    from http.server import SimpleHTTPRequestHandler
-    from socketserver import TCPServer
+from http.server import SimpleHTTPRequestHandler
+from socketserver import TCPServer
 
 
 PORT = 8998
@@ -171,10 +166,7 @@ class MockCkanHandler(SimpleHTTPRequestHandler):
 
     def get_url_params(self):
         params_str = self.path.split('?')[-1]
-        if six.PY2:
-            params_unicode = unquote_plus(params_str).decode('utf8')
-        else:
-            params_unicode = unquote_plus(params_str)
+        params_unicode = unquote_plus(params_str)
         params = params_unicode.split('&')
         return dict([param.split('=') for param in params])
 

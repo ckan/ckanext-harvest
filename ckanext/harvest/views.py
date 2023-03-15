@@ -5,6 +5,8 @@ from flask import Blueprint, make_response
 
 import ckanext.harvest.utils as utils
 
+# IDatasetForm provides a "harvest" blueprint for the package type harvest.
+# We name the extension blueprint "harvester" to avoid clashing of names.
 harvester = Blueprint("harvester", __name__)
 
 

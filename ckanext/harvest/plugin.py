@@ -2,10 +2,8 @@
 
 import os
 import json
-import six
 from logging import getLogger
 
-from six import string_types
 from collections import OrderedDict
 
 from ckan import logic
@@ -13,13 +11,10 @@ from ckan import model
 import ckan.plugins as p
 from ckan.lib.plugins import DefaultDatasetForm
 
-try:
-    from ckan.lib.plugins import DefaultTranslation
-except ImportError:
-    class DefaultTranslation():
-        pass
+from ckan.lib.plugins import DefaultTranslation
 
 import ckanext.harvest
+from ckanext.harvest import cli, views
 from ckanext.harvest.model import setup as model_setup
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 from ckanext.harvest.log import DBLogHandler
@@ -28,17 +23,13 @@ from ckanext.harvest.utils import (
     DATASET_TYPE_NAME
 )
 
-if p.toolkit.check_ckan_version(min_version='2.9.0'):
-    from ckanext.harvest.plugin.flask_plugin import MixinPlugin
-else:
-    from ckanext.harvest.plugin.pylons_plugin import MixinPlugin
-
 log = getLogger(__name__)
 assert not log.disabled
 
 
-class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
-
+class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
+    p.implements(p.IClick)
+    p.implements(p.IBlueprint)
     p.implements(p.IConfigurable)
     p.implements(p.IConfigurer, inherit=True)
     p.implements(p.IActions)
@@ -47,10 +38,19 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
     p.implements(p.IPackageController, inherit=True)
     p.implements(p.ITemplateHelpers)
     p.implements(p.IFacets, inherit=True)
-    if p.toolkit.check_ckan_version(min_version='2.5.0'):
-        p.implements(p.ITranslation, inherit=True)
+    p.implements(p.ITranslation, inherit=True)
 
     startup = False
+
+    # IClick
+
+    def get_commands(self):
+        return cli.get_commands()
+
+    # IBlueprint
+
+    def get_blueprint(self):
+        return views.get_blueprints()
 
     # ITranslation
     def i18n_directory(self):
@@ -111,7 +111,7 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
         fq = search_params.get("fq", "")
         if "dataset_type:harvest" not in fq:
-            fq = "{0} -dataset_type:harvest".format(fq.encode('utf8') if six.PY2 else fq)
+            fq = "{0} -dataset_type:harvest".format(fq)
             search_params.update({"fq": fq})
 
         return search_params
@@ -284,38 +284,10 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
         self.startup = False
 
     def update_config(self, config):
-        if not p.toolkit.check_ckan_version(min_version='2.0'):
-            assert 0, 'CKAN before 2.0 not supported by ckanext-harvest - '\
-                'genshi templates not supported any more'
-        if p.toolkit.asbool(config.get('ckan.legacy_templates', False)):
-            log.warn('Old genshi templates not supported any more by '
-                     'ckanext-harvest so you should set ckan.legacy_templates '
-                     'option to True any more.')
-        p.toolkit.add_template_directory(config, '../templates')
-        p.toolkit.add_public_directory(config, '../public')
-        p.toolkit.add_resource('../fanstatic_library', 'ckanext-harvest')
-        p.toolkit.add_resource('../public/ckanext/harvest/javascript', 'harvest-extra-field')
-
-        if p.toolkit.check_ckan_version(min_version='2.9.0'):
-            mappings = config.get('ckan.legacy_route_mappings') or {}
-            if mappings and isinstance(mappings, string_types):
-                mappings = json.loads(mappings)
-
-            mappings.update({
-                'harvest_read': 'harvest.read',
-                'harvest_edit': 'harvest.edit',
-            })
-            bp_routes = [
-                "delete", "refresh", "admin", "about",
-                "clear", "job_list", "job_show_last", "job_show",
-                "job_abort", "object_show"
-            ]
-            mappings.update({
-                'harvest_' + route: 'harvester.' + route
-                for route in bp_routes
-            })
-            # https://github.com/ckan/ckan/pull/4521
-            config['ckan.legacy_route_mappings'] = json.dumps(mappings)
+        p.toolkit.add_template_directory(config, 'templates')
+        p.toolkit.add_public_directory(config, 'public')
+        p.toolkit.add_resource('assets', 'ckanext-harvest')
+        p.toolkit.add_resource('public/ckanext/harvest/javascript', 'harvest-extra-field')
 
     # IActions
 
@@ -347,7 +319,6 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
                 'harvest_frequencies': harvest_helpers.harvest_frequencies,
                 'link_for_harvest_object': harvest_helpers.link_for_harvest_object,
                 'harvest_source_extra_fields': harvest_helpers.harvest_source_extra_fields,
-                'bootstrap_version': harvest_helpers.bootstrap_version,
                 'get_harvest_source': harvest_helpers.get_harvest_source,
                 }
 
