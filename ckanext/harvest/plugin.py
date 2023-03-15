@@ -116,7 +116,40 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
 
         return search_params
 
+    def _add_or_update_harvest_metadata(self, key, value, data_dict):
+        """Adds extras fields or updates them if already exist."""
+        if not data_dict.get("extras"):
+            data_dict["extras"] = []
+
+        for e in data_dict.get("extras"):
+            if e.get("key") == key:
+                e.update({"value": value})
+                break
+        else:
+            data_dict["extras"].append({"key": key, "value": value})
+
     def before_dataset_index(self, pkg_dict):
+        """Adds harvest metadata to the extra field of the dataset.
+
+        This method will add or update harvest related metadata in `pkg_dict`,
+        `data_dict` and `validated_data_dict` so it can be obtained when
+        calling package_show API (that depends on Solr data). This metadata will
+        be stored in the `extras` field of the dictionaries ONLY if it does not
+        already exist in the root schema.
+
+        Note: If another extension adds any harvest extra to the `package_show`
+        schema then this method will not add them again in the `extras` field to avoid
+        validation errors when updating a package.
+
+        If the harvest extra has been added to the root schema, then we will not update
+        them since it is responsibility of the package validators to do it.
+        """
+        # Fix to support Solr8
+        if isinstance(pkg_dict.get('status'), dict):
+            try:
+                pkg_dict['status'] = json.dumps(pkg_dict['status'])
+            except ValueError:
+                pkg_dict.pop('status', None)
 
         harvest_object = model.Session.query(HarvestObject) \
             .filter(HarvestObject.package_id == pkg_dict["id"]) \
@@ -125,59 +158,36 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
             ).order_by(HarvestObject.import_finished.desc()) \
             .first()
 
-        if harvest_object:
+        if not harvest_object:
+            return pkg_dict
 
-            data_dict = json.loads(pkg_dict["data_dict"])
+        harvest_extras = [
+            ("harvest_object_id", harvest_object.id),
+            ("harvest_source_id", harvest_object.source.id),
+            ("harvest_source_title", harvest_object.source.title),
+        ]
 
-            validated_data_dict = json.loads(pkg_dict["validated_data_dict"])
+        data_dict = json.loads(pkg_dict["data_dict"])
+        for key, value in harvest_extras:
+            if key in data_dict.keys():
+                data_dict[key] = value
+                continue
+            self._add_or_update_harvest_metadata(key, value, data_dict)
 
-            harvest_extras = [
-                ("harvest_object_id", harvest_object.id),
-                ("harvest_source_id", harvest_object.source.id),
-                ("harvest_source_title", harvest_object.source.title),
-            ]
+        validated_data_dict = json.loads(pkg_dict["validated_data_dict"])
+        for key, value in harvest_extras:
+            if key in validated_data_dict.keys():
+                validated_data_dict[key] = value
+                continue
+            self._add_or_update_harvest_metadata(key, value, validated_data_dict)
 
-            for key, value in harvest_extras:
-
-                # If the harvest extras are there, update them. This can
-                # happen eg when calling package_update or resource_update,
-                # which call package_show
-                harvest_not_found = True
-                harvest_not_found_validated = True
-                if not data_dict.get("extras"):
-                    data_dict["extras"] = []
-
-                for e in data_dict.get("extras"):
-                    if e.get("key") == key:
-                        e.update({"value": value})
-                        harvest_not_found = False
-                if harvest_not_found:
-                    data_dict["extras"].append({"key": key, "value": value})
-
-                if not validated_data_dict.get("extras"):
-                    validated_data_dict["extras"] = []
-
-                for e in validated_data_dict.get("extras"):
-                    if e.get("key") == key:
-                        e.update({"value": value})
-                        harvest_not_found_validated = False
-                if harvest_not_found_validated:
-                    validated_data_dict["extras"].append({"key": key, "value": value})
-
-                # The commented line isn't cataloged correctly, if we pass the
-                # basic key the extras are prepended and the system works as
-                # expected.
-                # pkg_dict['extras_{0}'.format(key)] = value
+        # Add harvest extras to main indexed pkg_dict
+        for key, value in harvest_extras:
+            if key not in pkg_dict.keys():
                 pkg_dict[key] = value
 
-            pkg_dict["data_dict"] = json.dumps(data_dict)
-            pkg_dict["validated_data_dict"] = json.dumps(validated_data_dict)
-
-        if isinstance(pkg_dict.get('status'), dict):
-            try:
-                pkg_dict['status'] = json.dumps(pkg_dict['status'])
-            except ValueError:
-                pkg_dict.pop('status', None)
+        pkg_dict["data_dict"] = json.dumps(data_dict)
+        pkg_dict["validated_data_dict"] = json.dumps(validated_data_dict)
 
         return pkg_dict
 
