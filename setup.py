@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '1.4.2'
+version = '1.5.0'
 
 setup(
     name='ckanext-harvest',
