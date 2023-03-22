@@ -633,7 +633,7 @@ def job_abort_view(source, id):
         return tk.abort(500, msg)
 
     return h.redirect_to(
-        h.url_for('{0}.admin'.format(DATASET_TYPE_NAME), id=source))
+        h.url_for('harvester.admin', id=source))
 
 
 def refresh_view(id):
@@ -663,7 +663,7 @@ def refresh_view(id):
         h.flash_error(msg)
 
     return h.redirect_to(
-        h.url_for('{0}.admin'.format(DATASET_TYPE_NAME), id=id))
+        h.url_for('harvester.admin', id=id))
 
 
 def clear_view(id):
@@ -680,7 +680,7 @@ def clear_view(id):
         h.flash_error(msg)
 
     return h.redirect_to(
-        h.url_for('{0}.admin'.format(DATASET_TYPE_NAME), id=id))
+        h.url_for('harvester.admin', id=id))
 
 
 def delete_view(id):
@@ -701,7 +701,7 @@ def delete_view(id):
             h.flash_success(_('Harvesting source successfully inactivated'))
 
         return h.redirect_to(
-            h.url_for('{0}.admin'.format(DATASET_TYPE_NAME), id=id))
+            h.url_for('harvester.admin', id=id))
     except tk.ObjectNotFound:
         return tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
