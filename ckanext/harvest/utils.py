@@ -687,7 +687,7 @@ def delete_view(id):
     try:
         context = {'model': model, 'user': tk.c.user}
 
-        context['clear_source'] = tk.request.params.get('clear',
+        context['clear_source'] = tk.request.args.get('clear',
                                                         '').lower() in (
                                                             u'true',
                                                             u'1',
