@@ -686,12 +686,8 @@ def clear_view(id):
 def delete_view(id):
     try:
         context = {'model': model, 'user': tk.c.user}
-
-        context['clear_source'] = tk.request.params.get('clear',
-                                                        '').lower() in (
-                                                            u'true',
-                                                            u'1',
-                                                        )
+        clear = tk.request.args.get('clear', '').lower()
+        context['clear_source'] = clear in ('true', '1', )
 
         tk.get_action('harvest_source_delete')(context, {'id': id})
 

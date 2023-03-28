@@ -36,7 +36,7 @@ def package_list_for_source(source_id):
     It calls the package_list snippet and the pager.
     '''
     limit = 20
-    page = int(request.params.get('page', 1))
+    page = int(request.args.get('page', 1))
     fq = '+harvest_source_id:"{0}"'.format(source_id)
     search_dict = {
         'fq': fq,
@@ -124,7 +124,7 @@ def link_for_harvest_object(id=None, guid=None, text=None):
         obj = logic.get_action('harvest_object_show')(context, {'id': guid, 'attr': 'guid'})
         id = obj.id
 
-    url = h.url_for('harvest.object_show', id=id)
+    url = h.url_for('harvester.object_show', id=id)
     text = text or guid or id
     link = '<a href="{url}">{text}</a>'.format(url=url, text=text)
 
