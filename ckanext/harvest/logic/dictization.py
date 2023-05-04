@@ -68,7 +68,7 @@ def harvest_job_dictize(job, context):
             .group_by(HarvestObjectError.message) \
             .order_by(text('error_count desc')) \
             .limit(context.get('error_summmary_limit', 20))
-        out['object_error_summary'] = q.all()
+        out['object_error_summary'] = _dictize_list(q.all())
         q = model.Session.query(
             HarvestGatherError.message,
             func.count(HarvestGatherError.message).label('error_count')) \
@@ -76,7 +76,7 @@ def harvest_job_dictize(job, context):
             .group_by(HarvestGatherError.message) \
             .order_by(text('error_count desc')) \
             .limit(context.get('error_summmary_limit', 20))
-        out['gather_error_summary'] = q.all()
+        out['gather_error_summary'] = _dictize_list(q.all())
     return out
 
 
@@ -144,3 +144,13 @@ def _get_source_status(source, context):
         out['last_harvest_request'] = 'Not yet harvested'
 
     return out
+
+
+def _dictize_list(db_result_list):
+    '''
+    Helper method to dictize all elements of a database result list.
+    '''
+    dictized_list = []
+    for elem in db_result_list:
+        dictized_list.append(elem._asdict())
+    return dictized_list

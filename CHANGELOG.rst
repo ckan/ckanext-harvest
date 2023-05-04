@@ -11,6 +11,8 @@ and this project adheres to `Semantic Versioning <http://semver.org/>`_
 Unreleased_
 ***********
 
+- Fix a problem with data-dictization when using sqlalchemy 1.4+
+
 ***********
 1.4.2_ - 2023-01-12
 ***********
