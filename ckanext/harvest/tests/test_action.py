@@ -755,3 +755,33 @@ class TestActions():
         assert job['status'] == 'Running'
         assert job['gather_started'] is None
         assert 'stats' in job.keys()
+
+    def test_harvest_source_show_status(self):
+
+        source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
+        job = factories.HarvestJobObj(source=source)
+        dataset = ckan_factories.Dataset()
+        obj = factories.HarvestObjectObj(
+            job=job, source=source, package_id=dataset['id'])
+
+        harvest_gather_error = harvest_model.HarvestGatherError(message="Unexpected gather error", job=job)
+        harvest_gather_error.save()
+        harvest_object_error = harvest_model.HarvestObjectError(message="Unexpected object error", object=obj)
+        harvest_object_error.save()
+
+        context = {'model': model}
+        data_dict = {'id': source.id}
+
+        source_status = get_action('harvest_source_show_status')(context, data_dict)
+
+        # verifiy that the response is dictized properly
+        json.dumps(source_status)
+
+        last_job = source_status['last_job']
+        assert last_job['source_id'] == source.id
+        assert last_job['status'] == 'New'
+        assert last_job['stats']['errored'] == 2
+        assert len(last_job['object_error_summary']) == 1
+        assert last_job['object_error_summary'][0]['message'] == harvest_object_error.message
+        assert len(last_job['gather_error_summary']) == 1
+        assert last_job['gather_error_summary'][0]['message'] == harvest_gather_error.message
