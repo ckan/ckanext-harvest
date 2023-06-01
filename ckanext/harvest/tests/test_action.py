@@ -783,5 +783,7 @@ class TestActions():
         assert last_job['stats']['errored'] == 2
         assert len(last_job['object_error_summary']) == 1
         assert last_job['object_error_summary'][0]['message'] == harvest_object_error.message
+        assert last_job['object_error_summary'][0]['error_count'] == 1
         assert len(last_job['gather_error_summary']) == 1
         assert last_job['gather_error_summary'][0]['message'] == harvest_gather_error.message
+        assert last_job['gather_error_summary'][0]['error_count'] == 1
