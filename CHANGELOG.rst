@@ -8,6 +8,15 @@ The format is based on `Keep a Changelog <http://keepachangelog.com>`_
 and this project adheres to `Semantic Versioning <http://semver.org/>`_
 
 ***********
+1.5.6_ - 2023-06-26
+***********
+
+Fixed
+-------
+
+- Fix url endpoint for job_show #534
+
+***********
 1.5.5_ - 2023-06-05
 ***********
 
@@ -404,7 +413,8 @@ Categories
 - ``Fixed`` for any bug fixes.
 - ``Security`` to invite users to upgrade in case of vulnerabilities.
 
-.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.5.5...HEAD
+.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.5.6...HEAD
+.. _1.5.6: https://github.com/ckan/ckanext-harvest/compare/v1.5.5...v1.5.6
 .. _1.5.5: https://github.com/ckan/ckanext-harvest/compare/v1.5.4...v1.5.5
 .. _1.5.4: https://github.com/ckan/ckanext-harvest/compare/v1.5.3...v1.5.4
 .. _1.5.3: https://github.com/ckan/ckanext-harvest/compare/v1.5.2...v1.5.3
