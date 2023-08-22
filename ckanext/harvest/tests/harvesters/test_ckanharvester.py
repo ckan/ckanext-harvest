@@ -49,7 +49,7 @@ class TestCkanHarvester(object):
         obj_ids = harvester.gather_stage(job)
 
         assert job.gather_errors == []
-        assert type(obj_ids) == list
+        assert isinstance(obj_ids, list)
         assert len(obj_ids) == len(mock_ckan.DATASETS)
         harvest_object = harvest_model.HarvestObject.get(obj_ids[0])
         assert harvest_object.guid == mock_ckan.DATASETS[0]['id']
