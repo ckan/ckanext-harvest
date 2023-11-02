@@ -19,8 +19,8 @@ depends_on = None
 def upgrade():
     engine = op.get_bind()
     inspector = sa.inspect(engine)
-
-    if not inspector.has_table("harvest_source"):
+    tables = inspector.get_table_names()
+    if "harvest_source" not in tables:
         op.create_table(
             "harvest_source",
             sa.Column("id", sa.UnicodeText, primary_key=True),
@@ -37,7 +37,7 @@ def upgrade():
             sa.Column("next_run", sa.DateTime),
         )
 
-    if not inspector.has_table("harvest_job"):
+    if "harvest_job" not in tables:
         op.create_table(
             "harvest_job",
             sa.Column("id", sa.UnicodeText, primary_key=True),
@@ -53,7 +53,7 @@ def upgrade():
             sa.Column("status", sa.UnicodeText, nullable=False),
         )
 
-    if not inspector.has_table("harvest_object"):
+    if "harvest_object" not in tables:
         op.create_table(
             "harvest_object",
             sa.Column("id", sa.UnicodeText, primary_key=True),
@@ -102,7 +102,7 @@ def upgrade():
     if "guid_idx" not in index_names:
         op.create_index("guid_idx", "harvest_object", ["guid"])
 
-    if not inspector.has_table("harvest_object_extra"):
+    if "harvest_object_extra" not in tables:
         op.create_table(
             "harvest_object_extra",
             sa.Column("id", sa.UnicodeText, primary_key=True),
@@ -123,7 +123,7 @@ def upgrade():
             "harvest_object_id_idx", "harvest_object_extra", ["harvest_object_id"]
         )
 
-    if not inspector.has_table("harvest_gather_error"):
+    if "harvest_gather_error" not in tables:
         op.create_table(
             "harvest_gather_error",
             sa.Column("id", sa.UnicodeText, primary_key=True),
@@ -136,7 +136,7 @@ def upgrade():
             sa.Column("created", sa.DateTime),
         )
 
-    if not inspector.has_table("harvest_object_error"):
+    if "harvest_object_error" not in tables:
         op.create_table(
             "harvest_object_error",
             sa.Column("id", sa.UnicodeText, primary_key=True),
@@ -161,7 +161,7 @@ def upgrade():
             ["harvest_object_id"],
         )
 
-    if not inspector.has_table("harvest_log"):
+    if "harvest_log" not in tables:
         op.create_table(
             "harvest_log",
             sa.Column("id", sa.UnicodeText, primary_key=True),
