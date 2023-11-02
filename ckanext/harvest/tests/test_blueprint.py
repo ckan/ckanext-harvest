@@ -5,7 +5,7 @@ from ckantoolkit.tests import factories
 from ckanext.harvest.tests import factories as harvest_factories
 
 
-@pytest.mark.usefixtures('clean_db', 'clean_index')
+@pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_index')
 class TestBlueprint():
 
     def test_index_page_is_rendered(self, app):
