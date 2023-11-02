@@ -101,12 +101,6 @@ def _there_are(what, sequence, condition=""):
     )
 
 
-def initdb():
-    from ckanext.harvest.model import setup as db_setup
-
-    db_setup()
-
-
 def create_harvest_source(
     name,
     url,
