@@ -57,6 +57,5 @@ jobs:
     - name: Setup extension (CKAN >= 2.9)
       run: |
         ckan -c test.ini db init
-        ckan -c test.ini harvester initdb
     - name: Run tests
       run: pytest --ckan-ini=test.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests

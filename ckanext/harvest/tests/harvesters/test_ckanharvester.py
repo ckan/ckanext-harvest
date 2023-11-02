@@ -38,7 +38,7 @@ def was_last_job_considered_error_free():
     return bool(HarvesterBase.last_error_free_job(job))
 
 
-@pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_index', 'harvest_setup')
+@pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_index')
 class TestCkanHarvester(object):
 
     def test_gather_normal(self):

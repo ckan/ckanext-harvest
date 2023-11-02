@@ -9,7 +9,7 @@ from ckanext.harvest.tests import factories as harvest_factories
 from ckanext.harvest.logic import HarvestJobExists
 
 
-@pytest.mark.usefixtures('with_plugins', 'clean_db', 'harvest_setup', 'clean_queues')
+@pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_queues')
 @pytest.mark.ckan_config('ckan.plugins', 'harvest test_action_harvester')
 class TestModelFunctions:
     dataset_counter = 0

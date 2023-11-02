@@ -57,7 +57,7 @@ SOURCE_DICT = {
 }
 
 
-@pytest.mark.usefixtures('with_plugins', 'clean_db', 'harvest_setup', 'clean_queues')
+@pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_queues')
 @pytest.mark.ckan_config('ckan.plugins', 'harvest test_action_harvester')
 class HarvestSourceActionBase():
 
@@ -225,7 +225,7 @@ class TestHarvestSourceActionPatch(HarvestSourceFixtureMixin,
         assert source.type == source_dict['source_type']
 
 
-@pytest.mark.usefixtures('with_plugins', 'clean_db', 'harvest_setup', 'clean_queues')
+@pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_queues')
 @pytest.mark.ckan_config('ckan.plugins', 'harvest test_action_harvester')
 class TestActions():
     def test_harvest_source_clear(self):
