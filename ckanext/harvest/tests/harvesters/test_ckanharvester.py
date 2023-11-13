@@ -38,7 +38,7 @@ def was_last_job_considered_error_free():
     return bool(HarvesterBase.last_error_free_job(job))
 
 
-@pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_index', 'harvest_setup')
+@pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_index')
 class TestCkanHarvester(object):
 
     def test_gather_normal(self):
@@ -49,7 +49,7 @@ class TestCkanHarvester(object):
         obj_ids = harvester.gather_stage(job)
 
         assert job.gather_errors == []
-        assert type(obj_ids) == list
+        assert isinstance(obj_ids, list)
         assert len(obj_ids) == len(mock_ckan.DATASETS)
         harvest_object = harvest_model.HarvestObject.get(obj_ids[0])
         assert harvest_object.guid == mock_ckan.DATASETS[0]['id']

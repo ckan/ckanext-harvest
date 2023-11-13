@@ -15,7 +15,6 @@ from ckan.lib.plugins import DefaultTranslation
 
 import ckanext.harvest
 from ckanext.harvest import cli, views
-from ckanext.harvest.model import setup as model_setup
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 from ckanext.harvest.log import DBLogHandler
 
@@ -274,9 +273,6 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
     def configure(self, config):
 
         self.startup = True
-
-        # Setup harvest model
-        model_setup()
 
         # Configure database logger
         _configure_db_logger(config)

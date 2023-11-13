@@ -20,14 +20,6 @@ def harvester():
     pass
 
 
-@harvester.command()
-def initdb():
-    """Creates the necessary tables in the database.
-    """
-    utils.initdb()
-    click.secho(u"DB tables created", fg=u"green")
-
-
 @harvester.group()
 def source():
     """Manage harvest sources
@@ -337,7 +329,6 @@ def import_stage(
     import. e.g. 15af will run segments 1,5,a,f
 
     """
-    ctx.invoke(initdb)
     flask_app = ctx.meta["flask_app"]
     with flask_app.test_request_context():
         try:

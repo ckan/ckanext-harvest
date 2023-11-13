@@ -94,7 +94,7 @@ Configuration
 
 Run the following command to create the necessary tables in the database (ensuring the pyenv is activated):
 
-    (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini harvester initdb
+    (pyenv) $ ckan --config=/etc/ckan/default/ckan.ini db upgrade -p harvest
 
 Finally, restart CKAN to have the changes take effect::
 
@@ -228,9 +228,6 @@ Command line interface
 ======================
 
 The following operations can be run from the command line as described underneath::
-
-      harvester initdb
-        - Creates the necessary tables in the database
 
       harvester source {name} {url} {type} [{title}] [{active}] [{owner_org}] [{frequency}] [{config}]
         - create new harvest source
