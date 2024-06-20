@@ -55,7 +55,7 @@ class TestModelFunctions:
         job.gather_finished = datetime.utcnow()
         job.save()
 
-        assert job.get_last_finished_object() == None
+        assert job.get_last_finished_object() is None
         assert job.get_last_action_time() == job.gather_finished
 
     def test_no_gathered_job(self):
@@ -65,7 +65,7 @@ class TestModelFunctions:
         job.gather_finished = None
         job.save()
 
-        assert job.get_last_finished_object() == None
+        assert job.get_last_finished_object() is None
         assert job.get_last_action_time() == job.created
 
     def test_gather_get_last_action_time(self):
