@@ -19,7 +19,7 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        ckan-version: ["2.10", 2.9]
+        ckan-version: ["master", "2.10", 2.9]
       fail-fast: false
 
     name: CKAN ${{ matrix.ckan-version }}
