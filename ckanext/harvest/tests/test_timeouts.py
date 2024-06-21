@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from nose.tools import assert_equal, assert_in
 import pytest
 from ckan.tests import factories as ckan_factories
 from ckan import model
@@ -25,14 +24,14 @@ class TestModelFunctions:
         ob2 = self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=5)
         self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=15)
 
-        assert_equal(job.get_last_finished_object(), ob2)
-        assert_equal(job.get_last_action_time(), ob2.import_finished)
+        assert job.get_last_finished_object() == ob2
+        assert job.get_last_action_time() == ob2.import_finished
 
         gather_errors = self.run(timeout=3, source=source, job=job)
-        assert_equal(len(gather_errors), 1)
-        assert_equal(job.status, 'Finished')
+        assert len(gather_errors) == 1
+        assert job.status == 'Finished'
         gather_error = gather_errors[0]
-        assert_in('timeout', gather_error.message)
+        assert 'timeout' in gather_error.message
 
     def test_no_timeout_jobs(self):
         """ Test a job that don't raise timeout """
@@ -42,12 +41,12 @@ class TestModelFunctions:
         ob2 = self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=5)
         self.add_object(job=job, source=source, state='COMPLETE', minutes_ago=15)
 
-        assert_equal(job.get_last_finished_object(), ob2)
-        assert_equal(job.get_last_action_time(), ob2.import_finished)
+        assert job.get_last_finished_object() == ob2
+        assert job.get_last_action_time() == ob2.import_finished
 
         gather_errors = self.run(timeout=7, source=source, job=job)
-        assert_equal(len(gather_errors), 0)
-        assert_equal(job.status, 'Finished')
+        assert len(gather_errors) == 0
+        assert job.status == 'Finished'
 
     def test_no_objects_job(self):
         """ Test a job that don't raise timeout """
@@ -56,8 +55,8 @@ class TestModelFunctions:
         job.gather_finished = datetime.utcnow()
         job.save()
 
-        assert_equal(job.get_last_finished_object(), None)
-        assert_equal(job.get_last_action_time(), job.gather_finished)
+        assert job.get_last_finished_object() is None
+        assert job.get_last_action_time() == job.gather_finished
 
     def test_no_gathered_job(self):
         """ Test a job that don't raise timeout """
@@ -66,8 +65,8 @@ class TestModelFunctions:
         job.gather_finished = None
         job.save()
 
-        assert_equal(job.get_last_finished_object(), None)
-        assert_equal(job.get_last_action_time(), job.created)
+        assert job.get_last_finished_object() is None
+        assert job.get_last_action_time() == job.created
 
     def test_gather_get_last_action_time(self):
         """ Test get_last_action_time at gather stage """
@@ -77,8 +76,8 @@ class TestModelFunctions:
         self.add_object(job=job, source=source, state='WAITING')
         ob3 = self.add_object(job=job, source=source, state='WAITING')
 
-        assert_equal(job.get_last_gathered_object(), ob3)
-        assert_equal(job.get_last_action_time(), ob3.gathered)
+        assert job.get_last_gathered_object() == ob3
+        assert job.get_last_action_time() == ob3.gathered
 
     def run(self, timeout, source, job):
         """ Run the havester_job_run and return the errors """
@@ -125,7 +124,7 @@ class TestModelFunctions:
         job.save()
 
         jobs = source.get_jobs(status='Running')
-        assert_in(job, jobs)
+        assert job in jobs
 
         return source, job
 
