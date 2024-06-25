@@ -5,7 +5,6 @@ import re
 import uuid
 
 from sqlalchemy import exists, and_
-from sqlalchemy.sql import update, bindparam
 from sqlalchemy.orm import contains_eager
 
 from ckantoolkit import config

@@ -345,7 +345,6 @@ class HarvestLog(BaseModel, HarvestDomainObject):
     created = Column(types.DateTime, default=datetime.datetime.utcnow)
 
 
-
 def harvest_object_before_insert_listener(mapper, connection, target):
     """
     For compatibility with old harvesters, check if the source id has
