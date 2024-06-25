@@ -315,15 +315,11 @@ class HarvesterBase(SingletonPlugin):
                     return 'unchanged'
 
                 # Flag the other objects linking to this package as not current anymore
-                from ckanext.harvest.model import harvest_object_table
-                conn = Session.connection()
-                u = update(harvest_object_table)\
-                    .where(harvest_object_table.c.package_id == bindparam('b_package_id')) \
-                    .values(current=False)
-                conn.execute(u, b_package_id=new_package['id'])
+                Session.query(HarvestObject).filter(
+                    HarvestObject.package_id == new_package["id"]).update(
+                        {"current": False})
 
                 # Flag this as the current harvest object
-
                 harvest_object.package_id = new_package['id']
                 harvest_object.current = True
                 harvest_object.save()
