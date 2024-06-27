@@ -19,13 +19,13 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        ckan-version: ["master", "2.10", 2.9]
+        ckan-version: ["2.11", "2.10", 2.9]
       fail-fast: false
 
     name: CKAN ${{ matrix.ckan-version }}
     runs-on: ubuntu-latest
     container:
-      image: openknowledge/ckan-dev:${{ matrix.ckan-version }}
+      image: ckan/ckan-dev:${{ matrix.ckan-version }}
     services:
       solr:
         image: ckan/ckan-solr:${{ matrix.ckan-version }}
