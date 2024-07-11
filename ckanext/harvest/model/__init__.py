@@ -2,145 +2,31 @@ import logging
 import datetime
 
 from sqlalchemy import event
-from sqlalchemy import Table
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import types
 from sqlalchemy import Index
-from sqlalchemy.orm import backref, relation
+from sqlalchemy.orm import backref, relationship
 from sqlalchemy.exc import InvalidRequestError
 
-from ckan.model.meta import metadata, mapper, Session
+from ckan.model.meta import Session
 from ckan.model.types import make_uuid
 from ckan.model.domain_object import DomainObject
 from ckan.model.package import Package
+
+try:
+    from ckan.plugins.toolkit import BaseModel
+except ImportError:
+    # CKAN <= 2.9
+    from ckan.model.meta import metadata
+    from sqlalchemy.ext.declarative import declarative_base
+
+    BaseModel = declarative_base(metadata=metadata)
 
 
 UPDATE_FREQUENCIES = ["MANUAL", "MONTHLY", "WEEKLY", "BIWEEKLY", "DAILY", "ALWAYS"]
 
 log = logging.getLogger(__name__)
-
-__all__ = [
-    "HarvestSource",
-    "harvest_source_table",
-    "HarvestJob",
-    "harvest_job_table",
-    "HarvestObject",
-    "harvest_object_table",
-    "HarvestGatherError",
-    "harvest_gather_error_table",
-    "HarvestObjectError",
-    "harvest_object_error_table",
-    "HarvestLog",
-    "harvest_log_table",
-]
-
-
-harvest_source_table = Table(
-    "harvest_source",
-    metadata,
-    Column("id", types.UnicodeText, primary_key=True, default=make_uuid),
-    Column("url", types.UnicodeText, nullable=False),
-    Column("title", types.UnicodeText, default=""),
-    Column("description", types.UnicodeText, default=""),
-    Column("config", types.UnicodeText, default=""),
-    Column("created", types.DateTime, default=datetime.datetime.utcnow),
-    Column("type", types.UnicodeText, nullable=False),
-    Column("active", types.Boolean, default=True),
-    Column("user_id", types.UnicodeText, default=""),
-    Column("publisher_id", types.UnicodeText, default=""),
-    Column("frequency", types.UnicodeText, default="MANUAL"),
-    Column("next_run", types.DateTime),
-)
-harvest_job_table = Table(
-    "harvest_job",
-    metadata,
-    Column("id", types.UnicodeText, primary_key=True, default=make_uuid),
-    Column("created", types.DateTime, default=datetime.datetime.utcnow),
-    Column("gather_started", types.DateTime),
-    Column("gather_finished", types.DateTime),
-    Column("finished", types.DateTime),
-    Column("source_id", types.UnicodeText, ForeignKey("harvest_source.id")),
-    # status: New, Running, Finished
-    Column("status", types.UnicodeText, default="New", nullable=False),
-)
-harvest_object_table = Table(
-    "harvest_object",
-    metadata,
-    Column("id", types.UnicodeText, primary_key=True, default=make_uuid),
-    # The guid is the 'identity' of the dataset, according to the source.
-    # So if you reharvest it, then the harvester knows which dataset to
-    # update because of this identity. The identity needs to be unique
-    # within this CKAN.
-    Column("guid", types.UnicodeText, default=""),
-    # When you harvest a dataset multiple times, only the latest
-    # successfully imported harvest_object should be flagged 'current'.
-    # The import_stage usually reads and writes it.
-    Column("current", types.Boolean, default=False),
-    Column("gathered", types.DateTime, default=datetime.datetime.utcnow),
-    Column("fetch_started", types.DateTime),
-    Column("content", types.UnicodeText, nullable=True),
-    Column("fetch_finished", types.DateTime),
-    Column("import_started", types.DateTime),
-    Column("import_finished", types.DateTime),
-    # state: WAITING, FETCH, IMPORT, COMPLETE, ERROR
-    Column("state", types.UnicodeText, default="WAITING"),
-    Column("metadata_modified_date", types.DateTime),
-    Column("retry_times", types.Integer, default=0),
-    Column("harvest_job_id", types.UnicodeText, ForeignKey("harvest_job.id")),
-    Column("harvest_source_id", types.UnicodeText, ForeignKey("harvest_source.id")),
-    Column(
-        "package_id",
-        types.UnicodeText,
-        ForeignKey("package.id", deferrable=True),
-        nullable=True,
-    ),
-    # report_status: 'added', 'updated', 'not modified', 'deleted', 'errored'
-    Column("report_status", types.UnicodeText, nullable=True),
-    Index("harvest_job_id_idx", "harvest_job_id"),
-    Index("harvest_source_id_idx", "harvest_source_id"),
-    Index("package_id_idx", "package_id"),
-    Index("guid_idx", "guid"),
-)
-harvest_gather_error_table = Table(
-    "harvest_gather_error",
-    metadata,
-    Column("id", types.UnicodeText, primary_key=True, default=make_uuid),
-    Column("harvest_job_id", types.UnicodeText, ForeignKey("harvest_job.id")),
-    Column("message", types.UnicodeText),
-    Column("created", types.DateTime, default=datetime.datetime.utcnow),
-)
-harvest_object_error_table = Table(
-    "harvest_object_error",
-    metadata,
-    Column("id", types.UnicodeText, primary_key=True, default=make_uuid),
-    Column("harvest_object_id", types.UnicodeText, ForeignKey("harvest_object.id")),
-    Column("message", types.UnicodeText),
-    Column("stage", types.UnicodeText),
-    Column("line", types.Integer),
-    Column("created", types.DateTime, default=datetime.datetime.utcnow),
-    Index("harvest_error_harvest_object_id_idx", "harvest_object_id"),
-)
-harvest_object_extra_table = Table(
-    "harvest_object_extra",
-    metadata,
-    Column("id", types.UnicodeText, primary_key=True, default=make_uuid),
-    Column("harvest_object_id", types.UnicodeText, ForeignKey("harvest_object.id")),
-    Column("key", types.UnicodeText),
-    Column("value", types.UnicodeText),
-    Index("harvest_object_id_idx", "harvest_object_id"),
-)
-harvest_log_table = Table(
-    "harvest_log",
-    metadata,
-    Column("id", types.UnicodeText, primary_key=True, default=make_uuid),
-    Column("content", types.UnicodeText, nullable=False),
-    Column(
-        "level",
-        types.Enum("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", name="log_level"),
-    ),
-    Column("created", types.DateTime, default=datetime.datetime.utcnow),
-)
 
 
 class HarvestError(Exception):
@@ -170,12 +56,33 @@ class HarvestDomainObject(DomainObject):
         return query.filter_by(**kwds)
 
 
-class HarvestSource(HarvestDomainObject):
+class HarvestSource(BaseModel, HarvestDomainObject):
     """A Harvest Source is essentially a URL plus some other metadata.
     It must have a type (e.g. CSW) and can have a status of "active"
     or "inactive". The harvesting processes are not fired on inactive
     sources.
     """
+
+    __tablename__ = "harvest_source"
+
+    id = Column(types.UnicodeText, primary_key=True, default=make_uuid)
+    url = Column(types.UnicodeText, nullable=False)
+    title = Column(types.UnicodeText, default="")
+    description = Column(types.UnicodeText, default="")
+    config = Column(types.UnicodeText, default="")
+    created = Column(types.DateTime, default=datetime.datetime.utcnow)
+    type = Column(types.UnicodeText, nullable=False)
+    active = Column(types.Boolean, default=True)
+    user_id = Column(types.UnicodeText, default="")
+    publisher_id = Column(types.UnicodeText, default="")
+    frequency = Column(types.UnicodeText, default="MANUAL")
+    next_run = Column(types.DateTime)
+    jobs = relationship(
+        "HarvestJob",
+        lazy="select",
+        back_populates="source",
+        order_by=lambda: HarvestJob.created,
+    )
 
     def __repr__(self):
         return "<HarvestSource id=%s title=%s url=%s active=%r>" % (
@@ -199,7 +106,7 @@ class HarvestSource(HarvestDomainObject):
         return query.all()
 
 
-class HarvestJob(HarvestDomainObject):
+class HarvestJob(BaseModel, HarvestDomainObject):
     """A Harvesting Job is performed in two phases. In first place, the
     **gather** stage collects all the Ids and URLs that need to be fetched
     from the harvest source. Errors occurring in this phase
@@ -210,6 +117,22 @@ class HarvestJob(HarvestDomainObject):
     (``HarvestObjectError``) are stored in the ``harvest_object_error``
     table.
     """
+
+    __tablename__ = "harvest_job"
+
+    id = Column(types.UnicodeText, primary_key=True, default=make_uuid)
+    created = Column(types.DateTime, default=datetime.datetime.utcnow)
+    gather_started = Column(types.DateTime)
+    gather_finished = Column(types.DateTime)
+    finished = Column(types.DateTime)
+    source_id = Column(types.UnicodeText, ForeignKey("harvest_source.id"))
+    # status: New, Running, Finished
+    status = Column(types.UnicodeText, default="New", nullable=False)
+    source = relationship(
+        "HarvestSource",
+        lazy="select",
+        back_populates="jobs",
+    )
 
     def get_last_finished_object(self):
         """Determine the last finished object in this job
@@ -267,22 +190,93 @@ class HarvestJob(HarvestDomainObject):
         return query.all()
 
 
-class HarvestObject(HarvestDomainObject):
+class HarvestObject(BaseModel, HarvestDomainObject):
     """A Harvest Object is created every time an element is fetched from a
     harvest source. Its contents can be processed and imported to ckan
     packages, RDF graphs, etc.
 
     """
 
+    __tablename__ = "harvest_object"
 
-class HarvestObjectExtra(HarvestDomainObject):
+    id = Column(types.UnicodeText, primary_key=True, default=make_uuid)
+    # The guid is the 'identity' of the dataset, according to the source.
+    # So if you reharvest it, then the harvester knows which dataset to
+    # update because of this identity. The identity needs to be unique
+    # within this CKAN.
+    guid = Column(types.UnicodeText, default="")
+    # When you harvest a dataset multiple times, only the latest
+    # successfully imported harvest_object should be flagged 'current'.
+    # The import_stage usually reads and writes it.
+    current = Column(types.Boolean, default=False)
+    gathered = Column(types.DateTime, default=datetime.datetime.utcnow)
+    fetch_started = Column(types.DateTime)
+    content = Column(types.UnicodeText, nullable=True)
+    fetch_finished = Column(types.DateTime)
+    import_started = Column(types.DateTime)
+    import_finished = Column(types.DateTime)
+    # state: WAITING, FETCH, IMPORT, COMPLETE, ERROR
+    state = Column(types.UnicodeText, default="WAITING")
+    metadata_modified_date = Column(types.DateTime)
+    retry_times = Column(types.Integer, default=0)
+    harvest_job_id = Column(types.UnicodeText, ForeignKey("harvest_job.id"))
+    harvest_source_id = Column(types.UnicodeText, ForeignKey("harvest_source.id"))
+    package_id = Column(
+        types.UnicodeText,
+        ForeignKey("package.id", deferrable=True),
+        nullable=True,
+    )
+    # report_status: 'added', 'updated', 'not modified', 'deleted', 'errored'
+    report_status = Column(types.UnicodeText, nullable=True)
+    harvest_job_id_idx = Index("harvest_job_id")
+    harvest_source_id_idx = Index("harvest_source_id")
+    package_id_idx = Index("package_id")
+    guid_idx = Index("guid")
+    package = relationship(
+        Package,
+        lazy="select",
+        backref="harvest_objects",
+    )
+    job = relationship(
+        HarvestJob,
+        lazy="select",
+        backref="objects",
+    )
+    source = relationship(
+        HarvestSource,
+        lazy="select",
+        backref="objects",
+    )
+
+
+class HarvestObjectExtra(BaseModel, HarvestDomainObject):
     """Extra key value data for Harvest objects"""
 
+    __tablename__ = "harvest_object_extra"
 
-class HarvestGatherError(HarvestDomainObject):
+    id = Column(types.UnicodeText, primary_key=True, default=make_uuid)
+    harvest_object_id = Column(types.UnicodeText, ForeignKey("harvest_object.id"))
+    key = Column(types.UnicodeText)
+    value = Column(types.UnicodeText)
+    harvest_object_id_idx = Index("harvest_object_id")
+    object = relationship(
+        HarvestObject, backref=backref("extras", cascade="all,delete-orphan")
+    )
+
+
+class HarvestGatherError(BaseModel, HarvestDomainObject):
     """Gather errors are raised during the **gather** stage of a harvesting
     job.
     """
+
+    __tablename__ = "harvest_gather_error"
+
+    id = Column(types.UnicodeText, primary_key=True, default=make_uuid)
+    harvest_job_id = Column(types.UnicodeText, ForeignKey("harvest_job.id"))
+    message = Column(types.UnicodeText)
+    created = Column(types.DateTime, default=datetime.datetime.utcnow)
+
+    job = relationship(HarvestJob, backref="gather_errors")
 
     @classmethod
     def create(cls, message, job):
@@ -300,10 +294,24 @@ class HarvestGatherError(HarvestDomainObject):
             log.info(message)
 
 
-class HarvestObjectError(HarvestDomainObject):
+class HarvestObjectError(BaseModel, HarvestDomainObject):
     """Object errors are raised during the **fetch** or **import** stage of a
     harvesting job, and are referenced to a specific harvest object.
     """
+
+    __tablename__ = "harvest_object_error"
+
+    id = Column(types.UnicodeText, primary_key=True, default=make_uuid)
+    harvest_object_id = Column(types.UnicodeText, ForeignKey("harvest_object.id"))
+    message = Column(types.UnicodeText)
+    stage = Column(types.UnicodeText)
+    line = Column(types.Integer)
+    created = Column(types.DateTime, default=datetime.datetime.utcnow)
+    harvest_error_harvest_object_id_idx = Index("harvest_object_id")
+
+    object = relationship(
+        HarvestObject, backref=backref("errors", cascade="all,delete-orphan")
+    )
 
     @classmethod
     def create(cls, message, object, stage="Fetch", line=None):
@@ -329,12 +337,19 @@ class HarvestObjectError(HarvestDomainObject):
             log.debug(log_message)
 
 
-class HarvestLog(HarvestDomainObject):
+class HarvestLog(BaseModel, HarvestDomainObject):
     """HarvestLog objects are created each time something is logged
     using python's standard logging module
     """
 
-    pass
+    __tablename__ = "harvest_log"
+
+    id = Column(types.UnicodeText, primary_key=True, default=make_uuid)
+    content = Column(types.UnicodeText, nullable=False)
+    level = Column(
+        types.Enum("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", name="log_level"),
+    )
+    created = Column(types.DateTime, default=datetime.datetime.utcnow)
 
 
 def harvest_object_before_insert_listener(mapper, connection, target):
@@ -370,78 +385,5 @@ def clean_harvest_log(condition):
 
     log.info("Harvest log table clean-up finished successfully")
 
-
-mapper(
-    HarvestSource,
-    harvest_source_table,
-    properties={
-        "jobs": relation(
-            HarvestJob,
-            lazy=True,
-            backref="source",
-            order_by=harvest_job_table.c.created,
-        ),
-    },
-)
-
-mapper(
-    HarvestJob,
-    harvest_job_table,
-)
-
-mapper(
-    HarvestObject,
-    harvest_object_table,
-    properties={
-        "package": relation(
-            Package,
-            lazy=True,
-            backref="harvest_objects",
-        ),
-        "job": relation(
-            HarvestJob,
-            lazy=True,
-            backref="objects",
-        ),
-        "source": relation(
-            HarvestSource,
-            lazy=True,
-            backref="objects",
-        ),
-    },
-)
-
-mapper(
-    HarvestGatherError,
-    harvest_gather_error_table,
-    properties={
-        "job": relation(HarvestJob, backref="gather_errors"),
-    },
-)
-
-mapper(
-    HarvestObjectError,
-    harvest_object_error_table,
-    properties={
-        "object": relation(
-            HarvestObject, backref=backref("errors", cascade="all,delete-orphan")
-        ),
-    },
-)
-
-mapper(
-    HarvestObjectExtra,
-    harvest_object_extra_table,
-    properties={
-        "object": relation(
-            HarvestObject, backref=backref("extras", cascade="all,delete-orphan")
-        ),
-    },
-)
-
-mapper(
-    HarvestLog,
-    harvest_log_table,
-)
 
 event.listen(HarvestObject, "before_insert", harvest_object_before_insert_listener)

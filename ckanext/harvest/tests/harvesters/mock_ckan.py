@@ -217,9 +217,9 @@ DATASETS = [
     {'id': 'dataset1-id',
      'name': 'dataset1',
      'title': 'Test Dataset1',
-     'owner_org': 'org1-id',
+     'owner_org': '0f8380d6-241a-47de-aa52-8bd91c763d97',
      'tags': [{'name': 'test-tag'}],
-     'groups': [{'id': 'group1-id', 'name': 'group1'}],
+     'groups': [{'id': '10037fa4-e683-4a67-892a-efba815e24ad', 'name': 'group1'}],
      'extras': []},
     {
         "id": "1c65c66a-fdec-4138-9c64-0f9bf087bcbb",
@@ -316,7 +316,7 @@ DATASETS = [
                 "recent": 0
             },
         "taxonomy_url": "",
-        "groups": [{"id": "remote-group-id", "name": "remote-group"}],
+        "groups": [{"id": "af9eacfc-5f77-4b36-9cb0-ce0222bf14d6", "name": "remote-group"}],
         "creator_user_id": None,
         "national_statistic": "no",
         "relationships_as_subject": [],
@@ -504,14 +504,14 @@ INVALID_TAGS = [
     ]
 
 ORGS = [
-    {'id': 'org1-id',
+    {'id': '0f8380d6-241a-47de-aa52-8bd91c763d97',
      'name': 'org1'},
     {'id': 'aa1e068a-23da-4563-b9c2-2cad272b663e',
      'name': 'cabinet-office'}
 ]
 
 GROUPS = [
-    {'id': 'group1-id',
+    {'id': '10037fa4-e683-4a67-892a-efba815e24ad',
      'name': 'group1'},
     {'id': '9853c3e1-eebb-4e8c-9ae7-1668a01bf2ca',
      'name': 'finances'}

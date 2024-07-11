@@ -58,7 +58,7 @@ SOURCE_DICT = {
 
 
 @pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_queues')
-@pytest.mark.ckan_config('ckan.plugins', 'harvest test_action_harvester')
+@pytest.mark.ckan_config('ckan.plugins', 'harvest test_action_harvester test_harvester')
 class HarvestSourceActionBase():
 
     def _get_source_dict(self):

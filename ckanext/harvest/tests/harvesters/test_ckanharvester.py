@@ -189,7 +189,7 @@ class TestCkanHarvester(object):
 
     def test_remote_groups_only_local(self):
         # Create an existing group
-        Group(id='group1-id', name='group1')
+        Group(id='10037fa4-e683-4a67-892a-efba815e24ad', name='group1')
 
         config = {'remote_groups': 'only_local'}
         results_by_guid = run_harvest(
@@ -258,11 +258,11 @@ class TestCkanHarvester(object):
         assert 'default_tags must be a list of dictionaries' in str(harvest_context.value)
 
     def test_default_groups(self):
-        Group(id='group1-id', name='group1')
-        Group(id='group2-id', name='group2')
-        Group(id='group3-id', name='group3')
+        Group(name='group1')
+        Group(name='group2')
+        Group(name='group3')
 
-        config = {'default_groups': ['group2-id', 'group3'],
+        config = {'default_groups': ['group2', 'group3'],
                   'remote_groups': 'only_local'}
         tmp_c = toolkit.c
         try:
@@ -284,7 +284,7 @@ class TestCkanHarvester(object):
         assert group_names, set(('group1', 'group2' == 'group3'))
 
     def test_default_groups_invalid(self):
-        Group(id='group2-id', name='group2')
+        Group(name='group2')
 
         # should be list of strings
         config = {'default_groups': [{'name': 'group2'}]}
