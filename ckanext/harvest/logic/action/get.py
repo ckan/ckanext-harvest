@@ -287,7 +287,7 @@ def harvest_object_list(context, data_dict):
 
     session = context['session']
 
-    only_current = data_dict.get('only_current', True)
+    only_current = p.toolkit.asbool(data_dict.get('only_current', True))
     source_id = data_dict.get('source_id', False)
 
     query = session.query(HarvestObject)
@@ -371,8 +371,8 @@ def _get_sources_for_user(context, data_dict, organization_id=None, limit=None):
     session = context['session']
     user = context.get('user', '')
 
-    only_active = data_dict.get('only_active', False)
-    only_to_run = data_dict.get('only_to_run', False)
+    only_active = p.toolkit.asbool(data_dict.get('only_active', False))
+    only_to_run = p.toolkit.asbool(data_dict.get('only_to_run', False))
 
     query = session.query(HarvestSource) \
         .order_by(HarvestSource.created.desc())
