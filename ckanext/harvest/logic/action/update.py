@@ -680,7 +680,7 @@ def harvest_jobs_run(context, data_dict):
                     session.query(HarvestObject.id) \
                            .filter(HarvestObject.harvest_job_id == job['id']) \
                            .filter(sa.and_((HarvestObject.state != u'COMPLETE'),
-                                        (HarvestObject.state != u'ERROR'))) \
+                                           (HarvestObject.state != u'ERROR'))) \
                            .count()
 
                 if num_objects_in_progress == 0:
