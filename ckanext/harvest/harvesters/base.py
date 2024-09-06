@@ -4,7 +4,7 @@ import logging
 import re
 import uuid
 
-from sqlalchemy import exists, and_
+import sqlalchemy as sa
 from sqlalchemy.orm import contains_eager
 
 from ckantoolkit import config
@@ -344,7 +344,9 @@ class HarvesterBase(SingletonPlugin):
                 # plugin)
                 harvest_object.add()
 
-                model.Session.execute('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
+                model.Session.execute(
+                    sa.text('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
+                )
                 model.Session.flush()
 
                 new_package = p.toolkit.get_action(
@@ -400,10 +402,10 @@ class HarvesterBase(SingletonPlugin):
                 .filter(HarvestJob.status == 'Finished')
                 .filter(HarvestJob.id != harvest_job.id)
                 .filter(
-            ~exists().where(
+            ~sa.exists().where(
                 HarvestGatherError.harvest_job_id == HarvestJob.id))
                 .outerjoin(HarvestObject,
-                           and_(HarvestObject.harvest_job_id == HarvestJob.id,
+                           sa.and_(HarvestObject.harvest_job_id == HarvestJob.id,
                                 HarvestObject.current == False,  # noqa: E712
                                 HarvestObject.report_status != 'not modified'))
                 .options(contains_eager(HarvestJob.objects))

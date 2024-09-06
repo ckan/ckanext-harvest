@@ -360,7 +360,6 @@ def harvest_object_before_insert_listener(mapper, connection, target):
     if not target.harvest_source_id or not target.source:
         if not target.job:
             raise Exception("You must define a Harvest Job for each Harvest Object")
-        target.source = target.job.source
         target.harvest_source_id = target.job.source.id
 
 
