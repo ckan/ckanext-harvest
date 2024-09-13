@@ -1,0 +1,44 @@
+[project]
+name = "ckanext-harvest"
+version = "1.5.6"
+description = "Harvesting interface plugin for CKAN"
+authors = [
+    {name = "CKAN Tech Team and contributors", email = "tech-team@ckan.org"}
+]
+license = {text = "AGPL"}
+classifiers = []
+keywords = []
+dependencies = []
+
+[project.urls]
+Homepage = "http://github.com/ckan/ckanext-harvest"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+#[build-system]
+#requires = ["setuptools", "wheel"]
+#build-backend = "setuptools.build_meta"
+#
+[tool.setuptools]
+#packages = ["ckanext"]
+#namespace-packages = ["ckanext"]
+include-package-data = true
+
+[tool.setuptools.packages]
+find = {}
+
+
+[project.entry-points."ckan.plugins"]
+harvest = "ckanext.harvest.plugin:Harvest"
+ckan_harvester = "ckanext.harvest.harvesters:CKANHarvester"
+
+# Test plugins"
+test_harvester = "ckanext.harvest.tests.test_queue:MockHarvester"
+test_harvester2 = "ckanext.harvest.tests.test_queue2:MockHarvester"
+test_action_harvester = "ckanext.harvest.tests.test_action:MockHarvesterForActionTests"
+
+
+[project.entry-points."babel.extractors"]
+ckan = "ckan.lib.extract:extract_ckan"
