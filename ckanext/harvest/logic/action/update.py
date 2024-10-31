@@ -7,8 +7,8 @@ import json
 import logging
 import datetime
 
+import sqlalchemy as sa
 from ckantoolkit import config
-from sqlalchemy import and_, or_
 from urllib.parse import urljoin
 
 from ckan.lib.search.index import PackageSearchIndex
@@ -194,7 +194,8 @@ def harvest_source_clear(context, data_dict):
     sql += """
     COMMIT;
     """
-    model.Session.execute(sql)
+
+    model.Session.execute(sa.text(sql))
 
     # Refresh the index for this source to update the status object
     get_action("harvest_source_reindex")(context, {"id": harvest_source_id})
@@ -376,7 +377,7 @@ def harvest_source_job_history_clear(context, data_dict):
         COMMIT;
         '''.format(harvest_source_id=harvest_source_id)
 
-    model.Session.execute(sql)
+    model.Session.execute(sa.text(sql))
 
     # Refresh the index for this source to update the status object
     get_action('harvest_source_reindex')(context, {'id': harvest_source_id})
@@ -497,8 +498,8 @@ def harvest_objects_import(context, data_dict):
                             .join(Package)
                             .filter(HarvestObject.current == True)  # noqa: E712
                             .filter(Package.state == u'active')
-                            .filter(or_(Package.id == package_id_or_name,
-                                        Package.name == package_id_or_name)))
+                            .filter(sa.or_(Package.id == package_id_or_name,
+                                           Package.name == package_id_or_name)))
         join_datasets = False
     else:
         last_objects_ids = \
@@ -639,8 +640,8 @@ def harvest_jobs_run(context, data_dict):
                 num_objects_in_progress = \
                     session.query(HarvestObject.id) \
                            .filter(HarvestObject.harvest_job_id == job['id']) \
-                           .filter(and_((HarvestObject.state != u'COMPLETE'),
-                                        (HarvestObject.state != u'ERROR'))) \
+                           .filter(sa.and_((HarvestObject.state != u'COMPLETE'),
+                                           (HarvestObject.state != u'ERROR'))) \
                            .count()
 
                 if num_objects_in_progress == 0:
@@ -947,7 +948,9 @@ def harvest_source_reindex(context, data_dict):
         'validate': False,
     })
     package_dict = logic.get_action('harvest_source_show')(
-        context, {'id': harvest_source_id})
+        dict(context, validate=False, use_cache=False),
+        {'id': harvest_source_id},
+    )
     log.debug('Updating search index for harvest source: %s',
               package_dict.get('name') or harvest_source_id)
 
