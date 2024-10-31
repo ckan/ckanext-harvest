@@ -188,8 +188,8 @@ class CKANHarvester(HarvesterBase):
         delete_missing = self.config.get('delete_missing', False)
         if delete_missing:
             query = model.Session.query(HarvestObject.package_id) \
-                .filter(HarvestObject.package_id != None) \
-                .filter(HarvestObject.current == True) \
+                .filter(HarvestObject.package_id is not None) \
+                .filter(HarvestObject.current is True) \
                 .filter(HarvestObject.harvest_source_id == harvest_job.source.id)
 
             package_ids_in_db = set()
@@ -302,8 +302,8 @@ class CKANHarvester(HarvesterBase):
             if delete_missing:
                 ids_to_delete = package_ids_in_db - package_ids
                 for pkg_id in ids_to_delete:
-                    log.debug('Creating HarvestObject to delete dataset %s',
-                        pkg_id)
+                    log.debug(
+                        'Creating HarvestObject to delete dataset %s', pkg_id)
                     obj = HarvestObject(
                         guid=pkg_id,
                         package_id=pkg_id,
@@ -431,9 +431,9 @@ class CKANHarvester(HarvesterBase):
                 # Update previous harvest object
                 model.Session.query(HarvestObject).\
                     filter(HarvestObject.guid == harvest_object.guid).\
-                    filter(HarvestObject.harvest_source_id ==
-                        harvest_object.source.id).\
-                    filter(HarvestObject.current == True).\
+                    filter(
+                        HarvestObject.harvest_source_id == harvest_object.source.id).\
+                    filter(HarvestObject.current is True).\
                     update({'current': False})
 
                 return True
