@@ -147,7 +147,7 @@ def harvest_source_clear(context, data_dict):
 
         sql += """
         DELETE FROM package_tag_revision WHERE package_id IN (
-            SELECT id FROM package_ids_to_delete');
+            SELECT id FROM package_ids_to_delete);
         DELETE FROM member_revision WHERE table_id IN (
             SELECT id FROM package_ids_to_delete);
         DELETE FROM package_extra_revision WHERE package_id IN (
