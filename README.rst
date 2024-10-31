@@ -227,102 +227,36 @@ For example, in case you want to retain changes made by the users to the fields 
 Command line interface
 ======================
 
-The following operations can be run from the command line as described underneath::
+The ``ckan harvester`` command provides utilities to manage harvest operations from the command line. 
+Please refer to the help message of each command for more details::
 
-      harvester source {name} {url} {type} [{title}] [{active}] [{owner_org}] [{frequency}] [{config}]
-        - create new harvest source
 
-      harvester source {source-id/name}
-        - shows a harvest source
+   Usage: ckan harvester [OPTIONS] COMMAND [ARGS]...
 
-      harvester rmsource {source-id/name}
-        - remove (deactivate) a harvester source, whilst leaving any related
-          datasets, jobs and objects
+     Harvests remotely mastered metadata.
 
-      harvester clearsource {source-id/name}
-        - clears all datasets, jobs and objects related to a harvest source,
-          but keeps the source itself
+   Options:
+     --help  Show this message and exit.
 
-      harvester clearsource-history [{source-id}] [-k]
-        - If no source id is given the history for all harvest sources (maximum is 1000)
-          will be cleared.
-          Clears all jobs and objects related to a harvest source, but keeps the source
-          itself. The datasets imported from the harvest source will **NOT** be deleted!!!
-          If a source id is given, it only clears the history of the harvest source with
-          the given source id.
+   Commands:
+     abort-failed-jobs  Abort all jobs which are in a "limbo state" where...
+     clean-harvest-log  Clean-up mechanism for the harvest log table.
+     dumphelp
+     fetch-consumer     Starts the consumer for the fetching queue.
+     gather-consumer    Starts the consumer for the gathering queue.
+     harvesters_info
+     import             Perform the import stage with the last fetched...
+     job                Create new harvest job and runs it (puts it on the...
+     job-abort          Marks a job as "Aborted" so that the source can be...
+     job-all            Create new harvest jobs for all active sources.
+     jobs               Lists harvest jobs.
+     purge-queues       Removes all jobs from fetch and gather queue.
+     reindex            Reindexes the harvest source datasets.
+     run                Starts any harvest jobs that have been created by...
+     run-test           Runs a harvest - for testing only.
+     source             Manage harvest sources
+     sources            Lists harvest sources.
 
-          To keep the currently active jobs use the -k option.
-
-      harvester sources [all]
-        - lists harvest sources
-          If 'all' is defined, it also shows the Inactive sources
-
-      harvester job {source-id/name}
-        - create new harvest job
-
-      harvester jobs
-        - lists harvest jobs
-
-      harvester job-abort {source-id/name}
-        - marks a job as "Aborted" so that the source can be restarted afresh.
-          It ensures that the job's harvest objects status are also marked
-          finished. You should ensure that neither the job nor its objects are
-          currently in the gather/fetch queues.
-
-      harvester run
-        - starts any harvest jobs that have been created by putting them onto
-          the gather queue. Also checks running jobs - if finished it
-          changes their status to Finished.
-
-      harvester run-test {source-id/name}
-        - runs a harvest - for testing only.
-          This does all the stages of the harvest (creates job, gather, fetch,
-          import) without involving the web UI or the queue backends. This is
-          useful for testing a harvester without having to fire up
-          gather/fetch_consumer processes, as is done in production.
-
-      harvester run-test {source-id/name} force-import=guid1,guid2...
-        - In order to force an import of particular datasets, useful to
-          target a dataset for dev purposes or when forcing imports on other environments.
-
-      harvester gather-consumer
-        - starts the consumer for the gathering queue
-
-      harvester fetch-consumer
-        - starts the consumer for the fetching queue
-
-      harvester purge-queues
-        - removes all jobs from fetch and gather queue
-          WARNING: if using Redis, this command purges all data in the current
-          Redis database
-
-      harvester clean-harvest-log
-        - Clean-up mechanism for the harvest log table.
-          You can configure the time frame through the configuration
-          parameter 'ckan.harvest.log_timeframe'. The default time frame is 30 days
-
-      harvester [-j] [-o] [--segments={segments}] import [{source-id}]
-        - perform the import stage with the last fetched objects, for a certain
-          source or a single harvest object. Please note that no objects will
-          be fetched from the remote server. It will only affect the objects
-          already present in the database.
-
-          To import a particular harvest source, specify its id as an argument.
-          To import a particular harvest object use the -o option.
-          To import a particular package use the -p option.
-
-          You will need to specify the -j flag in cases where the datasets are
-          not yet created (e.g. first harvest, or all previous harvests have
-          failed)
-
-          The --segments flag allows to define a string containing hex digits that represent which of
-          the 16 harvest object segments to import. e.g. 15af will run segments 1,5,a,f
-
-      harvester job-all
-        - create new harvest jobs for all active sources.
-
-      harvester reindex
-        - reindexes the harvest source datasets
 
 The commands should be run with the pyenv activated and refer to your CKAN configuration file:
 
