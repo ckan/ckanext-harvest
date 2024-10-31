@@ -965,9 +965,6 @@ def harvest_source_reindex(context, data_dict):
         if key not in config:
             new_dict[key] = value
 
-    # TODO: workaroud for extras exception caused by convert_from_extras
-    new_dict.pop("extras", None)
-
     package_index = PackageSearchIndex()
     package_index.index_package(new_dict, defer_commit=defer_commit)
 
