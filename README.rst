@@ -104,6 +104,11 @@ After installation, the harvest source listing should be available under /harves
 
     http://localhost/harvest
 
+There is a "Harvest" tab in the sysadmin pages as well:
+
+![Harvest admin tab](https://github.com/ckan/ckanext-harvest/blob/master/docs/admin-tab.png?raw=true)
+
+
 
 Database logger configuration(optional)
 =======================================
