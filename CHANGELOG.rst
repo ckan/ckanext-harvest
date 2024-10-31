@@ -7,6 +7,27 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog <http://keepachangelog.com>`_
 and this project adheres to `Semantic Versioning <http://semver.org/>`_
 
+
+***********
+1.6.0_ - 2024-10-31
+***********
+
+Changed
+_______
+
+- CKAN 2.11 support #551
+- Switched to alembic migrations #540
+- Support for SQLAlchemy 2 #553
+- Use pyproject.toml file #554
+- Add tab for harvest sources in sysadmin page
+
+Fixed
+-------
+
+- Clean up harvest source clear command, fix revisions exception #556
+- Convert boolean values to bools #544
+
+
 ***********
 1.5.6_ - 2023-06-26
 ***********
@@ -413,7 +434,8 @@ Categories
 - ``Fixed`` for any bug fixes.
 - ``Security`` to invite users to upgrade in case of vulnerabilities.
 
-.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.5.6...HEAD
+.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.6.0...HEAD
+.. _1.6.0: https://github.com/ckan/ckanext-harvest/compare/v1.5.6...v1.6.0
 .. _1.5.6: https://github.com/ckan/ckanext-harvest/compare/v1.5.5...v1.5.6
 .. _1.5.5: https://github.com/ckan/ckanext-harvest/compare/v1.5.4...v1.5.5
 .. _1.5.4: https://github.com/ckan/ckanext-harvest/compare/v1.5.3...v1.5.4
