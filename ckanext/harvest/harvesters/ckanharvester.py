@@ -1,11 +1,10 @@
 from __future__ import absolute_import
-import six
 import requests
 from requests.exceptions import HTTPError, RequestException
 
 import datetime
 
-from six.moves.urllib.parse import urlencode
+from urllib.parse import urlencode
 from ckan import model
 from ckan.logic import ValidationError, NotFound, get_action
 from ckan.lib.helpers import json
@@ -124,8 +123,7 @@ class CKANHarvester(HarvesterBase):
                     raise ValueError('default_groups must be a *list* of group'
                                      ' names/ids')
                 if config_obj['default_groups'] and \
-                        not isinstance(config_obj['default_groups'][0],
-                                       six.string_types):
+                        not isinstance(config_obj['default_groups'][0], str):
                     raise ValueError('default_groups must be a list of group '
                                      'names/ids (i.e. strings)')
 
@@ -525,7 +523,7 @@ class CKANHarvester(HarvesterBase):
                     if existing_extra:
                         package_dict['extras'].remove(existing_extra)
                     # Look for replacement strings
-                    if isinstance(value, six.string_types):
+                    if isinstance(value, str):
                         value = value.format(
                             harvest_source_id=harvest_object.job.source.id,
                             harvest_source_url=harvest_object.job.source.url.strip('/'),

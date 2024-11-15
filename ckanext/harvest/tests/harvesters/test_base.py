@@ -13,7 +13,7 @@ from ckantoolkit.tests import factories
 _ensure_name_is_unique = HarvesterBase._ensure_name_is_unique
 
 
-@pytest.mark.usefixtures('clean_db', 'clean_index', 'harvest_setup')
+@pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_index')
 class TestGenNewName(object):
 
     def test_basic(self):
@@ -51,7 +51,7 @@ class TestGenNewName(object):
         assert HarvesterBase._gen_new_name('Trees', append_type='number-sequence') == 'trees1'
 
 
-@pytest.mark.usefixtures('clean_db', 'clean_index', 'harvest_setup')
+@pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_index')
 class TestEnsureNameIsUnique(object):
 
     def test_no_existing_datasets(self):

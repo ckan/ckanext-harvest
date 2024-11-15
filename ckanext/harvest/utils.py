@@ -10,21 +10,11 @@ import xml.etree.ElementTree as etree
 
 import ckan.lib.helpers as h
 import ckan.plugins.toolkit as tk
-import six
 from ckan import model
 from ckantoolkit import _
-from six import StringIO
+from io import StringIO
 
 from ckanext.harvest.logic import HarvestJobExists, HarvestSourceInactiveError
-
-try:
-    # Python 2.7
-    xml_parser_exception = etree.ParseError
-except AttributeError:
-    # Python 2.6
-    from xml.parsers import expat
-
-    xml_parser_exception = expat.ExpatError
 
 log = logging.getLogger(__name__)
 
@@ -109,12 +99,6 @@ def _there_are(what, sequence, condition=""):
         what,
         not is_singular and "s" or "",
     )
-
-
-def initdb():
-    from ckanext.harvest.model import setup as db_setup
-
-    db_setup()
 
 
 def create_harvest_source(
@@ -394,8 +378,7 @@ def run_test_harvester(source_id_or_name, force_import):
         if running_jobs:
             print('\nSource "{0}" apparently has a "Running" job:\n{1}'.format(
                 source.get("name") or source["id"], running_jobs))
-
-            resp = six.moves.input("Abort it? (y/n)")
+            resp = input("Abort it? (y/n)")
             if not resp.lower().startswith("y"):
                 sys.exit(1)
             job_dict = tk.get_action("harvest_job_abort")(
@@ -517,7 +500,7 @@ def _get_source_for_job(source_id):
     except tk.ObjectNotFound:
         return tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        return tk.abort(403, _not_auth_message())
     except Exception as e:
         msg = 'An error occurred: [%s]' % str(e)
         return tk.abort(500, msg)
@@ -537,7 +520,7 @@ def admin_view(id):
     except tk.ObjectNotFound:
         return tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        return tk.abort(403, _not_auth_message())
 
 
 def job_show_last_view(source):
@@ -579,7 +562,7 @@ def job_show_view(id, source_dict=False, is_last=False):
     except tk.ObjectNotFound:
         return tk.abort(404, _('Harvest job not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        return tk.abort(403, _not_auth_message())
     except Exception as e:
         msg = 'An error occurred: [%s]' % str(e)
         return tk.abort(500, msg)
@@ -607,7 +590,7 @@ def job_list_view(source):
     except tk.ObjectNotFound:
         return tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        return tk.abort(403, _not_auth_message())
     except Exception as e:
         msg = 'An error occurred: [%s]' % str(e)
         return tk.abort(500, msg)
@@ -625,7 +608,7 @@ def about_view(id):
     except tk.ObjectNotFound:
         return tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        return tk.abort(403, _not_auth_message())
 
 
 def job_abort_view(source, id):
@@ -638,13 +621,13 @@ def job_abort_view(source, id):
     except tk.ObjectNotFound:
         return tk.abort(404, _('Harvest job not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        return tk.abort(403, _not_auth_message())
     except Exception as e:
         msg = 'An error occurred: [%s]' % str(e)
         return tk.abort(500, msg)
 
     return h.redirect_to(
-        h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=source))
+        h.url_for('harvester.admin', id=source))
 
 
 def refresh_view(id):
@@ -659,7 +642,7 @@ def refresh_view(id):
     except tk.ObjectNotFound:
         return tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        return tk.abort(403, _not_auth_message())
     except HarvestSourceInactiveError:
         h.flash_error(
             _('Cannot create new harvest jobs on inactive '
@@ -674,7 +657,7 @@ def refresh_view(id):
         h.flash_error(msg)
 
     return h.redirect_to(
-        h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
+        h.url_for('harvester.admin', id=id))
 
 
 def clear_view(id):
@@ -685,24 +668,20 @@ def clear_view(id):
     except tk.ObjectNotFound:
         return tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        return tk.abort(403, _not_auth_message())
     except Exception as e:
         msg = 'An error occurred: [%s]' % str(e)
         h.flash_error(msg)
 
     return h.redirect_to(
-        h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
+        h.url_for('harvester.admin', id=id))
 
 
 def delete_view(id):
     try:
         context = {'model': model, 'user': tk.c.user}
-
-        context['clear_source'] = tk.request.params.get('clear',
-                                                        '').lower() in (
-                                                            u'true',
-                                                            u'1',
-                                                        )
+        clear = tk.request.args.get('clear', '').lower()
+        context['clear_source'] = clear in ('true', '1', )
 
         tk.get_action('harvest_source_delete')(context, {'id': id})
 
@@ -712,11 +691,11 @@ def delete_view(id):
             h.flash_success(_('Harvesting source successfully inactivated'))
 
         return h.redirect_to(
-            h.url_for('{0}_admin'.format(DATASET_TYPE_NAME), id=id))
+            h.url_for('harvester.admin', id=id))
     except tk.ObjectNotFound:
         return tk.abort(404, _('Harvest source not found'))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        return tk.abort(403, _not_auth_message())
 
 
 def object_show_view(id, ref_type, response):
@@ -748,7 +727,7 @@ def object_show_view(id, ref_type, response):
             if '<?xml' not in content.split('\n')[0]:
                 content = u'<?xml version="1.0" encoding="UTF-8"?>\n' + content
 
-        except xml_parser_exception:
+        except etree.ParseError:
             try:
                 json.loads(obj['content'])
                 response.content_type = 'application/json; charset=utf-8'
@@ -757,12 +736,16 @@ def object_show_view(id, ref_type, response):
                 pass
 
         response.headers['Content-Length'] = len(content)
-        return (response, six.ensure_str(content))
+
+        if isinstance(content, bytes):
+            content = content.decode("utf-8")
+
+        return (response, content)
 
     except tk.ObjectNotFound as e:
         return tk.abort(404, _(str(e)))
     except tk.NotAuthorized:
-        return tk.abort(401, _not_auth_message())
+        return tk.abort(403, _not_auth_message())
     except Exception as e:
         msg = 'An error occurred: [%s]' % str(e)
         return tk.abort(500, msg)

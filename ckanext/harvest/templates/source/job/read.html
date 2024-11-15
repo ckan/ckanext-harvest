@@ -6,7 +6,7 @@
 <div class="module-content">
 
   <p class="pull-right">
-    {{ h.nav_link(_('Back to job list'), named_route='harvest_job_list', source=harvest_source.name, class_='btn btn-default', icon='arrow-left')}}
+    {{ h.nav_link(_('Back to job list'), named_route='harvester.job_list', source=harvest_source.name, class_='btn btn-default', icon='arrow-left')}}
   </p>
 
   <h1>{{ _('Job Report') }}</h1>
@@ -69,7 +69,7 @@
                       {{ _('Remote content') }}
                     </a>
                   {% endif %}
-                  <a href="{{ h.url_for('harvest_object_show', id=harvest_object_id) }}" class="btn btn-small">
+                  <a href="{{ h.url_for('harvester.object_show', id=harvest_object_id) }}" class="btn btn-small">
                     {{ _('Local content') }}
                   </a>
 

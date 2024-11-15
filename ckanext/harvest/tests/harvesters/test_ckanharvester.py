@@ -38,7 +38,7 @@ def was_last_job_considered_error_free():
     return bool(HarvesterBase.last_error_free_job(job))
 
 
-@pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_index', 'harvest_setup')
+@pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_index')
 class TestCkanHarvester(object):
 
     def test_gather_normal(self):
@@ -49,7 +49,7 @@ class TestCkanHarvester(object):
         obj_ids = harvester.gather_stage(job)
 
         assert job.gather_errors == []
-        assert type(obj_ids) == list
+        assert isinstance(obj_ids, list)
         assert len(obj_ids) == len(mock_ckan.DATASETS)
         harvest_object = harvest_model.HarvestObject.get(obj_ids[0])
         assert harvest_object.guid == mock_ckan.DATASETS[0]['id']
@@ -189,7 +189,7 @@ class TestCkanHarvester(object):
 
     def test_remote_groups_only_local(self):
         # Create an existing group
-        Group(id='group1-id', name='group1')
+        Group(id='10037fa4-e683-4a67-892a-efba815e24ad', name='group1')
 
         config = {'remote_groups': 'only_local'}
         results_by_guid = run_harvest(
@@ -258,11 +258,11 @@ class TestCkanHarvester(object):
         assert 'default_tags must be a list of dictionaries' in str(harvest_context.value)
 
     def test_default_groups(self):
-        Group(id='group1-id', name='group1')
-        Group(id='group2-id', name='group2')
-        Group(id='group3-id', name='group3')
+        Group(name='group1')
+        Group(name='group2')
+        Group(name='group3')
 
-        config = {'default_groups': ['group2-id', 'group3'],
+        config = {'default_groups': ['group2', 'group3'],
                   'remote_groups': 'only_local'}
         tmp_c = toolkit.c
         try:
@@ -284,7 +284,7 @@ class TestCkanHarvester(object):
         assert group_names, set(('group1', 'group2' == 'group3'))
 
     def test_default_groups_invalid(self):
-        Group(id='group2-id', name='group2')
+        Group(name='group2')
 
         # should be list of strings
         config = {'default_groups': [{'name': 'group2'}]}

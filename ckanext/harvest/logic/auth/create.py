@@ -35,7 +35,7 @@ def harvest_job_create(context, data_dict):
 
     context['package'] = pkg
     try:
-        pt.check_access('package_update', context, data_dict)
+        pt.check_access('package_update', context, {"id": source_id})
         return {'success': True}
     except pt.NotAuthorized:
         return {'success': False,

@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import hashlib
+import html
 import json
-import six
 
 import logging
 import datetime
 
+import sqlalchemy as sa
 from ckantoolkit import config
-from sqlalchemy import and_, or_
-from six.moves.urllib.parse import urljoin
+from urllib.parse import urljoin
 
 from ckan.lib.search.index import PackageSearchIndex
 from ckan.plugins import toolkit, PluginImplementations
@@ -38,10 +38,7 @@ from ckanext.harvest.logic.action.get import (
 import ckan.lib.mailer as mailer
 from itertools import islice
 
-if toolkit.check_ckan_version(min_version='2.9.0'):
-    from ckan.plugins.toolkit import render
-else:
-    from ckan.lib.base import render_jinja2 as render
+from ckan.plugins.toolkit import render
 
 log = logging.getLogger(__name__)
 
@@ -95,146 +92,115 @@ def harvest_source_update(context, data_dict):
 
 
 def harvest_source_clear(context, data_dict):
-    '''
+    """
     Clears all datasets, jobs and objects related to a harvest source, but
     keeps the source itself.  This is useful to clean history of long running
     harvest sources to start again fresh.
 
     :param id: the id of the harvest source to clear
     :type id: string
-    '''
+    """
 
-    check_access('harvest_source_clear', context, data_dict)
+    check_access("harvest_source_clear", context, data_dict)
 
-    harvest_source_id = data_dict.get('id')
+    harvest_source_id = data_dict.get("id")
 
     source = HarvestSource.get(harvest_source_id)
     if not source:
-        log.error('Harvest source %s does not exist', harvest_source_id)
-        raise NotFound('Harvest source %s does not exist' % harvest_source_id)
+        log.error("Harvest source %s does not exist", harvest_source_id)
+        raise NotFound("Harvest source %s does not exist" % harvest_source_id)
 
     harvest_source_id = source.id
 
     # Clear all datasets from this source from the index
     harvest_source_index_clear(context, data_dict)
 
-    model = context['model']
+    model = context["model"]
 
-    # CKAN-2.6 or above: related don't exist any more
-    if toolkit.check_ckan_version(max_version='2.5.99'):
+    sql = "BEGIN;"
 
-        sql = '''select id from related where id in (
-                  select related_id from related_dataset where dataset_id in (
-                      select package_id from harvest_object
-                      where harvest_source_id = '{harvest_source_id}'));'''.format(
-            harvest_source_id=harvest_source_id)
-        result = model.Session.execute(sql)
-        ids = []
-        for row in result:
-            ids.append(row[0])
-        related_ids = "('" + "','".join(ids) + "')"
+    sql += f"""
+        UPDATE package set state = 'to_delete' WHERE id IN (
+            SELECT package_id FROM harvest_object
+            WHERE harvest_source_id = '{harvest_source_id}');"""
 
-    sql = '''begin;
-        update package set state = 'to_delete' where id in (
-            select package_id from harvest_object
-            where harvest_source_id = '{harvest_source_id}');'''.format(
-        harvest_source_id=harvest_source_id)
+    sql += """
+        CREATE TEMP TABLE package_ids_to_delete AS (
+            SELECT id FROM package WHERE state = 'to_delete');
+        """
 
-    # CKAN-2.3 or above: delete resource views, resource revisions & resources
-    if toolkit.check_ckan_version(min_version='2.3'):
-        sql += '''
-        delete from resource_view where resource_id in (
-            select id from resource where package_id in (
-                select id from package where state = 'to_delete'));
-        delete from resource_revision where package_id in (
-            select id from package where state = 'to_delete');
-        delete from resource where package_id in (
-            select id from package where state = 'to_delete');
-        '''
-    # Backwards-compatibility: support ResourceGroup (pre-CKAN-2.3)
-    else:
-        sql += '''
-        delete from resource_revision where resource_group_id in (
-            select id from resource_group where package_id in (
-                select id from package where state = 'to_delete'));
-        delete from resource where resource_group_id in (
-            select id from resource_group where package_id in (
-                select id from package where state = 'to_delete'));
-        delete from resource_group_revision where package_id in (
-            select id from package where state = 'to_delete');
-        delete from resource_group where package_id in (
-            select id from package where state = 'to_delete');
-        '''
-    # CKAN pre-2.5: authz models were removed in migration 078
-    if toolkit.check_ckan_version(max_version='2.4.99'):
-        sql += '''
-        delete from package_role where package_id in (
-            select id from package where state = 'to_delete');
-        delete from user_object_role where id not in (
-            select user_object_role_id from package_role)
-            and context = 'Package';
-        '''
+    sql += f"""
+    DELETE FROM harvest_object_error WHERE harvest_object_id IN (
+        SELECT id FROM harvest_object
+        WHERE harvest_source_id = '{harvest_source_id}');
+    DELETE FROM harvest_object_extra WHERE harvest_object_id IN (
+        SELECT id FROM harvest_object
+        WHERE harvest_source_id = '{harvest_source_id}');
+    DELETE FROM harvest_object WHERE harvest_source_id = '{harvest_source_id}';
+    DELETE FROM harvest_gather_error WHERE harvest_job_id IN (
+        SELECT id FROM harvest_job WHERE source_id = '{harvest_source_id}');
+    DELETE FROM harvest_job WHERE source_id = '{harvest_source_id}';
+    """
 
-    sql += '''
-    delete from harvest_object_error where harvest_object_id in (
-        select id from harvest_object
-        where harvest_source_id = '{harvest_source_id}');
-    delete from harvest_object_extra where harvest_object_id in (
-        select id from harvest_object
-        where harvest_source_id = '{harvest_source_id}');
-    delete from harvest_object where harvest_source_id = '{harvest_source_id}';
-    delete from harvest_gather_error where harvest_job_id in (
-        select id from harvest_job where source_id = '{harvest_source_id}');
-    delete from harvest_job where source_id = '{harvest_source_id}';
-    delete from package_tag_revision where package_id in (
-        select id from package where state = 'to_delete');
-    delete from member_revision where table_id in (
-        select id from package where state = 'to_delete');
-    delete from package_extra_revision where package_id in (
-        select id from package where state = 'to_delete');
-    delete from package_revision where id in (
-        select id from package where state = 'to_delete');
-    delete from package_tag where package_id in (
-        select id from package where state = 'to_delete');
-    delete from package_extra where package_id in (
-        select id from package where state = 'to_delete');
-    delete from package_relationship_revision where subject_package_id in (
-        select id from package where state = 'to_delete');
-    delete from package_relationship_revision where object_package_id in (
-        select id from package where state = 'to_delete');
-    delete from package_relationship where subject_package_id in (
-        select id from package where state = 'to_delete');
-    delete from package_relationship where object_package_id in (
-        select id from package where state = 'to_delete');
-    delete from member where table_id in (
-        select id from package where state = 'to_delete');
-     '''.format(
-        harvest_source_id=harvest_source_id)
+    if toolkit.check_ckan_version(max_version="2.10.99"):
+        # Revision tables were dropped IN CKAN 2.10
 
-    if toolkit.check_ckan_version(max_version='2.5.99'):
-        sql += '''
-        delete from related_dataset where dataset_id in (
-            select id from package where state = 'to_delete');
-        delete from related where id in {related_ids};
-        delete from package where id in (
-            select id from package where state = 'to_delete');
-        '''.format(related_ids=related_ids)
-    else:
-        # CKAN-2.6 or above: related don't exist any more
-        sql += '''
-        delete from package where id in (
-            select id from package where state = 'to_delete');
-        '''
+        sql += """
+        DELETE FROM package_tag_revision WHERE package_id IN (
+            SELECT id FROM package_ids_to_delete);
+        DELETE FROM member_revision WHERE table_id IN (
+            SELECT id FROM package_ids_to_delete);
+        DELETE FROM package_extra_revision WHERE package_id IN (
+            SELECT id FROM package_ids_to_delete);
+        DELETE FROM package_revision WHERE id IN (
+            SELECT id FROM package_ids_to_delete);
+        DELETE FROM package_relationship_revision WHERE subject_package_id IN (
+            SELECT id FROM package_ids_to_delete);
+        DELETE FROM package_relationship_revision WHERE object_package_id IN (
+            SELECT id FROM package_ids_to_delete);
+        DELETE FROM resource_revision WHERE package_id IN (
+            SELECT id FROM package_ids_to_delete);
+        """
 
-    sql += '''
-    commit;
-    '''
-    model.Session.execute(sql)
+    if toolkit.check_ckan_version(max_version="2.11.99"):
+        # Package_extra table were dropped IN CKAN 2.12
+        sql += """
+        DELETE FROM package_extra WHERE package_id IN (
+            SELECT id FROM package_ids_to_delete);
+        """
+
+    sql += """
+    DELETE FROM package_tag WHERE package_id IN (
+        SELECT id FROM package_ids_to_delete);
+    DELETE FROM package_relationship WHERE subject_package_id IN (
+        SELECT id FROM package_ids_to_delete);
+    DELETE FROM package_relationship WHERE object_package_id IN (
+        SELECT id FROM package_ids_to_delete);
+    DELETE FROM member WHERE table_id IN (
+        SELECT id FROM package_ids_to_delete);
+    DELETE FROM resource_view WHERE resource_id IN (
+        SELECT id FROM resource WHERE package_id IN (
+            SELECT id FROM package_ids_to_delete));
+    DELETE FROM resource WHERE package_id IN (
+        SELECT id FROM package_ids_to_delete);
+
+     """
+
+    sql += """
+    DELETE FROM package WHERE id IN (
+        SELECT id FROM package_ids_to_delete);
+    """
+
+    sql += """
+    COMMIT;
+    """
+
+    model.Session.execute(sa.text(sql))
 
     # Refresh the index for this source to update the status object
-    get_action('harvest_source_reindex')(context, {'id': harvest_source_id})
+    get_action("harvest_source_reindex")(context, {"id": harvest_source_id})
 
-    return {'id': harvest_source_id}
+    return {"id": harvest_source_id}
 
 
 def harvest_abort_failed_jobs(context, data_dict):
@@ -411,7 +377,7 @@ def harvest_source_job_history_clear(context, data_dict):
         COMMIT;
         '''.format(harvest_source_id=harvest_source_id)
 
-    model.Session.execute(sql)
+    model.Session.execute(sa.text(sql))
 
     # Refresh the index for this source to update the status object
     get_action('harvest_source_reindex')(context, {'id': harvest_source_id})
@@ -532,8 +498,8 @@ def harvest_objects_import(context, data_dict):
                             .join(Package)
                             .filter(HarvestObject.current == True)  # noqa: E712
                             .filter(Package.state == u'active')
-                            .filter(or_(Package.id == package_id_or_name,
-                                        Package.name == package_id_or_name)))
+                            .filter(sa.or_(Package.id == package_id_or_name,
+                                           Package.name == package_id_or_name)))
         join_datasets = False
     else:
         last_objects_ids = \
@@ -549,8 +515,10 @@ def harvest_objects_import(context, data_dict):
     last_objects_count = 0
 
     for obj_id in last_objects_ids:
-        if segments and \
-                str(hashlib.md5(six.ensure_binary(obj_id[0])).hexdigest())[0] not in segments:
+        _id = obj_id[0]
+        if isinstance(_id, str):
+            _id = _id.encode()
+        if segments and str(hashlib.md5(_id).hexdigest())[0] not in segments:
             continue
 
         obj = session.query(HarvestObject).get(obj_id)
@@ -672,8 +640,8 @@ def harvest_jobs_run(context, data_dict):
                 num_objects_in_progress = \
                     session.query(HarvestObject.id) \
                            .filter(HarvestObject.harvest_job_id == job['id']) \
-                           .filter(and_((HarvestObject.state != u'COMPLETE'),
-                                        (HarvestObject.state != u'ERROR'))) \
+                           .filter(sa.and_((HarvestObject.state != u'COMPLETE'),
+                                           (HarvestObject.state != u'ERROR'))) \
                            .count()
 
                 if num_objects_in_progress == 0:
@@ -759,7 +727,7 @@ def get_mail_extra_vars(context, source_id, status):
     errors = job_errors + obj_errors
 
     site_url = config.get('ckan.site_url')
-    job_url = toolkit.url_for('harvest_job_show', source=source['id'], id=last_job['id'])
+    job_url = toolkit.url_for('harvester.job_show', source=source['id'], id=last_job['id'])
     full_job_url = urljoin(site_url, job_url)
     extra_vars = {
         'organization': organization,
@@ -798,6 +766,8 @@ def prepare_summary_mail(context, source_id, status):
 def prepare_error_mail(context, source_id, status):
     extra_vars = get_mail_extra_vars(context, source_id, status)
     body = render('emails/error_email.txt', extra_vars)
+    body = html.unescape(body)
+
     subject = '{} - Harvesting Job - Error Notification'\
         .format(config.get('ckan.site_title'))
 
@@ -973,9 +943,14 @@ def harvest_source_reindex(context, data_dict):
 
     if 'extras_as_string' in context:
         del context['extras_as_string']
-    context.update({'ignore_auth': True})
+    context.update({
+        'ignore_auth': True,
+        'validate': False,
+    })
     package_dict = logic.get_action('harvest_source_show')(
-        context, {'id': harvest_source_id})
+        dict(context, validate=False, use_cache=False),
+        {'id': harvest_source_id},
+    )
     log.debug('Updating search index for harvest source: %s',
               package_dict.get('name') or harvest_source_id)
 

@@ -1,0 +1,52 @@
+[project]
+name = "ckanext-harvest"
+version = "1.6.0"
+description = "Harvesting interface plugin for CKAN, plus harvester for other CKAN sites"
+authors = [
+    {name = "Adrià Mercader", email = "amercadero@gmail.com"}
+]
+maintainers = [
+    {name = "CKAN Tech Team and contributors", email = "tech-team@ckan.org"},
+    {name = "Seitenbau Govdata"},
+]
+license = {text = "AGPL"}
+classifiers = [
+    "Intended Audience :: Developers",
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12"
+]
+keywords = [
+    "ckan",
+    "ckanext",
+    "harvesting",
+    "federation",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "http://github.com/ckan/ckanext-harvest"
+Repository = "https://github.com/ckan/ckanext-harvest"
+Issues = "https://github.com/ckan/ckanext-harvest/issues"
+Changelog = "https://github.com/ckan/ckanext-harvest/blob/master/CHANGELOG.rst"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.entry-points."ckan.plugins"]
+harvest = "ckanext.harvest.plugin:Harvest"
+ckan_harvester = "ckanext.harvest.harvesters:CKANHarvester"
+
+# Test plugins
+test_harvester = "ckanext.harvest.tests.test_queue:MockHarvester"
+test_harvester2 = "ckanext.harvest.tests.test_queue2:MockHarvester"
+test_action_harvester = "ckanext.harvest.tests.test_action:MockHarvesterForActionTests"
+
+
+[project.entry-points."babel.extractors"]
+ckan = "ckan.lib.extract:extract_ckan"

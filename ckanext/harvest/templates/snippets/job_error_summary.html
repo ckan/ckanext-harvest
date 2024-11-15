@@ -1,7 +1,7 @@
 {#
 Displays a table with a summary of the most common errors for a job
 
-error_summary        - List of tuples with (message, count)
+error_summary        - List of dicts with message and error_count
 
 Example:
 
@@ -22,8 +22,8 @@ Example:
   <tbody>
   {% for error in summary %}
     <tr>
-      <td class="count">{{ error[1] }}</td>
-      <td>{{ error[0] }}</td>
+      <td class="count">{{ error["error_count"] }}</td>
+      <td>{{ error["message"] }}</td>
     </tr>
   {% endfor %}
    </tbody>

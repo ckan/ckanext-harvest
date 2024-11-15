@@ -7,9 +7,98 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog <http://keepachangelog.com>`_
 and this project adheres to `Semantic Versioning <http://semver.org/>`_
 
+
 ***********
-Unreleased_
+1.6.0_ - 2024-10-31
 ***********
+
+Changed
+_______
+
+- CKAN 2.11 support #551
+- Switched to alembic migrations #540
+- Support for SQLAlchemy 2 #553
+- Use pyproject.toml file #554
+- Add tab for harvest sources in sysadmin page
+
+Fixed
+-------
+
+- Clean up harvest source clear command, fix revisions exception #556
+- Convert boolean values to bools #544
+
+
+***********
+1.5.6_ - 2023-06-26
+***********
+
+Fixed
+-------
+
+- Fix url endpoint for job_show #534
+
+***********
+1.5.5_ - 2023-06-05
+***********
+
+Fixed
+-------
+
+- Fix display of harvest job errors #533
+
+***********
+1.5.4_ - 2023-05-23
+***********
+
+Fixed
+-------
+
+- Fix a problem with data-dictization when using sqlalchemy 1.4+ #529
+
+***********
+1.5.3_ - 2023-04-03
+***********
+
+Fixed
+-------
+
+- Fix asset path in MANIFEST.in #525
+
+***********
+1.5.2_ - 2023-03-28
+***********
+
+Fixed
+-------
+
+- Fix URL endpoints: from ``harvest.object_show`` to ``harvester.object_show`` #524
+
+***********
+1.5.1_ - 2023-03-22
+***********
+
+Fixed
+-------
+
+- Fix ``url_for`` routing to point to harvester blueprint #523
+
+***********
+1.5.0_ - 2023-03-16
+***********
+
+Changed
+-------
+
+- Added unescape for email text body to avoid encoded characters #517
+- Pick the right harvest_object_id if there are multiple #519
+- Do not duplicate harvest_extras if exist in root schema #521
+- Use 403 when actions are forbidden, not 401 #522
+- Drop support old versions #520
+
+Breaking Changes
+-------
+- ``h.bootstrap_version()`` no longer exist since it is no longer needed to inject CSS classes
+- Support for old Pylon's route syntax has been removed. Example: calling ``url_for("harvest_read")`` will no longer work. URLs for ``ckanext-harvest`` needs to respect Flask's syntax: ``url_for("harvest.read")``, etc
 
 ***********
 1.4.2_ - 2023-01-12
@@ -345,7 +434,20 @@ Categories
 - ``Fixed`` for any bug fixes.
 - ``Security`` to invite users to upgrade in case of vulnerabilities.
 
-.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.3.2...HEAD
+.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.6.0...HEAD
+.. _1.6.0: https://github.com/ckan/ckanext-harvest/compare/v1.5.6...v1.6.0
+.. _1.5.6: https://github.com/ckan/ckanext-harvest/compare/v1.5.5...v1.5.6
+.. _1.5.5: https://github.com/ckan/ckanext-harvest/compare/v1.5.4...v1.5.5
+.. _1.5.4: https://github.com/ckan/ckanext-harvest/compare/v1.5.3...v1.5.4
+.. _1.5.3: https://github.com/ckan/ckanext-harvest/compare/v1.5.2...v1.5.3
+.. _1.5.2: https://github.com/ckan/ckanext-harvest/compare/v1.5.1...v1.5.2
+.. _1.5.1: https://github.com/ckan/ckanext-harvest/compare/v1.5.0...v1.5.1
+.. _1.5.0: https://github.com/ckan/ckanext-harvest/compare/v1.4.2...v1.5.0
+.. _1.4.2: https://github.com/ckan/ckanext-harvest/compare/v1.4.1...v1.4.2
+.. _1.4.1: https://github.com/ckan/ckanext-harvest/compare/v1.4.0...v1.4.1
+.. _1.4.0: https://github.com/ckan/ckanext-harvest/compare/v1.3.4...v1.4.0
+.. _1.3.4: https://github.com/ckan/ckanext-harvest/compare/v1.3.3...v1.3.4
+.. _1.3.3: https://github.com/ckan/ckanext-harvest/compare/v1.3.2...v1.3.3
 .. _1.3.2: https://github.com/ckan/ckanext-harvest/compare/v1.3.1...v1.3.2
 .. _1.3.1: https://github.com/ckan/ckanext-harvest/compare/v1.3.0...v1.3.1
 .. _1.3.0: https://github.com/ckan/ckanext-harvest/compare/v1.2.1...v1.3.0

@@ -4,10 +4,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.8'
+          python-version: '3.9'
       - name: Install requirements
         run: pip install flake8 pycodestyle
       - name: Check syntax
@@ -19,16 +19,22 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        ckan-version: ["2.10", 2.9, 2.9-py2, 2.8, 2.7]
+        include:
+          - ckan-version: "2.11"
+            ckan-image: "ckan/ckan-dev:2.11-py3.10"
+          - ckan-version: "2.10"
+            ckan-image: "ckan/ckan-dev:2.10-py3.10"
+          - ckan-version: "2.9"
+            ckan-image: "ckan/ckan-dev:2.9-py3.9"
       fail-fast: false
 
     name: CKAN ${{ matrix.ckan-version }}
     runs-on: ubuntu-latest
     container:
-      image: openknowledge/ckan-dev:${{ matrix.ckan-version }}
+      image: ${{ matrix.ckan-image }}
     services:
       solr:
-        image: ckan/ckan-solr:${{ matrix.ckan-version }}
+        image: ckan/ckan-solr:${{ matrix.ckan-version }}-solr9
       postgres:
         image: ckan/ckan-postgres-dev:${{ matrix.ckan-version }}
         env:
@@ -46,7 +52,7 @@ jobs:
       CKAN_REDIS_URL: redis://redis:6379/1
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Install requirements
       run: |
         pip install -r requirements.txt
@@ -54,15 +60,13 @@ jobs:
         pip install -e .
         # Replace default path to CKAN core config file with the one on the container
         sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' test.ini
+    - name: Install requirements (2.9)
+      run: |
+        pip install -U pytest-rerunfailures
+      if: ${{ matrix.ckan-version == '2.9' }}        
     - name: Setup extension (CKAN >= 2.9)
-      if: ${{ matrix.ckan-version != '2.7' && matrix.ckan-version != '2.8' }}
       run: |
         ckan -c test.ini db init
-        ckan -c test.ini harvester initdb
-    - name: Setup extension (CKAN < 2.9)
-      if: ${{ matrix.ckan-version == '2.7' || matrix.ckan-version == '2.8' }}
-      run: |
-        paster --plugin=ckan db init -c test.ini
-        paster --plugin=ckanext-harvest harvester initdb -c test.ini
+        ckan -c test.ini db pending-migrations --apply
     - name: Run tests
       run: pytest --ckan-ini=test.ini --cov=ckanext.harvest --disable-warnings ckanext/harvest/tests

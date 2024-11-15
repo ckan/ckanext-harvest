@@ -2,8 +2,5 @@
 
 {% block styles %}
     {{ super() }}
-
-    {% set type = 'asset' if h.ckan_version().split('.')|map('int')|list >= [2, 9, 0] else 'resource' %}
-    {% include 'harvest/snippets/harvest_' ~ type ~ '.html' %}
-
+    {% asset 'ckanext-harvest/harvest_css' %}
 {% endblock %}

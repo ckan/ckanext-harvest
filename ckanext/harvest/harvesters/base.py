@@ -4,8 +4,7 @@ import logging
 import re
 import uuid
 
-from sqlalchemy import exists, and_
-from sqlalchemy.sql import update, bindparam
+import sqlalchemy as sa
 from sqlalchemy.orm import contains_eager
 
 from ckantoolkit import config
@@ -16,7 +15,7 @@ from ckan.model import Session, Package, PACKAGE_NAME_MAX_LENGTH
 
 from ckan.logic.schema import default_create_package_schema
 from ckan.lib.navl.validators import ignore_missing, ignore
-from ckan.lib.munge import munge_title_to_name, substitute_ascii_equivalents
+from ckan.lib.munge import munge_title_to_name, munge_tag
 
 from ckanext.harvest.model import (HarvestObject, HarvestGatherError,
                                    HarvestObjectError, HarvestJob)
@@ -25,25 +24,6 @@ from ckan.plugins.core import SingletonPlugin, implements
 from ckanext.harvest.interfaces import IHarvester
 from ckanext.harvest.logic.schema import unicode_safe
 
-if p.toolkit.check_ckan_version(min_version='2.3'):
-    from ckan.lib.munge import munge_tag
-else:
-    # Fallback munge_tag for older ckan versions which don't have a decent
-    # munger
-    def _munge_to_length(string, min_length, max_length):
-        '''Pad/truncates a string'''
-        if len(string) < min_length:
-            string += '_' * (min_length - len(string))
-        if len(string) > max_length:
-            string = string[:max_length]
-        return string
-
-    def munge_tag(tag):
-        tag = substitute_ascii_equivalents(tag)
-        tag = tag.lower().strip()
-        tag = re.sub(r'[^a-zA-Z0-9\- ]', '', tag).replace(' ', '-')
-        tag = _munge_to_length(tag, model.MIN_TAG_LENGTH, model.MAX_TAG_LENGTH)
-        return tag
 
 log = logging.getLogger(__name__)
 
@@ -334,15 +314,11 @@ class HarvesterBase(SingletonPlugin):
                     return 'unchanged'
 
                 # Flag the other objects linking to this package as not current anymore
-                from ckanext.harvest.model import harvest_object_table
-                conn = Session.connection()
-                u = update(harvest_object_table)\
-                    .where(harvest_object_table.c.package_id == bindparam('b_package_id')) \
-                    .values(current=False)
-                conn.execute(u, b_package_id=new_package['id'])
+                Session.query(HarvestObject).filter(
+                    HarvestObject.package_id == new_package["id"]).update(
+                        {"current": False})
 
                 # Flag this as the current harvest object
-
                 harvest_object.package_id = new_package['id']
                 harvest_object.current = True
                 harvest_object.save()
@@ -368,7 +344,9 @@ class HarvesterBase(SingletonPlugin):
                 # plugin)
                 harvest_object.add()
 
-                model.Session.execute('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
+                model.Session.execute(
+                    sa.text('SET CONSTRAINTS harvest_object_package_id_fkey DEFERRED')
+                )
                 model.Session.flush()
 
                 new_package = p.toolkit.get_action(
@@ -424,12 +402,12 @@ class HarvesterBase(SingletonPlugin):
                 .filter(HarvestJob.status == 'Finished')
                 .filter(HarvestJob.id != harvest_job.id)
                 .filter(
-            ~exists().where(
+            ~sa.exists().where(
                 HarvestGatherError.harvest_job_id == HarvestJob.id))
                 .outerjoin(HarvestObject,
-                           and_(HarvestObject.harvest_job_id == HarvestJob.id,
-                                HarvestObject.current == False,  # noqa: E712
-                                HarvestObject.report_status != 'not modified'))
+                           sa.and_(HarvestObject.harvest_job_id == HarvestJob.id,
+                                   HarvestObject.current == False,  # noqa: E712
+                                   HarvestObject.report_status != 'not modified'))
                 .options(contains_eager(HarvestJob.objects))
                 .order_by(HarvestJob.gather_started.desc()))
         # now check them until we find one with no fetch/import errors

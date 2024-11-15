@@ -2,10 +2,8 @@
 
 import os
 import json
-import six
 from logging import getLogger
 
-from six import string_types
 from collections import OrderedDict
 
 from ckan import logic
@@ -13,14 +11,10 @@ from ckan import model
 import ckan.plugins as p
 from ckan.lib.plugins import DefaultDatasetForm
 
-try:
-    from ckan.lib.plugins import DefaultTranslation
-except ImportError:
-    class DefaultTranslation():
-        pass
+from ckan.lib.plugins import DefaultTranslation
 
 import ckanext.harvest
-from ckanext.harvest.model import setup as model_setup
+from ckanext.harvest import cli, views
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
 from ckanext.harvest.log import DBLogHandler
 
@@ -28,17 +22,13 @@ from ckanext.harvest.utils import (
     DATASET_TYPE_NAME
 )
 
-if p.toolkit.check_ckan_version(min_version='2.9.0'):
-    from ckanext.harvest.plugin.flask_plugin import MixinPlugin
-else:
-    from ckanext.harvest.plugin.pylons_plugin import MixinPlugin
-
 log = getLogger(__name__)
 assert not log.disabled
 
 
-class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
-
+class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
+    p.implements(p.IClick)
+    p.implements(p.IBlueprint)
     p.implements(p.IConfigurable)
     p.implements(p.IConfigurer, inherit=True)
     p.implements(p.IActions)
@@ -47,10 +37,19 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
     p.implements(p.IPackageController, inherit=True)
     p.implements(p.ITemplateHelpers)
     p.implements(p.IFacets, inherit=True)
-    if p.toolkit.check_ckan_version(min_version='2.5.0'):
-        p.implements(p.ITranslation, inherit=True)
+    p.implements(p.ITranslation, inherit=True)
 
     startup = False
+
+    # IClick
+
+    def get_commands(self):
+        return cli.get_commands()
+
+    # IBlueprint
+
+    def get_blueprint(self):
+        return views.get_blueprints()
 
     # ITranslation
     def i18n_directory(self):
@@ -111,70 +110,83 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
         fq = search_params.get("fq", "")
         if "dataset_type:harvest" not in fq:
-            fq = "{0} -dataset_type:harvest".format(fq.encode('utf8') if six.PY2 else fq)
+            fq = "{0} -dataset_type:harvest".format(fq)
             search_params.update({"fq": fq})
 
         return search_params
 
+    def _add_or_update_harvest_metadata(self, key, value, data_dict):
+        """Adds extras fields or updates them if already exist."""
+        if not data_dict.get("extras"):
+            data_dict["extras"] = []
+
+        for e in data_dict.get("extras"):
+            if e.get("key") == key:
+                e.update({"value": value})
+                break
+        else:
+            data_dict["extras"].append({"key": key, "value": value})
+
     def before_dataset_index(self, pkg_dict):
+        """Adds harvest metadata to the extra field of the dataset.
 
-        harvest_object = model.Session.query(HarvestObject) \
-            .filter(HarvestObject.package_id == pkg_dict["id"]) \
-            .filter(HarvestObject.current == True).first() # noqa
+        This method will add or update harvest related metadata in `pkg_dict`,
+        `data_dict` and `validated_data_dict` so it can be obtained when
+        calling package_show API (that depends on Solr data). This metadata will
+        be stored in the `extras` field of the dictionaries ONLY if it does not
+        already exist in the root schema.
 
-        if harvest_object:
+        Note: If another extension adds any harvest extra to the `package_show`
+        schema then this method will not add them again in the `extras` field to avoid
+        validation errors when updating a package.
 
-            data_dict = json.loads(pkg_dict["data_dict"])
-
-            validated_data_dict = json.loads(pkg_dict["validated_data_dict"])
-
-            harvest_extras = [
-                ("harvest_object_id", harvest_object.id),
-                ("harvest_source_id", harvest_object.source.id),
-                ("harvest_source_title", harvest_object.source.title),
-            ]
-
-            for key, value in harvest_extras:
-
-                # If the harvest extras are there, update them. This can
-                # happen eg when calling package_update or resource_update,
-                # which call package_show
-                harvest_not_found = True
-                harvest_not_found_validated = True
-                if not data_dict.get("extras"):
-                    data_dict["extras"] = []
-
-                for e in data_dict.get("extras"):
-                    if e.get("key") == key:
-                        e.update({"value": value})
-                        harvest_not_found = False
-                if harvest_not_found:
-                    data_dict["extras"].append({"key": key, "value": value})
-
-                if not validated_data_dict.get("extras"):
-                    validated_data_dict["extras"] = []
-
-                for e in validated_data_dict.get("extras"):
-                    if e.get("key") == key:
-                        e.update({"value": value})
-                        harvest_not_found_validated = False
-                if harvest_not_found_validated:
-                    validated_data_dict["extras"].append({"key": key, "value": value})
-
-                # The commented line isn't cataloged correctly, if we pass the
-                # basic key the extras are prepended and the system works as
-                # expected.
-                # pkg_dict['extras_{0}'.format(key)] = value
-                pkg_dict[key] = value
-
-            pkg_dict["data_dict"] = json.dumps(data_dict)
-            pkg_dict["validated_data_dict"] = json.dumps(validated_data_dict)
-
+        If the harvest extra has been added to the root schema, then we will not update
+        them since it is responsibility of the package validators to do it.
+        """
+        # Fix to support Solr8
         if isinstance(pkg_dict.get('status'), dict):
             try:
                 pkg_dict['status'] = json.dumps(pkg_dict['status'])
             except ValueError:
                 pkg_dict.pop('status', None)
+
+        harvest_object = model.Session.query(HarvestObject) \
+            .filter(HarvestObject.package_id == pkg_dict["id"]) \
+            .filter(
+                HarvestObject.current == True # noqa
+            ).order_by(HarvestObject.import_finished.desc()) \
+            .first()
+
+        if not harvest_object:
+            return pkg_dict
+
+        harvest_extras = [
+            ("harvest_object_id", harvest_object.id),
+            ("harvest_source_id", harvest_object.source.id),
+            ("harvest_source_title", harvest_object.source.title),
+        ]
+
+        data_dict = json.loads(pkg_dict["data_dict"])
+        for key, value in harvest_extras:
+            if key in data_dict.keys():
+                data_dict[key] = value
+                continue
+            self._add_or_update_harvest_metadata(key, value, data_dict)
+
+        validated_data_dict = json.loads(pkg_dict["validated_data_dict"])
+        for key, value in harvest_extras:
+            if key in validated_data_dict.keys():
+                validated_data_dict[key] = value
+                continue
+            self._add_or_update_harvest_metadata(key, value, validated_data_dict)
+
+        # Add harvest extras to main indexed pkg_dict
+        for key, value in harvest_extras:
+            if key not in pkg_dict.keys():
+                pkg_dict[key] = value
+
+        pkg_dict["data_dict"] = json.dumps(data_dict)
+        pkg_dict["validated_data_dict"] = json.dumps(validated_data_dict)
 
         return pkg_dict
 
@@ -262,47 +274,16 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
 
         self.startup = True
 
-        # Setup harvest model
-        model_setup()
-
         # Configure database logger
         _configure_db_logger(config)
 
         self.startup = False
 
     def update_config(self, config):
-        if not p.toolkit.check_ckan_version(min_version='2.0'):
-            assert 0, 'CKAN before 2.0 not supported by ckanext-harvest - '\
-                'genshi templates not supported any more'
-        if p.toolkit.asbool(config.get('ckan.legacy_templates', False)):
-            log.warn('Old genshi templates not supported any more by '
-                     'ckanext-harvest so you should set ckan.legacy_templates '
-                     'option to True any more.')
-        p.toolkit.add_template_directory(config, '../templates')
-        p.toolkit.add_public_directory(config, '../public')
-        p.toolkit.add_resource('../fanstatic_library', 'ckanext-harvest')
-        p.toolkit.add_resource('../public/ckanext/harvest/javascript', 'harvest-extra-field')
-
-        if p.toolkit.check_ckan_version(min_version='2.9.0'):
-            mappings = config.get('ckan.legacy_route_mappings') or {}
-            if mappings and isinstance(mappings, string_types):
-                mappings = json.loads(mappings)
-
-            mappings.update({
-                'harvest_read': 'harvest.read',
-                'harvest_edit': 'harvest.edit',
-            })
-            bp_routes = [
-                "delete", "refresh", "admin", "about",
-                "clear", "job_list", "job_show_last", "job_show",
-                "job_abort", "object_show"
-            ]
-            mappings.update({
-                'harvest_' + route: 'harvester.' + route
-                for route in bp_routes
-            })
-            # https://github.com/ckan/ckan/pull/4521
-            config['ckan.legacy_route_mappings'] = json.dumps(mappings)
+        p.toolkit.add_template_directory(config, 'templates')
+        p.toolkit.add_public_directory(config, 'public')
+        p.toolkit.add_resource('assets', 'ckanext-harvest')
+        p.toolkit.add_resource('public/ckanext/harvest/javascript', 'harvest-extra-field')
 
     # IActions
 
@@ -334,7 +315,6 @@ class Harvest(MixinPlugin, p.SingletonPlugin, DefaultDatasetForm, DefaultTransla
                 'harvest_frequencies': harvest_helpers.harvest_frequencies,
                 'link_for_harvest_object': harvest_helpers.link_for_harvest_object,
                 'harvest_source_extra_fields': harvest_helpers.harvest_source_extra_fields,
-                'bootstrap_version': harvest_helpers.bootstrap_version,
                 'get_harvest_source': harvest_helpers.get_harvest_source,
                 }
 
