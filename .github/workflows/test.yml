@@ -20,6 +20,8 @@ jobs:
     strategy:
       matrix:
         include:
+          - ckan-version: "master"
+            ckan-image: "ckan/ckan-dev:master-py3.10"
           - ckan-version: "2.11"
             ckan-image: "ckan/ckan-dev:2.11-py3.10"
           - ckan-version: "2.10"
