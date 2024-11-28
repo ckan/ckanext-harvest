@@ -232,7 +232,7 @@ For example, in case you want to retain changes made by the users to the fields 
 Command line interface
 ======================
 
-The ``ckan harvester`` command provides utilities to manage harvest operations from the command line. 
+The ``ckan harvester`` command provides utilities to manage harvest operations from the command line.
 Please refer to the help message of each command for more details::
 
 
@@ -328,6 +328,9 @@ field. The currently supported configuration options are:
 
 *   api_key: If the remote CKAN instance has restricted access to the API, you
     can provide a CKAN API key, which will be sent in any request.
+
+*   user_agent: Set a custom user agent string on gathering and fetching,
+    to handle servers that whitelist or blacklist specific values.
 
 *   read_only: Create harvested packages in read-only mode. Only the user who
     performed the harvest (the one defined in the previous setting or the
