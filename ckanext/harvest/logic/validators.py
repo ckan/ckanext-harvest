@@ -106,8 +106,6 @@ def harvest_source_url_validator(key, data, errors, context):
             raise Invalid('There already is a Harvest Source for this URL (& '
                           'config): url=%s config=%s' % (new_url, new_config))
 
-    #return data[key]
-
 
 def harvest_source_type_exists(value, context):
     # TODO: use new description interface
@@ -213,7 +211,6 @@ def harvest_source_extra_validator(key, data, errors, context):
         data[('config',)] = config
     if package_extras:
         data[('extras',)] = package_extras
-
 
 
 def harvest_source_convert_from_config(key, data, errors, context):
