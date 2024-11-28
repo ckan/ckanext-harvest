@@ -2,6 +2,12 @@
 import ckan.plugins.toolkit as tk
 
 from ckan.logic.schema import default_extras_schema
+try:
+    from ckan.logic.schema import default_show_extras_schema
+except ImportError:
+    default_show_extras_schema = default_extras_schema
+
+
 from ckan.logic.validators import (package_id_exists,
                                    name_validator,
                                    owner_org_validator,
@@ -45,7 +51,6 @@ def harvest_source_schema():
         'frequency': [ignore_missing, unicode_safe, harvest_source_frequency_exists, convert_to_extras],
         'state': [ignore_missing],
         'config': [ignore_missing, harvest_source_config_validator, convert_to_extras],
-        'extras': default_extras_schema(),
     }
 
     extras_schema = default_extras_schema()
@@ -91,7 +96,7 @@ def harvest_source_show_package_schema():
         'tracking_summary': [ignore_missing],
     })
 
-    schema['__extras'] = [ignore]
+    schema["extras"] = default_show_extras_schema()
 
     return schema
 

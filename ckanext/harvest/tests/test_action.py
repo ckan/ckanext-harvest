@@ -227,6 +227,23 @@ class TestHarvestSourceActionPatch(HarvestSourceFixtureMixin,
 
 @pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_queues')
 @pytest.mark.ckan_config('ckan.plugins', 'harvest test_action_harvester')
+class TestHarvestSourceActionShow():
+
+    def test_show(self):
+
+        source_dict = SOURCE_DICT
+
+        result = helpers.call_action(
+            'harvest_source_create', **source_dict)
+
+        source_show = helpers.call_action(
+            'harvest_source_show', id=result['id'])
+
+        assert 'extras' not in source_show, source_show['extras']
+
+
+@pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_queues')
+@pytest.mark.ckan_config('ckan.plugins', 'harvest test_action_harvester')
 class TestActions():
     def test_harvest_source_clear(self):
         source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
