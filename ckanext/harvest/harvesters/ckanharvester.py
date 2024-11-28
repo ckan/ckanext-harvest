@@ -38,7 +38,7 @@ class CKANHarvester(HarvesterBase):
 
         user_agent = self.config.get('user_agent')
         if user_agent:
-            headers['User-Agent'] = user_agent
+            headers['User-Agent'] = str(user_agent)
 
         api_key = self.config.get('api_key')
         if api_key:
