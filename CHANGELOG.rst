@@ -7,6 +7,19 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog <http://keepachangelog.com>`_
 and this project adheres to `Semantic Versioning <http://semver.org/>`_
 
+***********
+1.6.1_ - 2025-01-14
+***********
+
+Changed
+_______
+
+- CKAN 2.9 is not longer maintained #559
+
+Fixed
+-------
+- Update manifest to include alembic configuration #558
+
 
 ***********
 1.6.0_ - 2024-10-31

@@ -24,8 +24,6 @@ jobs:
             ckan-image: "ckan/ckan-dev:2.11-py3.10"
           - ckan-version: "2.10"
             ckan-image: "ckan/ckan-dev:2.10-py3.10"
-          - ckan-version: "2.9"
-            ckan-image: "ckan/ckan-dev:2.9-py3.9"
       fail-fast: false
 
     name: CKAN ${{ matrix.ckan-version }}
@@ -61,10 +59,6 @@ jobs:
         pip install -e .
         # Replace default path to CKAN core config file with the one on the container
         sed -i -e 's/use = config:.*/use = config:\/srv\/app\/src\/ckan\/test-core.ini/' test.ini
-    - name: Install requirements (2.9)
-      run: |
-        pip install -U pytest-rerunfailures
-      if: ${{ matrix.ckan-version == '2.9' }}
     - name: Setup extension (CKAN >= 2.9)
       run: |
         ckan -c test.ini db init
