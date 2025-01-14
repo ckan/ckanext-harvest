@@ -912,7 +912,7 @@ To create a new release, follow the following steps:
 
 * Determine new release number based on the rules of `semantic versioning <http://semver.org>`_
 * Update the CHANGELOG, especially the link for the "Unreleased" section
-* Update the version number in `setup.py`
+* Update the version number in `pyproject.toml`
 * Create a new release on GitHub and add the CHANGELOG of this release as release notes
 
 
