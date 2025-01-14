@@ -2,7 +2,7 @@
 ckanext-harvest - Remote harvesting extension
 =============================================
 
-.. image:: https://github.com/ckan/ckanext-harvest/workflows/Tests/badge.svg?branch=master
+.. image:: https://github.com/ckan/ckanext-harvest/actions/workflows/test.yml/badge.svg
     :target: https://github.com/ckan/ckanext-harvest/actions
 
 This extension provides a common harvesting framework for ckan extensions
@@ -12,9 +12,8 @@ and adds a CLI and a WUI to CKAN to manage harvesting sources and jobs.
 Installation
 ============
 
-This extension requires CKAN v2.0 or later on both the CKAN it is installed
-into and the CKANs it harvests. However you are unlikely to encounter a CKAN
-running a version lower than 2.0.
+This extension requires CKAN 2.10+ to run. However, it can harvest other CKAN instances running
+version 2.0+.
 
 1. The harvest extension can use two different backends. You can choose whichever
    you prefer depending on your needs, but Redis has been found to be more stable
