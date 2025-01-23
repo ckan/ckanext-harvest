@@ -703,6 +703,10 @@ Note: It is recommended to run the harvest process from a non-root user
 (generally the one you are running CKAN with). Replace the user `ckan` in the
 following steps with the one you are using.
 
+
+Alpine image for ckan
+---------------------
+
 1. Install Supervisor::
 
        sudo apt-get update
@@ -838,6 +842,114 @@ following steps with the one you are using.
 
    This particular example will perform clean-up each day at 05 AM.
    You can tweak the value according to your needs.
+
+
+Python:3.10-slim-bookworm image for ckan
+-----------------------------------------
+
+This guide details how to configure the harvesters for CKAN Python:3.10-slim-bookworm image deployments using **Supervisor** and **cron**. Sudo and ps commands are not available in the Python:3.10-slim-bookworm image. Therefore, the following steps are required to configure the harvesters:
+
+1. In the `python:3.10-slim-bookworm` image, commands like `sudo` and `ps` are unavailable. Use the following Docker command to install Supervisor and cron inside the container:
+
+   .. code-block:: Dockerfile
+      # Switch to root user to install cron and supervisor
+      USER root
+
+      # Install cron and supervisor
+      RUN apt-get update && apt-get install -y --no-install-recommends \
+          cron \
+          supervisor \
+          && rm -rf /var/lib/apt/lists/* \
+          && mkdir -p /var/log/ckan/std /var/log/supervisor /etc/supervisor/conf.d \
+          && chown -R ckan:ckan-sys /var/log/ckan /var/log/supervisor /etc/supervisor/conf.d
+
+      # Config cron job for harvesting
+      COPY config/supervisord.conf /etc/supervisord.d/ckan.conf
+      COPY config/crontab /etc/cron.d/ckan-cron
+
+      # Running cron as non-root user and give permission to ckan user
+      RUN chmod gu+rw /var/run && \
+          chmod gu+s /usr/sbin/cron && \
+          crontab -u ckan /etc/cron.d/ckan-cron
+
+      # Switch back to ckan user
+      USER ckan
+
+2. Supervisor Configuration
+
+   Supervisor monitors and manages the cron, gather, and fetch processes. In the `python:3.10-slim-bookworm` image, Supervisor requires explicit configuration, including paths for log files. Below is an example Supervisor configuration(config/supervisord.conf):
+
+   .. code-block:: ini
+
+      [supervisord]
+      ; Directory where Supervisor will store its state
+      logfile=/var/log/supervisor/supervisord.log
+      logfile_maxbytes=50MB
+      logfile_backups=10
+      loglevel=info
+      nodaemon=false
+      minfds=1024
+      minprocs=200
+
+      [program:ckan_gather_consumer]
+      command=/usr/local/bin/ckan --config=/srv/app/ckan.ini harvester gather-consumer
+      numprocs=1
+      stdout_logfile=/var/log/ckan/std/gather_consumer.log
+      stderr_logfile=/var/log/ckan/std/gather_consumer.log
+      autostart=true
+      autorestart=true
+      startsecs=10
+
+      [program:ckan_fetch_consumer]
+      command=/usr/local/bin/ckan --config=/srv/app/ckan.ini harvester fetch-consumer
+      numprocs=1
+      stdout_logfile=/var/log/ckan/std/fetch_consumer.log
+      stderr_logfile=/var/log/ckan/std/fetch_consumer.log
+      autostart=true
+      autorestart=true
+      startsecs=10
+
+      [program:cron]
+      command=/usr/sbin/cron -f
+      numprocs=1
+      stdout_logfile=/var/log/ckan/std/cron.log
+      stderr_logfile=/var/log/ckan/std/cron.log
+      autostart=true
+      autorestart=true
+      startsecs=10
+
+      [include]
+      files = /etc/supervisor/conf.d/*.conf
+
+3. Cron Job Configuration
+
+   In Docker deployments using the `python:3.10-slim-bookworm` image, the location of CKAN executables and configuration files differs. Example cron job configuration(crontab):
+
+   .. code-block:: text
+
+      # Run harvest job every 15 minutes
+      */15 * * * * /usr/local/bin/ckan -c /srv/app/ckan.ini harvester run
+
+      # Run harvest log cleanup weekly (Sunday at 5 AM)
+      0 5 * * 0 /usr/local/bin/ckan -c /srv/app/ckan.ini harvester clean-harvest-log
+
+4. Start the Supervisor Service
+
+   Update the `start_ckan.sh` script to include the following override for starting Supervisor and CKAN:
+
+   .. code-block:: bash
+
+      if [ $? -eq 0 ]
+      then
+          supervisord --configuration /etc/supervisord.d/ckan.conf &
+          # Start uwsgi
+          uwsgi $UWSGI_OPTS
+      else
+          echo "[prerun] failed...not starting CKAN."
+      fi
+
+5. If you encounter issues with the Supervisor service, check the logs for errors. The logs are located in the `/var/log/supervisor/supervisord.log` file. In this file, you find if the cron, gather and fetch processes are spwaned as expected. The gather and fetch consumer logs are located in `/var/log/ckan/std/` directory.
+
 
 Extensible actions
 ==================
