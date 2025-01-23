@@ -7,6 +7,16 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog <http://keepachangelog.com>`_
 and this project adheres to `Semantic Versioning <http://semver.org/>`_
 
+
+***********
+Unreleased 
+***********
+Changed
+_______
+
+- Added detailed readme for running the harvester on a python:3.10-slim-bookworm image in production environment
+
+
 ***********
 1.6.1_ - 2025-01-14
 ***********
