@@ -125,6 +125,7 @@ def harvest_source_clear(context, data_dict):
             WHERE harvest_source_id = '{harvest_source_id}');"""
 
     sql += """
+        DROP TABLE IF EXISTS package_ids_to_delete;
         CREATE TEMP TABLE package_ids_to_delete AS (
             SELECT id FROM package WHERE state = 'to_delete');
         """
