@@ -126,7 +126,7 @@ def harvest_source_clear(context, data_dict):
 
     sql += """
         DROP TABLE IF EXISTS package_ids_to_delete;
-        CREATE TEMP TABLE package_ids_to_delete AS (
+        CREATE TEMP TABLE package_ids_to_delete ON COMMIT DROP AS (
             SELECT id FROM package WHERE state = 'to_delete');
         """
 
