@@ -30,9 +30,9 @@ Example:
         {{ h.link_to(h.truncate(title, truncate_title), url) }}
       {% endif %}
       {% if source.get(state, '').startswith('draft') %}
-        <span class="label label-info">{{ _('Draft') }}</span>
+        <span class="badge bg-info">{{ _('Draft') }}</span>
       {% elif source.get(state, '').startswith('deleted') %}
-        <span class="label label-important">{{ _('Deleted') }}</span>
+        <span class="badge bg-important">{{ _('Deleted') }}</span>
       {% endif %}
     </h3>
 

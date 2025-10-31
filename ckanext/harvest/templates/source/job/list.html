@@ -20,7 +20,7 @@
                 {{ _('Job: ') }} {{ job.id }}
               </a>
               {% if job.status != 'Finished' %}
-                <span class="label">{{ job.status }}</span>
+                <span class="badge">{{ job.status }}</span>
               {% endif %}
             </h3>
             <p>
@@ -39,14 +39,14 @@
             <ul class="dataset-resources unstyled">
               {% if 'errored' in job.stats and job.stats['errored'] > 0 %}
                 <li>
-                  <span class="label label-important" data-diff="error">
+                  <span class="badge bg-important" data-diff="error">
                     {{ job.stats['errored'] }} {{ _('errors') }}
                   </span>
                 </li>
               {% endif %}
               {% for action in ['added', 'updated', 'deleted', 'not modified'] %}
                 <li>
-                  <span class="label" data-diff="{{ action }}" title="{{ _(action) }}">
+                  <span class="badge" data-diff="{{ action }}" title="{{ _(action) }}">
                     {% if action in job.stats and job.stats[action] > 0 %}
                       {{ job.stats[action] }}
                     {% else %}
