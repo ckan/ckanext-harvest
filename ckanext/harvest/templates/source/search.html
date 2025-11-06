@@ -46,6 +46,6 @@
 
 {% block secondary_content %}
   {% for facet in c.facet_titles %}
-      {{ h.snippet('snippets/facet_list.html', title=c.facet_titles[facet], name=facet, alternative_url=h.url_for('{0}.search'.format(c.dataset_type))) }}
+    {{ h.snippet('snippets/facet_list.html', title=c.facet_titles[facet], name=facet, search_facets=c.search_facets, alternative_url=h.url_for('{0}.search'.format(c.dataset_type))) }}
   {% endfor %}
 {% endblock %}
