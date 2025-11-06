@@ -39,7 +39,7 @@
             <ul class="dataset-resources unstyled">
               {% if 'errored' in job.stats and job.stats['errored'] > 0 %}
                 <li>
-                  <span class="badge bg-important" data-diff="error">
+                  <span class="badge bg-danger" data-diff="error">
                     {{ job.stats['errored'] }} {{ _('errors') }}
                   </span>
                 </li>
