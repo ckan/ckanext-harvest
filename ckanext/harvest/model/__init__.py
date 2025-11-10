@@ -325,6 +325,7 @@ class HarvestObjectError(BaseModel, HarvestDomainObject):
             # Clear any in-progress sqlalchemy transactions
             try:
                 Session.rollback()
+                Session.close()
             except Exception:
                 pass
             try:
