@@ -8,6 +8,20 @@ The format is based on `Keep a Changelog <http://keepachangelog.com>`_
 and this project adheres to `Semantic Versioning <http://semver.org/>`_
 
 ***********
+1.6.2_ - 2025-11-11
+***********
+
+Changed
+_______
+
+- Use Bootstrap 5 badge classes instead of old label classes #570
+
+Fixed
+-------
+- Drop temp table package_ids_to_delete #566
+- Pass search_facets into h.get_facet_items_dict #572
+
+***********
 1.6.1_ - 2025-01-14
 ***********
 
@@ -447,7 +461,9 @@ Categories
 - ``Fixed`` for any bug fixes.
 - ``Security`` to invite users to upgrade in case of vulnerabilities.
 
-.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.6.0...HEAD
+.. _Unreleased: https://github.com/ckan/ckanext-harvest/compare/v1.6.2...HEAD
+.. _1.6.2: https://github.com/ckan/ckanext-harvest/compare/v1.6.1...v1.6.2
+.. _1.6.1: https://github.com/ckan/ckanext-harvest/compare/v1.6.0...v1.6.1
 .. _1.6.0: https://github.com/ckan/ckanext-harvest/compare/v1.5.6...v1.6.0
 .. _1.5.6: https://github.com/ckan/ckanext-harvest/compare/v1.5.5...v1.5.6
 .. _1.5.5: https://github.com/ckan/ckanext-harvest/compare/v1.5.4...v1.5.5
