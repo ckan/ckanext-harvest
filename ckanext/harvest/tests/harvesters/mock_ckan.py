@@ -109,7 +109,7 @@ class MockCkanHandler(SimpleHTTPRequestHandler):
                 if params['start'] != '0':
                     datasets = []
                 elif set(params.keys()) == set(['rows', 'start']):
-                    datasets = ['dataset1', DATASETS[1]['name']]
+                    datasets = [d['name'] for d in DATASETS]
                 elif set(params.keys()) == set(['fq', 'rows', 'start']) and \
                         params['fq'] == '-organization:org1':
                     datasets = [DATASETS[1]['name']]
@@ -489,7 +489,138 @@ DATASETS = [
         "revision_id": "3bd6ced3-35b2-4b20-94e2-c596e24bc375",
         "date_released": "30/7/2010",
         "theme-primary": "Towns & Cities"
-    }
+    },
+    {
+        "id": "243592d4-5a74-4139-8a9a-02c8a5fd0caf",
+        "name": "painel-integridade-publica",
+        "author": None,
+        "author_email": None,
+        "creator_user_id": "a0e37bbb-9859-43f8-836a-fc40406d83de",
+        "isopen": True,
+        "license_id": "odc-pddl",
+        "license_title": "Open Data Commons Public Domain Dedication and License (PDDL)",
+        "license_url": "http://www.opendefinition.org/licenses/odc-pddl",
+        "maintainer": "Coordenação-Geral de Monitoramento e Avaliação (CGMAV/DIPIN/SIP)",
+        "maintainer_email": "sip.dipin@cgu.gov.br",
+        "metadata_created": "2023-06-12T20:57:57.479383",
+        "metadata_modified": "2023-06-12T20:57:57.479390",
+        "notes": "O Painel Integridade Pública permite conferir informações sobre a estruturação, "
+            "a execução e o monitoramento de programas de integridade em órgãos e entidades "
+            "do Governo Federal",
+        "num_resources": 3,
+        "num_tags": 3,
+        "organization": {
+            "id": "539d7aca-df8e-4033-ad9d-191444f1322d",
+            "name": "controladoria-geral-da-uniao",
+            "title": "Controladoria-Geral da União",
+            "type": "organization",
+            "description": "A Controladoria-Geral da União (CGU) é o órgão"
+                "de controle interno do Governo Federal",
+            "image_url": "https://dados.gov.br/api/publico/s3/19987297-90c6-472b-9ee2-c2106fb6afbb.png",
+            "created": "2016-08-19T08:03:46.882221",
+            "is_organization": True,
+            "approval_status": "approved",
+            "state": "active"
+        },
+        "owner_org": "539d7aca-df8e-4033-ad9d-191444f1322d",
+        "private": False,
+        "state": "active",
+        "title": "Painel Integridade Pública",
+        "type": "dataset",
+        "url": None,
+        "version": "1.0",
+        "extras": [],
+        "groups": [],
+        "resources": [
+            {
+                "cache_last_updated": None,
+                "cache_url": None,
+                "created": "2023-06-12T20:57:57.618980",
+                "description": "Mapeamento",
+                "format": "CSV",
+                "hash": "",
+                "id": "309d3d05-3a30-45fd-a4b1-caf8c53e94fc",
+                "last_modified": None,
+                "mimetype": None,
+                "mimetype_inner": None,
+                "name": "2023",
+                "package_id": "243592d4-5a74-4139-8a9a-02c8a5fd0caf",
+                "position": 0,
+                "resource_type": None,
+                "size": 0,
+                "state": "active",
+                "url": "https://dadosabertos-download.cgu.gov.br/IntegridadePublica/Dados_Mapeamento_CSV.csv",
+                "url_type": None,
+            },
+            {
+                "cache_last_updated": None,
+                "cache_url": None,
+                "created": "2023-06-12T20:57:57.618985",
+                "description": "Dados coletados pela CGU",
+                "format": "CSV",
+                "hash": "",
+                "id": "71433fcb-a6a9-433e-a3fc-d9f8acbc75b8",
+                "idTipo": 1,
+                "last_modified": None,
+                "mimetype": None,
+                "mimetype_inner": None,
+                "name": "2022",
+                "package_id": "243592d4-5a74-4139-8a9a-02c8a5fd0caf",
+                "position": 1,
+                "resource_type": None,
+                "size": 0,
+                "state": "active",
+                "url": "https://dadosabertos-download.cgu.gov.br/IntegridadePublica/Dados_Etapa_2_CSV.csv",
+                "url_type": None,
+            },
+            {
+                "cache_last_updated": None,
+                "cache_url": None,
+                "created": "2023-06-12T20:57:57.618987",
+                "description": "Dados coletados pela CGU",
+                "format": "CSV",
+                "hash": "",
+                "id": "88554739-e83d-44fe-b6ad-f8e49ad7a1e6",
+                "last_modified": None,
+                "metadata_modified": "2023-06-12T20:57:57.380779",
+                "mimetype": None,
+                "mimetype_inner": None,
+                "name": "2021",
+                "package_id": "243592d4-5a74-4139-8a9a-02c8a5fd0caf",
+                "position": 2,
+                "resource_type": None,
+                "size": 0,
+                "state": "active",
+                "url": "https://dadosabertos-download.cgu.gov.br/IntegridadePublica/Dados_Etapa_1_CSV.csv",
+                "url_type": None,
+            },
+        ],
+        "tags": [
+            {
+                "display_name": "Integridade",
+                "id": "a709b28c-936c-4714-99ef-cd77cb144b9f",
+                "name": "Integridade",
+                "state": "active",
+                "vocabulary_id": None,
+            },
+            {
+                "display_name": "Integridade Pública",
+                "id": "2b52014c-da45-4837-80de-0dfe467a9a51",
+                "name": "Integridade Pública",
+                "state": "active",
+                "vocabulary_id": None,
+            },
+            {
+                "display_name": "Programa de Integridade",
+                "id": "ee16b70a-41e2-41ec-a521-11049aecf767",
+                "name": "Programa de Integridade",
+                "state": "active",
+                "vocabulary_id": None,
+            },
+        ],
+        "relationships_as_subject": [],
+        "relationships_as_object": [],
+    },
 ]
 
 INVALID_TAGS = [
