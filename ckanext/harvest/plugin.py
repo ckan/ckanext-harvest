@@ -13,6 +13,8 @@ from ckan.lib.plugins import DefaultDatasetForm
 
 from ckan.lib.plugins import DefaultTranslation
 
+from ckan.config.declaration import Declaration, Key
+
 import ckanext.harvest
 from ckanext.harvest import cli, views
 from ckanext.harvest.model import HarvestSource, HarvestJob, HarvestObject
@@ -38,6 +40,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
     p.implements(p.ITemplateHelpers)
     p.implements(p.IFacets, inherit=True)
     p.implements(p.ITranslation, inherit=True)
+    p.implements(p.IConfigDeclaration)
 
     startup = False
 
@@ -58,6 +61,29 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
             os.path.dirname(ckanext.harvest.__file__),
             'i18n'
         )
+
+    # IConfigDeclaration
+    def declare_config_options(self, declaration: Declaration, key: Key):
+        declaration.declare(key.ckan.harvest.mq.type, 'redis')
+        declaration.declare(key.ckan.harvest.mq.hostname, 'localhost')
+        declaration.declare_int(key.ckan.harvest.mq.port, 5672)
+        declaration.declare(key.ckan.harvest.mq.user_id, 'guest')
+        declaration.declare(key.ckan.harvest.mq.password, 'guest')
+        declaration.declare(key.ckan.harvest.mq.virtual_host, '/')
+        declaration.declare_int(key.ckan.harvest.mq.redis_db, 0)
+
+        declaration.declare(key.ckan.harvest.log_level, 'debug')
+        declaration.declare_int(key.ckan.harvest.log_scope, -1)
+
+        declaration.declare(key.ckan.harvest.timeout, None)
+        declaration.declare_bool(key.ckan.harvest.status_mail.all, False)
+        declaration.declare_bool(key.ckan.harvest.status_mail.errored, False)
+
+        declaration.declare(key.ckan.harvest.not_overwrite_fields, None)
+        declaration.declare_int(key.ckan.harvest.harvest_source_limit, 100)
+        declaration.declare(key.ckanext.harvest.user_name, None)
+        declaration.declare(key.ckanext.harvest.default_dataset_name_append, 'number-sequence')
+
 
     # IPackageController
 
