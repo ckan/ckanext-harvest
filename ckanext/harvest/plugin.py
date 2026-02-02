@@ -68,7 +68,7 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
         declaration.declare(key.ckan.harvest.mq.hostname, 'localhost')
         declaration.declare_int(key.ckan.harvest.mq.port, 5672)
         declaration.declare(key.ckan.harvest.mq.user_id, 'guest')
-        declaration.declare(key.ckan.harvest.mq.password, 'guest')
+        declaration.declare(key.ckan.harvest.mq.password, None)
         declaration.declare(key.ckan.harvest.mq.virtual_host, '/')
         declaration.declare_int(key.ckan.harvest.mq.redis_db, 0)
 
