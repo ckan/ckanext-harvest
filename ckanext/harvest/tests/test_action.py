@@ -160,7 +160,7 @@ class HarvestSourceFixtureMixin(object):
         # delete status because it gets in the way of the status supplied to
         # helpers.call_action later on. It is only a generated value, not affecting
         # the update/patch anyway.
-        del source['status']
+        source.pop("status", None)
         return source
 
 
