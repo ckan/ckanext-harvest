@@ -1,11 +1,16 @@
 name: Tests
 on: [push, pull_request]
+permissions: {}
 jobs:
   lint:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: '3.10'
       - name: Install requirements
@@ -28,6 +33,8 @@ jobs:
             ckan-image: "ckan/ckan-dev:2.10-py3.10"
       fail-fast: false
 
+    permissions:
+      contents: read
     name: CKAN ${{ matrix.ckan-version }}
     runs-on: ubuntu-latest
     container:
@@ -53,7 +60,9 @@ jobs:
       CKAN_REDIS_URL: redis://redis:6379/1
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+        persist-credentials: false
     - name: Install requirements
       run: |
         pip install -r requirements.txt
