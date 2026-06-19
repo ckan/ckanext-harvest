@@ -2,6 +2,11 @@
 import ckan.plugins.toolkit as tk
 
 from ckan.logic.schema import default_extras_schema
+try:
+    from ckan.logic.schema import default_show_extras_schema
+except ImportError:
+    default_show_extras_schema = None
+
 from ckan.logic.validators import (package_id_exists,
                                    name_validator,
                                    owner_org_validator,
@@ -32,6 +37,7 @@ if_empty_same_as = tk.get_validator("if_empty_same_as")
 def harvest_source_schema():
 
     schema = {
+        '__extras': [ignore],
         'id': [ignore_missing, unicode_safe, package_id_exists],
         'type': [dataset_type_exists, unicode_safe],
         'url': [not_empty, unicode_safe, harvest_source_url_validator],
@@ -45,13 +51,8 @@ def harvest_source_schema():
         'frequency': [ignore_missing, unicode_safe, harvest_source_frequency_exists, convert_to_extras],
         'state': [ignore_missing],
         'config': [ignore_missing, harvest_source_config_validator, convert_to_extras],
-        'extras': default_extras_schema(),
+        'extras': default_extras_schema()
     }
-
-    extras_schema = default_extras_schema()
-    extras_schema['__extras'] = [ignore]
-
-    schema['extras'] = extras_schema
 
     return schema
 
@@ -69,6 +70,7 @@ def harvest_source_create_package_schema():
 def harvest_source_update_package_schema():
 
     schema = harvest_source_create_package_schema()
+    schema['id'] = [ignore_missing]
     schema['owner_org'] = [ignore_missing, owner_org_validator, unicode_safe]
     return schema
 
@@ -90,8 +92,12 @@ def harvest_source_show_package_schema():
         'revision_timestamp': [ignore_missing],
         'tracking_summary': [ignore_missing],
     })
+    if default_show_extras_schema:
+        schema['extras'] = default_show_extras_schema()
 
     schema['__extras'] = [ignore]
+
+    schema['id'] = []
 
     return schema
 
