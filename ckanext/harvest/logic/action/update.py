@@ -966,7 +966,7 @@ def harvest_source_reindex(context, data_dict):
         if key not in config:
             new_dict[key] = value
 
-    if toolkit.check_ckan_version(min_version="2.12.0"):
+    if toolkit.check_ckan_version(min_version="2.12.0b0"):
         new_dict["with_custom_schema"] = package_dict
 
     package_index = PackageSearchIndex()
