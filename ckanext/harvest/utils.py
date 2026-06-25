@@ -324,7 +324,7 @@ def gather_consumer():
         gather_callback(consumer, method, header, body)
 
 
-def fetch_consumer():
+def fetch_consumer(app):
     import logging
 
     logging.getLogger("amqplib").setLevel(logging.INFO)
@@ -336,7 +336,8 @@ def fetch_consumer():
 
     consumer = get_fetch_consumer()
     for method, header, body in consumer.consume(queue=get_fetch_queue_name()):
-        fetch_callback(consumer, method, header, body)
+        with app.test_request_context():
+            fetch_callback(consumer, method, header, body)
 
 
 def run_harvester():
