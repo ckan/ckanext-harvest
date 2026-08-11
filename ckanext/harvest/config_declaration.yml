@@ -1,0 +1,132 @@
+version: 1
+groups:
+  - annotation: Backend (message queue) settings
+    options:
+
+      - key: ckan.harvest.mq.type
+        default: redis
+        description: |
+          Backend used for the harvesting queues. Supported values are `redis`
+          and `amqp` (RabbitMQ).
+
+      - key: ckan.harvest.mq.hostname
+        default: localhost
+        description: |
+          Hostname of the backend server (Redis or RabbitMQ).
+
+      - key: ckan.harvest.mq.port
+        type: int
+        default: 6379
+        description: |
+          Port of the backend server. Note that the usual default port for
+          Redis is 6379 and for RabbitMQ 5672.
+
+      - key: ckan.harvest.mq.user_id
+        default: guest
+        description: |
+          User name used to connect to the backend server (RabbitMQ only).
+
+      - key: ckan.harvest.mq.password
+        description: |
+          Password used to connect to the backend server. On RabbitMQ this
+          defaults to `guest`.
+
+      - key: ckan.harvest.mq.virtual_host
+        default: '/'
+        description: |
+          Virtual host used to connect to the backend server (RabbitMQ only).
+
+      - key: ckan.harvest.mq.redis_db
+        type: int
+        default: 0
+        description: |
+          Database number used on the backend server (Redis only).
+
+  - annotation: Database logger settings
+    options:
+
+      - key: ckan.harvest.log_level
+        default: debug
+        description: |
+          Log level used by the database logger.
+        example: info
+
+      - key: ckan.harvest.log_scope
+        type: int
+        default: -1
+        description: |
+          Scope of the logs stored in the database (and exposed via the API).
+          Logging to the database is disabled by default:
+
+          * -1 - Do not log in the database - DEFAULT
+          *  0 - Log everything
+          *  1 - model, logic.action, logic.validators, harvesters
+          *  2 - model, logic.action, logic.validators
+          *  3 - model, logic.action
+          *  4 - logic.action
+          *  5 - model
+          *  6 - plugin
+          *  7 - harvesters
+        example: 0
+
+      - key: ckan.harvest.log_timeframe
+        type: int
+        default: 30
+        description: |
+          Time frame (in days) used by the log clean-up mechanism.
+
+  - annotation: Harvesting settings
+    options:
+
+      - key: ckan.harvest.timeout
+        description: |
+          Timeout (in minutes) for harvest jobs. Jobs that time out will create
+          an error message for the user to see. The timeout value is compared to
+          the completion time of the last object in the job. If not set, there is
+          no timeout on harvest jobs.
+        example: 1440
+
+      - key: ckan.harvest.status_mail.all
+        type: bool
+        default: false
+        description: |
+          If set to True, send an email when completed harvest jobs finish
+          (whether or not they failed). Emails are sent to all sysadmins, plus
+          the admins of the organization the harvest source belongs to (if any).
+
+      - key: ckan.harvest.status_mail.errored
+        type: bool
+        default: false
+        description: |
+          If set to True, send an email when a harvest job fails. Emails are sent
+          to all sysadmins, plus the admins of the organization the harvest
+          source belongs to (if any).
+
+      - key: ckan.harvest.not_overwrite_fields
+        type: list
+        description: |
+          List of dataset fields that should not be modified by the harvesting
+          process. Useful if you want to add additional fields to the harvested
+          datasets, or alter them after they have been harvested.
+        example: description tags
+
+      - key: ckan.harvest.harvest_source_limit
+        type: int
+        default: 100
+        description: |
+          Maximum number of harvest sources returned by the
+          `harvest_source_list` action.
+
+      - key: ckanext.harvest.user_name
+        description: |
+          Name of the user used to perform the harvesting actions. Defaults to
+          the site user.
+        example: harvest
+
+      - key: ckanext.harvest.default_dataset_name_append
+        default: number-sequence
+        description: |
+          Suffix appended to a dataset name when the name generated from its
+          title already exists. Supported values are `number-sequence` and
+          `random-hex`.
+        example: random-hex
