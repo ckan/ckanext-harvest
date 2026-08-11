@@ -4,7 +4,10 @@ import json
 
 
 import redis
-import pika
+try:
+    import pika
+except ImportError:
+    pika = None
 import sqlalchemy
 
 from ckan.lib.base import config
@@ -45,6 +48,10 @@ def get_connection():
 
 
 def get_connection_amqp():
+
+    if not pika:
+        raise ValueError("The pika library is needed to use RabbitMQ as the backend"
+                         "Install it with `pip install ckanext-harvest[amqp]`")
     try:
         port = int(config.get('ckan.harvest.mq.port', PORT))
     except ValueError:
