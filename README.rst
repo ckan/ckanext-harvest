@@ -43,20 +43,25 @@ version 2.0+.
 
 3. Install the ckanext-harvest Python package into your virtual environment::
 
-     (pyenv) $ pip install -e git+https://github.com/ckan/ckanext-harvest.git#egg=ckanext-harvest
+     (pyenv) $ pip install ckanext-harvest
 
-4. Install the python modules required by the extension (adjusting the path according to where ckanext-harvest was installed in the previous step)::
+   If you are planning on using RabbitMQ / AMQP as backend, install the dependencies::
 
-     (pyenv) $ cd /usr/lib/ckan/default/src/ckanext-harvest/
-     (pyenv) $ pip install -r requirements.txt
+     (pyenv) $ pip install ckanext-harvest[amqp]
 
-5. Make sure the CKAN configuration ini file contains the harvest main plugin, as
+   If you want to install a ckanext-harvest version older than 1.6.3, use the old legacy version of the install::
+
+         pip install -e git+https://github.com/ckan/ckanext-harvest.git#egg=ckanext-harvest
+         pip install -r ckanext-harvest/requirements.txt
+
+
+4. Make sure the CKAN configuration ini file contains the harvest main plugin, as
    well as the harvester for CKAN instances if you need it (included with the extension)::
 
      ckan.plugins = harvest ckan_harvester
 
 6. If you haven't done it yet on the previous step, define the backend that you
-   are using with the ``ckan.harvest.mq.type`` option in the `[app:main]` section (it defaults to ``amqp``)::
+   are using with the ``ckan.harvest.mq.type`` option in the `[app:main]` section (it defaults to ``redis``)::
 
      ckan.harvest.mq.type = redis
 
@@ -107,6 +112,7 @@ There is a "Harvest" tab in the sysadmin pages as well:
 
 ![Harvest admin tab](https://github.com/ckan/ckanext-harvest/blob/master/docs/admin-tab.png?raw=true)
 
+Check the `config declaration <https://github.com/ckan/ckanext-harvest/blob/master/ckanext/harvest/config_declaration.yml>`_ file for a full list of all available configuration options.
 
 
 Database logger configuration(optional)

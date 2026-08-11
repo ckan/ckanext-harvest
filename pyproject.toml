@@ -25,7 +25,19 @@ keywords = [
     "harvesting",
     "federation",
 ]
-dependencies = []
+dependencies = [
+  "ckantoolkit",
+  # CKAN core dependencies
+  "requests",
+  "redis",
+]
+
+[project.optional-dependencies]
+amqp = ["pika"]
+dev = [
+    "pytest-ckan",
+    "factory-boy",
+]
 
 [project.urls]
 Homepage = "http://github.com/ckan/ckanext-harvest"
