@@ -26,6 +26,25 @@ log = getLogger(__name__)
 assert not log.disabled
 
 
+def config_declaration(arg=None):
+    supports_config_declaration = p.toolkit.check_ckan_version(min_version="2.10.0")
+
+    # @config_declaration with no args
+    if callable(arg):
+        if supports_config_declaration:
+            return p.toolkit.blanket.config_declarations(arg)
+        return arg
+
+    # @config_declaration with custom file
+    def decorator(cls):
+        if supports_config_declaration:
+            return p.toolkit.blanket.config_declarations(arg)(cls)
+        return cls
+
+    return decorator
+
+
+@config_declaration
 class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
     p.implements(p.IClick)
     p.implements(p.IBlueprint)
