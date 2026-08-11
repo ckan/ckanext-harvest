@@ -10,9 +10,10 @@ groups:
           and `amqp` (RabbitMQ).
 
       - key: ckan.harvest.mq.hostname
-        default: localhost
         description: |
-          Hostname of the backend server (Redis or RabbitMQ).
+          Hostname of the backend server (Redis or RabbitMQ). Note that if it not defined
+          and `ckan.redis.url` is set, this will be used as a backend server. If `ckan.redis.url`
+          is not set, this property defaults to `localhost`.
 
       - key: ckan.harvest.mq.port
         type: int
