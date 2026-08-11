@@ -928,7 +928,7 @@ Contributing
 ============
 
 For contributing to ckanext-harvest or its documentation, follow the guidelines described in
-`CONTRIBUTING <https://github.com/ckan/ckanext-harvest/blob/master/CONTRIBUTING.rst>`_.
+`CONTRIBUTING <https://github.com/ckan/ckanext-harvest/blob/master/CONTRIBUTING.md>`_.
 
 
 License

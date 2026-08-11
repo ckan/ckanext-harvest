@@ -18,7 +18,7 @@ For contributing to ckanext-harvest or its documentation, follow the same guidel
 
 * Ensure the PR description clearly describes the problem and solution. Include the relevant issue number if applicable.
 
-* Make sure to **update the CHANGELOG.rst** in the "Unreleased" section with your bugfix
+* Make sure to **update the CHANGELOG.md** in the "Unreleased" section with your bugfix
 
 **Do you intend to add a new feature or change an existing one?**
 -----------------------------------------------------------------
@@ -27,7 +27,7 @@ For contributing to ckanext-harvest or its documentation, follow the same guidel
 
 * If you are unsure about the change, wait for feedback on the issue or post to the `ckan-dev mailinglist <https://lists.okfn.org/mailman/listinfo/ckan-dev>`_
 
-* Make sure to **update the CHANGELOG.rst** in the "Unreleased" section with your change
+* Make sure to **update the CHANGELOG.md** in the "Unreleased" section with your change
 
 **Do you have questions about the source code?**
 ------------------------------------------------

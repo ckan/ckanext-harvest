@@ -31,7 +31,7 @@ dependencies = []
 Homepage = "http://github.com/ckan/ckanext-harvest"
 Repository = "https://github.com/ckan/ckanext-harvest"
 Issues = "https://github.com/ckan/ckanext-harvest/issues"
-Changelog = "https://github.com/ckan/ckanext-harvest/blob/master/CHANGELOG.rst"
+Changelog = "https://github.com/ckan/ckanext-harvest/blob/master/CHANGELOG.md"
 
 [build-system]
 requires = ["setuptools"]
