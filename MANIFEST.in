@@ -4,4 +4,6 @@ recursive-include ckanext/harvest/public *
 recursive-include ckanext/harvest/i18n *
 recursive-include ckanext/harvest/migration *
 include ckanext/harvest/config_declaration.yml
-
+include README.rst
+include CHANGELOG.md
+global-exclude *.pyc
