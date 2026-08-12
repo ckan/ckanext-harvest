@@ -1,6 +1,12 @@
 # Changelog
 
-## [Unreleased](https://github.com/ckan/ckanext-harvest/compare/v1.6.2...HEAD)
+## [Unreleased](https://github.com/ckan/ckanext-harvest/compare/v1.6.3...HEAD)
+
+## [v1.6.3](https://github.com/ckan/ckanext-harvest/compare/v1.6.3...v1.6.3) - 2026-08-12
+
+* The extension can now be installed via `pip install ckanext-harvest`: included requirements in pyproject.toml. To use the RabbitMQ backend, use `pip install ckanext-harvest[amqp]`.
+* Add support for CKAN 2.12 ([#576](https://github.com/ckan/ckanext-harvest/pull/576))
+* Add config declaration ([#575](https://github.com/ckan/ckanext-harvest/pull/575))
 
 ## [v1.6.2](https://github.com/ckan/ckanext-harvest/compare/v1.6.1...v1.6.2) - 2025-11-11
 
