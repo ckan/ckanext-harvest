@@ -1,0 +1,578 @@
+# Spanish translations for ckanext-harvest.
+# Copyright (C) 2015 ORGANIZATION
+# This file is distributed under the same license as the ckanext-harvest
+# project.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ckanext-harvest\n"
+"Report-Msgid-Bugs-To: adrianquintero86@gmail.com\n"
+"POT-Creation-Date: 2026-08-11 10:21+0000\n"
+"PO-Revision-Date: 2026-08-11 15:58+EDT\n"
+"Last-Translator: Adrian Quintero <adrianquintero86@gmail.com>\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+
+#: ckanext/harvest/helpers.py:70
+msgid "title"
+msgstr "título"
+
+#: ckanext/harvest/controllers/organization.py:40
+msgid "Group not found"
+msgstr "Grupo no encontrado"
+
+#: ckanext/harvest/controllers/organization.py:42
+#, python-format
+msgid "Unauthorized to read group %s"
+msgstr "No autorizado para leer el grupo %s"
+
+#: ckanext/harvest/controllers/organization.py:137
+msgid "Groups"
+msgstr "Grupos"
+
+#: ckanext/harvest/controllers/organization.py:138
+msgid "Tags"
+msgstr "Etiquetas"
+
+#: ckanext/harvest/controllers/organization.py:139
+msgid "Formats"
+msgstr "Formatos"
+
+#: ckanext/harvest/controllers/organization.py:140
+msgid "Licence"
+msgstr "Licencia"
+
+#: ckanext/harvest/controllers/view.py:28
+msgid "Not authorized to see this page"
+msgstr "No autorizado para ver esta página"
+
+#: ckanext/harvest/controllers/view.py:45
+msgid "Harvesting source successfully cleared"
+msgstr "Fuente de importación borrada con éxito"
+
+#: ckanext/harvest/controllers/view.py:47
+msgid "Harvesting source successfully inactivated"
+msgstr "Fuente de importación inactivada con éxito"
+
+#: ckanext/harvest/controllers/view.py:51 ckanext/harvest/controllers/view.py:63
+#: ckanext/harvest/controllers/view.py:85 ckanext/harvest/controllers/view.py:146
+#: ckanext/harvest/controllers/view.py:184 ckanext/harvest/controllers/view.py:195
+#: ckanext/harvest/controllers/view.py:221 ckanext/harvest/logic/auth/create.py:34
+#: ckanext/harvest/logic/auth/delete.py:18 ckanext/harvest/logic/auth/get.py:33
+#: ckanext/harvest/logic/auth/update.py:19
+msgid "Harvest source not found"
+msgstr "Fuente de importación no encontrada"
+
+#: ckanext/harvest/controllers/view.py:61
+msgid "Harvest will start shortly. Refresh this page for updates."
+msgstr "La importación comenzará pronto. Actualice esta página para obtener actualizaciones."
+
+#: ckanext/harvest/controllers/view.py:67
+msgid ""
+"Cannot create new harvest jobs on inactive sources. First, please change the "
+"source status to 'active'."
+msgstr ""
+"No se pueden crear nuevos trabajos de importación en fuentes inactivas. "
+"Primero, por favor cambie el estado de la fuente a 'activo'."
+
+#: ckanext/harvest/controllers/view.py:71
+msgid "A harvest job has already been scheduled for this source"
+msgstr "Ya se ha programado un trabajo de importación para esta fuente"
+
+#: ckanext/harvest/controllers/view.py:83
+msgid "Harvest source cleared"
+msgstr "Fuente de importación borrada"
+
+#: ckanext/harvest/controllers/view.py:111
+msgid "No content found"
+msgstr "No se encontró contenido"
+
+#: ckanext/harvest/controllers/view.py:171
+msgid "Harvest job not found"
+msgstr "Trabajo de importación no encontrado"
+
+#: ckanext/harvest/controllers/view.py:204
+#: ckanext/harvest/templates/source/admin.html:15
+#: ckanext/harvest/templates/source/job/list.html:13
+msgid "No jobs yet for this source"
+msgstr "Aún no hay trabajos para esta fuente"
+
+#: ckanext/harvest/logic/auth/create.py:19
+msgid "User {0} not authorized to create harvest sources"
+msgstr "Usuario {0} no autorizado para crear fuentes de importación"
+
+#: ckanext/harvest/logic/auth/create.py:42
+msgid "User not authorized to create a job for source {0}"
+msgstr "Usuario no autorizado para crear un trabajo para la fuente {0}"
+
+#: ckanext/harvest/logic/auth/create.py:52
+msgid "Only sysadmins can create harvest jobs for all sources"
+msgstr "Solo los administradores del sistema pueden crear trabajos de importación para todas las fuentes"
+
+#: ckanext/harvest/logic/auth/create.py:63
+msgid "Only the sysadmins can create harvest objects"
+msgstr "Sólo los administradores del sistema pueden crear objetos de importación."
+
+#: ckanext/harvest/logic/auth/delete.py:27
+msgid "User {0} not authorized to delete harvest source {1}"
+msgstr "Usuario {0} no autorizado para eliminar la fuente de importación {1}"
+
+#: ckanext/harvest/logic/auth/get.py:42
+msgid "User {0} not authorized to read harvest source {1}"
+msgstr "Usuario {0} no autorizado para leer la fuente de importación {1}"
+
+#: ckanext/harvest/logic/auth/get.py:82
+msgid "User {0} not authorized to see jobs from source {1}"
+msgstr "El usuario {0} no está autorizado a ver trabajos de la fuente {1}"
+
+#: ckanext/harvest/logic/auth/get.py:104
+msgid "User {0} not authorized to list jobs for source {1}"
+msgstr "El usuario {0} no está autorizado a enumerar trabajos para el origen {1}"
+
+#: ckanext/harvest/logic/auth/update.py:28
+msgid "User {0} not authorized to update harvest source {1}"
+msgstr "El usuario {0} no está autorizado a actualizar la fuente de importación {1}"
+
+#: ckanext/harvest/logic/auth/update.py:45
+msgid "Only sysadmins can reimport all harvest objects"
+msgstr "Sólo los administradores del sistema pueden volver a importar todos los objetos"
+
+#: ckanext/harvest/logic/auth/update.py:57
+msgid "Only sysadmins can run the pending harvest jobs"
+msgstr "Sólo los administradores del sistema pueden ejecutar los trabajos de importación pendientes"
+
+#: ckanext/harvest/logic/auth/update.py:89
+msgid "Only sysadmins can reindex all harvest sources"
+msgstr "Sólo los administradores del sistema pueden reindexar todas las fuentes de importación"
+
+#: ckanext/harvest/templates/snippets/add_source_button.html:6
+#: ckanext/harvest/templates/source/org_source_list.html:11
+msgid "Add Harvest Source"
+msgstr "Agregar fuente de importación"
+
+#: ckanext/harvest/templates/snippets/job_details.html:26
+#: ckanext/harvest/templates/source/job/list.html:44
+msgid "errors"
+msgstr "errores"
+
+#: ckanext/harvest/templates/snippets/job_details.html:41
+msgid "Details"
+msgstr "Detalles"
+
+#: ckanext/harvest/templates/snippets/job_details.html:48
+msgid "Id"
+msgstr "Identificación"
+
+#: ckanext/harvest/templates/snippets/job_details.html:52
+msgid "Created"
+msgstr "Creado"
+
+#: ckanext/harvest/templates/snippets/job_details.html:60
+msgid "Started"
+msgstr "Comenzó"
+
+#: ckanext/harvest/templates/snippets/job_details.html:68
+msgid "Finished"
+msgstr "Finalizado"
+
+#: ckanext/harvest/templates/snippets/job_details.html:76
+msgid "Status"
+msgstr "Estado"
+
+#: ckanext/harvest/templates/snippets/job_error_summary.html:18
+msgid "Count"
+msgstr "Contar"
+
+#: ckanext/harvest/templates/snippets/job_error_summary.html:19
+msgid "Message"
+msgstr "Mensaje"
+
+#: ckanext/harvest/templates/snippets/package_list_empty.html:1
+msgid "There are no datasets associated to this harvest source."
+msgstr "No hay conjuntos de datos asociados a esta fuente de importación."
+
+#: ckanext/harvest/templates/snippets/search_result_text.html:4
+msgid "{number} harvest source found for \"{query}\""
+msgid_plural "{number} harvest sources found for \"{query}\""
+msgstr[0] "{número} fuente de importación encontrada para \"{query}\""
+msgstr[1] "{número} fuentes de importación encontradas para \"{query}\""
+
+#: ckanext/harvest/templates/snippets/search_result_text.html:5
+#: ckanext/harvest/templates/source/org_source_list.html:17
+#: ckanext/harvest/templates/source/search_2.0.html:27
+msgid "Sorry no harvest sources found for \"{query}\""
+msgstr "Lo sentimos, no se han encontrado fuentes de cosecha para \"{query}\""
+
+#: ckanext/harvest/templates/snippets/search_result_text.html:6
+msgid "{number} harvest source found"
+msgid_plural "{number} harvest sources found"
+msgstr[0] "{número} fuente de importación encontrada"
+msgstr[1] "{número} fuentes de importación encontradas"
+
+#: ckanext/harvest/templates/snippets/search_result_text.html:7
+#: ckanext/harvest/templates/source/org_source_list.html:25
+msgid "Sorry no harvest sources found"
+msgstr "Lo sentimos, no se encontraron fuentes de cosecha"
+
+#: ckanext/harvest/templates/snippets/source_item.html:28
+msgid "Draft"
+msgstr "Borrador"
+
+#: ckanext/harvest/templates/snippets/source_item.html:30
+#: ckanext/harvest/templates/source/new_source_form.html:83
+msgid "Deleted"
+msgstr "Eliminado"
+
+#: ckanext/harvest/templates/snippets/source_item.html:37
+#: ckanext/harvest/templates/source/about.html:9
+#: ckanext/harvest/templates/source/read_base.html:25
+msgid "There is no description for this harvest source"
+msgstr "No hay descripción para esta fuente de importación."
+
+#: ckanext/harvest/templates/snippets/source_item.html:42
+#: ckanext/harvest/templates/source/read.html:5
+#: ckanext/harvest/templates/source/read_base.html:30
+#: ckanext/harvest/templates/source/read_base.html:53
+msgid "Datasets"
+msgstr "Conjuntos de datos"
+
+#: ckanext/harvest/templates/snippets/source_item.html:45
+#: ckanext/harvest/templates/source/new_source_form.html:63
+msgid "Organization"
+msgstr "Organización"
+
+#: ckanext/harvest/templates/source/admin.html:5
+msgid "Last Harvest Job"
+msgstr "Último trabajo de importación"
+
+#: ckanext/harvest/templates/source/admin.html:11
+msgid "View full job report"
+msgstr "Ver informe de trabajo completo"
+
+#: ckanext/harvest/templates/source/admin_base.html:7
+#: ckanext/harvest/templates/source/read_base.html:4
+msgid "Admin"
+msgstr "Administración"
+
+#: ckanext/harvest/templates/source/admin_base.html:15
+msgid ""
+"This will re-run the harvesting for this source. Any updates at the source "
+"will overwrite the local datasets. Sources with a large number of datasets "
+"may take a significant amount of time to finish harvesting. Please confirm "
+"you would like us to start reharvesting."
+msgstr ""
+"Esto volverá a ejecutar la importación para esta fuente. Cualquier actualización en la fuente "
+"sobrescribirá los conjuntos de datos locales. La importación de fuentes "
+"con un gran número de conjuntos de datos puede llevar bastante tiempo. Por favor, confirme "
+"que desea que iniciemos nuevamente la importación."
+
+#: ckanext/harvest/templates/source/admin_base.html:18
+msgid "Start a new harvesting job for this harvest source now"
+msgstr "Inicie un nuevo trabajo de importación para esta fuente ahora"
+
+#: ckanext/harvest/templates/source/admin_base.html:20
+msgid "Reharvest"
+msgstr "Volver a importar"
+
+#: ckanext/harvest/templates/source/admin_base.html:24
+msgid ""
+"Warning: This will remove all datasets for this source, as well as all "
+"previous job reports. Are you sure you want to continue?"
+msgstr ""
+"Advertencia: Esto eliminará todos los conjuntos de datos de esta fuente, así"
+" como todos los informes de trabajos anteriores. "
+
+#: ckanext/harvest/templates/source/admin_base.html:27
+msgid "Delete all harvest jobs and existing datasets from this source"
+msgstr "Eliminar todos los trabajos de importación y conjuntos de datos existentes de esta fuente"
+
+#: ckanext/harvest/templates/source/admin_base.html:28
+msgid "Clear"
+msgstr "Borrar"
+
+#: ckanext/harvest/templates/source/admin_base.html:32
+msgid "View harvest source"
+msgstr "Ver fuente de importación"
+
+#: ckanext/harvest/templates/source/admin_base.html:48
+msgid "Dashboard"
+msgstr "Panel"
+
+#: ckanext/harvest/templates/source/admin_base.html:49
+msgid "Jobs"
+msgstr "Trabajos"
+
+#: ckanext/harvest/templates/source/admin_base.html:50
+msgid "Edit"
+msgstr "Editar"
+
+#: ckanext/harvest/templates/source/base.html:17
+msgid "Organizations"
+msgstr "Organizaciones"
+
+#: ckanext/harvest/templates/source/base.html:19
+#: ckanext/harvest/templates/source/base.html:22
+#: ckanext/harvest/templates/source/new.html:4
+#: ckanext/harvest/templates/source/org_source_list.html:3
+#: ckanext/harvest/templates/source/org_source_list.html:7
+#: ckanext/harvest/templates/source/org_source_list.html:19
+#: ckanext/harvest/templates/source/search.html:7
+msgid "Harvest Sources"
+msgstr "Fuentes de importación"
+
+#: ckanext/harvest/templates/source/edit.html:3
+msgid "Edit harvest source"
+msgstr "Editar fuente de importación"
+
+#: ckanext/harvest/templates/source/new.html:5
+msgid "Create Harvest Source"
+msgstr "Crear fuente de importación"
+
+#: ckanext/harvest/templates/source/new.html:11
+msgid "Create harvest source"
+msgstr "Crear fuente de importación"
+
+#: ckanext/harvest/templates/source/new.html:23
+#: ckanext/harvest/templates/source/search.html:3
+msgid "Harvest sources"
+msgstr "Fuentes de importación"
+
+#: ckanext/harvest/templates/source/new.html:26
+msgid ""
+" Harvest sources allow importing remote metadata into this catalog. Remote "
+"sources can be other catalogs such as other CKAN instances, CSW servers or "
+"Web Accessible Folders (WAF) (depending on the actual harvesters enabled for"
+" this instance). "
+msgstr ""
+"Las fuentes de importación permiten importar metadatos remotos a este catálogo. "
+"Las fuentes remotas pueden ser otros catálogos, como otras instancias de CKAN, servidores CSW o "
+"carpetas accesibles vía web (WAF), dependiendo de los recolectores habilitados para esta instancia. "
+
+#: ckanext/harvest/templates/source/new_source_form.html:8
+msgid "URL"
+msgstr "URL"
+
+#: ckanext/harvest/templates/source/new_source_form.html:10
+msgid "This should include the http:// part of the URL"
+msgstr "Esto debe incluir la parte http:// de la URL."
+
+#: ckanext/harvest/templates/source/new_source_form.html:14
+msgid "Title"
+msgstr "Título"
+
+#: ckanext/harvest/templates/source/new_source_form.html:14
+msgid "eg. A descriptive title"
+msgstr "p.ej. Un título descriptivo"
+
+#: ckanext/harvest/templates/source/new_source_form.html:21
+msgid "Name"
+msgstr "Nombre"
+
+#: ckanext/harvest/templates/source/new_source_form.html:21
+msgid "eg. my-dataset"
+msgstr "p.ej. mi-dataset"
+
+#: ckanext/harvest/templates/source/new_source_form.html:23
+msgid "Description"
+msgstr "Descripción"
+
+#: ckanext/harvest/templates/source/new_source_form.html:43
+msgid "Update frequency"
+msgstr "Frecuencia de actualización"
+
+#: ckanext/harvest/templates/source/new_source_form.html:46
+msgid "Configuration"
+msgstr "Configuración"
+
+#: ckanext/harvest/templates/source/new_source_form.html:66
+msgid "No organization"
+msgstr "Ninguna organización"
+
+#: ckanext/harvest/templates/source/new_source_form.html:79
+msgid "State"
+msgstr "Estado"
+
+#: ckanext/harvest/templates/source/new_source_form.html:82
+msgid "Active"
+msgstr "Activo"
+
+#: ckanext/harvest/templates/source/new_source_form.html:92
+msgid ""
+"This will flag the source as deleted but keep all its datasets and previous "
+"jobs. Are you sure you want to delete this harvest source?"
+msgstr ""
+"Esto marcará la fuente como eliminada pero mantendrá todos sus conjuntos de "
+"datos y trabajos anteriores. "
+
+#: ckanext/harvest/templates/source/new_source_form.html:93
+msgid ""
+"Warning: Apart from deleting this source, this command will remove all its "
+"datasets, as well as all previous job reports. Are you sure you want to "
+"continue?"
+msgstr ""
+"Advertencia: además de eliminar esta fuente, este comando eliminará todos "
+"sus conjuntos de datos, así como todos los informes de trabajos anteriores. "
+
+#: ckanext/harvest/templates/source/new_source_form.html:96
+msgid "Delete"
+msgstr "Borrar"
+
+#: ckanext/harvest/templates/source/new_source_form.html:102
+msgid "Delete source"
+msgstr "Eliminar fuente"
+
+#: ckanext/harvest/templates/source/new_source_form.html:107
+msgid "Delete and clear source"
+msgstr "Eliminar y borrar fuente"
+
+#: ckanext/harvest/templates/source/old_new_source_form.html:5
+msgid "Return to the harvest sources list"
+msgstr "Volver a la lista de fuentes de importación"
+
+#: ckanext/harvest/templates/source/org_source_list.html:15
+#: ckanext/harvest/templates/source/search_2.0.html:25
+msgid " found for \"{query}\""
+msgstr " found for \"{query}\""
+
+#: ckanext/harvest/templates/source/org_source_list.html:31
+msgid "Search sources..."
+msgstr "Buscar fuentes..."
+
+#: ckanext/harvest/templates/source/org_source_list.html:32
+#: ckanext/harvest/templates/source/search_2.0.html:8
+msgid "Search"
+msgstr "Buscar"
+
+#: ckanext/harvest/templates/source/read_base.html:22
+msgid "read more"
+msgstr "leer más"
+
+#: ckanext/harvest/templates/source/read_base.html:54
+msgid "About"
+msgstr "Acerca de"
+
+#: ckanext/harvest/templates/source/search.html:44
+msgid "Relevance"
+msgstr "Relevancia"
+
+#: ckanext/harvest/templates/source/search.html:45
+msgid "Name Ascending"
+msgstr "Nombre ascendente"
+
+#: ckanext/harvest/templates/source/search.html:46
+msgid "Name Descending"
+msgstr "Nombre descendente"
+
+#: ckanext/harvest/templates/source/search.html:47
+msgid "Last Modified"
+msgstr "Última modificación"
+
+#: ckanext/harvest/templates/source/search.html:48
+msgid "Popular"
+msgstr "Popular"
+
+#: ckanext/harvest/templates/source/search.html:50
+msgid "Search harvest sources..."
+msgstr "Buscar fuentes de importación..."
+
+#: ckanext/harvest/templates/source/search_2.0.html:7
+msgid "Search..."
+msgstr "Buscar..."
+
+#: ckanext/harvest/templates/source/search_2.0.html:29
+msgid "All harvest sources"
+msgstr "Todas las fuentes de importación"
+
+#: ckanext/harvest/templates/source/search_2.0.html:42
+msgid "Remove"
+msgstr "Eliminar"
+
+#: ckanext/harvest/templates/source/search_2.0.html:48
+msgid "Try another search term, browse the sources below or "
+msgstr "Pruebe con otro término de búsqueda, explore las fuentes a continuación o "
+
+#: ckanext/harvest/templates/source/search_2.0.html:49
+msgid "add a new one"
+msgstr "agregue uno nuevo"
+
+#: ckanext/harvest/templates/source/search_2.0.html:55
+msgid ""
+" <p><strong>There was an error while searching.</strong> Please try "
+"again.</p> "
+msgstr ""
+" <p><strong>Se produjo un error durante la búsqueda.</strong> Por favor, "
+"inténtalo de nuevo.</p> "
+
+#: ckanext/harvest/templates/source/job/list.html:5
+#: ckanext/harvest/templates/source/job/list.html:10
+msgid "Harvest Jobs"
+msgstr "Trabajos de importación"
+
+#: ckanext/harvest/templates/source/job/list.html:21
+msgid "Job: "
+msgstr "Trabajos: "
+
+#: ckanext/harvest/templates/source/job/list.html:28
+msgid "Started:"
+msgstr "Comenzó:"
+
+#: ckanext/harvest/templates/source/job/list.html:30
+#: ckanext/harvest/templates/source/job/list.html:35
+msgid "Not yet"
+msgstr "Aún no"
+
+#: ckanext/harvest/templates/source/job/list.html:33
+msgid "Finished:"
+msgstr "Finalizado:"
+
+#: ckanext/harvest/templates/source/job/read.html:3
+#: ckanext/harvest/templates/source/job/read.html:12
+msgid "Job Report"
+msgstr "Informe de trabajo"
+
+#: ckanext/harvest/templates/source/job/read.html:9
+msgid "Back to job list"
+msgstr "Volver a la lista de trabajos"
+
+#: ckanext/harvest/templates/source/job/read.html:18
+#: ckanext/harvest/templates/source/job/read.html:22
+msgid "Error Summary"
+msgstr "Resumen de errores"
+
+#: ckanext/harvest/templates/source/job/read.html:19
+msgid "No errors for this job"
+msgstr "No hay errores para este trabajo"
+
+#: ckanext/harvest/templates/source/job/read.html:23
+msgid "Only the 20 most frequent errors are shown"
+msgstr "Sólo se muestran los 20 errores más frecuentes"
+
+#: ckanext/harvest/templates/source/job/read.html:26
+#: ckanext/harvest/templates/source/job/read.html:40
+msgid "Job Errors"
+msgstr "Errores de trabajo"
+
+#: ckanext/harvest/templates/source/job/read.html:30
+#: ckanext/harvest/templates/source/job/read.html:57
+msgid "Document Errors"
+msgstr "Errores de documentos"
+
+#: ckanext/harvest/templates/source/job/read.html:37
+msgid "Error Report"
+msgstr "Informe de errores"
+
+#: ckanext/harvest/templates/source/job/read.html:58
+msgid "documents with errors"
+msgstr "documentos con errores"
+
+#: ckanext/harvest/templates/source/job/read.html:69
+msgid "Remote content"
+msgstr "Contenido remoto"
+
+#: ckanext/harvest/templates/source/job/read.html:73
+msgid "Local content"
+msgstr "Contenido local"
+
