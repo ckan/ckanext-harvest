@@ -1,0 +1,1 @@
+# Empty file kept for compatibility, requirements are in pyproject.toml
