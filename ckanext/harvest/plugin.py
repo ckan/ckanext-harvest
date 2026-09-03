@@ -213,7 +213,26 @@ class Harvest(p.SingletonPlugin, DefaultDatasetForm, DefaultTranslation):
 
         if "type" in data_dict and data_dict["type"] == DATASET_TYPE_NAME:
             # This is a harvest source dataset, add extra info from the
-            # HarvestSource object
+            # HarvestSource object.
+            #
+            # ``config``, ``source_type`` and ``frequency`` are stored as
+            # package extras and normally promoted to the top level by the
+            # harvest source show schema. But when a source is reindexed
+            # (``harvest_source_reindex``), the dict is fetched with
+            # ``validate=False`` and stored verbatim in the Solr
+            # ``validated_data_dict``, so subsequent reads from the cache skip
+            # the schema and those fields only appear inside ``extras``.
+            # Restore them to the top level so callers such as the edit form
+            # can keep reading ``data["config"]`` etc.
+            extras = {
+                extra.get("key"): extra.get("value")
+                for extra in data_dict.get("extras", [])
+                if extra.get("value") is not None
+            }
+            for field in ("config", "source_type", "frequency"):
+                if data_dict.get(field) is None and field in extras:
+                    data_dict[field] = extras[field]
+
             source = HarvestSource.get(data_dict["id"])
             if not source:
                 log.error(
