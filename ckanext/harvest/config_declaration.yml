@@ -87,6 +87,16 @@ groups:
           no timeout on harvest jobs.
         example: 1440
 
+      - key: ckan.harvest.job_all_order
+        default: created_desc
+        description: |
+          Order in which ``harvest_job_create_all`` (``ckan harvester job-all``)
+          creates the jobs, which is also the order in which they are sent to
+          the gather queue. One of ``created_desc`` (most recently created
+          source first), ``created_asc`` (oldest source first), ``title_asc``
+          (alphabetical by source title, case insensitive) or ``title_desc``.
+        example: title_asc
+
       - key: ckan.harvest.status_mail.all
         type: bool
         default: false

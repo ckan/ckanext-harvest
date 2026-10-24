@@ -142,6 +142,19 @@ def harvest_job_create_all(context, data_dict):
 
     # Get all active sources
     sources = harvest_source_list(context, data_dict)
+
+    # Order in which the jobs are created, i.e. the order in which they
+    # are sent to the gather queue (sources come sorted by creation date,
+    # most recent first)
+    order = toolkit.config.get('ckan.harvest.job_all_order', 'created_desc')
+    if order in ('title_asc', 'title_desc'):
+        sources = sorted(
+            sources,
+            key=lambda s: (s.get('title') or '').casefold(),
+            reverse=(order == 'title_desc'))
+    elif order == 'created_asc':
+        sources = list(reversed(sources))
+    log.info('Harvest job create all: source order = %s', order)
     jobs = []
     # Create a new job for each, if there isn't already one
     for source in sources:
