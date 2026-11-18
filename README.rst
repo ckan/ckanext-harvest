@@ -224,6 +224,23 @@ If you don't specify this setting, the default will be False and there will be n
 This timeout value is compared to the completion time of the last object in the job.
 
 
+Order of the jobs created by job-all (optional)
+===============================================
+
+``ckan harvester job-all`` (the ``harvest_job_create_all`` action) creates a job
+for each active source and sends it to the gather queue. By default the sources
+are processed by creation date, most recent first. To use a different order,
+add this configuration option to the ini file::
+
+    ckan.harvest.job_all_order = title_asc
+
+Allowed values are ``created_desc`` (default), ``created_asc``, ``title_asc``
+(alphabetical by source title, case insensitive) and ``title_desc``.
+This only affects the order in which the jobs are created and queued: with
+several gather or fetch consumers running in parallel, jobs may still finish
+in a different order. ``harvest_source_list`` is not affected.
+
+
 Avoid overwriting certain fields (optional)
 ===========================================
 

@@ -228,6 +228,46 @@ class TestHarvestSourceActionPatch(HarvestSourceFixtureMixin,
 @pytest.mark.usefixtures('with_plugins', 'clean_db', 'clean_queues')
 @pytest.mark.ckan_config('ckan.plugins', 'harvest test_action_harvester')
 class TestActions():
+    def _create_sources_for_ordering(self):
+        # created in this order: "Beta", "gamma", "alpha"
+        for i, title in enumerate(['Beta source', 'gamma source', 'alpha source']):
+            source_dict = SOURCE_DICT.copy()
+            source_dict.update({
+                'name': 'order-source-{}'.format(i),
+                'title': title,
+                'url': 'http://order{}.test.action.com'.format(i),
+            })
+            factories.HarvestSourceObj(**source_dict)
+
+    def _job_all_titles(self):
+        context = {'ignore_auth': True, 'user': ''}
+        jobs = get_action('harvest_job_create_all')(context, {'run': False})
+        return [harvest_model.HarvestSource.get(job['source_id']).title
+                for job in jobs]
+
+    def test_harvest_job_create_all_default_order(self):
+        self._create_sources_for_ordering()
+        assert self._job_all_titles() == [
+            'alpha source', 'gamma source', 'Beta source']
+
+    @pytest.mark.ckan_config('ckan.harvest.job_all_order', 'created_asc')
+    def test_harvest_job_create_all_created_asc(self):
+        self._create_sources_for_ordering()
+        assert self._job_all_titles() == [
+            'Beta source', 'gamma source', 'alpha source']
+
+    @pytest.mark.ckan_config('ckan.harvest.job_all_order', 'title_asc')
+    def test_harvest_job_create_all_title_asc(self):
+        self._create_sources_for_ordering()
+        assert self._job_all_titles() == [
+            'alpha source', 'Beta source', 'gamma source']
+
+    @pytest.mark.ckan_config('ckan.harvest.job_all_order', 'title_desc')
+    def test_harvest_job_create_all_title_desc(self):
+        self._create_sources_for_ordering()
+        assert self._job_all_titles() == [
+            'gamma source', 'Beta source', 'alpha source']
+
     def test_harvest_source_clear(self):
         source = factories.HarvestSourceObj(**SOURCE_DICT.copy())
         job = factories.HarvestJobObj(source=source)
