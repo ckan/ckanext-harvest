@@ -4,6 +4,7 @@ import hashlib
 import html
 import json
 
+import calendar
 import logging
 import datetime
 
@@ -535,29 +536,43 @@ def harvest_objects_import(context, data_dict):
     return last_objects_count
 
 
-def _calculate_next_run(frequency):
+def _utcnow():
+    return datetime.datetime.utcnow()
 
-    now = datetime.datetime.utcnow()
+
+def _add_frequency(run, frequency):
+    if frequency == 'WEEKLY':
+        return run + datetime.timedelta(weeks=1)
+    if frequency == 'BIWEEKLY':
+        return run + datetime.timedelta(weeks=2)
+    if frequency == 'DAILY':
+        return run + datetime.timedelta(days=1)
+    if frequency == 'MONTHLY':
+        days = calendar.monthrange(run.year, run.month)[1]
+        return run + datetime.timedelta(days=days)
+    raise Exception('Frequency {freq} not recognised'.format(freq=frequency))
+
+
+def _calculate_next_run(frequency, previous_next_run=None):
+    '''
+    Returns the time of the next scheduled run of a source with the given
+    frequency.
+
+    The next run is calculated from the previously scheduled run instead of
+    the current time, so that a source keeps its schedule (e.g. a daily source
+    runs at the same time every day, independent of when the scheduled jobs
+    are processed). Scheduled runs that are already in the past, e.g. because
+    no jobs were scheduled for a while, are skipped. Without a previously
+    scheduled run, the next run is calculated from the current time.
+    '''
+    now = _utcnow()
     if frequency == 'ALWAYS':
         return now
-    if frequency == 'WEEKLY':
-        return now + datetime.timedelta(weeks=1)
-    if frequency == 'BIWEEKLY':
-        return now + datetime.timedelta(weeks=2)
-    if frequency == 'DAILY':
-        return now + datetime.timedelta(days=1)
-    if frequency == 'MONTHLY':
-        if now.month in (4, 6, 9, 11):
-            days = 30
-        elif now.month == 2:
-            if now.year % 4 == 0:
-                days = 29
-            else:
-                days = 28
-        else:
-            days = 31
-        return now + datetime.timedelta(days=days)
-    raise Exception('Frequency {freq} not recognised'.format(freq=frequency))
+
+    next_run = _add_frequency(previous_next_run or now, frequency)
+    while next_run <= now:
+        next_run = _add_frequency(next_run, frequency)
+    return next_run
 
 
 def _make_scheduled_jobs(context, data_dict):
@@ -573,7 +588,7 @@ def _make_scheduled_jobs(context, data_dict):
         except HarvestJobExists:
             log.info('Trying to rerun job for %s skipping', source.id)
 
-        source.next_run = _calculate_next_run(source.frequency)
+        source.next_run = _calculate_next_run(source.frequency, source.next_run)
         source.save()
 
 
