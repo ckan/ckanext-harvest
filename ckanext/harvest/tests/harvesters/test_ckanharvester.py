@@ -17,7 +17,7 @@ from ckan.plugins import toolkit
 from ckanext.harvest.harvesters.ckanharvester import ContentFetchError
 from ckanext.harvest.tests.factories import (HarvestSourceObj, HarvestJobObj,
                                              HarvestObjectObj)
-from ckanext.harvest.tests.lib import run_harvest
+from ckanext.harvest.tests.lib import run_harvest, run_harvest_job
 import ckanext.harvest.model as harvest_model
 from ckanext.harvest.harvesters.base import HarvesterBase
 from ckanext.harvest.harvesters.ckanharvester import CKANHarvester
@@ -357,3 +357,35 @@ class TestCkanHarvester(object):
             harvester._get_content("http://test.example.gov.uk")
 
         assert str(context.value) == 'HTTP error: 404 http://test.example.gov.uk'
+
+    def test_delete_missing(self):
+        config = {'delete_missing': True}
+        harvester = CKANHarvester()
+
+        # Create harvest source
+        source = HarvestSourceObj(
+            url='http://localhost:%s' % mock_ckan.PORT,
+            config=json.dumps(config),
+            source_type=harvester.info()['name'])
+
+        # Run the first harvest process
+        job = HarvestJobObj(source=source, run=False)
+        results_by_guid = run_harvest_job(job, harvester)
+
+        assert mock_ckan.DATASETS[2]['id'] in results_by_guid
+
+        # Delete one dataset in mock server and rerun harvest process
+        datasets = copy.deepcopy(mock_ckan.DATASETS)
+        deleted_id = datasets[2]['id']
+        del datasets[2]
+        with patch('ckanext.harvest.tests.harvesters.mock_ckan.DATASETS',
+                   datasets):
+            job = HarvestJobObj(source=source, run=False)
+            results_by_guid = run_harvest_job(job, harvester)
+
+            assert deleted_id in results_by_guid
+            assert results_by_guid[deleted_id]['report_status'] == 'deleted'
+
+        # Check if dataset is in deleted state
+        deleted_dataset = call_action('package_show', None, id=deleted_id)
+        assert deleted_dataset['state'] == 'deleted'
